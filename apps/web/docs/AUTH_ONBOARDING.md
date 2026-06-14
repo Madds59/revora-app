@@ -55,7 +55,8 @@ Supabase Auth should use:
 
 ## Bootstrap commands
 
-Promote an existing signed-up user to platform admin:
+Promote an existing signed-up user to platform admin. Full bootstrap steps and
+production safety notes live in [SUPER_ADMIN_BOOTSTRAP.md](./SUPER_ADMIN_BOOTSTRAP.md).
 
 ```bash
 node scripts/grant-super-admin.mjs madd59productions@gmail.com
@@ -63,3 +64,5 @@ node scripts/grant-super-admin.mjs moda.imf1997@gmail.com
 ```
 
 The user must sign up first; do not generate or commit passwords.
+Super admin is never a public signup option and is never derived from
+`account_intent`.

@@ -50,6 +50,11 @@
 - Confirm billing invoices and payment events only appear after Stripe webhook sync.
 - Confirm AED and date/time values use Western digits in the shell and billing
   surfaces.
+- Confirm `/en/admin` is available only after a platform-admin row exists.
+- Confirm super admin is not selectable during signup and is bootstrapped only
+  through `platform_admins`.
+- Confirm `owner@vrf.test` / `password1234` remain smoke-test-only credentials
+  and are never used as production admin access.
 
 ## Automated Checks
 
@@ -74,5 +79,7 @@
   - `http://localhost:3000/**`
 - Public signup must expose business owner, customer, and invited staff account
   types. Do not surface super admin as a public option.
+- Super admin bootstrap instructions live in
+  [SUPER_ADMIN_BOOTSTRAP.md](./SUPER_ADMIN_BOOTSTRAP.md).
 - If pnpm reports ignored native builds on a fresh checkout, run `pnpm approve-builds --all`
 - Keep `/api/stripe/webhook` public; do not put it behind login or deployment protection

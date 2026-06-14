@@ -56,6 +56,10 @@ The smoke runner reports:
 - `unexpected 500`
 - `connection unavailable`
 
+The local e2e harness uses disposable smoke-test users and a test-only password.
+Those credentials are not production accounts and must not be reused for
+super-admin bootstrap.
+
 ## Canonical locale routes
 
 The locale tree is canonical. Treat these redirects as expected:
@@ -145,6 +149,8 @@ node scripts/grant-super-admin.mjs moda.imf1997@gmail.com
 ```
 
 Use the password the user created during signup, or a Supabase magic-link/password-reset flow. Do not create or commit a separate plaintext credential.
+For the full production checklist, including local environment variables and
+safety notes, see [SUPER_ADMIN_BOOTSTRAP.md](./SUPER_ADMIN_BOOTSTRAP.md).
 
 ## Production auth settings
 
