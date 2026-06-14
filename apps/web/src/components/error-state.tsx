@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { RotateCcw } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,9 @@ export function ErrorState({
   description,
   errorDigest,
   onRetry,
-  retryLabel = "Try again",
+  retryLabel,
   backHref,
-  backLabel = "Go back",
+  backLabel,
   className,
 }: {
   backHref?: string;
@@ -25,6 +26,9 @@ export function ErrorState({
   retryLabel?: string;
   title: string;
 }) {
+  const t = useTranslations("common.states");
+  const resolvedRetryLabel = retryLabel ?? t("errorRetry");
+  const resolvedBackLabel = backLabel ?? t("errorBack");
   return (
     <div
       className={cn(
@@ -45,18 +49,18 @@ export function ErrorState({
             className={buttonVariants()}
           >
             <RotateCcw />
-            {retryLabel}
+            {resolvedRetryLabel}
           </button>
         )}
         {backHref && (
           <Link href={backHref} className={buttonVariants({ variant: "outline" })}>
-            {backLabel}
+            {resolvedBackLabel}
           </Link>
         )}
       </div>
 
       {errorDigest && (
-        <p className="text-muted-foreground text-xs">Reference: {errorDigest}</p>
+        <p className="text-muted-foreground text-xs">{t("errorReference", { digest: errorDigest })}</p>
       )}
     </div>
   );

@@ -1,7 +1,38 @@
 {
   "common": {
     "appName": "Revora",
-    "tagline": "مبنيٌّ على الثقة. مدعومٌ بالعمليات."
+    "tagline": "مبنيٌّ على الثقة. مدعومٌ بالعمليات.",
+    "actions": {
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "create": "إنشاء",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "submit": "إرسال",
+      "reset": "إعادة تعيين",
+      "back": "رجوع",
+      "close": "إغلاق",
+      "change": "تغيير",
+      "remove": "إزالة"
+    },
+    "filters": {
+      "search": "بحث",
+      "searchPlaceholder": "بحث",
+      "status": "الحالة",
+      "dateRange": "النطاق الزمني"
+    },
+    "pagination": {
+      "total": "{count} الإجمالي",
+      "pageOf": "صفحة {page} من {pageCount}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "states": {
+      "errorRetry": "حاول مرة أخرى",
+      "errorBack": "العودة",
+      "errorReference": "المرجع: {digest}",
+      "noEvidence": "لم يتم رفع أي أدلة بعد."
+    }
   },
   "nav": {
     "home": "الرئيسية",

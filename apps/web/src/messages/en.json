@@ -1,7 +1,38 @@
 {
   "common": {
     "appName": "Revora",
-    "tagline": "Built on Trust. Powered by Operations."
+    "tagline": "Built on Trust. Powered by Operations.",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "submit": "Submit",
+      "reset": "Reset",
+      "back": "Back",
+      "close": "Close",
+      "change": "Change",
+      "remove": "Remove"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search",
+      "status": "Status",
+      "dateRange": "Date range"
+    },
+    "pagination": {
+      "total": "{count} total",
+      "pageOf": "Page {page} of {pageCount}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "states": {
+      "errorRetry": "Try again",
+      "errorBack": "Go back",
+      "errorReference": "Reference: {digest}",
+      "noEvidence": "No evidence uploaded yet."
+    }
   },
   "nav": {
     "home": "Home",
