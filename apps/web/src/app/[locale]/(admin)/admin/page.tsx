@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -10,27 +12,28 @@ import type { PlatformMetrics } from "@/lib/admin-views";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminOverviewPage() {
+  const t = await getTranslations("adminOverview");
   await requireSuperAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_platform_metrics");
   const m = data as unknown as PlatformMetrics | null;
 
   const stats: { label: string; value: number | string }[] = [
-    { label: "Businesses", value: m?.businesses ?? 0 },
-    { label: "Registered users", value: m?.users ?? 0 },
-    { label: "Customers", value: m?.customers ?? 0 },
-    { label: "Quotations", value: m?.quotations ?? 0 },
-    { label: "Approved quotes", value: m?.approved_quotes ?? 0 },
-    { label: "Complaints", value: m?.complaints ?? 0 },
-    { label: "Open complaints", value: m?.open_complaints ?? 0 },
-    { label: "Super admins", value: m?.super_admins ?? 0 },
+    { label: t("stats.businesses"), value: m?.businesses ?? 0 },
+    { label: t("stats.registeredUsers"), value: m?.users ?? 0 },
+    { label: t("stats.customers"), value: m?.customers ?? 0 },
+    { label: t("stats.quotations"), value: m?.quotations ?? 0 },
+    { label: t("stats.approvedQuotes"), value: m?.approved_quotes ?? 0 },
+    { label: t("stats.complaints"), value: m?.complaints ?? 0 },
+    { label: t("stats.openComplaints"), value: m?.open_complaints ?? 0 },
+    { label: t("stats.superAdmins"), value: m?.super_admins ?? 0 },
   ];
 
   return (
     <>
       <PageHeader
-        title="Platform overview"
-        description="Tenant and usage metrics across all of Revora."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="p-6">
         {error ? (

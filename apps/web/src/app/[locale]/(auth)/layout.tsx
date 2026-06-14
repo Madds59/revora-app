@@ -1,28 +1,31 @@
 import { ShieldCheck, FileCheck2, MessageSquareHeart } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Logo, FlagStripe } from "@/components/brand";
 
-const TRUST_POINTS = [
-  {
-    icon: ShieldCheck,
-    title: "Built on trust",
-    body: "Transparent quotes and a verifiable record customers can rely on.",
-  },
-  {
-    icon: FileCheck2,
-    title: "Digital approvals",
-    body: "Signed, audited sign-off on every job — no more disputes.",
-  },
-  {
-    icon: MessageSquareHeart,
-    title: "Resolve with care",
-    body: "Complaints handled in the open, start to finish.",
-  },
-];
-
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const t = await getTranslations("auth.layout");
+
+  const TRUST_POINTS = [
+    {
+      icon: ShieldCheck,
+      title: t("trustBuilt"),
+      body: t("trustBuiltBody"),
+    },
+    {
+      icon: FileCheck2,
+      title: t("digitalApprovals"),
+      body: t("digitalApprovalsBody"),
+    },
+    {
+      icon: MessageSquareHeart,
+      title: t("resolveWithCare"),
+      body: t("resolveWithCareBody"),
+    },
+  ];
+
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-2">
       {/* Brand panel — graphite with the trust story. Hidden on small screens. */}
@@ -32,7 +35,7 @@ export default function AuthLayout({
           className="bg-brand-green/20 pointer-events-none absolute -end-24 -top-24 size-72 rounded-full blur-3xl"
         />
         <Logo
-          subtitle="Built on Trust. Powered by Operations."
+          subtitle={t("tagline")}
           tone="inverted"
           className="relative"
         />
@@ -53,9 +56,7 @@ export default function AuthLayout({
 
         <div className="relative flex items-center gap-3">
           <FlagStripe className="max-w-24 rounded-full" />
-          <span className="text-sidebar-foreground/45 text-xs">
-            Made for UAE service businesses
-          </span>
+          <span className="text-sidebar-foreground/45 text-xs">{t("madeForUAE")}</span>
         </div>
       </aside>
 
@@ -63,9 +64,7 @@ export default function AuthLayout({
       <div className="bg-muted/30 flex min-h-dvh flex-col items-center justify-center gap-6 p-6">
         <div className="flex flex-col items-center gap-1 text-center lg:hidden">
           <Logo />
-          <span className="text-muted-foreground text-sm">
-            Built on Trust. Powered by Operations.
-          </span>
+          <span className="text-muted-foreground text-sm">{t("tagline")}</span>
         </div>
         {children}
       </div>

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { UserRoundPen } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export function ComplaintAssignmentModal({
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("complaints.assignment");
   const lastMessage = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -67,15 +69,15 @@ export function ComplaintAssignmentModal({
         render={
           <Button variant="outline" className="w-full sm:w-auto">
             <UserRoundPen />
-            Change assignee
+            {t("change")}
           </Button>
         }
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Change assignee</DialogTitle>
+          <DialogTitle>{t("change")}</DialogTitle>
           <DialogDescription>
-            Move this complaint to another active team member or clear the assignment.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -83,13 +85,13 @@ export function ComplaintAssignmentModal({
           <input type="hidden" name="complaint_id" value={complaintId} />
 
           <div className="grid gap-2">
-            <Label htmlFor="assigned_to">Assigned to</Label>
+            <Label htmlFor="assigned_to">{t("assignedTo")}</Label>
             <Select name="assigned_to" defaultValue={currentAssigneeId ?? ""}>
               <SelectTrigger id="assigned_to" className="w-full">
-                <SelectValue placeholder="Unassigned" />
+                <SelectValue placeholder={t("unassigned")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="">{t("unassigned")}</SelectItem>
                 {assignees.map((assignee) => (
                   <SelectItem key={assignee.id} value={assignee.id}>
                     {assignee.label}
@@ -105,7 +107,7 @@ export function ComplaintAssignmentModal({
 
           <DialogFooter className={cn("px-0 pb-0 pt-2")}>
             <Button type="submit" className="w-full sm:w-auto">
-              Save assignment
+              {t("submit")}
             </Button>
           </DialogFooter>
         </form>

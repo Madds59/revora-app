@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -48,6 +49,7 @@ export default async function AdminTenantsPage({
     to?: string;
   }>;
 }) {
+  const t = await getTranslations("adminTenants");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -78,24 +80,22 @@ export default async function AdminTenantsPage({
   return (
     <>
       <PageHeader
-        title="Tenants"
-        description="Every business on the platform."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Businesses ({totalCount})</CardTitle>
-            <CardDescription>
-              Owner, team size, and activity per tenant.
-            </CardDescription>
+            <CardTitle>{t("cardTitle", { count: totalCount })}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-destructive text-sm">{error.message}</p>
             ) : businesses.length === 0 ? (
               <EmptyState
-                title="No businesses yet"
-                description="Tenant records will appear here once a business signs up and creates its workspace."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <AdminTenantsBrowser

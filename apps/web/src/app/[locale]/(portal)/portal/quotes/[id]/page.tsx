@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { requireCustomerPortal } from "@/lib/auth";
 import { formatCurrency } from "@/lib/money";
+import { formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import type { Approval, Quotation, QuotationItem } from "@/lib/database.types";
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
@@ -192,9 +193,9 @@ export default async function PortalQuoteDetailPage({
             {isApproved ? (
               <StatusBanner
                 tone="success"
-                title={`Approved${
-                  approval
-                    ? ` on ${new Date(approval.approved_at).toLocaleString()}`
+              title={`Approved${
+                approval
+                    ? ` on ${formatDateTime(approval.approved_at)}`
                     : ""
                 }`}
               >
@@ -210,9 +211,9 @@ export default async function PortalQuoteDetailPage({
             ) : isDeclined ? (
               <StatusBanner
                 tone="destructive"
-                title={`Declined${
-                  quote.customer_rejected_at
-                    ? ` on ${new Date(quote.customer_rejected_at).toLocaleString()}`
+              title={`Declined${
+                quote.customer_rejected_at
+                    ? ` on ${formatDateTime(quote.customer_rejected_at)}`
                     : ""
                 }`}
               >

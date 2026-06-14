@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -57,6 +58,7 @@ export default async function AdminSubscriptionsPage({
     to?: string;
   }>;
 }) {
+  const t = await getTranslations("adminSubscriptions");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -92,32 +94,32 @@ export default async function AdminSubscriptionsPage({
   return (
     <>
       <PageHeader
-        title="Subscriptions"
-        description="Platform subscription rollup across tenants."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Active</CardDescription>
+              <CardDescription>{t("stats.active")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{active}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Trialing</CardDescription>
+              <CardDescription>{t("stats.trialing")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{trialing}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Past due</CardDescription>
+              <CardDescription>{t("stats.pastDue")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{overdue}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Total</CardDescription>
+              <CardDescription>{t("stats.total")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {subscriptions.length}
               </CardTitle>
@@ -127,16 +129,16 @@ export default async function AdminSubscriptionsPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Subscription overview ({totalCount})</CardTitle>
-            <CardDescription>Stripe-backed tenants and their current plan state.</CardDescription>
+            <CardTitle>{t("cardTitle", { count: totalCount })}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-sm text-destructive">{error.message}</p>
             ) : subscriptions.length === 0 ? (
               <EmptyState
-                title="No subscriptions yet"
-                description="Stripe-backed subscription records will appear here once tenants are billed."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <AdminSubscriptionsBrowser

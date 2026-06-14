@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -42,6 +43,7 @@ export function ComplaintSubmissionForm({
   accounts: ComplaintAccountOption[];
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("complaints.submission");
   const [accountIndex, setAccountIndex] = useState(accounts[0]?.customer_id ?? "");
   const lastMessage = useRef<string | undefined>(undefined);
 
@@ -64,7 +66,7 @@ export function ComplaintSubmissionForm({
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-4">
       <div className="grid gap-2">
-        <Label htmlFor="customer_id">Business account</Label>
+        <Label htmlFor="customer_id">{t("businessAccount")}</Label>
         <Select
           name="customer_id"
           value={accountIndex}
@@ -72,7 +74,7 @@ export function ComplaintSubmissionForm({
           required
         >
           <SelectTrigger id="customer_id" className="w-full">
-            <SelectValue placeholder="Select an account" />
+            <SelectValue placeholder={t("selectAccount")} />
           </SelectTrigger>
           <SelectContent>
             {accounts.map((account) => (
@@ -91,7 +93,7 @@ export function ComplaintSubmissionForm({
       />
 
       <div className="grid gap-2">
-        <Label htmlFor="severity">Severity</Label>
+        <Label htmlFor="severity">{t("severity")}</Label>
         <Select name="severity" defaultValue="medium">
           <SelectTrigger id="severity" className="w-full">
             <SelectValue />
@@ -107,18 +109,18 @@ export function ComplaintSubmissionForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="subject">Subject</Label>
+        <Label htmlFor="subject">{t("subject")}</Label>
         <Input id="subject" name="subject" required />
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("description")}</Label>
         <Textarea id="description" name="description" rows={5} required />
       </div>
 
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton disabled={!accountIndex}>Submit complaint</SubmitButton>
+        <SubmitButton disabled={!accountIndex}>{t("submit")}</SubmitButton>
       </div>
     </form>
   );

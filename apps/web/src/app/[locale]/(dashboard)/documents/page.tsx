@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
@@ -18,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
+import { formatDate } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import { PRIVATE_BUCKET } from "@/lib/storage";
 import { uploadDocument } from "@/lib/document-actions";
@@ -45,6 +48,7 @@ type DocumentRow = {
 type DocumentView = DocumentRow & { url: string | null };
 
 export default async function DocumentsPage() {
+  const t = await getTranslations("dashboardDocuments");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -75,15 +79,15 @@ export default async function DocumentsPage() {
   return (
     <>
       <PageHeader
-        title="Documents"
-        description="Contracts, PDFs, and audit reports."
+        title={t("title")}
+        description={t("description")}
         action={
           <FileUpload
             bucket={PRIVATE_BUCKET}
             businessId={business.id}
             entity="documents"
             accept="*/*"
-            label="Upload document"
+            label={t("actions.uploadDocument")}
             onUpload={uploadDocument.bind(null, { documentType: "file" })}
           />
         }
@@ -91,18 +95,16 @@ export default async function DocumentsPage() {
       <div className="p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Document library</CardTitle>
-            <CardDescription>
-              Stored files linked to quotes, complaints, jobs, and customers.
-            </CardDescription>
+            <CardTitle>{t("library.title")}</CardTitle>
+            <CardDescription>{t("library.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-sm text-destructive">{error.message}</p>
             ) : rows.length === 0 ? (
               <EmptyState
-                title="No documents yet"
-                description="Upload contracts, PDFs, and service records to keep them linked to quotes, jobs, and complaints."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <>
@@ -116,8 +118,7 @@ export default async function DocumentsPage() {
                       row.complaint?.subject ??
                       row.job?.title ??
                       row.customer?.full_name ??
-                      "—";
-                    const downloadLabel = row.url ? "Download" : "Unavailable";
+                      t("fallback.none");
                     return (
                       <MobileDataCard
                         title={row.title}
@@ -125,7 +126,7 @@ export default async function DocumentsPage() {
                         meta={
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="outline">{row.document_type}</Badge>
-                            <span>{new Date(row.created_at).toLocaleDateString()}</span>
+                            <span>{formatDate(row.created_at)}</span>
                           </div>
                         }
                         action={
@@ -136,10 +137,12 @@ export default async function DocumentsPage() {
                               rel="noreferrer"
                               className="text-sm font-medium underline"
                             >
-                              {downloadLabel}
+                              {t("actions.download")}
                             </a>
                           ) : (
-                            <span className="text-muted-foreground text-sm">{downloadLabel}</span>
+                            <span className="text-muted-foreground text-sm">
+                              {t("actions.unavailable")}
+                            </span>
                           )
                         }
                       />
@@ -149,60 +152,59 @@ export default async function DocumentsPage() {
 
                 <div className="hidden rounded-lg border md:block">
                   <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Document</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Related to</TableHead>
-                      <TableHead>File</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((row) => {
-                      const related =
-                        row.quotation?.quote_number ??
-                        row.complaint?.subject ??
-                        row.job?.title ??
-                        row.customer?.full_name ??
-                        "—";
-                      const downloadLabel = row.url ? "Download" : "Unavailable";
-                      return (
-                        <TableRow key={row.id}>
-                          <TableCell className="font-medium">{row.title}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{row.document_type}</Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{related}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {row.media?.file_name ?? "—"}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {new Date(row.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {row.url ? (
-                              <a
-                                href={row.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-sm font-medium underline"
-                              >
-                                {downloadLabel}
-                              </a>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">
-                                {downloadLabel}
-                              </span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("table.document")}</TableHead>
+                        <TableHead>{t("table.type")}</TableHead>
+                        <TableHead>{t("table.relatedTo")}</TableHead>
+                        <TableHead>{t("table.file")}</TableHead>
+                        <TableHead>{t("table.created")}</TableHead>
+                        <TableHead>{t("table.action")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row) => {
+                        const related =
+                          row.quotation?.quote_number ??
+                          row.complaint?.subject ??
+                          row.job?.title ??
+                          row.customer?.full_name ??
+                          t("fallback.none");
+                        return (
+                          <TableRow key={row.id}>
+                            <TableCell className="font-medium">{row.title}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{row.document_type}</Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{related}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {row.media?.file_name ?? t("fallback.none")}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {formatDate(row.created_at)}
+                            </TableCell>
+                            <TableCell>
+                              {row.url ? (
+                                <a
+                                  href={row.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-sm font-medium underline"
+                                >
+                                  {t("actions.download")}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">
+                                  {t("actions.unavailable")}
+                                </span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </>
             )}
           </CardContent>

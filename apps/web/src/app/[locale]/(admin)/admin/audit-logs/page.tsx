@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -54,6 +55,7 @@ export default async function AdminAuditLogsPage({
     to?: string;
   }>;
 }) {
+  const t = await getTranslations("adminAuditLogs");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -83,24 +85,22 @@ export default async function AdminAuditLogsPage({
   return (
     <>
       <PageHeader
-        title="Audit logs"
-        description="Cross-tenant record changes and administrative actions."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Activity stream ({totalCount})</CardTitle>
-            <CardDescription>
-              Latest create, update, and delete events across the platform.
-            </CardDescription>
+            <CardTitle>{t("cardTitle", { count: totalCount })}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-sm text-destructive">{error.message}</p>
             ) : logs.length === 0 ? (
               <EmptyState
-                title="No audit events yet"
-                description="Administrative activity will appear here once tenants and platform operators start making changes."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <AdminAuditLogsBrowser

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { addItem, type FormState } from "../actions";
@@ -31,6 +32,7 @@ const KIND_LABELS: Record<ItemKind, string> = {
 
 export function AddItemForm({ quotationId }: { quotationId: string }) {
   const [state, action] = useActionState(addItem, initial);
+  const t = useTranslations("forms.quote");
   const [kind, setKind] = useState<ItemKind>("service");
   const formRef = useRef<HTMLFormElement>(null);
   const lastMessage = useRef<string | undefined>(undefined);
@@ -52,7 +54,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="kind">Type</Label>
+          <Label htmlFor="kind">{t("type")}</Label>
           {/* name="kind" carried by a hidden input so the Select stays controlled */}
           <input type="hidden" name="kind" value={kind} />
           <Select
@@ -72,19 +74,19 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">{t("name")}</Label>
           <Input id="name" name="name" required placeholder="Brake pads" />
         </div>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("description")}</Label>
         <Textarea id="description" name="description" rows={2} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="grid gap-2">
-          <Label htmlFor="quantity">Qty</Label>
+          <Label htmlFor="quantity">{t("qty")}</Label>
           <Input
             id="quantity"
             name="quantity"
@@ -93,7 +95,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="unit_price">Unit price</Label>
+          <Label htmlFor="unit_price">{t("unitPrice")}</Label>
           <Input
             id="unit_price"
             name="unit_price"
@@ -102,7 +104,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="discount_amount">Discount</Label>
+          <Label htmlFor="discount_amount">{t("discount")}</Label>
           <Input
             id="discount_amount"
             name="discount_amount"
@@ -111,7 +113,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="tax_rate">Tax %</Label>
+          <Label htmlFor="tax_rate">{t("taxRate")}</Label>
           <Input
             id="tax_rate"
             name="tax_rate"
@@ -124,10 +126,10 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
       {showTransparency && (
         <fieldset className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
           <legend className="text-muted-foreground px-1 text-xs uppercase">
-            Product transparency
+            {t("productTransparency")}
           </legend>
           <div className="grid gap-2">
-            <Label htmlFor="product_category">Category</Label>
+            <Label htmlFor="product_category">{t("category")}</Label>
             <Select name="product_category" defaultValue="genuine">
               <SelectTrigger id="product_category" className="w-full">
                 <SelectValue />
@@ -142,23 +144,23 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="brand">Brand</Label>
+            <Label htmlFor="brand">{t("brand")}</Label>
             <Input id="brand" name="brand" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="warranty">Warranty</Label>
+            <Label htmlFor="warranty">{t("warranty")}</Label>
             <Input id="warranty" name="warranty" placeholder="12 months" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="origin">Origin</Label>
+            <Label htmlFor="origin">{t("origin")}</Label>
             <Input id="origin" name="origin" placeholder="Japan" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="supplier">Supplier</Label>
+            <Label htmlFor="supplier">{t("supplier")}</Label>
             <Input id="supplier" name="supplier" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="expected_lifespan">Expected lifespan</Label>
+            <Label htmlFor="expected_lifespan">{t("expectedLifespan")}</Label>
             <Input
               id="expected_lifespan"
               name="expected_lifespan"
@@ -170,7 +172,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
 
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Add line item</SubmitButton>
+        <SubmitButton variant="secondary">{t("addLineItem")}</SubmitButton>
       </div>
     </form>
   );

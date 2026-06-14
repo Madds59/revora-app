@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Logo, FlagStripe } from "@/components/brand";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export function ResponsiveSidebarShell({
   sidebarFooter?: React.ReactNode;
   sidebarTop?: React.ReactNode;
 }) {
+  const t = useTranslations("shell");
   const brandHeader = (
     <div>
       <div className="px-4 py-4">
@@ -63,7 +65,7 @@ export function ResponsiveSidebarShell({
                 <Button
                   variant="outline"
                   size="icon-sm"
-                  aria-label="Open navigation"
+                  aria-label={t("openNavigation")}
                 >
                   <Menu />
                 </Button>
@@ -95,13 +97,13 @@ export function ResponsiveSidebarShell({
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          aria-label="Close navigation"
+                          aria-label={t("closeNavigation")}
                           className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         />
                       }
                     >
                       <X />
-                      <span className="sr-only">Close navigation</span>
+                      <span className="sr-only">{t("closeNavigation")}</span>
                     </DialogClose>
                   </div>
                   <FlagStripe />

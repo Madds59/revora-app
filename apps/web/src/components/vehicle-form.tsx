@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -45,6 +46,7 @@ export function VehicleForm({
   vehicle?: Pick<Vehicle, "id" | "customer_id" | "make" | "model" | "year" | "plate_number" | "vin" | "color">;
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("forms.vehicle");
   const lastMessage = useRef<string | undefined>(undefined);
   const selectedCustomer = useMemo(
     () => customers.find((customer) => customer.id === (selectedCustomerId ?? vehicle?.customer_id)) ?? null,
@@ -74,14 +76,14 @@ export function VehicleForm({
 
       {showCustomerSelect && (
         <div className="grid gap-2">
-          <Label htmlFor="customer_id">Customer</Label>
+          <Label htmlFor="customer_id">{t("customer")}</Label>
           <Select
             name="customer_id"
             required
             defaultValue={selectedCustomerId ?? vehicle?.customer_id ?? ""}
           >
             <SelectTrigger id="customer_id" className="w-full">
-              <SelectValue placeholder="Select a customer" />
+              <SelectValue placeholder={t("selectCustomer")} />
             </SelectTrigger>
             <SelectContent>
               {customers.map((customer) => (
@@ -97,7 +99,7 @@ export function VehicleForm({
       {selectedCustomer && customerSelectionLocked && (
         <div className="rounded-lg border bg-muted/30 p-3 text-sm">
           <div className="text-muted-foreground text-xs uppercase tracking-wide">
-            Customer
+            {t("customer")}
           </div>
           <div className="mt-1 font-medium">{selectedCustomer.label}</div>
           {selectedCustomer.detail && (
@@ -108,15 +110,15 @@ export function VehicleForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="make">Make</Label>
+          <Label htmlFor="make">{t("make")}</Label>
           <Input id="make" name="make" defaultValue={vehicle?.make ?? ""} placeholder="Toyota" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="model">Model</Label>
+          <Label htmlFor="model">{t("model")}</Label>
           <Input id="model" name="model" defaultValue={vehicle?.model ?? ""} placeholder="Land Cruiser" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="year">Year</Label>
+          <Label htmlFor="year">{t("year")}</Label>
           <Input
             id="year"
             name="year"
@@ -126,15 +128,15 @@ export function VehicleForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="plate_number">Plate number</Label>
+          <Label htmlFor="plate_number">{t("plateNumber")}</Label>
           <Input id="plate_number" name="plate_number" defaultValue={vehicle?.plate_number ?? ""} placeholder="A 12345" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="vin">VIN</Label>
+          <Label htmlFor="vin">{t("vin")}</Label>
           <Input id="vin" name="vin" defaultValue={vehicle?.vin ?? ""} placeholder="JTEBU5JR9J5A12345" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="color">Color</Label>
+          <Label htmlFor="color">{t("color")}</Label>
           <Input id="color" name="color" defaultValue={vehicle?.color ?? ""} placeholder="White" />
         </div>
       </div>

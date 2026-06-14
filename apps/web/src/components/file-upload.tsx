@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ export function FileUpload({
   businessId,
   entity,
   accept = "image/*",
-  label = "Upload file",
+  label,
   onUpload,
 }: {
   bucket: string;
@@ -42,6 +43,8 @@ export function FileUpload({
   label?: string;
   onUpload: (formData: FormData) => Promise<UploadResult>;
 }) {
+  const t = useTranslations("forms.upload");
+  const resolvedLabel = label ?? t("defaultLabel");
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -69,7 +72,7 @@ export function FileUpload({
         const res = await onUpload(fd);
         if (res.error) toast.error(res.error);
         else {
-          toast.success(res.message ?? "Uploaded.");
+          toast.success(res.message ?? t("uploaded"));
           router.refresh();
         }
       });
@@ -100,7 +103,7 @@ export function FileUpload({
         onClick={() => inputRef.current?.click()}
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-        {label}
+        {resolvedLabel}
       </Button>
     </div>
   );

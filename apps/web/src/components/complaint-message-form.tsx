@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -34,12 +35,13 @@ export function ComplaintMessageForm({
   allowInternalOnly?: boolean;
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("complaints.messages");
   const [parentMessageId, setParentMessageId] = useState("");
   const lastMessage = useRef<string | undefined>(undefined);
 
   const options = useMemo(
-    () => [{ id: "", label: "Top level" }, ...parentOptions],
-    [parentOptions],
+    () => [{ id: "", label: t("topLevel") }, ...parentOptions],
+    [parentOptions, t],
   );
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function ComplaintMessageForm({
 
       {options.length > 1 && (
         <div className="grid gap-2">
-          <Label htmlFor={`parent_message_id-${complaintId}`}>Reply to</Label>
+          <Label htmlFor={`parent_message_id-${complaintId}`}>{t("replyTo")}</Label>
           <select
             id={`parent_message_id-${complaintId}`}
             value={parentMessageId}
@@ -78,14 +80,14 @@ export function ComplaintMessageForm({
       )}
 
       <div className="grid gap-2">
-        <Label htmlFor={`body-${complaintId}`}>Message</Label>
+        <Label htmlFor={`body-${complaintId}`}>{t("message")}</Label>
         <Textarea id={`body-${complaintId}`} name="body" rows={4} required />
       </div>
 
       {allowInternalOnly && (
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="internal_only" className="size-4" />
-          <span>Internal only</span>
+          <span>{t("internalOnly")}</span>
         </label>
       )}
 
@@ -99,14 +101,15 @@ export function ComplaintMessageForm({
 
 export function ComplaintResetButton({
   onClick,
-  label = "Reset",
+  label,
 }: {
   onClick: () => void;
   label?: string;
 }) {
+  const t = useTranslations("common.actions");
   return (
     <Button type="button" variant="ghost" size="sm" onClick={onClick}>
-      {label}
+      {label ?? t("reset")}
     </Button>
   );
 }

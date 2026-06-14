@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Building2, UserRound } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { AccountIntent } from "@/lib/account-intent";
 import { cn } from "@/lib/utils";
@@ -45,11 +46,25 @@ export function AccountIntentPicker({
   onChange: (value: AccountIntent) => void;
   className?: string;
 }) {
+  const t = useTranslations("auth.signup.accountTypes");
+
   return (
     <div className={cn("grid gap-3 sm:grid-cols-3", className)}>
       {OPTIONS.map((option) => {
         const Icon = option.icon;
         const selected = value === option.value;
+        const title =
+          option.value === "business_owner"
+            ? t("businessOwnerTitle")
+            : option.value === "customer"
+              ? t("customerTitle")
+              : t("staffTitle");
+        const description =
+          option.value === "business_owner"
+            ? t("businessOwnerDescription")
+            : option.value === "customer"
+              ? t("customerDescription")
+              : t("staffDescription");
 
         return (
           <button
@@ -74,14 +89,14 @@ export function AccountIntentPicker({
               </span>
               {option.note && (
                 <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
-                  {option.note}
+                  {t("invitationRequired")}
                 </span>
               )}
             </div>
             <div className="grid gap-1">
-              <p className="text-sm font-semibold leading-tight">{option.title}</p>
+              <p className="text-sm font-semibold leading-tight">{title}</p>
               <p className="text-muted-foreground text-xs leading-5">
-                {option.description}
+                {description}
               </p>
             </div>
           </button>

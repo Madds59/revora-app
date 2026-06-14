@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -36,17 +37,18 @@ export function BusinessProfileForm({
   canEdit: boolean;
 }) {
   const [state, action] = useActionState(updateBusiness, initial);
+  const t = useTranslations("settings.business");
   useToastOnMessage(state.message);
 
   return (
     <form action={action} className="flex max-w-lg flex-col gap-4">
       <fieldset disabled={!canEdit} className="flex flex-col gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="name">Business name</Label>
+          <Label htmlFor="name">{t("name")}</Label>
           <Input id="name" name="name" required defaultValue={business.name} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="legal_name">Legal name</Label>
+          <Label htmlFor="legal_name">{t("legalName")}</Label>
           <Input
             id="legal_name"
             name="legal_name"
@@ -54,7 +56,7 @@ export function BusinessProfileForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="tagline">Tagline</Label>
+          <Label htmlFor="tagline">{t("tagline")}</Label>
           <Input
             id="tagline"
             name="tagline"
@@ -63,7 +65,7 @@ export function BusinessProfileForm({
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="country">Country</Label>
+            <Label htmlFor="country">{t("country")}</Label>
             <Input
               id="country"
               name="country"
@@ -71,7 +73,7 @@ export function BusinessProfileForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="default_language">Default language</Label>
+            <Label htmlFor="default_language">{t("defaultLanguage")}</Label>
             <Input
               id="default_language"
               name="default_language"
@@ -84,13 +86,13 @@ export function BusinessProfileForm({
         )}
         {canEdit && (
           <div>
-            <SubmitButton>Save changes</SubmitButton>
+            <SubmitButton>{t("save")}</SubmitButton>
           </div>
         )}
       </fieldset>
       {!canEdit && (
         <p className="text-muted-foreground text-sm">
-          Only owners can edit business details.
+          {t("ownersOnly")}
         </p>
       )}
     </form>
@@ -99,6 +101,7 @@ export function BusinessProfileForm({
 
 export function AddBranchForm() {
   const [state, action] = useActionState(addBranch, initial);
+  const t = useTranslations("settings.branch");
   const formRef = useRef<HTMLFormElement>(null);
   useToastOnMessage(state.message, () => formRef.current?.reset());
 
@@ -106,21 +109,21 @@ export function AddBranchForm() {
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
-          <Label htmlFor="branch-name">Name</Label>
+          <Label htmlFor="branch-name">{t("name")}</Label>
           <Input id="branch-name" name="name" required placeholder="Main" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="branch-phone">Phone</Label>
+          <Label htmlFor="branch-phone">{t("phone")}</Label>
           <Input id="branch-phone" name="phone" type="tel" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="branch-email">Email</Label>
+          <Label htmlFor="branch-email">{t("email")}</Label>
           <Input id="branch-email" name="email" type="email" />
         </div>
       </div>
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Add branch</SubmitButton>
+        <SubmitButton variant="secondary">{t("add")}</SubmitButton>
       </div>
     </form>
   );
@@ -128,6 +131,7 @@ export function AddBranchForm() {
 
 export function AddServiceForm() {
   const [state, action] = useActionState(addService, initial);
+  const t = useTranslations("settings.service");
   const formRef = useRef<HTMLFormElement>(null);
   useToastOnMessage(state.message, () => formRef.current?.reset());
 
@@ -135,7 +139,7 @@ export function AddServiceForm() {
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2 sm:col-span-2">
-          <Label htmlFor="service-name">Name</Label>
+          <Label htmlFor="service-name">{t("name")}</Label>
           <Input
             id="service-name"
             name="name"
@@ -144,7 +148,7 @@ export function AddServiceForm() {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="service-price">Default price (AED)</Label>
+          <Label htmlFor="service-price">{t("defaultPrice")}</Label>
           <Input
             id="service-price"
             name="default_price"
@@ -154,12 +158,12 @@ export function AddServiceForm() {
         </div>
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="service-description">Description</Label>
+        <Label htmlFor="service-description">{t("description")}</Label>
         <Textarea id="service-description" name="description" rows={2} />
       </div>
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Add service</SubmitButton>
+        <SubmitButton variant="secondary">{t("add")}</SubmitButton>
       </div>
     </form>
   );

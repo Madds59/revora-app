@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
@@ -21,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
+import { formatDate } from "@/lib/formatters";
 import { canManageComplaints } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { Complaint, Customer, Profile } from "@/lib/database.types";
@@ -45,32 +48,34 @@ type ComplaintListStats = {
 type ComplaintLookup = Pick<Customer, "id" | "full_name" | "email">;
 type ProfileLookup = Pick<Profile, "id" | "full_name">;
 
-function ComplaintEmptyState() {
+function ComplaintEmptyState({
+  title,
+  description,
+  action,
+}: {
+  action: ReactNode;
+  description: string;
+  title: string;
+}) {
   return (
     <EmptyState
-      title="No complaints yet"
-      description="Complaints submitted by customers will appear here once they are linked to this business."
-      action={
-        <Link href="/portal/complaints" className={buttonVariants({ variant: "secondary" })}>
-          View customer portal
-        </Link>
-      }
+      title={title}
+      description={description}
+      action={action}
     />
   );
 }
 
 export default async function ComplaintsPage() {
+  const t = await getTranslations("dashboardComplaints");
   const { member, business } = await requireMembership();
   if (!canManageComplaints(member.role)) {
     return (
       <>
-        <PageHeader
-          title="Complaints"
-          description="Complaint handling is restricted to staff roles."
-        />
+        <PageHeader title={t("title")} description={t("accessRestrictedDescription")} />
         <div className="p-6">
           <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
-            You do not have access to complaint management.
+            {t("accessRestricted")}
           </div>
         </div>
       </>
@@ -78,33 +83,30 @@ export default async function ComplaintsPage() {
   }
 
   const supabase = await createClient();
-  const [
-    { data: complaintsData },
-    { count: openCount },
-    { count: resolvedCount },
-  ] = await Promise.all([
-    supabase
-      .from("complaints")
-      .select("*")
-      .eq("business_id", business.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("complaints")
-      .select("id", { count: "exact", head: true })
-      .eq("business_id", business.id)
-      .in("status", [
-        "open",
-        "assigned",
-        "awaiting_customer",
-        "investigating",
-        "escalated",
-      ]),
-    supabase
-      .from("complaints")
-      .select("id", { count: "exact", head: true })
-      .eq("business_id", business.id)
-      .in("status", ["resolved", "closed"]),
-  ]);
+  const [{ data: complaintsData }, { count: openCount }, { count: resolvedCount }] =
+    await Promise.all([
+      supabase
+        .from("complaints")
+        .select("*")
+        .eq("business_id", business.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("complaints")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", business.id)
+        .in("status", [
+          "open",
+          "assigned",
+          "awaiting_customer",
+          "investigating",
+          "escalated",
+        ]),
+      supabase
+        .from("complaints")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", business.id)
+        .in("status", ["resolved", "closed"]),
+    ]);
 
   const complaintRows = (complaintsData ?? []) as Complaint[];
   const customerIds = [...new Set(complaintRows.map((row) => row.customer_id))];
@@ -153,41 +155,40 @@ export default async function ComplaintsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Complaints"
-        description="Customer complaints, internal follow-up, and resolution tracking."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Open / active</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">
-                {stats.openCount}
-              </CardTitle>
+              <CardDescription>{t("stats.openActive")}</CardDescription>
+              <CardTitle className="text-3xl tabular-nums">{stats.openCount}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Resolved / closed</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">
-                {stats.resolvedCount}
-              </CardTitle>
+              <CardDescription>{t("stats.resolvedClosed")}</CardDescription>
+              <CardTitle className="text-3xl tabular-nums">{stats.resolvedCount}</CardTitle>
             </CardHeader>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Complaint queue</CardTitle>
-            <CardDescription>
-              Manage status, severity, assignees, and threaded replies.
-            </CardDescription>
+            <CardTitle>{t("queue.title")}</CardTitle>
+            <CardDescription>{t("queue.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             {rows.length === 0 ? (
-              <ComplaintEmptyState />
+              <ComplaintEmptyState
+                title={t("empty.title")}
+                description={t("empty.description")}
+                action={
+                  <Link href="/portal/complaints" className={buttonVariants({ variant: "secondary" })}>
+                    {t("empty.action")}
+                  </Link>
+                }
+              />
             ) : (
               <>
                 <MobileDataList
@@ -201,7 +202,7 @@ export default async function ComplaintsPage() {
                           {complaint.subject}
                         </Link>
                       }
-                      subtitle={complaint.customer_name ?? "No customer"}
+                      subtitle={complaint.customer_name ?? t("fallback.noCustomer")}
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
@@ -210,7 +211,7 @@ export default async function ComplaintsPage() {
                           <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
                             {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
                           </Badge>
-                          <span>{new Date(complaint.updated_at).toLocaleDateString()}</span>
+                          <span>{formatDate(complaint.updated_at)}</span>
                         </div>
                       }
                     />
@@ -219,63 +220,59 @@ export default async function ComplaintsPage() {
 
                 <div className="hidden rounded-lg border md:block">
                   <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[28%]">Subject</TableHead>
-                      <TableHead className="hidden md:table-cell">Customer</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden lg:table-cell">Severity</TableHead>
-                      <TableHead className="hidden xl:table-cell">Assignee</TableHead>
-                      <TableHead className="text-end">Updated</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((complaint) => (
-                      <TableRow key={complaint.id}>
-                        <TableCell className="align-top">
-                          <div className="flex flex-col gap-1">
-                            <Link
-                              href={`/complaints/${complaint.id}`}
-                              className="font-medium hover:underline"
-                            >
-                              {complaint.subject}
-                            </Link>
-                            <div className="text-muted-foreground line-clamp-2 text-xs">
-                              {complaint.description}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden align-top md:table-cell">
-                          <div className="flex flex-col gap-1">
-                            <div>{complaint.customer_name ?? "—"}</div>
-                            <div className="text-muted-foreground text-xs">
-                              {complaint.customer_email ?? "—"}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="align-top">
-                          <Badge
-                            variant={COMPLAINT_STATUS_VARIANT[complaint.status]}
-                          >
-                            {COMPLAINT_STATUS_LABELS[complaint.status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden align-top lg:table-cell">
-                          <Badge
-                            variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}
-                          >
-                            {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden align-top xl:table-cell text-muted-foreground">
-                          {complaint.assignee_name ?? "Unassigned"}
-                        </TableCell>
-                        <TableCell className="align-top text-end text-muted-foreground">
-                          {new Date(complaint.updated_at).toLocaleDateString()}
-                        </TableCell>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[28%]">{t("table.subject")}</TableHead>
+                        <TableHead className="hidden md:table-cell">{t("table.customer")}</TableHead>
+                        <TableHead>{t("table.status")}</TableHead>
+                        <TableHead className="hidden lg:table-cell">{t("table.severity")}</TableHead>
+                        <TableHead className="hidden xl:table-cell">{t("table.assignee")}</TableHead>
+                        <TableHead className="text-end">{t("table.updated")}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((complaint) => (
+                        <TableRow key={complaint.id}>
+                          <TableCell className="align-top">
+                            <div className="flex flex-col gap-1">
+                              <Link
+                                href={`/complaints/${complaint.id}`}
+                                className="font-medium hover:underline"
+                              >
+                                {complaint.subject}
+                              </Link>
+                              <div className="text-muted-foreground line-clamp-2 text-xs">
+                                {complaint.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden align-top md:table-cell">
+                            <div className="flex flex-col gap-1">
+                              <div>{complaint.customer_name ?? t("fallback.none")}</div>
+                              <div className="text-muted-foreground text-xs">
+                                {complaint.customer_email ?? t("fallback.none")}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
+                              {COMPLAINT_STATUS_LABELS[complaint.status]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden align-top lg:table-cell">
+                            <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
+                              {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden align-top text-muted-foreground xl:table-cell">
+                            {complaint.assignee_name ?? t("fallback.unassigned")}
+                          </TableCell>
+                          <TableCell className="align-top text-end text-muted-foreground">
+                            {formatDate(complaint.updated_at)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
                   </Table>
                 </div>
               </>

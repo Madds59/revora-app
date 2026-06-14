@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -51,6 +52,7 @@ export function ComplaintManagementForm({
   currentStatus: ComplaintStatus;
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("complaints.management");
   const lastMessage = useRef<string | undefined>(undefined);
   const statusOptions = useMemo(() => COMPLAINT_STATUSES, []);
 
@@ -70,7 +72,7 @@ export function ComplaintManagementForm({
       <input type="hidden" name="complaint_id" value={complaintId} />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="status">{t("status")}</Label>
           <Select name="status" defaultValue={currentStatus}>
             <SelectTrigger id="status" className="w-full">
               <SelectValue />
@@ -86,7 +88,7 @@ export function ComplaintManagementForm({
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="severity">Severity</Label>
+          <Label htmlFor="severity">{t("severity")}</Label>
           <Select name="severity" defaultValue={currentSeverity}>
             <SelectTrigger id="severity" className="w-full">
               <SelectValue />
@@ -103,7 +105,7 @@ export function ComplaintManagementForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="resolution_summary">Resolution summary</Label>
+        <Label htmlFor="resolution_summary">{t("resolutionSummary")}</Label>
         <Textarea
           id="resolution_summary"
           name="resolution_summary"
@@ -113,7 +115,7 @@ export function ComplaintManagementForm({
 
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Save complaint</SubmitButton>
+        <SubmitButton variant="secondary">{t("submit")}</SubmitButton>
       </div>
     </form>
   );

@@ -64,6 +64,14 @@ function classifyRouteResponse(status, location) {
   return `unexpected status ${status}`;
 }
 
+function isCanonicalLocaleRedirect(route, location) {
+  if (!location) return false;
+  if (route === "/") return /^\/[a-z]{2}(?:\/)?(?:\?.*)?$/.test(location);
+  if (route === "/login") return /^\/[a-z]{2}\/login(?:\?.*)?$/.test(location);
+  if (route === "/signup") return /^\/[a-z]{2}\/signup(?:\?.*)?$/.test(location);
+  return false;
+}
+
 async function newUser(tag) {
   const auth = createClient(SUPABASE_URL, ANON);
   const email = `${tag}+${stamp}@revora.test`;
@@ -261,7 +269,8 @@ const appBase = process.env.APP_URL;
 if (appBase) {
   const smokeRoutes = [
     { route: "/", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/login", expected: ["OK"] },
+    { route: "/login", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/signup", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/billing", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/analytics", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/notifications", expected: ["OK", "unauthorized as expected", "expected redirect"] },
@@ -293,6 +302,14 @@ if (appBase) {
       const res = await fetch(new URL(route, appBase), { redirect: "manual" });
       const location = res.headers.get("location") ?? undefined;
       const classification = classifyRouteResponse(res.status, location);
+      if (route === "/" || route === "/login" || route === "/signup") {
+        assert(
+          classification === "expected redirect" || isCanonicalLocaleRedirect(route, location) || classification === "OK",
+          `route ${route}`,
+          `${classification}${location ? ` (${location})` : ""}`,
+        );
+        continue;
+      }
       assert(
         expected.includes(classification),
         `route ${route}`,
@@ -320,6 +337,22 @@ if (appBase) {
     }
   }
 
+  for (const route of ["/en/login", "/ar/login", "/en/signup", "/ar/signup"]) {
+    try {
+      const res = await fetch(new URL(route, appBase), { redirect: "manual" });
+      assert(
+        res.status >= 200 && res.status < 300,
+        `public locale auth route ${route}`,
+        `unexpected status ${res.status}`,
+      );
+    } catch (error) {
+      bad(
+        `public locale auth route ${route}`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
   try {
     const res = await fetch(new URL("/api/stripe/webhook", appBase), {
       method: "POST",
@@ -332,6 +365,7 @@ if (appBase) {
       "stripe webhook rejects unsigned requests",
       `unexpected status ${res.status}`,
     );
+    assert(!res.headers.get("location"), "stripe webhook does not redirect", res.headers.get("location") ?? "redirect present");
   } catch (error) {
     bad(
       "stripe webhook rejects unsigned requests",

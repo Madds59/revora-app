@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { StatusBanner } from "@/components/status-banner";
@@ -23,6 +24,7 @@ import {
 import { getUser, requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
 import { formatCurrency } from "@/lib/money";
+import { formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import type { Approval, Quotation, QuotationItem } from "@/lib/database.types";
 
@@ -58,6 +60,7 @@ export default async function QuoteBuilderPage({
   const isStaff = canManageQuotes(member.role);
   const user = await getUser();
   const supabase = await createClient();
+  const t = await getTranslations("dashboardQuotations.detail");
 
   const { data } = await supabase
     .from("quotations")
@@ -121,7 +124,7 @@ export default async function QuoteBuilderPage({
             href="/quotations"
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to quotations
+            {t("back")}
           </Link>
         }
       />
@@ -129,25 +132,25 @@ export default async function QuoteBuilderPage({
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Line items</CardTitle>
+            <CardTitle>{t("lineItems")}</CardTitle>
             <CardDescription>
-              Services, labor, parts, and products with transparency details.
+              {t("lineItemsDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             {items.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No items yet.</p>
+              <p className="text-muted-foreground text-sm">{t("noItems")}</p>
             ) : (
               <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Transparency</TableHead>
-                      <TableHead className="text-end">Qty</TableHead>
-                      <TableHead className="text-end">Unit</TableHead>
-                      <TableHead className="text-end">Total</TableHead>
+                      <TableHead>{t("thItem")}</TableHead>
+                      <TableHead>{t("thType")}</TableHead>
+                      <TableHead>{t("thTransparency")}</TableHead>
+                      <TableHead className="text-end">{t("thQty")}</TableHead>
+                      <TableHead className="text-end">{t("thUnit")}</TableHead>
+                      <TableHead className="text-end">{t("thTotal")}</TableHead>
                       {canEditItems && <TableHead />}
                     </TableRow>
                   </TableHeader>
@@ -192,25 +195,25 @@ export default async function QuoteBuilderPage({
 
             <dl className="ms-auto grid w-full max-w-xs gap-1 text-sm">
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Subtotal</dt>
+                <dt className="text-muted-foreground">{t("subtotal")}</dt>
                 <dd className="tabular-nums">
                   {formatCurrency(quote.subtotal, quote.currency)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Discount</dt>
+                <dt className="text-muted-foreground">{t("discount")}</dt>
                 <dd className="tabular-nums">
                   −{formatCurrency(quote.discount_total, quote.currency)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Tax</dt>
+                <dt className="text-muted-foreground">{t("tax")}</dt>
                 <dd className="tabular-nums">
                   {formatCurrency(quote.tax_total, quote.currency)}
                 </dd>
               </div>
               <div className="mt-1 flex items-baseline justify-between border-t pt-2 text-base font-semibold">
-                <dt>Total</dt>
+                <dt>{t("total")}</dt>
                 <dd className="text-primary tabular-nums">
                   {formatCurrency(quote.total, quote.currency)}
                 </dd>
@@ -227,7 +230,7 @@ export default async function QuoteBuilderPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Details</CardTitle>
+            <CardTitle>{t("details")}</CardTitle>
           </CardHeader>
           <CardContent>
             <QuoteDetailsForm quote={quote} disabled={!isStaff || !isDraft} />
@@ -236,18 +239,18 @@ export default async function QuoteBuilderPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Approval</CardTitle>
+            <CardTitle>{t("approval")}</CardTitle>
             <CardDescription>
-              Digital approval with signature and audit metadata.
+              {t("approvalDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isApproved ? (
               <StatusBanner
                 tone="success"
-                title={`Approved${
-                  approval
-                    ? ` on ${new Date(approval.approved_at).toLocaleString()}`
+              title={`Approved${
+                approval
+                    ? ` on ${formatDateTime(approval.approved_at)}`
                     : ""
                 }`}
               >
@@ -264,9 +267,9 @@ export default async function QuoteBuilderPage({
             ) : isDeclined ? (
               <StatusBanner
                 tone="destructive"
-                title={`Declined${
-                  quote.customer_rejected_at
-                    ? ` on ${new Date(quote.customer_rejected_at).toLocaleString()}`
+              title={`Declined${
+                quote.customer_rejected_at
+                    ? ` on ${formatDateTime(quote.customer_rejected_at)}`
                     : ""
                 }`}
               >

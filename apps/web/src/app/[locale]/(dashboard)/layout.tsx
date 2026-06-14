@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { setActiveBusiness } from "@/app/[locale]/(dashboard)/actions";
 import { BusinessSwitcher, type BusinessOption } from "@/components/business-switcher";
 import { DashboardNav } from "@/components/dashboard-nav";
@@ -6,9 +8,18 @@ import { getUser, getCurrentMemberships, isSuperAdmin, requireMembership } from 
 import { ResponsiveSidebarShell } from "@/components/responsive-sidebar-shell";
 import { ROLE_LABELS } from "@/lib/permissions";
 
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("dashboardTitle"),
+    description: t("dashboardDescription"),
+  };
+}
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const t = await getTranslations("shell");
   const { member, business } = await requireMembership();
   const user = await getUser();
   const memberships = await getCurrentMemberships();
@@ -19,10 +30,10 @@ export default async function DashboardLayout({
     detail: `${membership.business.legal_name ?? membership.business.name} · ${ROLE_LABELS[membership.member.role]}`,
   }));
   const accountLinks: ShellMenuLink[] = [
-    { href: "/settings", label: "Business settings", icon: "settings" as const },
-    { href: "/billing", label: "Billing", icon: "billing" as const },
+    { href: "/settings", label: t("businessSettings"), icon: "settings" as const },
+    { href: "/billing", label: t("billing"), icon: "billing" as const },
     ...(superAdmin
-      ? [{ href: "/admin", label: "Platform admin", icon: "admin" as const }]
+      ? [{ href: "/admin", label: t("platformAdmin"), icon: "admin" as const }]
       : []),
   ];
 

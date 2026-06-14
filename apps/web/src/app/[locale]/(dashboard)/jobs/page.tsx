@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { requireMembership } from "@/lib/auth";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { Branch, Customer, Job } from "@/lib/database.types";
 
@@ -22,6 +23,7 @@ type CustomerLookup = Pick<Customer, "id" | "full_name" | "email">;
 type BranchLookup = Pick<Branch, "id" | "name">;
 
 export default async function JobsPage() {
+  const t = await getTranslations("dashboardJobsPage");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -68,16 +70,16 @@ export default async function JobsPage() {
   return (
     <>
       <PageHeader
-        title="Jobs"
-        description="Work orders created from approved quotes."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="p-6">
         {error ? (
           <p className="text-sm text-destructive">{error.message}</p>
         ) : rows.length === 0 ? (
           <EmptyState
-            title="No jobs yet"
-            description="Approved work orders will appear here once they are created from quotes."
+            title={t("empty.title")}
+            description={t("empty.description")}
           />
         ) : (
           <JobsBoard rows={rows} />

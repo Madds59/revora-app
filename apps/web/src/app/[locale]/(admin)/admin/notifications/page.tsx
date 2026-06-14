@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -54,6 +55,7 @@ export default async function AdminNotificationsPage({
     to?: string;
   }>;
 }) {
+  const t = await getTranslations("adminNotifications");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -90,32 +92,32 @@ export default async function AdminNotificationsPage({
   return (
     <>
       <PageHeader
-        title="Notifications"
-        description="Queued and delivered platform notifications."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Sent</CardDescription>
+              <CardDescription>{t("stats.sent")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{sent}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Queued</CardDescription>
+              <CardDescription>{t("stats.queued")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{queued}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Failed</CardDescription>
+              <CardDescription>{t("stats.failed")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{failed}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Unread</CardDescription>
+              <CardDescription>{t("stats.unread")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {unread}
               </CardTitle>
@@ -125,18 +127,16 @@ export default async function AdminNotificationsPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Notification center ({totalCount})</CardTitle>
-            <CardDescription>
-              Delivery state across email, SMS, and channel integrations.
-            </CardDescription>
+            <CardTitle>{t("cardTitle", { count: totalCount })}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-sm text-destructive">{error.message}</p>
             ) : notifications.length === 0 ? (
               <EmptyState
-                title="No notifications yet"
-                description="Queued and delivered notifications will appear here once the platform sends activity."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <AdminNotificationsBrowser
