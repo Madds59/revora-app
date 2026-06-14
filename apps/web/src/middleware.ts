@@ -1,16 +1,19 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { type NextRequest } from "next/server";
+
+import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  return await updateSession(request);
+}
 
-  if (pathname.startsWith('/api/stripe/webhook')) {
-    return NextResponse.next();
-  }
-
-  export const config = {
+export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|opengraph-image|manifest.webmanifest).*)',
+    /*
+     * Run the Supabase session middleware on all routes EXCEPT API routes
+     * (which authenticate themselves — e.g. the Stripe webhook verifies its
+     * signature and must never be redirected to /login), Next internals, and
+     * static assets.
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|opengraph-image|manifest.webmanifest).*)",
   ],
-};   
-
-
+};
