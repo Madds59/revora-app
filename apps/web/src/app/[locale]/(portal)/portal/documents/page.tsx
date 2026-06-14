@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +10,10 @@ import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrl } from "@/lib/storage";
+import { formatDate } from "@/lib/formatters";
 import type { Document } from "@/lib/database.types";
 
-type DocumentRow = Pick<
-  Document,
-  "id" | "title" | "document_type" | "created_at"
-> & {
+type DocumentRow = Pick<Document, "id" | "title" | "document_type" | "created_at"> & {
   complaint: { subject: string } | null;
   customer: { full_name: string } | null;
   job: { title: string } | null;
@@ -23,26 +22,20 @@ type DocumentRow = Pick<
   url: string | null;
 };
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString();
-}
-
 export default async function PortalDocumentsPage() {
+  const t = await getTranslations("portalDocuments");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
       <>
-        <PageHeader
-          title="Documents"
-          description="Files shared by your workshop and linked to your account."
-        />
+        <PageHeader title={t("title")} description={t("description")} />
         <div className="p-6">
           <EmptyState
-            title="No documents are available yet"
-            description="The workshop has not shared any customer-linked documents yet."
+            title={t("empty.noLinkedTitle")}
+            description={t("empty.noLinkedDescription")}
             action={
               <Link href="/portal" className={buttonVariants({ variant: "outline" })}>
-                Back to portal
+                {t("actions.backToPortal")}
               </Link>
             }
           />
@@ -73,29 +66,24 @@ export default async function PortalDocumentsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Documents"
-        description="Files shared by your workshop and linked to your account."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Your documents</CardTitle>
-            <CardDescription>
-              Contracts, PDFs, and images tied to your jobs, quotes, or complaints.
-            </CardDescription>
+            <CardTitle>{t("library.title")}</CardTitle>
+            <CardDescription>{t("library.description")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
               <p className="text-destructive text-sm">{error.message}</p>
             ) : rows.length === 0 ? (
               <EmptyState
-                title="No documents are available yet"
-                description="The workshop has not shared any customer-linked documents yet."
+                title={t("empty.noDocumentsTitle")}
+                description={t("empty.noDocumentsDescription")}
                 action={
                   <Link href="/portal" className={buttonVariants({ variant: "outline" })}>
-                    Back to portal
+                    {t("actions.backToPortal")}
                   </Link>
                 }
               />
@@ -105,8 +93,8 @@ export default async function PortalDocumentsPage() {
                   items={rows}
                   empty={
                     <EmptyState
-                      title="No documents are available yet"
-                      description="The workshop has not shared any customer-linked documents yet."
+                      title={t("empty.noDocumentsTitle")}
+                      description={t("empty.noDocumentsDescription")}
                     />
                   }
                   renderItem={(row) => {
@@ -115,7 +103,7 @@ export default async function PortalDocumentsPage() {
                       row.complaint?.subject ??
                       row.job?.title ??
                       row.customer?.full_name ??
-                      "—";
+                      t("fallback.none");
                     return (
                       <MobileDataCard
                         title={row.title}
@@ -134,13 +122,13 @@ export default async function PortalDocumentsPage() {
                               rel="noreferrer"
                               className={buttonVariants({ variant: "outline", size: "sm" })}
                             >
-                              Open
+                              {t("actions.open")}
                             </Link>
                           ) : null
                         }
                       >
                         <div className="text-muted-foreground text-xs">
-                          {row.media?.file_name ?? "—"}
+                          {row.media?.file_name ?? t("fallback.none")}
                         </div>
                       </MobileDataCard>
                     );
@@ -151,12 +139,12 @@ export default async function PortalDocumentsPage() {
                   <table className="w-full caption-bottom text-sm">
                     <thead>
                       <tr className="[&>th]:h-10 [&>th]:px-2 [&>th]:text-start [&>th]:align-middle [&>th]:font-medium [&>th]:whitespace-nowrap">
-                        <th>Document</th>
-                        <th>Type</th>
-                        <th>Related to</th>
-                        <th>File</th>
-                        <th>Created</th>
-                        <th>Action</th>
+                        <th>{t("table.document")}</th>
+                        <th>{t("table.type")}</th>
+                        <th>{t("table.relatedTo")}</th>
+                        <th>{t("table.file")}</th>
+                        <th>{t("table.created")}</th>
+                        <th>{t("table.action")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -166,7 +154,7 @@ export default async function PortalDocumentsPage() {
                           row.complaint?.subject ??
                           row.job?.title ??
                           row.customer?.full_name ??
-                          "—";
+                          t("fallback.none");
                         return (
                           <tr key={row.id} className="border-b last:border-0">
                             <td className="p-2 align-middle whitespace-nowrap font-medium">{row.title}</td>
@@ -177,7 +165,7 @@ export default async function PortalDocumentsPage() {
                               {related}
                             </td>
                             <td className="p-2 align-middle whitespace-nowrap text-muted-foreground">
-                              {row.media?.file_name ?? "—"}
+                              {row.media?.file_name ?? t("fallback.none")}
                             </td>
                             <td className="p-2 align-middle whitespace-nowrap text-muted-foreground">
                               {formatDate(row.created_at)}
@@ -190,10 +178,10 @@ export default async function PortalDocumentsPage() {
                                   rel="noreferrer"
                                   className="text-sm font-medium underline"
                                 >
-                                  Open
+                                  {t("actions.open")}
                                 </Link>
                               ) : (
-                                <span className="text-muted-foreground text-sm">Unavailable</span>
+                                <span className="text-muted-foreground text-sm">{t("actions.unavailable")}</span>
                               )}
                             </td>
                           </tr>

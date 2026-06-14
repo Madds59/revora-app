@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { requireCustomerPortal } from "@/lib/auth";
 import { JOB_STATUS_LABELS, JOB_STATUS_VARIANT } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/formatters";
 import type { Job } from "@/lib/database.types";
 
 type JobRow = Pick<
@@ -19,26 +21,20 @@ type JobRow = Pick<
   business: { name: string } | null;
 };
 
-function formatDate(value: string | null) {
-  return value ? new Date(value).toLocaleDateString() : "—";
-}
-
 export default async function PortalJobsPage() {
+  const t = await getTranslations("portalJobs");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
       <>
-        <PageHeader
-          title="Jobs"
-          description="Track the progress of your work orders."
-        />
+        <PageHeader title={t("title")} description={t("description")} />
         <div className="p-6">
           <EmptyState
-            title="No jobs are linked to your account yet"
-            description="Once the workshop creates a job for one of your vehicles or quotes, it will appear here."
+            title={t("empty.noLinkedJobsTitle")}
+            description={t("empty.noLinkedJobsDescription")}
             action={
               <Link href="/portal" className={buttonVariants({ variant: "outline" })}>
-                Back to portal
+                {t("actions.backToPortal")}
               </Link>
             }
           />
@@ -52,38 +48,39 @@ export default async function PortalJobsPage() {
 
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, title, status, expected_completion_at, created_at, updated_at, branch:branches(name), business:businesses(name)")
+    .select(
+      "id, title, status, expected_completion_at, created_at, updated_at, branch:branches(name), business:businesses(name)",
+    )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
 
   const jobs = (data ?? []) as unknown as JobRow[];
-  const activeJobs = jobs.filter((job) => ["pending", "approved", "in_progress", "waiting_parts", "delayed"].includes(job.status));
+  const activeJobs = jobs.filter((job) =>
+    ["pending", "approved", "in_progress", "waiting_parts", "delayed"].includes(job.status),
+  );
   const completedJobs = jobs.filter((job) => job.status === "completed");
 
   return (
     <>
-      <PageHeader
-        title="Jobs"
-        description="Track the progress of your work orders."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Jobs</CardDescription>
+              <CardDescription>{t("stats.jobs")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{jobs.length}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Active</CardDescription>
+              <CardDescription>{t("stats.active")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{activeJobs.length}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Completed</CardDescription>
+              <CardDescription>{t("stats.completed")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{completedJobs.length}</CardTitle>
             </CardHeader>
           </Card>
@@ -91,21 +88,19 @@ export default async function PortalJobsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Your jobs</CardTitle>
-            <CardDescription>
-              Open a job to see its latest updates and attachments.
-            </CardDescription>
+            <CardTitle>{t("list.title")}</CardTitle>
+            <CardDescription>{t("list.description")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
               <p className="text-destructive text-sm">{error.message}</p>
             ) : jobs.length === 0 ? (
               <EmptyState
-                title="No jobs linked to your account yet"
-                description="Once the workshop creates a job for one of your vehicles or quotes, it will appear here."
+                title={t("empty.title")}
+                description={t("empty.description")}
                 action={
                   <Link href="/portal" className={buttonVariants({ variant: "outline" })}>
-                    Back to portal
+                    {t("actions.backToPortal")}
                   </Link>
                 }
               />
@@ -115,8 +110,8 @@ export default async function PortalJobsPage() {
                   items={jobs}
                   empty={
                     <EmptyState
-                      title="No jobs linked to your account yet"
-                      description="Once the workshop creates a job, it will appear here."
+                      title={t("empty.title")}
+                      description={t("empty.description")}
                     />
                   }
                   renderItem={(job) => (
@@ -126,18 +121,18 @@ export default async function PortalJobsPage() {
                           {job.title}
                         </Link>
                       }
-                      subtitle={job.business?.name ?? "Workshop"}
+                      subtitle={job.business?.name ?? t("fallback.workshop")}
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={JOB_STATUS_VARIANT[job.status]}>
                             {JOB_STATUS_LABELS[job.status]}
                           </Badge>
-                          <span>{job.branch?.name ?? "No branch"}</span>
+                          <span>{job.branch?.name ?? t("fallback.noBranch")}</span>
                         </div>
                       }
                     >
                       <div className="text-muted-foreground text-xs">
-                        Expected: {formatDate(job.expected_completion_at)} · Updated {formatDate(job.updated_at)}
+                        {t("labels.expected")} {formatDate(job.expected_completion_at)} · {t("labels.updated")} {formatDate(job.updated_at)}
                       </div>
                     </MobileDataCard>
                   )}
@@ -147,12 +142,12 @@ export default async function PortalJobsPage() {
                   <table className="w-full caption-bottom text-sm">
                     <thead>
                       <tr className="[&>th]:h-10 [&>th]:px-2 [&>th]:text-start [&>th]:align-middle [&>th]:font-medium [&>th]:whitespace-nowrap">
-                        <th>Job</th>
-                        <th>Workshop</th>
-                        <th>Branch</th>
-                        <th>Status</th>
-                        <th>Expected</th>
-                        <th>Updated</th>
+                        <th>{t("table.job")}</th>
+                        <th>{t("table.workshop")}</th>
+                        <th>{t("table.branch")}</th>
+                        <th>{t("table.status")}</th>
+                        <th>{t("table.expected")}</th>
+                        <th>{t("table.updated")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -164,10 +159,10 @@ export default async function PortalJobsPage() {
                             </Link>
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap text-muted-foreground">
-                            {job.business?.name ?? "—"}
+                            {job.business?.name ?? t("fallback.none")}
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap text-muted-foreground">
-                            {job.branch?.name ?? "—"}
+                            {job.branch?.name ?? t("fallback.none")}
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap">
                             <Badge variant={JOB_STATUS_VARIANT[job.status]}>

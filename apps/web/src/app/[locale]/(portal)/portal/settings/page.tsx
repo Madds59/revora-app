@@ -1,54 +1,53 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import { DetailSummaryCard } from "@/components/detail-summary-card";
 import { requireCustomerPortal, getUser } from "@/lib/auth";
+import { formatDate } from "@/lib/formatters";
 
 export default async function PortalSettingsPage() {
+  const t = await getTranslations("portalSettings");
   const { accounts } = await requireCustomerPortal();
   const user = await getUser();
   const primary = accounts[0]?.business ?? null;
 
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Read-only profile and account details for the customer portal."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <div className="flex flex-col gap-6 p-6">
         {accounts.length === 0 ? (
           <EmptyState
-            title="No linked customer account"
-            description="We could not find a customer record linked to your sign-in. Use the same email address your workshop has on file, or ask them to invite/link you."
+            title={t("empty.title")}
+            description={t("empty.description")}
           />
         ) : (
           <>
             <DetailSummaryCard
-              title="Signed-in account"
-              description="The email and linked customer records associated with this portal account."
+              title={t("summary.title")}
+              description={t("summary.description")}
               rows={[
-                { label: "Email", value: user?.email ?? "—" },
+                { label: t("summary.email"), value: user?.email ?? "—" },
                 {
-                  label: "Linked records",
-                  value: `${accounts.length} customer account${accounts.length === 1 ? "" : "s"}`,
+                  label: t("summary.linkedRecords"),
+                  value: t("summary.recordsValue", { count: accounts.length }),
                 },
                 {
-                  label: "Primary workshop",
+                  label: t("summary.primaryWorkshop"),
                   value: primary?.name ?? "—",
                   note: primary?.legal_name ?? undefined,
                 },
               ]}
-              status={{ label: "Read-only" }}
+              status={{ label: t("summary.readOnly") }}
             />
 
             <Card>
               <CardHeader>
-                <CardTitle>Linked customer accounts</CardTitle>
-                <CardDescription>
-                  These records are available through the portal and are kept separate by tenant.
-                </CardDescription>
+                <CardTitle>{t("accounts.title")}</CardTitle>
+                <CardDescription>{t("accounts.description")}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {accounts.map((account) => (
@@ -57,23 +56,23 @@ export default async function PortalSettingsPage() {
                       <div className="space-y-1">
                         <div className="font-medium">{account.full_name}</div>
                         <div className="text-muted-foreground text-xs">
-                          {account.email ?? "No email"}
+                          {account.email ?? t("fallback.noEmail")}
                         </div>
                       </div>
-                      <Badge variant="outline">{account.business?.name ?? "Workshop"}</Badge>
+                      <Badge variant="outline">{account.business?.name ?? t("fallback.workshop")}</Badge>
                     </div>
                     <dl className="mt-3 grid gap-2 text-sm">
                       <div className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">Phone</dt>
+                        <dt className="text-muted-foreground">{t("account.phone")}</dt>
                         <dd>{account.phone ?? "—"}</dd>
                       </div>
                       <div className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">Language</dt>
+                        <dt className="text-muted-foreground">{t("account.language")}</dt>
                         <dd>{account.preferred_language}</dd>
                       </div>
                       <div className="flex justify-between gap-3">
-                        <dt className="text-muted-foreground">Created</dt>
-                        <dd>{new Date(account.created_at).toLocaleDateString()}</dd>
+                        <dt className="text-muted-foreground">{t("account.created")}</dt>
+                        <dd>{formatDate(account.created_at)}</dd>
                       </div>
                     </dl>
                   </div>
@@ -83,13 +82,11 @@ export default async function PortalSettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Security and communication</CardTitle>
-                <CardDescription>
-                  Portal access is linked to your signed-in email. Editable customer settings are not enabled yet.
-                </CardDescription>
+                <CardTitle>{t("security.title")}</CardTitle>
+                <CardDescription>{t("security.description")}</CardDescription>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
-                Communication preferences, delivery channels, and account edits are managed by the workshop for now.
+                {t("security.body")}
               </CardContent>
             </Card>
           </>

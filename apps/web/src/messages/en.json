@@ -381,5 +381,155 @@
     "fallback": {
       "none": "—"
     }
+  },
+  "portalJobs": {
+    "title": "Jobs",
+    "description": "Track the progress of your work orders.",
+    "stats": {
+      "jobs": "Jobs",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "list": {
+      "title": "Your jobs",
+      "description": "Open a job to see its latest updates and attachments."
+    },
+    "empty": {
+      "noLinkedJobsTitle": "No jobs are linked to your account yet",
+      "noLinkedJobsDescription": "Once the workshop creates a job for one of your vehicles or quotes, it will appear here.",
+      "title": "No jobs linked to your account yet",
+      "description": "Once the workshop creates a job, it will appear here."
+    },
+    "actions": {
+      "backToPortal": "Back to portal"
+    },
+    "labels": {
+      "expected": "Expected:",
+      "updated": "Updated"
+    },
+    "table": {
+      "job": "Job",
+      "workshop": "Workshop",
+      "branch": "Branch",
+      "status": "Status",
+      "expected": "Expected",
+      "updated": "Updated"
+    },
+    "fallback": {
+      "workshop": "Workshop",
+      "noBranch": "No branch",
+      "none": "—"
+    }
+  },
+  "portalQuotes": {
+    "title": "Quotes",
+    "description": "Review and approve quotations from your workshop.",
+    "list": {
+      "title": "Your quotes",
+      "description": "Open a quote to see the line items and approve it."
+    },
+    "empty": "No quotes yet.",
+    "table": {
+      "quote": "Quote",
+      "workshop": "Workshop",
+      "status": "Status",
+      "total": "Total"
+    },
+    "fallback": {
+      "workshop": "Workshop",
+      "none": "—"
+    }
+  },
+  "portalComplaints": {
+    "title": "Complaints",
+    "description": "Track the status of every complaint you have submitted.",
+    "actions": {
+      "submitComplaint": "Submit complaint"
+    },
+    "empty": {
+      "noLinkedTitle": "No complaints are available for this portal account yet.",
+      "noLinkedDescription": "Use the same email address your workshop has on file, or ask them to invite/link your customer record.",
+      "noComplaintsTitle": "No complaints yet",
+      "noComplaintsDescription": "When you need support, submit a complaint and track the response here."
+    },
+    "history": {
+      "title": "Complaint history",
+      "description": "Status, severity, and linked business for each complaint."
+    },
+    "table": {
+      "subject": "Subject",
+      "workshop": "Workshop",
+      "status": "Status",
+      "severity": "Severity"
+    },
+    "fallback": {
+      "workshop": "Workshop",
+      "none": "—"
+    }
+  },
+  "portalDocuments": {
+    "title": "Documents",
+    "description": "Files shared by your workshop and linked to your account.",
+    "actions": {
+      "backToPortal": "Back to portal",
+      "open": "Open",
+      "unavailable": "Unavailable"
+    },
+    "library": {
+      "title": "Your documents",
+      "description": "Contracts, PDFs, and images tied to your jobs, quotes, or complaints."
+    },
+    "empty": {
+      "noLinkedTitle": "No documents are available yet",
+      "noLinkedDescription": "The workshop has not shared any customer-linked documents yet.",
+      "noDocumentsTitle": "No documents are available yet",
+      "noDocumentsDescription": "The workshop has not shared any customer-linked documents yet."
+    },
+    "table": {
+      "document": "Document",
+      "type": "Type",
+      "relatedTo": "Related to",
+      "file": "File",
+      "created": "Created",
+      "action": "Action"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "portalSettings": {
+    "title": "Settings",
+    "description": "Read-only profile and account details for the customer portal.",
+    "empty": {
+      "title": "No linked customer account",
+      "description": "We could not find a customer record linked to your sign-in. Use the same email address your workshop has on file, or ask them to invite/link you."
+    },
+    "summary": {
+      "title": "Signed-in account",
+      "description": "The email and linked customer records associated with this portal account.",
+      "email": "Email",
+      "linkedRecords": "Linked records",
+      "recordsValue": "{count, plural, one {# customer account} other {# customer accounts}}",
+      "primaryWorkshop": "Primary workshop",
+      "readOnly": "Read-only"
+    },
+    "accounts": {
+      "title": "Linked customer accounts",
+      "description": "These records are available through the portal and are kept separate by tenant."
+    },
+    "account": {
+      "phone": "Phone",
+      "language": "Language",
+      "created": "Created"
+    },
+    "security": {
+      "title": "Security and communication",
+      "description": "Portal access is linked to your signed-in email. Editable customer settings are not enabled yet.",
+      "body": "Communication preferences, delivery channels, and account edits are managed by the workshop for now."
+    },
+    "fallback": {
+      "noEmail": "No email",
+      "workshop": "Workshop"
+    }
   }
 }

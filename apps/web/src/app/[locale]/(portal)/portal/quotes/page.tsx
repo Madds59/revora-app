@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
@@ -30,6 +31,7 @@ type Row = Pick<
 > & { business: { name: string } | null };
 
 export default async function PortalQuotesPage() {
+  const t = await getTranslations("portalQuotes");
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
   const customerIds = accounts.map((account) => account.id);
@@ -45,24 +47,19 @@ export default async function PortalQuotesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Quotes"
-        description="Review and approve quotations from your workshop."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
       <div className="p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Your quotes</CardTitle>
-            <CardDescription>
-              Open a quote to see the line items and approve it.
-            </CardDescription>
+            <CardTitle>{t("list.title")}</CardTitle>
+            <CardDescription>{t("list.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-destructive text-sm">{error.message}</p>
             ) : quotes.length === 0 ? (
               <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
-                No quotes yet.
+                {t("empty")}
               </div>
             ) : (
               <>
@@ -77,10 +74,12 @@ export default async function PortalQuotesPage() {
                           {quote.quote_number}
                         </Link>
                       }
-                      subtitle={quote.business?.name ?? "Workshop"}
+                      subtitle={quote.business?.name ?? t("fallback.workshop")}
                       meta={
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>{quote.status}</Badge>
+                          <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
+                            {quote.status}
+                          </Badge>
                           <span className="tabular-nums">{formatCurrency(quote.total, quote.currency)}</span>
                         </div>
                       }
@@ -90,39 +89,39 @@ export default async function PortalQuotesPage() {
 
                 <div className="hidden rounded-lg border md:block">
                   <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Quote</TableHead>
-                      <TableHead>Workshop</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-end">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {quotes.map((q) => (
-                      <TableRow key={q.id}>
-                        <TableCell>
-                          <Link
-                            href={`/portal/quotes/${q.id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {q.quote_number}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{q.business?.name ?? "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant={QUOTE_STATUS_VARIANT[q.status]}>
-                            {q.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-end tabular-nums">
-                          {formatCurrency(q.total, q.currency)}
-                        </TableCell>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("table.quote")}</TableHead>
+                        <TableHead>{t("table.workshop")}</TableHead>
+                        <TableHead>{t("table.status")}</TableHead>
+                        <TableHead className="text-end">{t("table.total")}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {quotes.map((q) => (
+                        <TableRow key={q.id}>
+                          <TableCell>
+                            <Link
+                              href={`/portal/quotes/${q.id}`}
+                              className="font-medium hover:underline"
+                            >
+                              {q.quote_number}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{q.business?.name ?? t("fallback.none")}</TableCell>
+                          <TableCell>
+                            <Badge variant={QUOTE_STATUS_VARIANT[q.status]}>
+                              {q.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-end tabular-nums">
+                            {formatCurrency(q.total, q.currency)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </>
             )}
           </CardContent>
