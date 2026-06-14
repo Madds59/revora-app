@@ -47,7 +47,7 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   const canManage = canManageJobs(member.role);
   const supabase = await createClient();
 
@@ -56,6 +56,7 @@ export default async function JobDetailPage({
     .select(
       "*, customer:customers(full_name), quotation:quotations(quote_number, vehicle:vehicles(make, model, plate_number))",
     )
+    .eq("business_id", business.id)
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
@@ -65,11 +66,13 @@ export default async function JobDetailPage({
     supabase
       .from("job_tasks")
       .select("*")
+      .eq("business_id", business.id)
       .eq("job_id", id)
       .order("created_at", { ascending: true }),
     supabase
       .from("job_updates")
       .select("*")
+      .eq("business_id", business.id)
       .eq("job_id", id)
       .order("created_at", { ascending: false }),
   ]);

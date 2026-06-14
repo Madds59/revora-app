@@ -1,16 +1,16 @@
-import { type NextRequest } from "next/server";
-
-import { updateSession } from "@/lib/supabase/middleware";
+import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
-}
+  const pathname = request.nextUrl.pathname;
 
-export const config = {
+  if (pathname.startsWith('/api/stripe/webhook')) {
+    return NextResponse.next();
+  }
+
+  export const config = {
   matcher: [
-    /*
-     * Match all request paths except static assets and image optimization.
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|opengraph-image|manifest.webmanifest).*)',
   ],
-};
+};   
+
+

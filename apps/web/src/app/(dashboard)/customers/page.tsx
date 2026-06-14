@@ -16,12 +16,13 @@ import { createClient } from "@/lib/supabase/server";
 import type { Customer } from "@/lib/database.types";
 
 export default async function CustomersPage() {
-  await requireMembership();
+  const { business } = await requireMembership();
   const supabase = await createClient();
 
   const { data: customers, error } = await supabase
     .from("customers")
     .select("id, full_name, phone, email, created_at")
+    .eq("business_id", business.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 

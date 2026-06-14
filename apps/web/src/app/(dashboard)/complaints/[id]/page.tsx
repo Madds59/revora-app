@@ -91,10 +91,16 @@ export default async function ComplaintDetailPage({
 
   const [{ data: complaintRow }, { data: messageRows }, { data: memberRows }] =
     await Promise.all([
-      supabase.from("complaints").select("*").eq("id", id).maybeSingle(),
+      supabase
+        .from("complaints")
+        .select("*")
+        .eq("business_id", business.id)
+        .eq("id", id)
+        .maybeSingle(),
       supabase
         .from("complaint_messages")
         .select("*")
+        .eq("business_id", business.id)
         .eq("complaint_id", id)
         .order("created_at", { ascending: true }),
       supabase

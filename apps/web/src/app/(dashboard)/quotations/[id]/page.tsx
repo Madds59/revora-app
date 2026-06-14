@@ -54,7 +54,7 @@ export default async function QuoteBuilderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   const isStaff = canManageQuotes(member.role);
   const user = await getUser();
   const supabase = await createClient();
@@ -64,6 +64,7 @@ export default async function QuoteBuilderPage({
     .select(
       "*, customer:customers(full_name, app_user_id, preferred_language), vehicle:vehicles(make, model, plate_number)",
     )
+    .eq("business_id", business.id)
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
@@ -72,6 +73,7 @@ export default async function QuoteBuilderPage({
   const { data: itemRows } = await supabase
     .from("quotation_items")
     .select("*")
+    .eq("business_id", business.id)
     .eq("quotation_id", id)
     .order("created_at", { ascending: true });
   const items = (itemRows ?? []) as QuotationItem[];
@@ -79,6 +81,7 @@ export default async function QuoteBuilderPage({
   const { data: approvalRow } = await supabase
     .from("approvals")
     .select("*")
+    .eq("business_id", business.id)
     .eq("quotation_id", id)
     .eq("quotation_version", quote.current_version)
     .maybeSingle();

@@ -34,13 +34,14 @@ export default async function CustomerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   const canManage = canManageCustomers(member.role);
   const supabase = await createClient();
 
   const { data: customer } = await supabase
     .from("customers")
     .select("*")
+    .eq("business_id", business.id)
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -51,6 +52,7 @@ export default async function CustomerDetailPage({
   const { data: vehicles } = await supabase
     .from("vehicles")
     .select("*")
+    .eq("business_id", business.id)
     .eq("customer_id", id)
     .order("created_at", { ascending: false });
   const typedVehicles = (vehicles ?? []) as Vehicle[];
