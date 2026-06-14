@@ -26,3 +26,8 @@ export const stripeEnv = {
   secretKey: process.env.STRIPE_SECRET_KEY ?? null,
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? null,
 };
+
+export const openAiEnv = {
+  apiKey: process.env.OPENAI_API_KEY ?? null,
+  model: process.env.OPENAI_MODEL ?? null,
+};

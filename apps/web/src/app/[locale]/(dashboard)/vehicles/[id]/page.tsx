@@ -5,6 +5,8 @@ import { EmptyState } from "@/components/empty-state";
 import { DetailSummaryCard } from "@/components/detail-summary-card";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { PageHeader } from "@/components/page-header";
+import { VehicleDiagnosticCard } from "@/components/vehicle-intelligence-result";
+import { VehicleMediaUpload } from "@/components/vehicle-media-upload";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -29,6 +31,8 @@ import type { Complaint, Document, Job, Quotation, Vehicle } from "@/lib/databas
 import { JOB_STATUS_LABELS, JOB_STATUS_VARIANT } from "@/lib/jobs";
 import { COMPLAINT_SEVERITY_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_VARIANT } from "@/lib/complaints";
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
+import { formatAED, formatDate, formatDateTime } from "@/lib/formatters";
+import type { VehicleDiagnosticJson } from "@/lib/vehicle-intelligence/types";
 
 type VehicleDetailRow = Pick<
   Vehicle,
@@ -82,14 +86,6 @@ function vehicleLabel(vehicle: VehicleDetailRow) {
   return [vehicle.make, vehicle.model].filter(Boolean).join(" ") || vehicle.plate_number || vehicle.vin || "Vehicle";
 }
 
-function formatDate(value: string | null) {
-  return value ? new Date(value).toLocaleDateString() : "—";
-}
-
-function formatDateTime(value: string | null) {
-  return value ? new Date(value).toLocaleString() : "—";
-}
-
 export default async function VehicleDetailPage({
   params,
 }: {
@@ -121,6 +117,10 @@ export default async function VehicleDetailPage({
     { data: quoteRows, error: quoteError },
     { data: complaintRows, error: complaintError },
     { data: documentRows, error: documentError },
+    { data: symptomRows },
+    { data: diagnosticRows },
+    { data: planRows },
+    { data: mediaRows },
   ] = await Promise.all([
     supabase
       .from("jobs")
@@ -149,12 +149,92 @@ export default async function VehicleDetailPage({
       )
       .eq("business_id", business.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("vehicle_symptom_reports")
+      .select("id, symptoms, severity_input, status, created_at, warning_lights, driving_condition, mileage")
+      .eq("business_id", business.id)
+      .eq("vehicle_id", vehicle.id)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("vehicle_diagnostic_results")
+      .select("id, diagnosis_json, severity, stop_driving_warning, workshop_required, quote_draft_eligible, customer_explanation, advisor_summary, created_at, model")
+      .eq("business_id", business.id)
+      .eq("vehicle_id", vehicle.id)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("vehicle_maintenance_plans")
+      .select("id, plan_json, next_service_date, next_service_mileage, created_at")
+      .eq("business_id", business.id)
+      .eq("vehicle_id", vehicle.id)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("vehicle_media_uploads")
+      .select("id, storage_bucket, storage_path, media_type, description, created_at")
+      .eq("business_id", business.id)
+      .eq("vehicle_id", vehicle.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const jobs = (jobRows ?? []) as unknown as VehicleJobRow[];
   const quotes = (quoteRows ?? []) as unknown as VehicleQuoteRow[];
   const complaints = (complaintRows ?? []) as unknown as VehicleComplaintRow[];
   const documents = (documentRows ?? []) as unknown as VehicleDocumentRow[];
+  const symptom = (symptomRows ?? [])[0] as
+    | {
+        id: string;
+        symptoms: string;
+        severity_input: string | null;
+        status: string;
+        created_at: string;
+        warning_lights: string[];
+        driving_condition: string | null;
+        mileage: number | null;
+      }
+    | undefined;
+  const diagnostic = (diagnosticRows ?? [])[0] as
+    | {
+        id: string;
+        diagnosis_json: Record<string, unknown>;
+        severity: "low" | "medium" | "high" | "critical";
+        stop_driving_warning: boolean;
+        workshop_required: boolean;
+        quote_draft_eligible: boolean;
+        customer_explanation: string | null;
+        advisor_summary: string | null;
+        created_at: string;
+        model: string | null;
+      }
+    | undefined;
+  const maintenance = (planRows ?? [])[0] as
+    | {
+        id: string;
+        plan_json: Record<string, unknown>;
+        next_service_date: string | null;
+        next_service_mileage: number | null;
+        created_at: string;
+      }
+    | undefined;
+  const mediaUploads = (mediaRows ?? []) as Array<{
+    id: string;
+    storage_bucket: string;
+    storage_path: string;
+    media_type: string;
+    description: string | null;
+    created_at: string;
+  }>;
+  const maintenancePlanItems = Array.isArray(
+    maintenance ? (maintenance.plan_json as { items?: unknown }).items : [],
+  )
+    ? ((maintenance?.plan_json as { items?: Array<{
+        title: string;
+        interval: string;
+        rationale: string;
+        priority: "low" | "medium" | "high";
+      }> }).items ?? [])
+    : [];
 
   const jobIds = new Set(jobs.map((job) => job.id));
   const relatedDocuments = documents.filter(
@@ -313,7 +393,7 @@ export default async function VehicleDetailPage({
                             <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
                               {quote.status}
                             </Badge>
-                            <span>{new Intl.NumberFormat("en", { style: "currency", currency: quote.currency }).format(quote.total)}</span>
+                            <span>{formatAED(quote.total, { currency: quote.currency })}</span>
                           </div>
                         }
                       />
@@ -344,7 +424,7 @@ export default async function VehicleDetailPage({
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
-                              {new Intl.NumberFormat("en", { style: "currency", currency: quote.currency }).format(quote.total)}
+                              {formatAED(quote.total, { currency: quote.currency })}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {formatDate(quote.created_at)}
@@ -355,6 +435,101 @@ export default async function VehicleDetailPage({
                     </Table>
                   </div>
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle intelligence</CardTitle>
+              <CardDescription>Safety triage, diagnostics, and maintenance follow-up.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {diagnostic ? (
+                <VehicleDiagnosticCard
+                  aiUsed={diagnostic.model != null}
+                  advisorSummary={diagnostic.advisor_summary}
+                  customerExplanation={diagnostic.customer_explanation}
+                  diagnostic={diagnostic.diagnosis_json as VehicleDiagnosticJson}
+                  maintenancePlan={
+                    maintenance
+                          ? {
+                          title: "Maintenance plan",
+                          summary: "Latest maintenance plan generated for this vehicle.",
+                          items: maintenancePlanItems,
+                          nextServiceDate: maintenance.next_service_date,
+                          nextServiceMileage: maintenance.next_service_mileage,
+                          advisorReviewRequired: true,
+                        }
+                      : null
+                  }
+                  quoteDraftEligible={diagnostic.quote_draft_eligible}
+                  action={
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
+                        className={buttonVariants({ variant: "outline" })}
+                      >
+                        Open diagnosis workspace
+                      </Link>
+                    </div>
+                  }
+                />
+              ) : (
+                <EmptyState
+                  title="No diagnostic result yet"
+                  description="Run a diagnosis to generate a structured AI summary, maintenance plan, and workshop review."
+                  action={
+                    <Link
+                      href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
+                      className={buttonVariants()}
+                    >
+                      Open diagnosis workspace
+                    </Link>
+                  }
+                />
+              )}
+
+              {symptom && (
+                <div className="rounded-lg border bg-muted/20 p-4 text-sm">
+                  <div className="font-medium">Latest symptom report</div>
+                  <p className="text-muted-foreground mt-2 leading-6">{symptom.symptoms}</p>
+                  <div className="text-muted-foreground mt-2 text-xs">
+                    {formatDateTime(symptom.created_at)}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vehicle media</CardTitle>
+              <CardDescription>Attach photos, videos, and documents to this vehicle.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <VehicleMediaUpload
+                businessId={business.id}
+                customerId={vehicle.customer_id}
+                vehicleId={vehicle.id}
+              />
+              {mediaUploads.length === 0 ? (
+                <EmptyState
+                  title="No media yet"
+                  description="Uploaded files will appear here once they are recorded against this vehicle."
+                />
+              ) : (
+                <div className="grid gap-3">
+                  {mediaUploads.map((media) => (
+                    <div key={media.id} className="rounded-lg border p-3 text-sm">
+                      <div className="font-medium">{media.description ?? media.storage_path}</div>
+                      <div className="text-muted-foreground text-xs">{media.media_type}</div>
+                      <div className="text-muted-foreground mt-1 text-xs">{formatDateTime(media.created_at)}</div>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

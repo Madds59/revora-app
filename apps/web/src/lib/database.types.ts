@@ -39,6 +39,147 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_safety_flags: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          diagnostic_result_id: string | null
+          id: string
+          matched_terms: string[]
+          reason: string
+          risk_level: string
+          stop_driving_warning: boolean
+          symptom_report_id: string | null
+          triggered_by: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          diagnostic_result_id?: string | null
+          id?: string
+          matched_terms?: string[]
+          reason: string
+          risk_level: string
+          stop_driving_warning?: boolean
+          symptom_report_id?: string | null
+          triggered_by: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          diagnostic_result_id?: string | null
+          id?: string
+          matched_terms?: string[]
+          reason?: string
+          risk_level?: string
+          stop_driving_warning?: boolean
+          symptom_report_id?: string | null
+          triggered_by?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_safety_flags_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_safety_flags_diagnostic_result_id_fkey"
+            columns: ["diagnostic_result_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_diagnostic_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_safety_flags_symptom_report_id_fkey"
+            columns: ["symptom_report_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_symptom_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_safety_flags_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tool_calls: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input_json: Json
+          model: string | null
+          output_json: Json | null
+          safety_flagged: boolean
+          status: string
+          tool_name: string
+          user_id: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_json: Json
+          model?: string | null
+          output_json?: Json | null
+          safety_flagged?: boolean
+          status: string
+          tool_name: string
+          user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input_json?: Json
+          model?: string | null
+          output_json?: Json | null
+          safety_flagged?: boolean
+          status?: string
+          tool_name?: string
+          user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tool_calls_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_tool_calls_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_tool_calls_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_events: {
         Row: {
           approval_id: string
@@ -2148,6 +2289,378 @@ export type Database = {
           },
         ]
       }
+      vehicle_diagnostic_results: {
+        Row: {
+          advisor_summary: string | null
+          business_id: string
+          created_at: string
+          customer_explanation: string | null
+          diagnosis_json: Json
+          generated_by: string | null
+          id: string
+          model: string | null
+          quote_draft_eligible: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: string
+          stop_driving_warning: boolean
+          symptom_report_id: string | null
+          updated_at: string
+          vehicle_id: string
+          workshop_required: boolean
+        }
+        Insert: {
+          advisor_summary?: string | null
+          business_id: string
+          created_at?: string
+          customer_explanation?: string | null
+          diagnosis_json: Json
+          generated_by?: string | null
+          id?: string
+          model?: string | null
+          quote_draft_eligible?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity: string
+          stop_driving_warning?: boolean
+          symptom_report_id?: string | null
+          updated_at?: string
+          vehicle_id: string
+          workshop_required?: boolean
+        }
+        Update: {
+          advisor_summary?: string | null
+          business_id?: string
+          created_at?: string
+          customer_explanation?: string | null
+          diagnosis_json?: Json
+          generated_by?: string | null
+          id?: string
+          model?: string | null
+          quote_draft_eligible?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          stop_driving_warning?: boolean
+          symptom_report_id?: string | null
+          updated_at?: string
+          vehicle_id?: string
+          workshop_required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_diagnostic_results_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_diagnostic_results_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_diagnostic_results_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_diagnostic_results_symptom_report_id_fkey"
+            columns: ["symptom_report_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_symptom_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_diagnostic_results_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_dtc_codes: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          description: string | null
+          diagnostic_result_id: string | null
+          id: string
+          severity: string | null
+          source: string
+          system: string | null
+          title: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          description?: string | null
+          diagnostic_result_id?: string | null
+          id?: string
+          severity?: string | null
+          source: string
+          system?: string | null
+          title?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          diagnostic_result_id?: string | null
+          id?: string
+          severity?: string | null
+          source?: string
+          system?: string | null
+          title?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_dtc_codes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_dtc_codes_diagnostic_result_id_fkey"
+            columns: ["diagnostic_result_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_diagnostic_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_dtc_codes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_maintenance_plans: {
+        Row: {
+          business_id: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          next_service_date: string | null
+          next_service_mileage: number | null
+          plan_json: Json
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          next_service_date?: string | null
+          next_service_mileage?: number | null
+          plan_json: Json
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          next_service_date?: string | null
+          next_service_mileage?: number | null
+          plan_json?: Json
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_maintenance_plans_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_maintenance_plans_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_maintenance_plans_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_media_uploads: {
+        Row: {
+          business_id: string
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          id: string
+          media_type: string
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string
+          vehicle_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          media_type: string
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string
+          vehicle_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          media_type?: string
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_media_uploads_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_media_uploads_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_media_uploads_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_media_uploads_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_symptom_reports: {
+        Row: {
+          business_id: string
+          created_at: string
+          customer_id: string | null
+          driving_condition: string | null
+          id: string
+          mileage: number | null
+          severity_input: string | null
+          source: string
+          status: string
+          submitted_by: string
+          submitted_by_type: string
+          symptom_tags: string[]
+          symptoms: string
+          updated_at: string
+          vehicle_id: string
+          warning_lights: string[]
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          customer_id?: string | null
+          driving_condition?: string | null
+          id?: string
+          mileage?: number | null
+          severity_input?: string | null
+          source: string
+          status?: string
+          submitted_by: string
+          submitted_by_type: string
+          symptom_tags?: string[]
+          symptoms: string
+          updated_at?: string
+          vehicle_id: string
+          warning_lights?: string[]
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          customer_id?: string | null
+          driving_condition?: string | null
+          id?: string
+          mileage?: number | null
+          severity_input?: string | null
+          source?: string
+          status?: string
+          submitted_by?: string
+          submitted_by_type?: string
+          symptom_tags?: string[]
+          symptoms?: string
+          updated_at?: string
+          vehicle_id?: string
+          warning_lights?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_symptom_reports_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_symptom_reports_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_symptom_reports_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_symptom_reports_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           business_id: string
@@ -2322,6 +2835,36 @@ export type Database = {
         Args: { p_business_id: string; p_period?: string }
         Returns: Json
       }
+      get_vehicle_portal_snapshot: {
+        Args: { target_vehicle_id: string }
+        Returns: {
+          business_id: string
+          business_name: string
+          color: string
+          customer_explanation: string
+          customer_id: string
+          customer_name: string
+          latest_diagnostic_id: string
+          latest_diagnostic_severity: string
+          latest_plan_id: string
+          latest_report_created_at: string
+          latest_report_id: string
+          latest_report_severity_input: string
+          latest_report_status: string
+          latest_report_symptoms: string
+          media_count: number
+          next_service_date: string
+          next_service_mileage: number
+          plate_number: string
+          stop_driving_warning: boolean
+          vehicle_id: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_year: number
+          vin: string
+          workshop_required: boolean
+        }[]
+      }
       has_business_role: {
         Args: {
           allowed_roles: Database["public"]["Enums"]["member_role"][]
@@ -2337,7 +2880,16 @@ export type Database = {
         Args: { target_business_id: string; target_customer_id: string }
         Returns: boolean
       }
+      is_customer_for_vehicle: {
+        Args: { target_vehicle_id: string }
+        Returns: boolean
+      }
+      is_platform_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      is_vehicle_business_member: {
+        Args: { target_vehicle_id: string }
+        Returns: boolean
+      }
       list_active_billing_plans: { Args: never; Returns: Json }
       list_business_billing_invoices: {
         Args: { p_business_id: string; p_limit?: number; p_offset?: number }
@@ -2628,36 +3180,34 @@ export const Constants = {
   },
 } as const
 
-export type Branch = Database["public"]["Tables"]["branches"]["Row"]
-export type Business = Database["public"]["Tables"]["businesses"]["Row"]
-export type BusinessMember = Database["public"]["Tables"]["business_members"]["Row"]
-export type BusinessInvitation = Database["public"]["Tables"]["business_invitations"]["Row"]
-export type BillingInvoice = Database["public"]["Tables"]["billing_invoices"]["Row"]
-export type BillingPaymentEvent = Database["public"]["Tables"]["billing_payment_events"]["Row"]
-export type BillingPlan = Database["public"]["Tables"]["billing_plans"]["Row"]
-export type BillingPlanFeature = Database["public"]["Tables"]["billing_plan_features"]["Row"]
-export type Complaint = Database["public"]["Tables"]["complaints"]["Row"]
-export type ComplaintMessage = Database["public"]["Tables"]["complaint_messages"]["Row"]
-export type ComplaintSeverity = Database["public"]["Enums"]["complaint_severity"]
-export type ComplaintStatus = Database["public"]["Enums"]["complaint_status"]
-export type Customer = Database["public"]["Tables"]["customers"]["Row"]
-export type Document = Database["public"]["Tables"]["documents"]["Row"]
-export type ItemKind = Database["public"]["Enums"]["item_kind"]
-export type Job = Database["public"]["Tables"]["jobs"]["Row"]
-export type JobStatus = Database["public"]["Enums"]["job_status"]
-export type JobTask = Database["public"]["Tables"]["job_tasks"]["Row"]
-export type JobUpdate = Database["public"]["Tables"]["job_updates"]["Row"]
-export type MemberRole = Database["public"]["Enums"]["member_role"]
-export type NotificationChannel = Database["public"]["Enums"]["notification_channel"]
-export type NotificationEvent = Database["public"]["Tables"]["notification_events"]["Row"]
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
-export type ProductCategory = Database["public"]["Enums"]["product_category"]
-export type Approval = Database["public"]["Tables"]["approvals"]["Row"]
-export type Quotation = Database["public"]["Tables"]["quotations"]["Row"]
-export type QuotationItem = Database["public"]["Tables"]["quotation_items"]["Row"]
-export type QuoteStatus = Database["public"]["Enums"]["quote_status"]
-export type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"]
-export type SubscriptionItem = Database["public"]["Tables"]["subscription_items"]["Row"]
-export type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"]
-export type Service = Database["public"]["Tables"]["services"]["Row"]
-export type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"]
+export type Branch = Database["public"]["Tables"]["branches"]["Row"];
+export type BillingInvoice = Database["public"]["Tables"]["billing_invoices"]["Row"];
+export type BillingPlan = Database["public"]["Tables"]["billing_plans"]["Row"];
+export type BillingPlanFeature = Database["public"]["Tables"]["billing_plan_features"]["Row"];
+export type Business = Database["public"]["Tables"]["businesses"]["Row"];
+export type BusinessInvitation = Database["public"]["Tables"]["business_invitations"]["Row"];
+export type BusinessMember = Database["public"]["Tables"]["business_members"]["Row"];
+export type Complaint = Database["public"]["Tables"]["complaints"]["Row"];
+export type ComplaintMessage = Database["public"]["Tables"]["complaint_messages"]["Row"];
+export type ComplaintSeverity = Database["public"]["Enums"]["complaint_severity"];
+export type ComplaintStatus = Database["public"]["Enums"]["complaint_status"];
+export type Customer = Database["public"]["Tables"]["customers"]["Row"];
+export type Document = Database["public"]["Tables"]["documents"]["Row"];
+export type ItemKind = Database["public"]["Enums"]["item_kind"];
+export type Job = Database["public"]["Tables"]["jobs"]["Row"];
+export type JobStatus = Database["public"]["Enums"]["job_status"];
+export type JobTask = Database["public"]["Tables"]["job_tasks"]["Row"];
+export type JobUpdate = Database["public"]["Tables"]["job_updates"]["Row"];
+export type MemberRole = Database["public"]["Enums"]["member_role"];
+export type NotificationEvent = Database["public"]["Tables"]["notification_events"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Approval = Database["public"]["Tables"]["approvals"]["Row"];
+export type ProductCategory = Database["public"]["Enums"]["product_category"];
+export type Quotation = Database["public"]["Tables"]["quotations"]["Row"];
+export type QuotationItem = Database["public"]["Tables"]["quotation_items"]["Row"];
+export type QuoteStatus = Database["public"]["Enums"]["quote_status"];
+export type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type SubscriptionItem = Database["public"]["Tables"]["subscription_items"]["Row"];
+export type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
+export type Service = Database["public"]["Tables"]["services"]["Row"];
+export type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
