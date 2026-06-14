@@ -71,6 +71,39 @@
       "read": "مقروء"
     }
   },
+  "complaints": {
+    "submission": {
+      "businessAccount": "الحساب التجاري",
+      "selectAccount": "اختر حساباً",
+      "severity": "درجة الخطورة",
+      "subject": "الموضوع",
+      "description": "الوصف",
+      "submit": "إرسال الشكوى"
+    },
+    "management": {
+      "status": "الحالة",
+      "severity": "درجة الخطورة",
+      "resolutionSummary": "ملخّص الحل",
+      "submit": "حفظ الشكوى"
+    },
+    "messages": {
+      "topLevel": "المستوى الأعلى",
+      "replyTo": "الرد على",
+      "message": "الرسالة",
+      "internalOnly": "داخلي فقط",
+      "internal": "داخلي",
+      "empty": "لا توجد رسائل بعد. استخدم مربع الرد أدناه لبدء المحادثة.",
+      "panelTitle": "الرسائل المتسلسلة",
+      "panelDescription": "ردود الفريق وردود العملاء والملاحظات الداخلية في محادثة واحدة."
+    },
+    "assignment": {
+      "change": "تغيير المُكلَّف",
+      "description": "انقل هذه الشكوى إلى عضو فريق نشط آخر أو ألغِ التكليف.",
+      "assignedTo": "مُكلَّف إلى",
+      "unassigned": "غير مُكلَّف",
+      "submit": "حفظ التكليف"
+    }
+  },
   "nav": {
     "home": "الرئيسية",
     "dashboard": "لوحة التحكم",

@@ -71,6 +71,39 @@
       "read": "Read"
     }
   },
+  "complaints": {
+    "submission": {
+      "businessAccount": "Business account",
+      "selectAccount": "Select an account",
+      "severity": "Severity",
+      "subject": "Subject",
+      "description": "Description",
+      "submit": "Submit complaint"
+    },
+    "management": {
+      "status": "Status",
+      "severity": "Severity",
+      "resolutionSummary": "Resolution summary",
+      "submit": "Save complaint"
+    },
+    "messages": {
+      "topLevel": "Top level",
+      "replyTo": "Reply to",
+      "message": "Message",
+      "internalOnly": "Internal only",
+      "internal": "Internal",
+      "empty": "No messages yet. Use the reply box below to start the thread.",
+      "panelTitle": "Threaded messages",
+      "panelDescription": "Staff replies, customer replies, and internal notes in one thread."
+    },
+    "assignment": {
+      "change": "Change assignee",
+      "description": "Move this complaint to another active team member or clear the assignment.",
+      "assignedTo": "Assigned to",
+      "unassigned": "Unassigned",
+      "submit": "Save assignment"
+    }
+  },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
