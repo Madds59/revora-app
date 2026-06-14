@@ -35,11 +35,19 @@ export default function OpengraphImage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <span style={{ fontSize: 56, fontWeight: 600, letterSpacing: -1 }}>
-            Built on Trust.
-            <br />
-            Powered by Operations.
-          </span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              fontSize: 56,
+              fontWeight: 600,
+              letterSpacing: -1,
+              lineHeight: 1.1,
+            }}
+          >
+            <span>Built on Trust.</span>
+            <span>Powered by Operations.</span>
+          </div>
           <span style={{ fontSize: 28, color: "#A7ACA4" }}>
             Customer trust & operations for service businesses.
           </span>

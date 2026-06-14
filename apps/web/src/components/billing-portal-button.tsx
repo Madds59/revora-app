@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import { openBillingPortal, type BillingActionState } from "@/app/(dashboard)/billing/actions";
+import { openBillingPortal, type BillingActionState } from "@/app/[locale]/(dashboard)/billing/actions";
 import { SubmitButton } from "@/components/submit-button";
 
 const initial: BillingActionState = {};

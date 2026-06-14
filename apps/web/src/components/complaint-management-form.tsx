@@ -17,10 +17,22 @@ import type {
   ComplaintSeverity,
   ComplaintStatus,
 } from "@/lib/database.types";
-import {
-  COMPLAINT_SEVERITIES,
-  COMPLAINT_STATUSES,
-} from "@/lib/database.types";
+
+const COMPLAINT_STATUSES: ComplaintStatus[] = [
+  "open",
+  "assigned",
+  "awaiting_customer",
+  "investigating",
+  "escalated",
+  "resolved",
+  "closed",
+];
+const COMPLAINT_SEVERITIES: ComplaintSeverity[] = [
+  "low",
+  "medium",
+  "high",
+  "critical",
+];
 
 type FormState = { error?: string; message?: string };
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;

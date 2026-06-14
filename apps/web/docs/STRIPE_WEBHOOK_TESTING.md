@@ -40,6 +40,26 @@ stripe trigger customer.subscription.updated
 stripe trigger customer.subscription.deleted
 ```
 
+## Event shape guidance
+
+Use Stripe events that include the snapshot payloads Revora currently syncs:
+
+- `invoice.created`
+- `invoice.finalized`
+- `invoice.updated`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `invoice.voided`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `charge.succeeded`
+- `charge.failed`
+
+Do not switch the dashboard to thin/event-summary payloads for these sync flows.
+
 ## What to verify
 
 - `billing_invoices` gets a row for the Stripe invoice.
@@ -73,3 +93,7 @@ The script reads these environment variables:
 If `STRIPE_SECRET_KEY` is also set, the script backfills price amounts and currency from Stripe.
 
 The sync script validates that configured price IDs start with `price_` and supports `--dry-run` before applying updates.
+
+## Production note
+
+Production Supabase Auth and Stripe webhook settings should point at the public app domain, not a `_vercel_share` URL.

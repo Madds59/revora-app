@@ -1,0 +1,88 @@
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { requireMembership } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import type { Branch, Customer, Job } from "@/lib/database.types";
+
+import { JobsBoard, type JobBoardRow } from "@/components/jobs-board";
+
+type JobLookup = Pick<
+  Job,
+  | "id"
+  | "title"
+  | "description"
+  | "status"
+  | "created_at"
+  | "expected_completion_at"
+  | "customer_id"
+  | "branch_id"
+>;
+
+type CustomerLookup = Pick<Customer, "id" | "full_name" | "email">;
+type BranchLookup = Pick<Branch, "id" | "name">;
+
+export default async function JobsPage() {
+  const { business } = await requireMembership();
+  const supabase = await createClient();
+
+  const [{ data: jobRows, error }, { data: customerRows }, { data: branchRows }] =
+    await Promise.all([
+      supabase
+        .from("jobs")
+        .select(
+          "id, title, description, status, created_at, expected_completion_at, customer_id, branch_id",
+        )
+        .eq("business_id", business.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("customers")
+        .select("id, full_name, email")
+        .eq("business_id", business.id)
+        .is("deleted_at", null),
+      supabase.from("branches").select("id, name").eq("business_id", business.id),
+    ]);
+
+  const jobs = (jobRows ?? []) as JobLookup[];
+  const customerMap = new Map(
+    (customerRows ?? []).map((customer: CustomerLookup) => [customer.id, customer]),
+  );
+  const branchMap = new Map(
+    (branchRows ?? []).map((branch: BranchLookup) => [branch.id, branch.name]),
+  );
+
+  const rows: JobBoardRow[] = jobs.map((job) => {
+    const customer = customerMap.get(job.customer_id);
+    return {
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      status: job.status,
+      created_at: job.created_at,
+      expected_completion_at: job.expected_completion_at,
+      customer_name: customer?.full_name ?? "—",
+      customer_email: customer?.email ?? null,
+      branch_name: job.branch_id ? branchMap.get(job.branch_id) ?? null : null,
+    };
+  });
+
+  return (
+    <>
+      <PageHeader
+        title="Jobs"
+        description="Work orders created from approved quotes."
+      />
+      <div className="p-6">
+        {error ? (
+          <p className="text-sm text-destructive">{error.message}</p>
+        ) : rows.length === 0 ? (
+          <EmptyState
+            title="No jobs yet"
+            description="Approved work orders will appear here once they are created from quotes."
+          />
+        ) : (
+          <JobsBoard rows={rows} />
+        )}
+      </div>
+    </>
+  );
+}

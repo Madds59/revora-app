@@ -9,6 +9,14 @@ pnpm typecheck
 pnpm smoke:routes
 ```
 
+## Install gate
+
+If pnpm reports ignored native builds on a fresh checkout, approve the required packages once:
+
+```bash
+pnpm approve-builds --all
+```
+
 ## Typecheck ordering
 
 `pnpm typecheck` runs `next typegen` first via the `pretypecheck` script, so the generated route types exist before `tsc --noEmit` runs.
@@ -20,6 +28,8 @@ If you hit stale generated output in an old checkout, run:
 
 In a normal checkout, `pnpm typecheck` can run directly.
 
+Run `pnpm build` and `pnpm typecheck` serially, not in parallel. Both commands read from `.next/types`, and a concurrent run can race the generated files.
+
 ## Route smoke
 
 Set `APP_URL` to a reachable app URL:
@@ -27,6 +37,7 @@ Set `APP_URL` to a reachable app URL:
 ```bash
 APP_URL=http://localhost:3000 pnpm smoke:routes
 APP_URL=https://your-preview-url.vercel.app pnpm smoke:routes
+APP_URL=https://revora-app.vercel.app pnpm smoke:routes
 ```
 
 If you want the smoke runner to hit a specific vehicle detail page, also set:
@@ -45,6 +56,17 @@ The smoke runner reports:
 - `unexpected 500`
 - `connection unavailable`
 
+## Auth and onboarding
+
+Revora now asks users to choose an account type during signup. The canonical
+flow and role/access matrix live in [AUTH_ONBOARDING.md](./AUTH_ONBOARDING.md).
+Use that document when validating:
+
+- business owner signup/onboarding
+- customer signup and portal linking
+- invited staff onboarding
+- super admin bootstrap through `platform_admins`
+
 ## Stripe verification
 
 Use the live-config helpers only with real Stripe IDs:
@@ -54,3 +76,23 @@ pnpm diagnose:billing
 node scripts/sync-stripe-plan-prices.mjs --dry-run
 node scripts/sync-stripe-plan-prices.mjs
 ```
+
+## Admin bootstrap
+
+After a user signs up through `/signup` or magic link auth, promote them with:
+
+```bash
+node scripts/grant-super-admin.mjs madd59productions@gmail.com
+node scripts/grant-super-admin.mjs moda.imf1997@gmail.com
+```
+
+Use the password the user created during signup, or a Supabase magic-link/password-reset flow. Do not create or commit a separate plaintext credential.
+
+## Production auth settings
+
+Set Supabase Auth to use:
+
+- Site URL: `https://revora-app.vercel.app`
+- Redirect URLs:
+  - `https://revora-app.vercel.app/**`
+  - `http://localhost:3000/**`

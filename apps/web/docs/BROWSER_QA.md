@@ -12,6 +12,22 @@ Run the local app and smoke routes before release checks.
 pnpm smoke:routes
 ```
 
+## Preview / production smoke
+
+Use the same command against a reachable preview or production URL:
+
+```bash
+APP_URL=https://your-preview-url.vercel.app pnpm smoke:routes
+APP_URL=https://revora-app.vercel.app pnpm smoke:routes
+```
+
+If pnpm refuses to run scripts because of native build approval on a fresh checkout,
+run:
+
+```bash
+pnpm approve-builds --all
+```
+
 ## What the smoke checks
 
 - Public/auth routes exist.
@@ -23,6 +39,13 @@ pnpm smoke:routes
 
 ## Manual browser checklist
 
+- Open `/signup` and confirm the account-type cards require an explicit choice
+  before submission.
+- Sign up as a business owner and confirm `/onboarding` leads to business setup.
+- Sign up as a customer and confirm `/portal` shows the customer onboarding or
+  empty linked-account state instead of a business workspace.
+- Sign up as invited staff and confirm the onboarding page explains that an
+  invitation is required.
 - Sign in as a business user and confirm `/`, `/analytics`, `/notifications`, and `/billing`.
 - Open `/vehicles` and confirm list, filters, and vehicle detail navigation work.
 - Open `/customers`, `/jobs`, `/quotations`, `/complaints`, and `/documents` on mobile and desktop.
@@ -31,6 +54,7 @@ pnpm smoke:routes
 - If Stripe webhook sync is configured, verify `/billing` and `/analytics` show synced invoices and revenue after a test Stripe event.
 - Run `pnpm diagnose:billing` in a live environment and confirm Stripe plan IDs align with the catalog.
 - Run `node scripts/sync-stripe-plan-prices.mjs --dry-run` before applying live plan updates.
+- Confirm Supabase Auth Site URL is `https://revora-app.vercel.app` and redirect URLs include both production and localhost patterns.
 
 ## Expected results
 

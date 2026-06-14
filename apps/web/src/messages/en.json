@@ -1,0 +1,42 @@
+{
+  "common": {
+    "appName": "Revora",
+    "tagline": "Built on Trust. Powered by Operations."
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "vehicles": "Vehicles",
+    "jobs": "Jobs",
+    "quotes": "Quotes",
+    "complaints": "Complaints",
+    "documents": "Documents",
+    "billing": "Billing",
+    "analytics": "Analytics",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "soon": "soon"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "We couldn't find that page",
+    "description": "The page may have moved, or the link is no longer valid. Let's get you back on track.",
+    "backToDashboard": "Back to dashboard",
+    "goToPortal": "Go to portal"
+  },
+  "error": {
+    "code": "Something went wrong",
+    "title": "That didn't work as expected",
+    "description": "An unexpected error occurred. You can try again, or head back to safety. If it keeps happening, please let the team know.",
+    "tryAgain": "Try again",
+    "backToDashboard": "Back to dashboard",
+    "reference": "Reference: {id}"
+  },
+  "globalError": {
+    "code": "Critical error",
+    "title": "The app ran into a problem",
+    "description": "Something went wrong while loading Revora. Reloading usually fixes it.",
+    "reload": "Reload Revora"
+  }
+}

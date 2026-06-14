@@ -43,7 +43,7 @@ export function FilterToolbar({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-end lg:justify-between",
+        "flex flex-col gap-4 rounded-xl border bg-card/70 p-4 shadow-sm backdrop-blur lg:flex-row lg:items-end lg:justify-between",
         className,
       )}
     >
@@ -69,7 +69,10 @@ export function FilterToolbar({
             <Label className="sr-only" htmlFor="filter-status">
               Status
             </Label>
-            <Select value={statusValue} onValueChange={(value) => onStatusValueChange(value ?? "all")}>
+            <Select
+              value={statusValue}
+              onValueChange={(value) => onStatusValueChange(value ?? "all")}
+            >
               <SelectTrigger id="filter-status" className="w-full">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -89,7 +92,10 @@ export function FilterToolbar({
             <Label className="sr-only" htmlFor="filter-date">
               Date range
             </Label>
-            <Select value={dateValue} onValueChange={(value) => onDateValueChange(value ?? "all")}>
+            <Select
+              value={dateValue}
+              onValueChange={(value) => onDateValueChange(value ?? "all")}
+            >
               <SelectTrigger id="filter-date" className="w-full">
                 <SelectValue placeholder="Date range" />
               </SelectTrigger>
@@ -105,7 +111,11 @@ export function FilterToolbar({
         )}
       </div>
 
-      {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
+      {action && (
+        <div className="flex w-full shrink-0 flex-wrap gap-2 lg:w-auto lg:justify-end">
+          {action}
+        </div>
+      )}
     </div>
   );
 }

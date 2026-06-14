@@ -11,7 +11,7 @@ export const ROLE_LABELS: Record<MemberRole, string> = {
   super_admin: "Super Admin",
   business_owner: "Owner",
   manager: "Manager",
-  employee: "Employee",
+  employee: "Service advisor",
   customer: "Customer",
 };
 

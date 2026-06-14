@@ -3,7 +3,13 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Business, BusinessMember, Customer } from "@/lib/database.types";
+import { isAccountIntent, type AccountIntent } from "@/lib/account-intent";
+import type {
+  Business,
+  BusinessMember,
+  Customer,
+  Profile,
+} from "@/lib/database.types";
 
 export type Membership = {
   member: BusinessMember;
@@ -19,6 +25,14 @@ export const ACTIVE_BUSINESS_COOKIE = "revora_active_business_id";
 type MembershipRow = BusinessMember & {
   business: Business | null;
 };
+
+type ProfileRow = Pick<Profile, "id" | "full_name" | "account_intent">;
+
+function normalizeAccountIntent(
+  value: string | null | undefined,
+): AccountIntent | null {
+  return isAccountIntent(value) ? value : null;
+}
 
 /** The authenticated Supabase user, or null. Cached per request. */
 export const getUser = cache(async () => {
@@ -79,6 +93,37 @@ export const getCurrentMemberships = cache(async (): Promise<Membership[]> => {
   return data
     .filter((row): row is MembershipRow & { business: Business } => !!row.business)
     .map(({ business, ...member }) => ({ member, business }));
+});
+
+/** The current user's profile row, or null if it hasn't been created yet. */
+export const getCurrentProfile = cache(async (): Promise<ProfileRow | null> => {
+  const user = await getUser();
+  if (!user) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, full_name, account_intent")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return (data as ProfileRow | null) ?? null;
+});
+
+/** The user's intended account type, if they selected one during signup. */
+export const getCurrentAccountIntent = cache(async (): Promise<AccountIntent | null> => {
+  const user = await getUser();
+  if (!user) return null;
+
+  const profile = await getCurrentProfile();
+  return (
+    normalizeAccountIntent(profile?.account_intent) ??
+    normalizeAccountIntent(
+      typeof user.user_metadata?.account_intent === "string"
+        ? user.user_metadata.account_intent
+        : null,
+    )
+  );
 });
 
 /**
@@ -159,19 +204,29 @@ export async function requireSuperAdmin() {
  * (-> /onboarding). Returns the membership + business.
  */
 export async function requireMembership(): Promise<Membership> {
-  await requireUser();
+  const user = await requireUser();
   const membership = await getCurrentMembership();
   if (!membership) {
-    // A freshly-signed-up teammate may have a pending invitation; accepting it
-    // creates a membership, so re-enter via a fresh request.
-    const claimedInvites = await claimBusinessInvitations();
-    if (claimedInvites > 0) redirect("/");
+    if (await isSuperAdmin()) redirect("/admin");
+
+    const intent = await getCurrentAccountIntent();
+    if (intent === null || intent === "staff_invited") {
+      // A freshly-signed-up teammate may have a pending invitation; accepting
+      // it creates a membership, so re-enter via a fresh request.
+      const claimedInvites = await claimBusinessInvitations();
+      if (claimedInvites > 0) redirect("/");
+    }
 
     await claimCustomerRecords();
     const customerAccounts = await getCurrentCustomerAccounts();
+
+    if (intent === "customer") redirect("/portal");
+    if (intent === "staff_invited") redirect("/onboarding");
+    if (intent === "business_owner") redirect("/onboarding");
     if (customerAccounts.length > 0) redirect("/portal");
 
-    if (await isSuperAdmin()) redirect("/admin");
+    if (user.user_metadata?.account_intent === "customer") redirect("/portal");
+
     redirect("/onboarding");
   }
   return membership;
@@ -186,5 +241,12 @@ export async function requireCustomerPortal(): Promise<{
   if (membership) redirect("/");
   await claimCustomerRecords();
   const accounts = await getCurrentCustomerAccounts();
+  if (accounts.length > 0) return { accounts };
+
+  const intent = await getCurrentAccountIntent();
+  if (intent === "business_owner" || intent === "staff_invited") {
+    redirect("/onboarding");
+  }
+
   return { accounts };
 }

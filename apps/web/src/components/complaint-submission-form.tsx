@@ -14,7 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { COMPLAINT_SEVERITIES } from "@/lib/database.types";
+import type { ComplaintSeverity } from "@/lib/database.types";
+
+const COMPLAINT_SEVERITIES: ComplaintSeverity[] = [
+  "low",
+  "medium",
+  "high",
+  "critical",
+];
 
 export type ComplaintAccountOption = {
   customer_id: string;

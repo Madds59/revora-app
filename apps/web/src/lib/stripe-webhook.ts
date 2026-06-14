@@ -8,6 +8,7 @@ import type {
   BillingPlan,
   BillingPlanFeature,
   SubscriptionStatus,
+  Json,
 } from "@/lib/database.types";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
@@ -547,7 +548,7 @@ async function syncPaymentEvent(
     currency: upperCurrency(payment.currency),
     provider: "stripe",
     provider_event_id: event.id,
-    raw_payload: event as unknown as Record<string, unknown>,
+    raw_payload: JSON.parse(JSON.stringify(event)) as Json,
     occurred_at: toIso(payment.created ?? null) ?? new Date().toISOString(),
   };
 

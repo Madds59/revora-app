@@ -42,15 +42,17 @@ export function MobileDataCard({
 }) {
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3 p-4">
+      <CardContent className="flex flex-col gap-2.5 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <div className="font-medium">{title}</div>
-            {subtitle && <div className="text-muted-foreground text-xs">{subtitle}</div>}
+            <div className="font-medium leading-5">{title}</div>
+            {subtitle && (
+              <div className="text-muted-foreground text-xs leading-5">{subtitle}</div>
+            )}
           </div>
           {action}
         </div>
-        {meta && <div className="text-muted-foreground text-xs">{meta}</div>}
+        {meta && <div className="text-muted-foreground text-xs leading-5">{meta}</div>}
         {children}
       </CardContent>
     </Card>

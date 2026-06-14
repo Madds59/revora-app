@@ -28,13 +28,13 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-6 text-center",
+        "mx-auto flex max-w-xl flex-col items-center gap-4 rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center",
         className,
       )}
     >
       <div className="space-y-1">
-        <h3 className="font-medium">{title}</h3>
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <h3 className="font-medium leading-6">{title}</h3>
+        <p className="text-muted-foreground text-sm leading-6">{description}</p>
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">

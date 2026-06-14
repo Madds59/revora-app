@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { ChevronDown, CreditCard, LogOut, Settings, ShieldCheck } from "lucide-react";
 
-import { signOut } from "@/app/(auth)/actions";
+import { signOut } from "@/app/[locale]/(auth)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -111,21 +111,21 @@ export function ShellAccountMenu({
       <DropdownMenuContent align="end" sideOffset={8} className="min-w-60">
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            <div className="flex items-start gap-3 py-1">
-            <Avatar className="size-8">
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-            <div className="grid min-w-0 gap-0.5">
-              <span className="truncate text-sm font-medium">{email}</span>
-              <span className="text-muted-foreground truncate text-xs">
-                {title}
-              </span>
-              {subtitle && (
+            <div className="flex items-start gap-3 rounded-md bg-muted/50 px-2 py-2">
+              <Avatar className="size-8">
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <div className="grid min-w-0 gap-0.5">
+                <span className="truncate text-sm font-medium">{email}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {subtitle}
+                  {title}
                 </span>
-              )}
-            </div>
+                {subtitle && (
+                  <span className="text-muted-foreground truncate text-xs">
+                    {subtitle}
+                  </span>
+                )}
+              </div>
             </div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>

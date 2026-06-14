@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 
-import { markNotificationRead, type AdminFormState } from "@/app/(admin)/admin/actions";
+import { markNotificationRead, type AdminFormState } from "@/app/[locale]/(admin)/admin/actions";
 import { Button } from "@/components/ui/button";
 
 const initial: AdminFormState = {};

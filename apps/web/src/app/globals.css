@@ -61,6 +61,8 @@
     "Inter", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
   --font-geist-mono:
     "SFMono-Regular", "SF Mono", "Consolas", "Liberation Mono", monospace;
+  --font-arabic:
+    "Noto Naskh Arabic", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
   /* Desert Graphite + UAE flag — warm-white surfaces, graphite ink, UAE green as the
      trust/primary color, UAE red for alerts, brass as a warm tertiary accent. */
   --background: oklch(0.992 0.003 80);
@@ -171,6 +173,13 @@
   h3 {
     @apply font-heading tracking-tight;
   }
+}
+
+/* Arabic / RTL uses Cairo (Geist has no Arabic glyphs). Kept UNLAYERED on
+   purpose: next/font injects the Geist `--font-sans` class unlayered, and
+   unlayered rules beat any @layer, so this must be unlayered too to win. */
+html[dir="rtl"] {
+  --font-sans: var(--font-arabic);
 }
 
 @layer components {
