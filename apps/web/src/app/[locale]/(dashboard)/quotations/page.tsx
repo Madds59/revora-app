@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
+import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import type { Quotation } from "@/lib/database.types";
@@ -26,6 +27,7 @@ type Row = Pick<
 > & { customer: { full_name: string } | null };
 
 export default async function QuotationsPage() {
+  const t = await getTranslations("dashboardQuotations");
   const { member, business } = await requireMembership();
   const canManage = canManageQuotes(member.role);
   const supabase = await createClient();
@@ -42,12 +44,12 @@ export default async function QuotationsPage() {
   return (
     <>
       <PageHeader
-        title="Quotations"
-        description="Quotes, product transparency, and digital approvals."
+        title={t("title")}
+        description={t("description")}
         action={
           canManage ? (
             <Link href="/quotations/new" className={buttonVariants()}>
-              New quote
+              {t("actions.newQuote")}
             </Link>
           ) : undefined
         }
@@ -57,12 +59,12 @@ export default async function QuotationsPage() {
           <p className="text-destructive text-sm">{error.message}</p>
         ) : quotes.length === 0 ? (
           <EmptyState
-            title="No quotations yet"
-            description="Quotes created in this business will appear here once they are saved."
+            title={t("empty.title")}
+            description={t("empty.description")}
             action={
               canManage ? (
                 <Link href="/quotations/new" className={buttonVariants({ variant: "secondary" })}>
-                  Create your first quote
+                  {t("empty.action")}
                 </Link>
               ) : undefined
             }
@@ -80,7 +82,7 @@ export default async function QuotationsPage() {
                       {quote.quote_number}
                     </Link>
                   }
-                  subtitle={quote.customer?.full_name ?? "No customer"}
+                  subtitle={quote.customer?.full_name ?? t("fallback.noCustomer")}
                   meta={
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
@@ -97,10 +99,10 @@ export default async function QuotationsPage() {
               <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Quote</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-end">Total</TableHead>
+                  <TableHead>{t("table.quote")}</TableHead>
+                  <TableHead>{t("table.customer")}</TableHead>
+                  <TableHead>{t("table.status")}</TableHead>
+                  <TableHead className="text-end">{t("table.total")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -114,7 +116,7 @@ export default async function QuotationsPage() {
                         {q.quote_number}
                       </Link>
                     </TableCell>
-                    <TableCell>{q.customer?.full_name ?? "—"}</TableCell>
+                    <TableCell>{q.customer?.full_name ?? t("fallback.none")}</TableCell>
                     <TableCell>
                       <Badge variant={QUOTE_STATUS_VARIANT[q.status]}>
                         {q.status}

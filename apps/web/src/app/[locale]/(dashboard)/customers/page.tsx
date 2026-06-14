@@ -13,10 +13,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
+import { formatDate } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import type { Customer } from "@/lib/database.types";
+import { getTranslations } from "next-intl/server";
 
 export default async function CustomersPage() {
+  const t = await getTranslations("dashboardCustomers");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -30,11 +33,11 @@ export default async function CustomersPage() {
   return (
     <>
       <PageHeader
-        title="Customers"
-        description="People and businesses you serve."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href="/customers/new" className={buttonVariants()}>
-            Add customer
+            {t("actions.addCustomer")}
           </Link>
         }
       />
@@ -43,11 +46,11 @@ export default async function CustomersPage() {
           <p className="text-destructive text-sm">{error.message}</p>
         ) : !customers || customers.length === 0 ? (
           <EmptyState
-            title="No customers yet"
-            description="Add your first customer to start linking vehicles, quotes, jobs, and documents."
+            title={t("empty.title")}
+            description={t("empty.description")}
             action={
               <Link href="/customers/new" className={buttonVariants({ variant: "secondary" })}>
-                Add your first customer
+                {t("empty.action")}
               </Link>
             }
           />
@@ -67,8 +70,13 @@ export default async function CustomersPage() {
                       {customer.full_name}
                     </Link>
                   }
-                  subtitle={customer.email ?? "No email"}
-                  meta={customer.phone ?? "No phone"}
+                  subtitle={customer.email ?? t("fallback.noEmail")}
+                  meta={
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span>{customer.phone ?? t("fallback.noPhone")}</span>
+                      <span>{formatDate(customer.created_at)}</span>
+                    </div>
+                  }
                 />
               )}
             />
@@ -77,9 +85,10 @@ export default async function CustomersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>{t("table.name")}</TableHead>
+                    <TableHead>{t("table.phone")}</TableHead>
+                    <TableHead>{t("table.email")}</TableHead>
+                    <TableHead>{t("table.created")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -97,10 +106,13 @@ export default async function CustomersPage() {
                         </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {c.phone ?? "—"}
+                        {c.phone ?? t("fallback.none")}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {c.email ?? "—"}
+                        {c.email ?? t("fallback.none")}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(c.created_at)}
                       </TableCell>
                     </TableRow>
                   ))}

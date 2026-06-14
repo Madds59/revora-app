@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { ErrorState } from "@/components/error-state";
+import { getTranslations } from "next-intl/server";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +34,7 @@ type JobLookupRow = Pick<
 >;
 
 export default async function VehiclesPage() {
+  const t = await getTranslations("dashboardVehicles");
   const { member, business } = await requireMembership();
   const canCreate = canManageCustomers(member.role);
   const supabase = await createClient();
@@ -57,15 +59,15 @@ export default async function VehiclesPage() {
     return (
       <>
         <PageHeader
-          title="Vehicles"
-          description="Vehicle management and service history."
+          title={t("title")}
+          description={t("description")}
         />
         <div className="p-6">
           <ErrorState
-            title="Vehicles failed to load"
-            description="The vehicle list could not be loaded right now. Try again or return later."
+            title={t("error.title")}
+            description={t("error.description")}
             backHref="/"
-            backLabel="Go to dashboard"
+            backLabel={t("error.backLabel")}
           />
         </div>
       </>
@@ -90,8 +92,8 @@ export default async function VehiclesPage() {
   return (
     <>
       <PageHeader
-        title="Vehicles"
-        description="Tenant-scoped vehicle records linked to customers and service history."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="p-6">
         <VehiclesBrowser vehicles={vehicles} canCreate={canCreate} />

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { CarFront, Filter, SearchX } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -25,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { matchesQuery } from "@/lib/filtering";
+import { formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { Vehicle } from "@/lib/database.types";
 
@@ -52,11 +54,12 @@ export type VehicleListRow = Pick<
 type FilterValue = "all" | string;
 
 function vehicleLabel(vehicle: VehicleListRow) {
-  return [vehicle.make, vehicle.model].filter(Boolean).join(" ") || vehicle.plate_number || vehicle.vin || "Vehicle";
-}
-
-function formatDate(value: string | null) {
-  return value ? new Date(value).toLocaleDateString() : "—";
+  return (
+    [vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
+    vehicle.plate_number ||
+    vehicle.vin ||
+    "Vehicle"
+  );
 }
 
 function FilterSection({
@@ -76,19 +79,21 @@ function FilterSection({
   onMakeValueChange: (value: FilterValue) => void;
   onReset: () => void;
 }) {
+  const t = useTranslations("dashboardVehicles");
+
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
       <div className="grid flex-1 gap-3 md:grid-cols-2">
         <div className="grid gap-2">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            Make
+            {t("filters.make")}
           </div>
           <Select value={makeValue} onValueChange={(value) => onMakeValueChange(value ?? "all")}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="All makes" />
+              <SelectValue placeholder={t("filters.allMakes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All makes</SelectItem>
+              <SelectItem value="all">{t("filters.allMakes")}</SelectItem>
               {makeOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -100,14 +105,17 @@ function FilterSection({
 
         <div className="grid gap-2">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            Customer
+            {t("filters.customer")}
           </div>
-          <Select value={customerValue} onValueChange={(value) => onCustomerValueChange(value ?? "all")}>
+          <Select
+            value={customerValue}
+            onValueChange={(value) => onCustomerValueChange(value ?? "all")}
+          >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="All customers" />
+              <SelectValue placeholder={t("filters.allCustomers")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All customers</SelectItem>
+              <SelectItem value="all">{t("filters.allCustomers")}</SelectItem>
               {customerOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -124,7 +132,7 @@ function FilterSection({
         className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-fit")}
       >
         <SearchX />
-        Reset filters
+        {t("filters.reset")}
       </button>
     </div>
   );
@@ -137,6 +145,7 @@ export function VehiclesBrowser({
   canCreate: boolean;
   vehicles: VehicleListRow[];
 }) {
+  const t = useTranslations("dashboardVehicles");
   const [search, setSearch] = useState("");
   const [makeValue, setMakeValue] = useState<FilterValue>("all");
   const [customerValue, setCustomerValue] = useState<FilterValue>("all");
@@ -196,13 +205,13 @@ export function VehiclesBrowser({
   return (
     <div className="flex flex-col gap-6">
       <FilterToolbar
-        searchPlaceholder="Search plate, make, model, customer, or VIN"
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={search}
         onSearchValueChange={setSearch}
         action={
           canCreate ? (
             <Link href="/vehicles/new" className={buttonVariants()}>
-              Add vehicle
+              {t("actions.addVehicle")}
             </Link>
           ) : undefined
         }
@@ -223,22 +232,20 @@ export function VehiclesBrowser({
       />
 
       <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>
-          Showing {filtered.length} of {vehicles.length} vehicles
-        </span>
-        {hasFilters && <Badge variant="secondary">Filtered</Badge>}
+        <span>{t("summary.visible", { count: filtered.length, total: vehicles.length })}</span>
+        {hasFilters && <Badge variant="secondary">{t("summary.filtered")}</Badge>}
       </div>
 
       {filtered.length === 0 ? (
         vehicles.length === 0 ? (
           <EmptyState
             icon={<CarFront className="size-4" />}
-            title="No vehicles yet"
-            description="Add the first vehicle to start linking service history, quotes, and documents."
+            title={t("empty.noneTitle")}
+            description={t("empty.noneDescription")}
             action={
               canCreate ? (
                 <Link href="/vehicles/new" className={buttonVariants({ variant: "secondary" })}>
-                  Add vehicle
+                  {t("actions.addVehicle")}
                 </Link>
               ) : undefined
             }
@@ -246,8 +253,8 @@ export function VehiclesBrowser({
         ) : (
           <EmptyState
             icon={<Filter className="size-4" />}
-            title="No vehicles match"
-            description="Try a different search term or clear the filters."
+            title={t("empty.matchTitle")}
+            description={t("empty.matchDescription")}
             action={
               <button
                 type="button"
@@ -258,7 +265,7 @@ export function VehiclesBrowser({
                 }}
                 className={buttonVariants({ variant: "secondary" })}
               >
-                Reset filters
+                {t("filters.reset")}
               </button>
             }
           />
@@ -276,18 +283,20 @@ export function VehiclesBrowser({
                     {vehicleLabel(vehicle)}
                   </Link>
                 }
-                subtitle={vehicle.customer?.full_name ?? "No linked customer"}
+                subtitle={vehicle.customer?.full_name ?? t("fallback.noCustomer")}
                 meta={
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                     {vehicle.plate_number && <Badge variant="outline">{vehicle.plate_number}</Badge>}
                     {vehicle.year && <Badge variant="outline">{vehicle.year}</Badge>}
-                    {vehicle.vin && <span>VIN {vehicle.vin}</span>}
+                    {vehicle.vin && <span>{t("labels.vin")} {vehicle.vin}</span>}
                   </div>
                 }
               >
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   {vehicle.color && <span>{vehicle.color}</span>}
-                  <span>Last service {formatDate(vehicle.last_service_at)}</span>
+                  <span>
+                    {t("labels.lastService")} {formatDate(vehicle.last_service_at)}
+                  </span>
                 </div>
               </MobileDataCard>
             )}
@@ -297,12 +306,12 @@ export function VehiclesBrowser({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Plate</TableHead>
-                  <TableHead>VIN</TableHead>
-                  <TableHead>Last service</TableHead>
-                  <TableHead>Updated</TableHead>
+                  <TableHead>{t("table.vehicle")}</TableHead>
+                  <TableHead>{t("table.customer")}</TableHead>
+                  <TableHead>{t("table.plate")}</TableHead>
+                  <TableHead>{t("table.vin")}</TableHead>
+                  <TableHead>{t("table.lastService")}</TableHead>
+                  <TableHead>{t("table.updated")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -321,13 +330,13 @@ export function VehiclesBrowser({
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {vehicle.customer?.full_name ?? "—"}
+                      {vehicle.customer?.full_name ?? t("fallback.none")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {vehicle.plate_number ?? "—"}
+                      {vehicle.plate_number ?? t("fallback.none")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {vehicle.vin ?? "—"}
+                      {vehicle.vin ?? t("fallback.none")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(vehicle.last_service_at)}

@@ -195,5 +195,191 @@
       "openComplaints": "الشكاوى المفتوحة",
       "superAdmins": "المشرفون العامون"
     }
+  },
+  "dashboardCustomers": {
+    "title": "العملاء",
+    "description": "الأشخاص والأنشطة التي تخدمهم.",
+    "actions": {
+      "addCustomer": "إضافة عميل"
+    },
+    "empty": {
+      "title": "لا يوجد عملاء بعد",
+      "description": "أضف أول عميل لبدء ربط المركبات وعروض الأسعار والمهام والمستندات.",
+      "action": "إضافة أول عميل"
+    },
+    "table": {
+      "name": "الاسم",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "created": "تاريخ الإنشاء"
+    },
+    "fallback": {
+      "noEmail": "لا يوجد بريد",
+      "noPhone": "لا يوجد هاتف",
+      "none": "—"
+    }
+  },
+  "dashboardVehicles": {
+    "title": "المركبات",
+    "description": "سجلات المركبات المرتبطة بالعملاء وتاريخ الخدمة.",
+    "searchPlaceholder": "ابحث عن اللوحة أو الماركة أو الطراز أو العميل أو VIN",
+    "actions": {
+      "addVehicle": "إضافة مركبة"
+    },
+    "filters": {
+      "make": "الماركة",
+      "customer": "العميل",
+      "allMakes": "كل الماركات",
+      "allCustomers": "كل العملاء",
+      "reset": "إعادة ضبط الفلاتر"
+    },
+    "summary": {
+      "visible": "عرض {count} من أصل {total} مركبة",
+      "filtered": "مصفّى"
+    },
+    "empty": {
+      "noneTitle": "لا توجد مركبات بعد",
+      "noneDescription": "أضف أول مركبة لبدء ربط تاريخ الخدمة وعروض الأسعار والمستندات.",
+      "matchTitle": "لا توجد مركبات مطابقة",
+      "matchDescription": "جرّب عبارة بحث مختلفة أو امسح الفلاتر."
+    },
+    "table": {
+      "vehicle": "المركبة",
+      "customer": "العميل",
+      "plate": "اللوحة",
+      "vin": "VIN",
+      "lastService": "آخر خدمة",
+      "updated": "تم التحديث"
+    },
+    "labels": {
+      "vin": "VIN",
+      "lastService": "آخر خدمة"
+    },
+    "fallback": {
+      "noCustomer": "لا يوجد عميل مرتبط",
+      "none": "—"
+    },
+    "error": {
+      "title": "تعذّر تحميل المركبات",
+      "description": "تعذّر تحميل قائمة المركبات الآن. حاول مرة أخرى أو عد لاحقًا.",
+      "backLabel": "العودة إلى لوحة التحكم"
+    }
+  },
+  "dashboardJobsPage": {
+    "title": "المهام",
+    "description": "أوامر العمل التي أُنشئت من عروض الأسعار المعتمدة.",
+    "empty": {
+      "title": "لا توجد مهام بعد",
+      "description": "ستظهر أوامر العمل المعتمدة هنا بمجرد إنشائها من عروض الأسعار."
+    }
+  },
+  "dashboardJobs": {
+    "searchPlaceholder": "ابحث عن المهام أو العملاء أو الفروع",
+    "filters": {
+      "status": "تصفية حسب الحالة",
+      "allStatuses": "كل الحالات",
+      "reset": "إعادة ضبط الفلاتر"
+    },
+    "summary": {
+      "visible": "الظاهر {count}"
+    },
+    "empty": {
+      "title": "لا توجد مهام مطابقة",
+      "description": "جرّب بحثًا مختلفًا أو أعد ضبط الفلاتر."
+    },
+    "fallback": {
+      "noBranch": "لا يوجد فرع",
+      "noDueDate": "لا يوجد موعد",
+      "none": "—"
+    },
+    "table": {
+      "job": "المهمة",
+      "customer": "العميل",
+      "branch": "الفرع",
+      "status": "الحالة",
+      "due": "الموعد"
+    }
+  },
+  "dashboardQuotations": {
+    "title": "عروض الأسعار",
+    "description": "العروض وشفافية البنود والموافقات الرقمية.",
+    "actions": {
+      "newQuote": "عرض سعر جديد"
+    },
+    "empty": {
+      "title": "لا توجد عروض أسعار بعد",
+      "description": "ستظهر العروض التي أُنشئت لهذا النشاط هنا بمجرد حفظها.",
+      "action": "إنشاء أول عرض سعر"
+    },
+    "table": {
+      "quote": "عرض السعر",
+      "customer": "العميل",
+      "status": "الحالة",
+      "total": "الإجمالي"
+    },
+    "fallback": {
+      "noCustomer": "لا يوجد عميل",
+      "none": "—"
+    }
+  },
+  "dashboardComplaints": {
+    "title": "الشكاوى",
+    "description": "شكاوى العملاء والمتابعة الداخلية وتتبع الحلول.",
+    "accessRestrictedDescription": "إدارة الشكاوى مقصورة على أدوار الموظفين.",
+    "accessRestricted": "ليس لديك صلاحية إدارة الشكاوى.",
+    "stats": {
+      "openActive": "مفتوحة / نشطة",
+      "resolvedClosed": "محلولة / مغلقة"
+    },
+    "queue": {
+      "title": "طابور الشكاوى",
+      "description": "إدارة الحالة، والحدة، والمكلّفين، والردود المتسلسلة."
+    },
+    "empty": {
+      "title": "لا توجد شكاوى بعد",
+      "description": "ستظهر الشكاوى التي يرسلها العملاء هنا بمجرد ربطها بهذا النشاط.",
+      "action": "عرض بوابة العملاء"
+    },
+    "table": {
+      "subject": "الموضوع",
+      "customer": "العميل",
+      "status": "الحالة",
+      "severity": "الحدّة",
+      "assignee": "المسند إليه",
+      "updated": "تم التحديث"
+    },
+    "fallback": {
+      "noCustomer": "لا يوجد عميل",
+      "none": "—",
+      "unassigned": "غير مسند"
+    }
+  },
+  "dashboardDocuments": {
+    "title": "المستندات",
+    "description": "العقود وملفات PDF وتقارير التدقيق.",
+    "actions": {
+      "uploadDocument": "رفع مستند",
+      "download": "تنزيل",
+      "unavailable": "غير متاح"
+    },
+    "library": {
+      "title": "مكتبة المستندات",
+      "description": "ملفات محفوظة ومرتبطة بعروض الأسعار والشكاوى والمهام والعملاء."
+    },
+    "empty": {
+      "title": "لا توجد مستندات بعد",
+      "description": "ارفع العقود وملفات PDF وسجلات الخدمة لإبقائها مرتبطة بعروض الأسعار والمهام والشكاوى."
+    },
+    "table": {
+      "document": "المستند",
+      "type": "النوع",
+      "relatedTo": "مرتبط بـ",
+      "file": "الملف",
+      "created": "تاريخ الإنشاء",
+      "action": "الإجراء"
+    },
+    "fallback": {
+      "none": "—"
+    }
   }
 }

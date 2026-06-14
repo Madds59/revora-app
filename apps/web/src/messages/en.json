@@ -195,5 +195,191 @@
       "openComplaints": "Open complaints",
       "superAdmins": "Super admins"
     }
+  },
+  "dashboardCustomers": {
+    "title": "Customers",
+    "description": "People and businesses you serve.",
+    "actions": {
+      "addCustomer": "Add customer"
+    },
+    "empty": {
+      "title": "No customers yet",
+      "description": "Add your first customer to start linking vehicles, quotes, jobs, and documents.",
+      "action": "Add your first customer"
+    },
+    "table": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "created": "Created"
+    },
+    "fallback": {
+      "noEmail": "No email",
+      "noPhone": "No phone",
+      "none": "—"
+    }
+  },
+  "dashboardVehicles": {
+    "title": "Vehicles",
+    "description": "Vehicle records linked to customers and service history.",
+    "searchPlaceholder": "Search plate, make, model, customer, or VIN",
+    "actions": {
+      "addVehicle": "Add vehicle"
+    },
+    "filters": {
+      "make": "Make",
+      "customer": "Customer",
+      "allMakes": "All makes",
+      "allCustomers": "All customers",
+      "reset": "Reset filters"
+    },
+    "summary": {
+      "visible": "Showing {count} of {total} vehicles",
+      "filtered": "Filtered"
+    },
+    "empty": {
+      "noneTitle": "No vehicles yet",
+      "noneDescription": "Add the first vehicle to start linking service history, quotes, and documents.",
+      "matchTitle": "No vehicles match",
+      "matchDescription": "Try a different search term or clear the filters."
+    },
+    "table": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "plate": "Plate",
+      "vin": "VIN",
+      "lastService": "Last service",
+      "updated": "Updated"
+    },
+    "labels": {
+      "vin": "VIN",
+      "lastService": "Last service"
+    },
+    "fallback": {
+      "noCustomer": "No linked customer",
+      "none": "—"
+    },
+    "error": {
+      "title": "Vehicles failed to load",
+      "description": "The vehicle list could not be loaded right now. Try again or return later.",
+      "backLabel": "Go to dashboard"
+    }
+  },
+  "dashboardJobsPage": {
+    "title": "Jobs",
+    "description": "Work orders created from approved quotes.",
+    "empty": {
+      "title": "No jobs yet",
+      "description": "Approved work orders will appear here once they are created from quotes."
+    }
+  },
+  "dashboardJobs": {
+    "searchPlaceholder": "Search jobs, customers, branches",
+    "filters": {
+      "status": "Filter by status",
+      "allStatuses": "All statuses",
+      "reset": "Reset filters"
+    },
+    "summary": {
+      "visible": "{count} visible"
+    },
+    "empty": {
+      "title": "No jobs match",
+      "description": "Try a different search or reset the filters."
+    },
+    "fallback": {
+      "noBranch": "No branch",
+      "noDueDate": "No due date",
+      "none": "—"
+    },
+    "table": {
+      "job": "Job",
+      "customer": "Customer",
+      "branch": "Branch",
+      "status": "Status",
+      "due": "Due"
+    }
+  },
+  "dashboardQuotations": {
+    "title": "Quotations",
+    "description": "Quotes, product transparency, and digital approvals.",
+    "actions": {
+      "newQuote": "New quote"
+    },
+    "empty": {
+      "title": "No quotations yet",
+      "description": "Quotes created in this business will appear here once they are saved.",
+      "action": "Create your first quote"
+    },
+    "table": {
+      "quote": "Quote",
+      "customer": "Customer",
+      "status": "Status",
+      "total": "Total"
+    },
+    "fallback": {
+      "noCustomer": "No customer",
+      "none": "—"
+    }
+  },
+  "dashboardComplaints": {
+    "title": "Complaints",
+    "description": "Customer complaints, internal follow-up, and resolution tracking.",
+    "accessRestrictedDescription": "Complaint handling is restricted to staff roles.",
+    "accessRestricted": "You do not have access to complaint management.",
+    "stats": {
+      "openActive": "Open / active",
+      "resolvedClosed": "Resolved / closed"
+    },
+    "queue": {
+      "title": "Complaint queue",
+      "description": "Manage status, severity, assignees, and threaded replies."
+    },
+    "empty": {
+      "title": "No complaints yet",
+      "description": "Complaints submitted by customers will appear here once they are linked to this business.",
+      "action": "View customer portal"
+    },
+    "table": {
+      "subject": "Subject",
+      "customer": "Customer",
+      "status": "Status",
+      "severity": "Severity",
+      "assignee": "Assignee",
+      "updated": "Updated"
+    },
+    "fallback": {
+      "noCustomer": "No customer",
+      "none": "—",
+      "unassigned": "Unassigned"
+    }
+  },
+  "dashboardDocuments": {
+    "title": "Documents",
+    "description": "Contracts, PDFs, and audit reports.",
+    "actions": {
+      "uploadDocument": "Upload document",
+      "download": "Download",
+      "unavailable": "Unavailable"
+    },
+    "library": {
+      "title": "Document library",
+      "description": "Stored files linked to quotes, complaints, jobs, and customers."
+    },
+    "empty": {
+      "title": "No documents yet",
+      "description": "Upload contracts, PDFs, and service records to keep them linked to quotes, jobs, and complaints."
+    },
+    "table": {
+      "document": "Document",
+      "type": "Type",
+      "relatedTo": "Related to",
+      "file": "File",
+      "created": "Created",
+      "action": "Action"
+    },
+    "fallback": {
+      "none": "—"
+    }
   }
 }
