@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Building2, FileCheck2, Wrench, ArrowRight } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -38,18 +39,19 @@ type ActiveJob = Pick<Job, "id" | "title" | "status"> & {
 type ComplaintRow = Complaint & { business_name: string | null };
 
 export default async function PortalHomePage() {
+  const t = await getTranslations("portalHome");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
       <>
         <PageHeader
-          title="Portal"
-          description="Your linked accounts and complaint history."
+          title={t("title")}
+          description={t("description")}
         />
         <div className="p-6">
           <EmptyState
-            title="No linked customer account yet"
-            description="Use the same email address your workshop has on file, or ask them to invite/link your customer record. Once it matches, your quotes, jobs, complaints, and documents will appear here automatically."
+            title={t("noLinkedAccountTitle")}
+            description={t("noLinkedAccountDescription")}
           />
         </div>
       </>
@@ -100,11 +102,11 @@ export default async function PortalHomePage() {
   return (
     <>
       <PageHeader
-        title="Portal"
-        description="Your linked accounts and complaint history."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href="/portal/complaints/new" className={buttonVariants()}>
-            Submit complaint
+            {t("submitComplaint")}
           </Link>
         }
       />
@@ -119,7 +121,7 @@ export default async function PortalHomePage() {
                   </span>
                   <div className="grid min-w-0 gap-0.5">
                     <CardTitle className="truncate">
-                      {account.business?.name ?? "Business"}
+                      {account.business?.name ?? t("business")}
                     </CardTitle>
                     <CardDescription className="truncate">
                       {account.full_name}
@@ -128,7 +130,7 @@ export default async function PortalHomePage() {
                 </div>
               </CardHeader>
               <CardContent className="text-muted-foreground text-sm">
-                {account.phone ?? account.email ?? "Linked account"}
+                {account.phone ?? account.email ?? t("linkedAccount")}
               </CardContent>
             </Card>
           ))}
@@ -140,11 +142,9 @@ export default async function PortalHomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileCheck2 className="text-primary size-5" />
-                Quotes awaiting your approval
+                {t("quotesAwaitingApproval")}
               </CardTitle>
-              <CardDescription>
-                Review the details and approve with your digital signature.
-              </CardDescription>
+              <CardDescription>{t("reviewAndApproveDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3">
@@ -157,14 +157,14 @@ export default async function PortalHomePage() {
                     <div>
                       <div className="font-medium">{quote.quote_number}</div>
                       <div className="text-muted-foreground text-xs">
-                        {quote.business?.name ?? "Workshop"}
+                        {quote.business?.name ?? t("workshop")}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-semibold tabular-nums">
                         {formatCurrency(quote.total, quote.currency)}
                       </span>
-                      <Badge>Review &amp; approve</Badge>
+                      <Badge>{t("reviewAndApprove")}</Badge>
                       <ArrowRight className="text-muted-foreground size-4 rtl:rotate-180" />
                     </div>
                   </Link>
@@ -179,9 +179,9 @@ export default async function PortalHomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Wrench className="text-primary size-5" />
-                Active jobs
+                {t("activeJobs")}
               </CardTitle>
-              <CardDescription>Work currently in progress.</CardDescription>
+              <CardDescription>{t("workInProgress")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3">
@@ -194,7 +194,7 @@ export default async function PortalHomePage() {
                     <div>
                       <div className="font-medium">{job.title}</div>
                       <div className="text-muted-foreground text-xs">
-                        {job.business?.name ?? "Workshop"}
+                        {job.business?.name ?? t("workshop")}
                       </div>
                     </div>
                     <Badge variant={JOB_STATUS_VARIANT[job.status]}>
@@ -209,22 +209,20 @@ export default async function PortalHomePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent complaints</CardTitle>
-            <CardDescription>
-              View the current status of your active and past complaints.
-            </CardDescription>
+            <CardTitle>{t("recentComplaints")}</CardTitle>
+            <CardDescription>{t("complaintsDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {typedComplaints.length === 0 ? (
               <EmptyState
-                title="No complaints yet"
-                description="When you need support, submit a complaint and track the response here."
+                title={t("noComplaintsYet")}
+                description={t("complaintsEmpty")}
                 action={
                   <Link
                     href="/portal/complaints/new"
                     className={buttonVariants({ variant: "secondary" })}
                   >
-                    Submit complaint
+                    {t("submitComplaintSecondary")}
                   </Link>
                 }
               />
@@ -240,7 +238,7 @@ export default async function PortalHomePage() {
                       <div>
                         <div className="font-medium">{complaint.subject}</div>
                         <div className="text-muted-foreground text-xs">
-                          {complaint.business_name ?? "Business"}
+                          {complaint.business_name ?? t("business")}
                         </div>
                       </div>
                       <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>

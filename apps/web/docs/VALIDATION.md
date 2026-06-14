@@ -56,6 +56,23 @@ The smoke runner reports:
 - `unexpected 500`
 - `connection unavailable`
 
+## Canonical locale routes
+
+The locale tree is canonical. Treat these redirects as expected:
+
+- `/` -> `/en`
+- `/login` -> `/en/login`
+- `/signup` -> `/en/signup`
+
+Smoke coverage includes both English and Arabic auth entry points:
+
+- `/en/login`
+- `/ar/login`
+- `/en/signup`
+- `/ar/signup`
+
+Language switching should preserve the current path and query string.
+
 ## Auth and onboarding
 
 Revora now asks users to choose an account type during signup. The canonical
@@ -66,6 +83,12 @@ Use that document when validating:
 - customer signup and portal linking
 - invited staff onboarding
 - super admin bootstrap through `platform_admins`
+
+## Formatting
+
+Revora uses Western-digit formatting for AED and date/time surfaces in the shell
+and high-value operational views. This is intentional and should remain stable
+unless there is a specific product decision to change it.
 
 ## Stripe verification
 

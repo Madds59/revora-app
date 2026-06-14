@@ -139,5 +139,61 @@
     "adminDescription": "مقاييس المستأجرين والاستخدام عبر Revora.",
     "dashboardTitle": "لوحة التحكم",
     "dashboardDescription": "التحكم التشغيلي لنشاطك."
+  },
+  "dashboardHome": {
+    "title": "مرحبًا بك في {businessName}",
+    "description": "إدارة عملياتك في لمحة.",
+    "stats": {
+      "customers": "العملاء",
+      "vehicles": "المركبات",
+      "quotesAwaitingApproval": "عروض الأسعار بانتظار الموافقة",
+      "openComplaints": "الشكاوى المفتوحة",
+      "activeJobs": "المهام النشطة"
+    },
+    "status": {
+      "live": "مباشر",
+      "laterRelease": "متاح في إصدار لاحق"
+    },
+    "getStarted": {
+      "title": "ابدأ الآن",
+      "description": "الأساس جاهز. أضف عملاءك واضبط ملف نشاطك.",
+      "addCustomer": "إضافة عميل",
+      "manageVehicles": "إدارة المركبات",
+      "businessSettings": "إعدادات النشاط"
+    }
+  },
+  "portalHome": {
+    "title": "البوابة",
+    "description": "حساباتك المرتبطة وسجل الشكاوى.",
+    "business": "النشاط",
+    "linkedAccount": "حساب مرتبط",
+    "workshop": "الورشة",
+    "noLinkedAccountTitle": "لا يوجد حساب عميل مرتبط بعد",
+    "noLinkedAccountDescription": "استخدم نفس عنوان البريد الإلكتروني الموجود لدى ورشتك، أو اطلب منهم دعوتك/ربط سجل العميل. بعد التطابق ستظهر عروض الأسعار والمهام والشكاوى والمستندات تلقائيًا هنا.",
+    "submitComplaint": "إرسال شكوى",
+    "quotesAwaitingApproval": "عروض الأسعار بانتظار موافقتك",
+    "reviewAndApprove": "مراجعة والموافقة",
+    "activeJobs": "المهام النشطة",
+    "workInProgress": "العمل الجاري حاليًا.",
+    "recentComplaints": "الشكاوى الأخيرة",
+    "complaintsDescription": "اطّلع على حالة الشكاوى النشطة والسابقة.",
+    "noComplaintsYet": "لا توجد شكاوى بعد",
+    "complaintsEmpty": "عندما تحتاج إلى دعم، أرسل شكوى وتابع الرد هنا.",
+    "submitComplaintSecondary": "إرسال شكوى",
+    "reviewAndApproveDescription": "راجع التفاصيل ووافق عليها بتوقيعك الرقمي."
+  },
+  "adminOverview": {
+    "title": "نظرة عامة على المنصة",
+    "description": "مقاييس المستأجرين والاستخدام عبر Revora.",
+    "stats": {
+      "businesses": "الأنشطة",
+      "registeredUsers": "المستخدمون المسجلون",
+      "customers": "العملاء",
+      "quotations": "عروض الأسعار",
+      "approvedQuotes": "العروض المعتمدة",
+      "complaints": "الشكاوى",
+      "openComplaints": "الشكاوى المفتوحة",
+      "superAdmins": "المشرفون العامون"
+    }
   }
 }

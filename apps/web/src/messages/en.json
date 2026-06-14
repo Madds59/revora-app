@@ -139,5 +139,61 @@
     "adminDescription": "Tenant and usage metrics across all of Revora.",
     "dashboardTitle": "Dashboard",
     "dashboardDescription": "Operational control for your business."
+  },
+  "dashboardHome": {
+    "title": "Welcome to {businessName}",
+    "description": "Your operations at a glance.",
+    "stats": {
+      "customers": "Customers",
+      "vehicles": "Vehicles",
+      "quotesAwaitingApproval": "Quotes awaiting approval",
+      "openComplaints": "Open complaints",
+      "activeJobs": "Active jobs"
+    },
+    "status": {
+      "live": "Live",
+      "laterRelease": "Available in a later release"
+    },
+    "getStarted": {
+      "title": "Get started",
+      "description": "The foundation is ready. Add your customers and configure your business profile.",
+      "addCustomer": "Add a customer",
+      "manageVehicles": "Manage vehicles",
+      "businessSettings": "Business settings"
+    }
+  },
+  "portalHome": {
+    "title": "Portal",
+    "description": "Your linked accounts and complaint history.",
+    "business": "Business",
+    "linkedAccount": "Linked account",
+    "workshop": "Workshop",
+    "noLinkedAccountTitle": "No linked customer account yet",
+    "noLinkedAccountDescription": "Use the same email address your workshop has on file, or ask them to invite/link your customer record. Once it matches, your quotes, jobs, complaints, and documents will appear here automatically.",
+    "submitComplaint": "Submit complaint",
+    "quotesAwaitingApproval": "Quotes awaiting your approval",
+    "reviewAndApprove": "Review & approve",
+    "activeJobs": "Active jobs",
+    "workInProgress": "Work currently in progress.",
+    "recentComplaints": "Recent complaints",
+    "complaintsDescription": "View the current status of your active and past complaints.",
+    "noComplaintsYet": "No complaints yet",
+    "complaintsEmpty": "When you need support, submit a complaint and track the response here.",
+    "submitComplaintSecondary": "Submit complaint",
+    "reviewAndApproveDescription": "Review the details and approve with your digital signature."
+  },
+  "adminOverview": {
+    "title": "Platform overview",
+    "description": "Tenant and usage metrics across all of Revora.",
+    "stats": {
+      "businesses": "Businesses",
+      "registeredUsers": "Registered users",
+      "customers": "Customers",
+      "quotations": "Quotations",
+      "approvedQuotes": "Approved quotes",
+      "complaints": "Complaints",
+      "openComplaints": "Open complaints",
+      "superAdmins": "Super admins"
+    }
   }
 }

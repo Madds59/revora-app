@@ -2,8 +2,10 @@
 
 ## Critical Routes
 
-- `/signup`
-- `/login`
+- `/en/signup`
+- `/ar/signup`
+- `/en/login`
+- `/ar/login`
 - `/onboarding`
 - `/analytics`
 - `/notifications`
@@ -19,6 +21,14 @@
 
 ## Manual Checks
 
+- Open `/login` and `/signup` and confirm they redirect to the canonical locale
+  routes.
+- Open `/en/login` and `/ar/login` and confirm the tabs render cleanly without
+  overlap or empty gray panels.
+- Open `/en/signup` and `/ar/signup` and confirm account-type selection is
+  explicit and readable in both directions.
+- Confirm the language switcher preserves the current path when moving between
+  English and Arabic.
 - Sign up as a business owner, customer, and invited staff user, and confirm
   each path lands on the correct onboarding or portal surface.
 - Sign in as a business owner and confirm the dashboard shell loads.
@@ -35,6 +45,8 @@
 - Resize to mobile width and confirm table-heavy pages render card fallbacks.
 - Confirm billing remains owner-only.
 - Confirm billing invoices and payment events only appear after Stripe webhook sync.
+- Confirm AED and date/time values use Western digits in the shell and billing
+  surfaces.
 
 ## Automated Checks
 
@@ -43,6 +55,13 @@
 - `pnpm build`
 - `APP_URL=http://127.0.0.1:3001 pnpm smoke:routes`
 - `APP_URL=https://revora-app.vercel.app pnpm smoke:routes`
+
+## Locale Notes
+
+- Revora's canonical app routes live under `/en` and `/ar`.
+- `/api` remains excluded from middleware.
+- `/api/stripe/webhook` must stay public at the routing layer and protected only
+  by Stripe signature verification.
 
 ## Deployment Checklist
 

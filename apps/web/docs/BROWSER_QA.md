@@ -39,8 +39,14 @@ pnpm approve-builds --all
 
 ## Manual browser checklist
 
-- Open `/signup` and confirm the account-type cards require an explicit choice
-  before submission.
+- Open `/login` and `/signup` and confirm they redirect to `/en/login` and
+  `/en/signup`.
+- Open `/en/login` and `/ar/login` and confirm the login tabs render without
+  overlap or a blank gray panel.
+- Open `/en/signup` and `/ar/signup` and confirm the account-type cards require
+  an explicit choice before submission.
+- Confirm the language switcher preserves the current path when switching
+  between English and Arabic.
 - Sign up as a business owner and confirm `/onboarding` leads to business setup.
 - Sign up as a customer and confirm `/portal` shows the customer onboarding or
   empty linked-account state instead of a business workspace.
@@ -55,9 +61,13 @@ pnpm approve-builds --all
 - Run `pnpm diagnose:billing` in a live environment and confirm Stripe plan IDs align with the catalog.
 - Run `node scripts/sync-stripe-plan-prices.mjs --dry-run` before applying live plan updates.
 - Confirm Supabase Auth Site URL is `https://revora-app.vercel.app` and redirect URLs include both production and localhost patterns.
+- Confirm AED and date/time values use Western digits on billing-heavy views.
+- Confirm `/api/stripe/webhook` is not behind auth middleware by checking an
+  unsigned POST returns a non-redirect failure code.
 
 ## Expected results
 
 - Protected routes redirect or render safely.
 - Mobile list pages stay readable without horizontal scrolling.
 - No route throws a runtime 500.
+- Locale routes are the canonical app surface.

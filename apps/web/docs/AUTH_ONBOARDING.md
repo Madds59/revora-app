@@ -27,6 +27,14 @@ Super admin is never selectable during public signup.
 - Super admins can access `/admin`.
 - Users without a valid business context are not treated as business owners by default.
 
+## Locale behavior
+
+- Canonical public auth routes live at `/en/login`, `/ar/login`, `/en/signup`,
+  and `/ar/signup`.
+- `/login` and `/signup` redirect to the English locale entry points.
+- The language switcher should preserve the current path when moving between
+  English and Arabic.
+
 ## Role matrix
 
 | Context | Signup option | Access |
