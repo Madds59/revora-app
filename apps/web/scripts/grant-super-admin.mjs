@@ -8,8 +8,8 @@
 // Usage (from apps/web):
 //   node scripts/grant-super-admin.mjs <email> [--revoke]
 //
-// Env (falls back to local Supabase defaults if unset):
-//   NEXT_PUBLIC_SUPABASE_URL / SUPABASE_URL
+// Env:
+//   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
 //   SUPABASE_SERVICE_ROLE_KEY
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
@@ -27,22 +27,38 @@ function loadEnvLocal() {
 }
 loadEnvLocal();
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  "http://127.0.0.1:54321";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const email = process.argv[2];
-const revoke = process.argv.includes("--revoke");
+const args = process.argv.slice(2);
+const revoke = args.includes("--revoke");
+const positional = args.filter((arg) => !arg.startsWith("--"));
+const email = positional[0];
+const unknownFlags = args.filter((arg) => arg.startsWith("--") && arg !== "--revoke");
 
-if (!email) {
-  console.error("Usage: node scripts/grant-super-admin.mjs <email> [--revoke]");
+function fail(message) {
+  console.error(message);
   process.exit(1);
 }
+
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+if (positional.length !== 1) {
+  fail("Usage: node scripts/grant-super-admin.mjs <email> [--revoke]");
+}
+if (unknownFlags.length > 0) {
+  fail(`Unknown flag(s): ${unknownFlags.join(", ")}`);
+}
+if (!isEmail(email)) fail(`Invalid email address: ${email}`);
+if (!supabaseUrl) {
+  fail(
+    "NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) is required. Export the target Supabase URL before running this script.",
+  );
+}
 if (!SERVICE_KEY) {
-  console.error("SUPABASE_SERVICE_ROLE_KEY is not set (check .env.local or env).");
-  process.exit(1);
+  fail("SUPABASE_SERVICE_ROLE_KEY is required and must be exported locally.");
 }
 
 const admin = createClient(supabaseUrl, SERVICE_KEY, {
@@ -54,8 +70,7 @@ let userId = null;
 for (let page = 1; page <= 50 && !userId; page++) {
   const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
   if (error) {
-    console.error("listUsers failed:", error.message);
-    process.exit(1);
+    fail(`listUsers failed: ${error.message}`);
   }
   const match = data.users.find(
     (u) => (u.email ?? "").toLowerCase() === email.toLowerCase(),
@@ -65,24 +80,38 @@ for (let page = 1; page <= 50 && !userId; page++) {
 }
 
 if (!userId) {
-  console.error(`No user with email ${email}. They must sign up first.`);
-  process.exit(1);
+  fail(`No user with email ${email}. They must sign up first.`);
+}
+
+const { data: existingAdmin, error: existingAdminError } = await admin
+  .from("platform_admins")
+  .select("user_id")
+  .eq("user_id", userId)
+  .maybeSingle();
+if (existingAdminError) {
+  fail(`platform_admins lookup failed: ${existingAdminError.message}`);
 }
 
 if (revoke) {
+  if (!existingAdmin) {
+    console.log(`${email} is not currently a super admin.`);
+    process.exit(0);
+  }
   const { error } = await admin.from("platform_admins").delete().eq("user_id", userId);
   if (error) {
-    console.error("revoke failed:", error.message);
-    process.exit(1);
+    fail(`revoke failed: ${error.message}`);
   }
   console.log(`Revoked super admin from ${email}.`);
 } else {
+  if (existingAdmin) {
+    console.log(`${email} is already a super admin.`);
+    process.exit(0);
+  }
   const { error } = await admin
     .from("platform_admins")
     .upsert({ user_id: userId }, { onConflict: "user_id" });
   if (error) {
-    console.error("grant failed:", error.message);
-    process.exit(1);
+    fail(`grant failed: ${error.message}`);
   }
   console.log(`Granted super admin to ${email}.`);
 }
