@@ -29,6 +29,9 @@
   explicit and readable in both directions.
 - Confirm the language switcher preserves the current path when moving between
   English and Arabic.
+- On `/ar`, confirm shared UI, form labels/actions, complaint/message tooling,
+  and customer/vehicle/settings component copy are localized with no raw keys and
+  no leftover English. AED and pagination counts stay in Western digits.
 - Sign up as a business owner, customer, and invited staff user, and confirm
   each path lands on the correct onboarding or portal surface.
 - Sign in as a business owner and confirm the dashboard shell loads.

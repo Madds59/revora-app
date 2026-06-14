@@ -46,7 +46,14 @@ pnpm approve-builds --all
 - Open `/en/signup` and `/ar/signup` and confirm the account-type cards require
   an explicit choice before submission.
 - Confirm the language switcher preserves the current path when switching
-  between English and Arabic.
+  between English and Arabic. The switcher sits next to the theme toggle.
+- On `/en` and `/ar`, spot-check that form labels and actions, complaint/message
+  tooling, and customer/vehicle/settings component copy are localized (no raw
+  translation keys, no leftover English on `/ar`). Enum option values (severity,
+  status, role) intentionally remain in source.
+- Confirm shared UI states are localized: error retry/back labels, filter search
+  placeholders, pagination "Previous/Next" and counts, and the evidence empty
+  state. Pagination counts must stay in Western digits on `/ar`.
 - Sign up as a business owner and confirm `/onboarding` leads to business setup.
 - Sign up as a customer and confirm `/portal` shows the customer onboarding or
   empty linked-account state instead of a business workspace.
