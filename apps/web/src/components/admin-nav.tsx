@@ -16,24 +16,40 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
-type NavItem = { label: string; href: string; icon: LucideIcon };
+type NavItem = {
+  labelKey:
+    | "overview"
+    | "tenants"
+    | "users"
+    | "subscriptions"
+    | "billing"
+    | "analytics"
+    | "notifications"
+    | "auditLogs"
+    | "settings"
+    | "superAdmins";
+  href: string;
+  icon: LucideIcon;
+};
 
 const NAV: NavItem[] = [
-  { label: "Overview", href: "/admin", icon: LayoutDashboard },
-  { label: "Tenants", href: "/admin/tenants", icon: Building2 },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Subscriptions", href: "/admin/subscriptions", icon: ReceiptText },
-  { label: "Billing", href: "/admin/billing", icon: CreditCard },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Notifications", href: "/admin/notifications", icon: Bell },
-  { label: "Audit logs", href: "/admin/audit-logs", icon: FileClock },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-  { label: "Super admins", href: "/admin/admins", icon: ShieldCheck },
+  { labelKey: "overview", href: "/admin", icon: LayoutDashboard },
+  { labelKey: "tenants", href: "/admin/tenants", icon: Building2 },
+  { labelKey: "users", href: "/admin/users", icon: Users },
+  { labelKey: "subscriptions", href: "/admin/subscriptions", icon: ReceiptText },
+  { labelKey: "billing", href: "/admin/billing", icon: CreditCard },
+  { labelKey: "analytics", href: "/admin/analytics", icon: BarChart3 },
+  { labelKey: "notifications", href: "/admin/notifications", icon: Bell },
+  { labelKey: "auditLogs", href: "/admin/audit-logs", icon: FileClock },
+  { labelKey: "settings", href: "/admin/settings", icon: Settings },
+  { labelKey: "superAdmins", href: "/admin/admins", icon: ShieldCheck },
 ];
 
 export function AdminNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className="flex flex-col gap-1 p-2">
@@ -55,7 +71,7 @@ export function AdminNav() {
             )}
           >
             <Icon className="size-4 shrink-0" />
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </Link>
         );
       })}

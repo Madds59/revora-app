@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { rejectQuote, type FormState } from "../actions";
@@ -20,6 +21,7 @@ export function RejectForm({
   customerId: string;
 }) {
   const [state, action] = useActionState(rejectQuote, initial);
+  const t = useTranslations("forms.quote");
   const last = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -39,17 +41,17 @@ export function RejectForm({
       <input type="hidden" name="business_id" value={businessId} />
       <input type="hidden" name="customer_id" value={customerId} />
       <div className="grid gap-2">
-        <Label htmlFor="rejection_note">Optional reason</Label>
+        <Label htmlFor="rejection_note">{t("optionalReason")}</Label>
         <Textarea
           id="rejection_note"
           name="rejection_note"
           rows={3}
-          placeholder="Tell the workshop what you would like changed"
+          placeholder={t("rejectPlaceholder")}
         />
       </div>
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="destructive">Decline quotation</SubmitButton>
+        <SubmitButton variant="destructive">{t("decline")}</SubmitButton>
       </div>
     </form>
   );

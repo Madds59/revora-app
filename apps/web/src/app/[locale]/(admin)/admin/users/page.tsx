@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -51,6 +52,7 @@ export default async function AdminUsersPage({
     to?: string;
   }>;
 }) {
+  const t = await getTranslations("adminUsers");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -85,14 +87,14 @@ export default async function AdminUsersPage({
   return (
     <>
       <PageHeader
-        title="Users"
-        description="All registered platform users and their tenant footprint."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total users</CardDescription>
+              <CardHeader className="pb-2">
+              <CardDescription>{t("stats.totalUsers")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.users ?? users.length}
               </CardTitle>
@@ -100,7 +102,7 @@ export default async function AdminUsersPage({
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Super admins</CardDescription>
+              <CardDescription>{t("stats.superAdmins")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.super_admins ?? users.filter((u) => u.is_super_admin).length}
               </CardTitle>
@@ -108,7 +110,7 @@ export default async function AdminUsersPage({
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Linked customers</CardDescription>
+              <CardDescription>{t("stats.linkedCustomers")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {users.reduce((total, user) => total + user.linked_customers, 0)}
               </CardTitle>
@@ -116,7 +118,7 @@ export default async function AdminUsersPage({
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Business memberships</CardDescription>
+              <CardDescription>{t("stats.businessMemberships")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {users.reduce((total, user) => total + user.business_memberships, 0)}
               </CardTitle>
@@ -126,18 +128,16 @@ export default async function AdminUsersPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>User table ({totalCount})</CardTitle>
-            <CardDescription>
-              Platform signups, super-admin status, and tenant linkage.
-            </CardDescription>
+            <CardTitle>{t("cardTitle", { count: totalCount })}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
               <p className="text-sm text-destructive">{error.message}</p>
             ) : users.length === 0 ? (
               <EmptyState
-                title="No users yet"
-                description="Users will appear here once the platform starts collecting signups and memberships."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <AdminUsersBrowser

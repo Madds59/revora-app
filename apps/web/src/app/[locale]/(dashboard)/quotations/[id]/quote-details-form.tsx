@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { updateQuoteDetails, type FormState } from "../actions";
@@ -27,6 +28,7 @@ export function QuoteDetailsForm({
   disabled: boolean;
 }) {
   const [state, action] = useActionState(updateQuoteDetails, initial);
+  const t = useTranslations("forms.quote");
   const last = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (state.message && state.message !== last.current) {
@@ -42,7 +44,7 @@ export function QuoteDetailsForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
             <Label htmlFor="expected_completion_date">
-              Expected completion
+              {t("expectedCompletion")}
             </Label>
             <Input
               id="expected_completion_date"
@@ -52,7 +54,7 @@ export function QuoteDetailsForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="warranty_terms">Warranty terms</Label>
+            <Label htmlFor="warranty_terms">{t("warrantyTerms")}</Label>
             <Input
               id="warranty_terms"
               name="warranty_terms"
@@ -61,7 +63,7 @@ export function QuoteDetailsForm({
           </div>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="customer_notes">Customer notes</Label>
+          <Label htmlFor="customer_notes">{t("customerNotes")}</Label>
           <Textarea
             id="customer_notes"
             name="customer_notes"
@@ -70,7 +72,7 @@ export function QuoteDetailsForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="internal_notes">Internal notes (staff only)</Label>
+          <Label htmlFor="internal_notes">{t("internalNotes")}</Label>
           <Textarea
             id="internal_notes"
             name="internal_notes"
@@ -83,7 +85,7 @@ export function QuoteDetailsForm({
         )}
         {!disabled && (
           <div>
-            <SubmitButton variant="secondary">Save details</SubmitButton>
+            <SubmitButton variant="secondary">{t("saveDetails")}</SubmitButton>
           </div>
         )}
       </fieldset>

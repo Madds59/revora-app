@@ -12,24 +12,26 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type NavItem = {
-  label: string;
+  labelKey: "home" | "quotes" | "jobs" | "complaints" | "documents" | "settings";
   href: string;
   icon: LucideIcon;
 };
 
 const NAV: NavItem[] = [
-  { label: "Home", href: "/portal", icon: Home },
-  { label: "Quotes", href: "/portal/quotes", icon: FileText },
-  { label: "Jobs", href: "/portal/jobs", icon: Wrench },
-  { label: "Complaints", href: "/portal/complaints", icon: MessageSquare },
-  { label: "Documents", href: "/portal/documents", icon: Files },
-  { label: "Settings", href: "/portal/settings", icon: Settings },
+  { labelKey: "home", href: "/portal", icon: Home },
+  { labelKey: "quotes", href: "/portal/quotes", icon: FileText },
+  { labelKey: "jobs", href: "/portal/jobs", icon: Wrench },
+  { labelKey: "complaints", href: "/portal/complaints", icon: MessageSquare },
+  { labelKey: "documents", href: "/portal/documents", icon: Files },
+  { labelKey: "settings", href: "/portal/settings", icon: Settings },
 ];
 
 export function PortalNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className="flex flex-col gap-0.5 px-2">
@@ -61,7 +63,7 @@ export function PortalNav() {
                 active ? "text-sidebar-primary" : "text-sidebar-foreground/60",
               )}
             />
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </Link>
         );
       })}

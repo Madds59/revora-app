@@ -27,6 +27,14 @@ Super admin is never selectable during public signup.
 - Super admins can access `/admin`.
 - Users without a valid business context are not treated as business owners by default.
 
+## Locale behavior
+
+- Canonical public auth routes live at `/en/login`, `/ar/login`, `/en/signup`,
+  and `/ar/signup`.
+- `/login` and `/signup` redirect to the English locale entry points.
+- The language switcher should preserve the current path when moving between
+  English and Arabic.
+
 ## Role matrix
 
 | Context | Signup option | Access |
@@ -47,7 +55,8 @@ Supabase Auth should use:
 
 ## Bootstrap commands
 
-Promote an existing signed-up user to platform admin:
+Promote an existing signed-up user to platform admin. Full bootstrap steps and
+production safety notes live in [SUPER_ADMIN_BOOTSTRAP.md](./SUPER_ADMIN_BOOTSTRAP.md).
 
 ```bash
 node scripts/grant-super-admin.mjs madd59productions@gmail.com
@@ -55,3 +64,5 @@ node scripts/grant-super-admin.mjs moda.imf1997@gmail.com
 ```
 
 The user must sign up first; do not generate or commit passwords.
+Super admin is never a public signup option and is never derived from
+`account_intent`.

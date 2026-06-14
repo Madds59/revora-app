@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -29,14 +30,16 @@ export default async function NewVehiclePage() {
     detail: customer.email ?? undefined,
   }));
 
+  const t = await getTranslations("dashboardVehicles.new");
+
   return (
     <>
       <PageHeader
-        title="Add vehicle"
-        description="Create a vehicle record and link it to an existing customer."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href="/vehicles" className={buttonVariants({ variant: "outline" })}>
-            Back to vehicles
+            {t("back")}
           </Link>
         }
       />
@@ -45,16 +48,16 @@ export default async function NewVehiclePage() {
           <div className="text-destructive text-sm">{error.message}</div>
         ) : customers.length === 0 ? (
           <EmptyState
-            title="No customers yet"
-            description="Create a customer first, then add their vehicle."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
             action={
               <Link href="/customers/new" className={buttonVariants()}>
-                Add customer
+                {t("emptyAction")}
               </Link>
             }
           />
         ) : (
-          <VehicleForm action={createVehicle} submitLabel="Create vehicle" customers={customers} />
+          <VehicleForm action={createVehicle} submitLabel={t("submit")} customers={customers} />
         )}
       </div>
     </>

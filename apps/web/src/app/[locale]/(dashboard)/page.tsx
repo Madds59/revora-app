@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   Users,
   FileCheck2,
@@ -31,6 +32,7 @@ type Stat = {
 };
 
 export default async function HomePage() {
+  const t = await getTranslations("dashboardHome");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -68,22 +70,22 @@ export default async function HomePage() {
   ]);
 
   const stats: Stat[] = [
-    { label: "Customers", value: customerCount ?? 0, icon: Users, ready: true },
-    { label: "Vehicles", value: vehicleCount ?? 0, icon: CarFront, ready: true },
+    { label: t("stats.customers"), value: customerCount ?? 0, icon: Users, ready: true },
+    { label: t("stats.vehicles"), value: vehicleCount ?? 0, icon: CarFront, ready: true },
     {
-      label: "Quotes awaiting approval",
+      label: t("stats.quotesAwaitingApproval"),
       value: pendingQuoteCount ?? 0,
       icon: FileCheck2,
       ready: true,
     },
     {
-      label: "Open complaints",
+      label: t("stats.openComplaints"),
       value: openComplaintCount ?? 0,
       icon: MessageSquareWarning,
       ready: true,
     },
     {
-      label: "Active jobs",
+      label: t("stats.activeJobs"),
       value: activeJobCount ?? 0,
       icon: Wrench,
       ready: true,
@@ -93,8 +95,8 @@ export default async function HomePage() {
   return (
     <>
       <PageHeader
-        title={`Welcome to ${business.name}`}
-        description="Your operations at a glance."
+        title={t("title", { businessName: business.name })}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
@@ -127,7 +129,7 @@ export default async function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <span className="text-muted-foreground text-xs">
-                    {s.ready ? "Live" : "Available in a later release"}
+                    {s.ready ? t("status.live") : t("status.laterRelease")}
                   </span>
                 </CardContent>
               </Card>
@@ -138,11 +140,8 @@ export default async function HomePage() {
         <Card className="overflow-hidden">
           <div aria-hidden className="uae-flag-stripe h-1 w-full" />
           <CardHeader>
-            <CardTitle>Get started</CardTitle>
-            <CardDescription>
-              The foundation is ready. Add your customers and configure your
-              business profile.
-            </CardDescription>
+            <CardTitle>{t("getStarted.title")}</CardTitle>
+            <CardDescription>{t("getStarted.description")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
             <Link
@@ -152,7 +151,7 @@ export default async function HomePage() {
                 "w-full justify-center",
               )}
             >
-              Add a customer
+              {t("getStarted.addCustomer")}
               <ArrowRight className="rtl:rotate-180" />
             </Link>
             <Link
@@ -162,7 +161,7 @@ export default async function HomePage() {
                 "w-full justify-center",
               )}
             >
-              Manage vehicles
+              {t("getStarted.manageVehicles")}
             </Link>
             <Link
               href="/settings/business"
@@ -171,7 +170,7 @@ export default async function HomePage() {
                 "w-full justify-center",
               )}
             >
-              Business settings
+              {t("getStarted.businessSettings")}
             </Link>
           </CardContent>
         </Card>

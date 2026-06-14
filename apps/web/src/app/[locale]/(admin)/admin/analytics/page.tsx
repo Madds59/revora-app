@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { getTranslations } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -20,6 +21,7 @@ import type { AdminBusinessRow, PlatformMetrics } from "@/lib/admin-views";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminAnalyticsPage() {
+  const t = await getTranslations("adminAnalytics");
   await requireSuperAdmin();
   const supabase = await createClient();
 
@@ -37,14 +39,14 @@ export default async function AdminAnalyticsPage() {
   return (
     <>
       <PageHeader
-        title="Analytics"
-        description="Cross-tenant activity, operations, and growth signals."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Businesses</CardDescription>
+              <CardDescription>{t("stats.businesses")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.businesses ?? 0}
               </CardTitle>
@@ -52,7 +54,7 @@ export default async function AdminAnalyticsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Customers</CardDescription>
+              <CardDescription>{t("stats.customers")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.customers ?? 0}
               </CardTitle>
@@ -60,7 +62,7 @@ export default async function AdminAnalyticsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Quotes</CardDescription>
+              <CardDescription>{t("stats.quotes")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.quotations ?? 0}
               </CardTitle>
@@ -68,7 +70,7 @@ export default async function AdminAnalyticsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Complaints</CardDescription>
+              <CardDescription>{t("stats.complaints")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.complaints ?? 0}
               </CardTitle>
@@ -78,27 +80,25 @@ export default async function AdminAnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top tenants</CardTitle>
-            <CardDescription>
-              Businesses with the most quote and complaint activity.
-            </CardDescription>
+            <CardTitle>{t("cardTitle")}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {businesses.length === 0 ? (
               <EmptyState
-                title="No tenant activity yet"
-                description="Analytics will fill in once businesses start generating quotes, complaints, and customer growth."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Business</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead className="text-end">Members</TableHead>
-                      <TableHead className="text-end">Quotes</TableHead>
-                      <TableHead className="text-end">Complaints</TableHead>
+                      <TableHead>{t("table.business")}</TableHead>
+                      <TableHead>{t("table.owner")}</TableHead>
+                      <TableHead className="text-end">{t("table.members")}</TableHead>
+                      <TableHead className="text-end">{t("table.quotes")}</TableHead>
+                      <TableHead className="text-end">{t("table.complaints")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

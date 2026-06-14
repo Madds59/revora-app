@@ -1,11 +1,13 @@
 import { FileText } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import type { EvidenceItem } from "@/lib/evidence";
 
-export function EvidenceGallery({ items }: { items: EvidenceItem[] }) {
+export async function EvidenceGallery({ items }: { items: EvidenceItem[] }) {
   if (items.length === 0) {
+    const t = await getTranslations("common.states");
     return (
-      <p className="text-muted-foreground text-sm">No evidence uploaded yet.</p>
+      <p className="text-muted-foreground text-sm">{t("noEvidence")}</p>
     );
   }
   return (

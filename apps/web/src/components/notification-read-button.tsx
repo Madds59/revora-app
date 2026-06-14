@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { markNotificationRead, type AdminFormState } from "@/app/[locale]/(admin)/admin/actions";
@@ -15,7 +16,7 @@ export function NotificationReadButton({
   notificationId,
   readAt,
   action = markNotificationRead,
-  label = "Mark read",
+  label,
 }: {
   action?: Action;
   label?: string;
@@ -23,6 +24,8 @@ export function NotificationReadButton({
   readAt: string | null;
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("forms.notifications");
+  const resolvedLabel = label ?? t("markRead");
   const last = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export function NotificationReadButton({
     return (
       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         <Check className="size-3" />
-        Read
+        {t("read")}
       </span>
     );
   }
@@ -49,7 +52,7 @@ export function NotificationReadButton({
     <form action={formAction}>
       <input type="hidden" name="notification_id" value={notificationId} />
       <Button type="submit" variant="outline" size="sm">
-        {label}
+        {resolvedLabel}
       </Button>
     </form>
   );

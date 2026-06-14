@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -23,14 +25,16 @@ function formatDate(value: string): string {
 }
 
 function EmptyThread() {
+  const t = useTranslations("complaints.messages");
   return (
     <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-      No messages yet. Use the reply box below to start the thread.
+      {t("empty")}
     </div>
   );
 }
 
 function ThreadList({ entries }: { entries: ThreadNode[] }) {
+  const t = useTranslations("complaints.messages");
   if (entries.length === 0) return <EmptyThread />;
 
   return (
@@ -46,7 +50,7 @@ function ThreadList({ entries }: { entries: ThreadNode[] }) {
               {message.sender_name ?? message.sender_role}
             </span>
             <span className="uppercase tracking-wide">{message.sender_role}</span>
-            {message.internal_only && <Badge variant="outline">Internal</Badge>}
+            {message.internal_only && <Badge variant="outline">{t("internal")}</Badge>}
             <span>{formatDate(message.created_at)}</span>
           </div>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
@@ -59,8 +63,8 @@ function ThreadList({ entries }: { entries: ThreadNode[] }) {
 }
 
 export function ComplaintMessagingPanel({
-  title = "Threaded messages",
-  description = "Staff replies, customer replies, and internal notes in one thread.",
+  title,
+  description,
   entries,
   complaintId,
   businessId,
@@ -77,6 +81,9 @@ export function ComplaintMessagingPanel({
   replyLabel: string;
   title?: string;
 }) {
+  const t = useTranslations("complaints.messages");
+  const resolvedTitle = title ?? t("panelTitle");
+  const resolvedDescription = description ?? t("panelDescription");
   const threaded = buildComplaintThread(entries);
   const parentReplyOptions: ComplaintParentOption[] = threaded.map((message) => ({
     id: message.id,
@@ -86,8 +93,8 @@ export function ComplaintMessagingPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardTitle>{resolvedTitle}</CardTitle>
+        <CardDescription>{resolvedDescription}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         <ThreadList entries={threaded} />

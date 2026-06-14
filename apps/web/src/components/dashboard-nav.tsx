@@ -17,30 +17,43 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type NavItem = {
-  label: string;
+  labelKey:
+    | "dashboard"
+    | "customers"
+    | "vehicles"
+    | "jobs"
+    | "quotes"
+    | "complaints"
+    | "documents"
+    | "billing"
+    | "analytics"
+    | "notifications"
+    | "settings";
   href: string;
   icon: LucideIcon;
   aliases?: string[];
 };
 
 const NAV: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: Home, aliases: ["/"] },
-  { label: "Customers", href: "/customers", icon: Users },
-  { label: "Vehicles", href: "/vehicles", icon: CarFront },
-  { label: "Jobs", href: "/jobs", icon: Wrench },
-  { label: "Quotes", href: "/quotes", icon: FileText, aliases: ["/quotations"] },
-  { label: "Complaints", href: "/complaints", icon: MessageSquareWarning },
-  { label: "Documents", href: "/documents", icon: Files },
-  { label: "Billing", href: "/billing", icon: CreditCard },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Notifications", href: "/notifications", icon: Bell },
-  { label: "Settings", href: "/settings", icon: Settings, aliases: ["/settings/business"] },
+  { labelKey: "dashboard", href: "/dashboard", icon: Home, aliases: ["/"] },
+  { labelKey: "customers", href: "/customers", icon: Users },
+  { labelKey: "vehicles", href: "/vehicles", icon: CarFront },
+  { labelKey: "jobs", href: "/jobs", icon: Wrench },
+  { labelKey: "quotes", href: "/quotes", icon: FileText, aliases: ["/quotations"] },
+  { labelKey: "complaints", href: "/complaints", icon: MessageSquareWarning },
+  { labelKey: "documents", href: "/documents", icon: Files },
+  { labelKey: "billing", href: "/billing", icon: CreditCard },
+  { labelKey: "analytics", href: "/analytics", icon: BarChart3 },
+  { labelKey: "notifications", href: "/notifications", icon: Bell },
+  { labelKey: "settings", href: "/settings", icon: Settings, aliases: ["/settings/business"] },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className="flex flex-col gap-0.5 px-2">
@@ -71,7 +84,7 @@ export function DashboardNav() {
                 active ? "text-sidebar-primary" : "text-sidebar-foreground/60",
               )}
             />
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </Link>
         );
       })}

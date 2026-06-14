@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
@@ -24,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatDate } from "@/lib/formatters";
 import type { JobStatus } from "@/lib/database.types";
 
 export type JobBoardRow = {
@@ -59,6 +61,7 @@ const STATUS_LABELS: Record<JobStatus, string> = {
 };
 
 export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
+  const t = useTranslations("dashboardJobs");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<JobStatus | "all">("all");
 
@@ -103,15 +106,15 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search jobs, customers, branches"
+          placeholder={t("searchPlaceholder")}
           className="md:max-w-sm"
         />
         <Select value={status} onValueChange={(value) => setStatus(value as JobStatus | "all")}>
           <SelectTrigger className="md:w-56">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder={t("filters.status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">{t("filters.allStatuses")}</SelectItem>
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
               <SelectItem key={key} value={key}>
                 {label}
@@ -120,7 +123,7 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2 md:ms-auto">
-          <Badge variant="secondary">{filtered.length} visible</Badge>
+          <Badge variant="secondary">{t("summary.visible", { count: filtered.length })}</Badge>
           <Button
             type="button"
             variant="ghost"
@@ -131,15 +134,15 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
             }}
             disabled={query.length === 0 && status === "all"}
           >
-            Reset filters
+            {t("filters.reset")}
           </Button>
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="No jobs match"
-          description="Try a different search or reset the filters."
+          title={t("empty.title")}
+          description={t("empty.description")}
         />
       ) : (
         <>
@@ -160,11 +163,11 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
                     <Badge variant={STATUS_VARIANT[row.status]}>
                       {STATUS_LABELS[row.status]}
                     </Badge>
-                    <span>{row.branch_name ?? "No branch"}</span>
+                    <span>{row.branch_name ?? t("fallback.noBranch")}</span>
                     <span>
                       {row.expected_completion_at
-                        ? new Date(row.expected_completion_at).toLocaleDateString()
-                        : "No due date"}
+                        ? formatDate(row.expected_completion_at)
+                        : t("fallback.noDueDate")}
                     </span>
                   </div>
                 }
@@ -173,56 +176,51 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
           />
 
           <div className="hidden rounded-lg border md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Job</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Branch</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Due</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <Link
-                      href={`/jobs/${row.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {row.title}
-                    </Link>
-                    {row.description && (
-                      <div className="text-muted-foreground text-xs">
-                        {row.description}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div>{row.customer_name}</div>
-                    <div className="text-muted-foreground text-xs">
-                      {row.customer_email ?? "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.branch_name ?? "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_VARIANT[row.status]}>
-                      {STATUS_LABELS[row.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.expected_completion_at
-                      ? new Date(row.expected_completion_at).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("table.job")}</TableHead>
+                  <TableHead>{t("table.customer")}</TableHead>
+                  <TableHead>{t("table.branch")}</TableHead>
+                  <TableHead>{t("table.status")}</TableHead>
+                  <TableHead>{t("table.due")}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell>
+                      <Link href={`/jobs/${row.id}`} className="font-medium hover:underline">
+                        {row.title}
+                      </Link>
+                      {row.description && (
+                        <div className="text-muted-foreground text-xs">{row.description}</div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div>{row.customer_name}</div>
+                      <div className="text-muted-foreground text-xs">
+                        {row.customer_email ?? t("fallback.none")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {row.branch_name ?? t("fallback.none")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_VARIANT[row.status]}>
+                        {STATUS_LABELS[row.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {row.expected_completion_at
+                        ? formatDate(row.expected_completion_at)
+                        : t("fallback.none")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </>
       )}
     </div>

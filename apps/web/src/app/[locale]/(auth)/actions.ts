@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { isAccountIntent, type AccountIntent } from "@/lib/account-intent";
 import { createClient } from "@/lib/supabase/server";
@@ -22,9 +23,10 @@ export async function signIn(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const t = await getTranslations("auth.actions");
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Email and password are required." };
+  if (!email || !password) return { error: t("emailRequired") };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -37,14 +39,14 @@ export async function signUp(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const t = await getTranslations("auth.actions");
   const fullName = String(formData.get("full_name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const accountIntent = parseAccountIntent(formData.get("account_intent"));
-  if (!email || !password) return { error: "Email and password are required." };
-  if (password.length < 8)
-    return { error: "Password must be at least 8 characters." };
-  if (!accountIntent) return { error: "Choose an account type to continue." };
+  if (!email || !password) return { error: t("emailRequired") };
+  if (password.length < 8) return { error: t("passwordMin") };
+  if (!accountIntent) return { error: t("chooseAccountType") };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -61,7 +63,7 @@ export async function signUp(
 
   // When email confirmation is enabled, there is no session yet.
   if (!data.session)
-    return { message: "Check your email to confirm your account, then sign in." };
+    return { message: t("checkEmail") };
 
   redirect(accountIntent === "customer" ? "/portal" : "/onboarding");
 }
@@ -70,8 +72,9 @@ export async function signInWithMagicLink(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
+  const t = await getTranslations("auth.actions");
   const email = String(formData.get("email") ?? "").trim();
-  if (!email) return { error: "Email is required." };
+  if (!email) return { error: t("emailRequired") };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
@@ -80,7 +83,7 @@ export async function signInWithMagicLink(
   });
   if (error) return { error: error.message };
 
-  return { message: "Magic link sent. Check your email to sign in." };
+  return { message: t("magicLinkSent") };
 }
 
 export async function signOut() {

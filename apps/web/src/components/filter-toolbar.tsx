@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,7 @@ export type FilterOption = { label: string; value: string };
 export function FilterToolbar({
   searchValue,
   onSearchValueChange,
-  searchPlaceholder = "Search",
+  searchPlaceholder,
   statusValue,
   onStatusValueChange,
   statusOptions,
@@ -40,6 +41,8 @@ export function FilterToolbar({
   statusOptions?: FilterOption[];
   statusValue?: string;
 }) {
+  const t = useTranslations("common.filters");
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t("searchPlaceholder");
   return (
     <div
       className={cn(
@@ -50,7 +53,7 @@ export function FilterToolbar({
       <div className="grid flex-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_220px]">
         <div className="grid gap-2">
           <Label className="sr-only" htmlFor="filter-search">
-            Search
+            {t("search")}
           </Label>
           <div className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute start-2 top-1/2 -translate-y-1/2" />
@@ -58,7 +61,7 @@ export function FilterToolbar({
               id="filter-search"
               value={searchValue}
               onChange={(event) => onSearchValueChange(event.target.value)}
-              placeholder={searchPlaceholder}
+              placeholder={resolvedSearchPlaceholder}
               className="ps-8"
             />
           </div>
@@ -67,14 +70,14 @@ export function FilterToolbar({
         {statusOptions && onStatusValueChange && (
           <div className="grid gap-2">
             <Label className="sr-only" htmlFor="filter-status">
-              Status
+              {t("status")}
             </Label>
             <Select
               value={statusValue}
               onValueChange={(value) => onStatusValueChange(value ?? "all")}
             >
               <SelectTrigger id="filter-status" className="w-full">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("status")} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
@@ -90,14 +93,14 @@ export function FilterToolbar({
         {dateOptions && onDateValueChange && (
           <div className="grid gap-2">
             <Label className="sr-only" htmlFor="filter-date">
-              Date range
+              {t("dateRange")}
             </Label>
             <Select
               value={dateValue}
               onValueChange={(value) => onDateValueChange(value ?? "all")}
             >
               <SelectTrigger id="filter-date" className="w-full">
-                <SelectValue placeholder="Date range" />
+                <SelectValue placeholder={t("dateRange")} />
               </SelectTrigger>
               <SelectContent>
                 {dateOptions.map((option) => (

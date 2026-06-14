@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useTranslations } from "next-intl";
 
 export type ShellMenuLink = {
   href: string;
@@ -70,6 +72,7 @@ export function ShellAccountMenu({
   footerNote,
 }: ShellAccountMenuProps) {
   const initials = useMemo(() => getInitials(email), [email]);
+  const t = useTranslations("shell");
 
   return (
     <DropdownMenu>
@@ -84,7 +87,7 @@ export function ShellAccountMenu({
                 ? "size-8 rounded-full px-0"
                 : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground h-auto py-1.5",
             )}
-            aria-label="Open account menu"
+            aria-label={t("openAccountMenu")}
           />
         }
       >
@@ -154,11 +157,19 @@ export function ShellAccountMenu({
         )}
 
         <DropdownMenuSeparator />
-        <div className="px-1.5 py-1">
-          <p className="text-muted-foreground mb-1.5 text-xs font-medium">
-            Theme
-          </p>
-          <ThemeToggle />
+        <div className="grid gap-3 px-1.5 py-1">
+          <div className="grid gap-1.5">
+            <p className="text-muted-foreground text-xs font-medium">
+              {t("theme")}
+            </p>
+            <ThemeToggle />
+          </div>
+          <div className="grid gap-1.5">
+            <p className="text-muted-foreground text-xs font-medium">
+              {t("language")}
+            </p>
+            <LanguageSwitcher />
+          </div>
         </div>
 
         <DropdownMenuSeparator />
@@ -168,7 +179,7 @@ export function ShellAccountMenu({
             className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground"
           >
             <LogOut className="size-4" />
-            <span>Sign out</span>
+            <span>{t("signOut")}</span>
           </button>
         </form>
         {footerNote && (

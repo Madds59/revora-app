@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -60,14 +61,16 @@ export default async function EditVehiclePage({
     detail: customer.email ?? undefined,
   }));
 
+  const t = await getTranslations("dashboardVehicles.edit");
+
   return (
     <>
       <PageHeader
-        title="Edit vehicle"
-        description="Update the vehicle and keep it linked to the correct customer."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href={`/vehicles/${id}`} className={buttonVariants({ variant: "outline" })}>
-            Back to vehicle
+            {t("back")}
           </Link>
         }
       />
@@ -76,18 +79,18 @@ export default async function EditVehiclePage({
           <div className="text-destructive text-sm">{error.message}</div>
         ) : customers.length === 0 ? (
           <EmptyState
-            title="No customers yet"
-            description="Create or restore a customer before editing vehicle ownership."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
             action={
               <Link href="/customers/new" className={buttonVariants()}>
-                Add customer
+                {t("emptyAction")}
               </Link>
             }
           />
         ) : (
           <VehicleForm
             action={updateVehicle}
-            submitLabel="Save changes"
+            submitLabel={t("submit")}
             vehicle={vehicle}
             customers={customers}
           />

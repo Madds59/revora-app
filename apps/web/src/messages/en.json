@@ -1,7 +1,179 @@
 {
   "common": {
     "appName": "Revora",
-    "tagline": "Built on Trust. Powered by Operations."
+    "tagline": "Built on Trust. Powered by Operations.",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "submit": "Submit",
+      "reset": "Reset",
+      "back": "Back",
+      "close": "Close",
+      "change": "Change",
+      "remove": "Remove"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search",
+      "status": "Status",
+      "dateRange": "Date range"
+    },
+    "pagination": {
+      "total": "{count} total",
+      "pageOf": "Page {page} of {pageCount}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "states": {
+      "errorRetry": "Try again",
+      "errorBack": "Go back",
+      "errorReference": "Reference: {digest}",
+      "noEvidence": "No evidence uploaded yet."
+    }
+  },
+  "forms": {
+    "customer": {
+      "fullName": "Full name",
+      "phone": "Phone",
+      "email": "Email",
+      "preferredLanguage": "Preferred language",
+      "languageEnglish": "English",
+      "languageArabic": "Arabic"
+    },
+    "vehicle": {
+      "customer": "Customer",
+      "selectCustomer": "Select a customer",
+      "selectedCustomer": "Selected customer",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "plateNumber": "Plate number",
+      "vin": "VIN",
+      "color": "Color"
+    },
+    "upload": {
+      "defaultLabel": "Upload file",
+      "uploaded": "Uploaded."
+    },
+    "business": {
+      "activeBusiness": "Active business",
+      "selectBusiness": "Select business",
+      "switchBusiness": "Switch business"
+    },
+    "billing": {
+      "openPortal": "Open billing portal"
+    },
+    "notifications": {
+      "markRead": "Mark read",
+      "read": "Read"
+    },
+    "quote": {
+      "customer": "Customer",
+      "selectCustomer": "Select a customer",
+      "vehicleOptional": "Vehicle (optional)",
+      "noVehicle": "No vehicle",
+      "createDraft": "Create draft quote",
+      "type": "Type",
+      "name": "Name",
+      "description": "Description",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "taxRate": "Tax %",
+      "productTransparency": "Product transparency",
+      "category": "Category",
+      "brand": "Brand",
+      "warranty": "Warranty",
+      "origin": "Origin",
+      "supplier": "Supplier",
+      "expectedLifespan": "Expected lifespan",
+      "addLineItem": "Add line item",
+      "expectedCompletion": "Expected completion",
+      "warrantyTerms": "Warranty terms",
+      "customerNotes": "Customer notes",
+      "internalNotes": "Internal notes (staff only)",
+      "saveDetails": "Save details",
+      "removeItem": "Remove item",
+      "sendToCustomer": "Send to customer",
+      "acknowledge": "I acknowledge the parts, pricing, warranty, and terms of this quotation.",
+      "signLabel": "Type your full name to sign",
+      "signPlaceholder": "Your full name",
+      "optionalNote": "Optional note",
+      "noteForWorkshop": "Add a note for the workshop",
+      "approve": "Approve quotation",
+      "approvalRecorded": "Your approval is recorded with a secure timestamp and digital signature.",
+      "optionalReason": "Optional reason",
+      "rejectPlaceholder": "Tell the workshop what you would like changed",
+      "decline": "Decline quotation"
+    }
+  },
+  "complaints": {
+    "submission": {
+      "businessAccount": "Business account",
+      "selectAccount": "Select an account",
+      "severity": "Severity",
+      "subject": "Subject",
+      "description": "Description",
+      "submit": "Submit complaint"
+    },
+    "management": {
+      "status": "Status",
+      "severity": "Severity",
+      "resolutionSummary": "Resolution summary",
+      "submit": "Save complaint"
+    },
+    "messages": {
+      "topLevel": "Top level",
+      "replyTo": "Reply to",
+      "message": "Message",
+      "internalOnly": "Internal only",
+      "internal": "Internal",
+      "empty": "No messages yet. Use the reply box below to start the thread.",
+      "panelTitle": "Threaded messages",
+      "panelDescription": "Staff replies, customer replies, and internal notes in one thread."
+    },
+    "assignment": {
+      "change": "Change assignee",
+      "description": "Move this complaint to another active team member or clear the assignment.",
+      "assignedTo": "Assigned to",
+      "unassigned": "Unassigned",
+      "submit": "Save assignment"
+    }
+  },
+  "settings": {
+    "business": {
+      "name": "Business name",
+      "legalName": "Legal name",
+      "tagline": "Tagline",
+      "country": "Country",
+      "defaultLanguage": "Default language",
+      "save": "Save changes",
+      "ownersOnly": "Only owners can edit business details."
+    },
+    "branch": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "add": "Add branch"
+    },
+    "service": {
+      "name": "Name",
+      "defaultPrice": "Default price (AED)",
+      "description": "Description",
+      "add": "Add service"
+    }
+  },
+  "team": {
+    "email": "Email",
+    "role": "Role",
+    "sendInvitation": "Send invitation",
+    "revoke": "Revoke",
+    "member": "Member",
+    "pendingInvitations": "Pending invitations",
+    "ownersOnly": "Only owners can invite teammates."
   },
   "nav": {
     "home": "Home",
@@ -16,7 +188,95 @@
     "analytics": "Analytics",
     "notifications": "Notifications",
     "settings": "Settings",
-    "soon": "soon"
+    "soon": "soon",
+    "overview": "Overview",
+    "tenants": "Tenants",
+    "users": "Users",
+    "subscriptions": "Subscriptions",
+    "auditLogs": "Audit logs",
+    "superAdmins": "Super admins"
+  },
+  "shell": {
+    "openNavigation": "Open navigation",
+    "closeNavigation": "Close navigation",
+    "openAccountMenu": "Open account menu",
+    "theme": "Theme",
+    "language": "Language",
+    "signOut": "Sign out",
+    "businessSettings": "Business settings",
+    "billing": "Billing",
+    "platformAdmin": "Platform admin",
+    "platformConsole": "Platform console",
+    "adminAccess": "Admin access",
+    "customerPortalAccess": "Customer portal access",
+    "platformOwner": "Platform owner",
+    "linkedAccounts": "{count, plural, one {# linked account} other {# linked accounts}}",
+    "languageOptions": {
+      "label": "Language",
+      "en": "English",
+      "ar": "Arabic",
+      "switchToEnglish": "Switch language to English",
+      "switchToArabic": "Switch language to Arabic"
+    },
+    "themeOptions": {
+      "label": "Color theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "auth": {
+    "layout": {
+      "trustBuilt": "Built on trust",
+      "trustBuiltBody": "Transparent quotes and a verifiable record customers can rely on.",
+      "digitalApprovals": "Digital approvals",
+      "digitalApprovalsBody": "Signed, audited sign-off on every job - no more disputes.",
+      "resolveWithCare": "Resolve with care",
+      "resolveWithCareBody": "Complaints handled in the open, start to finish.",
+      "madeForUAE": "Made for UAE service businesses",
+      "tagline": "Built on Trust. Powered by Operations."
+    },
+    "actions": {
+      "emailRequired": "Email and password are required.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "chooseAccountType": "Choose an account type to continue.",
+      "checkEmail": "Check your email to confirm your account, then sign in.",
+      "magicLinkSent": "Magic link sent. Check your email to sign in."
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Access your Revora workspace.",
+      "passwordTab": "Password",
+      "magicTab": "Magic link",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "signIn": "Sign in",
+      "sendMagicLink": "Send magic link",
+      "noAccount": "No account?",
+      "createOne": "Create one"
+    },
+    "signup": {
+      "title": "Create your account",
+      "description": "Choose the account type that fits how you will use Revora.",
+      "fullNameLabel": "Full name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "createAccount": "Create account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "superAdminNote": "Super admin is never selectable here. Staff access requires an invitation.",
+      "checkEmail": "Check your email to confirm your account, then sign in.",
+      "chooseAccountType": "Choose an account type to continue.",
+      "accountTypes": {
+        "businessOwnerTitle": "I own/manage a service business",
+        "businessOwnerDescription": "Create a workspace for your workshop, detailing center, tire shop, or service team.",
+        "customerTitle": "I am a customer/consumer",
+        "customerDescription": "Access quotes, approvals, jobs, complaints, and documents shared by a business.",
+        "staffTitle": "I was invited as staff",
+        "staffDescription": "Join a business team using an invitation from an owner or manager.",
+        "invitationRequired": "Invitation required"
+      }
+    }
   },
   "notFound": {
     "code": "404",
@@ -38,5 +298,596 @@
     "title": "The app ran into a problem",
     "description": "Something went wrong while loading Revora. Reloading usually fixes it.",
     "reload": "Reload Revora"
+  },
+  "metadata": {
+    "siteName": "Revora",
+    "homeTitle": "Dashboard",
+    "homeDescription": "Your operations at a glance.",
+    "loginTitle": "Sign in",
+    "loginDescription": "Access your Revora workspace.",
+    "signupTitle": "Create your account",
+    "signupDescription": "Choose the account type that fits how you will use Revora.",
+    "portalTitle": "Customer portal",
+    "portalDescription": "Your linked accounts and complaint history.",
+    "adminTitle": "Platform admin",
+    "adminDescription": "Tenant and usage metrics across all of Revora.",
+    "dashboardTitle": "Dashboard",
+    "dashboardDescription": "Operational control for your business."
+  },
+  "dashboardHome": {
+    "title": "Welcome to {businessName}",
+    "description": "Your operations at a glance.",
+    "stats": {
+      "customers": "Customers",
+      "vehicles": "Vehicles",
+      "quotesAwaitingApproval": "Quotes awaiting approval",
+      "openComplaints": "Open complaints",
+      "activeJobs": "Active jobs"
+    },
+    "status": {
+      "live": "Live",
+      "laterRelease": "Available in a later release"
+    },
+    "getStarted": {
+      "title": "Get started",
+      "description": "The foundation is ready. Add your customers and configure your business profile.",
+      "addCustomer": "Add a customer",
+      "manageVehicles": "Manage vehicles",
+      "businessSettings": "Business settings"
+    }
+  },
+  "portalHome": {
+    "title": "Portal",
+    "description": "Your linked accounts and complaint history.",
+    "business": "Business",
+    "linkedAccount": "Linked account",
+    "workshop": "Workshop",
+    "noLinkedAccountTitle": "No linked customer account yet",
+    "noLinkedAccountDescription": "Use the same email address your workshop has on file, or ask them to invite/link your customer record. Once it matches, your quotes, jobs, complaints, and documents will appear here automatically.",
+    "submitComplaint": "Submit complaint",
+    "quotesAwaitingApproval": "Quotes awaiting your approval",
+    "reviewAndApprove": "Review & approve",
+    "activeJobs": "Active jobs",
+    "workInProgress": "Work currently in progress.",
+    "recentComplaints": "Recent complaints",
+    "complaintsDescription": "View the current status of your active and past complaints.",
+    "noComplaintsYet": "No complaints yet",
+    "complaintsEmpty": "When you need support, submit a complaint and track the response here.",
+    "submitComplaintSecondary": "Submit complaint",
+    "reviewAndApproveDescription": "Review the details and approve with your digital signature."
+  },
+  "adminOverview": {
+    "title": "Platform overview",
+    "description": "Tenant and usage metrics across all of Revora.",
+    "stats": {
+      "businesses": "Businesses",
+      "registeredUsers": "Registered users",
+      "customers": "Customers",
+      "quotations": "Quotations",
+      "approvedQuotes": "Approved quotes",
+      "complaints": "Complaints",
+      "openComplaints": "Open complaints",
+      "superAdmins": "Super admins"
+    }
+  },
+  "dashboardCustomers": {
+    "title": "Customers",
+    "description": "People and businesses you serve.",
+    "actions": {
+      "addCustomer": "Add customer"
+    },
+    "empty": {
+      "title": "No customers yet",
+      "description": "Add your first customer to start linking vehicles, quotes, jobs, and documents.",
+      "action": "Add your first customer"
+    },
+    "table": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "created": "Created"
+    },
+    "fallback": {
+      "noEmail": "No email",
+      "noPhone": "No phone",
+      "none": "—"
+    },
+    "new": {
+      "title": "Add customer",
+      "description": "Create a customer record.",
+      "submit": "Create customer"
+    },
+    "detail": {
+      "editSubmit": "Save changes",
+      "addVehicleSubmit": "Add vehicle"
+    }
+  },
+  "dashboardVehicles": {
+    "title": "Vehicles",
+    "description": "Vehicle records linked to customers and service history.",
+    "searchPlaceholder": "Search plate, make, model, customer, or VIN",
+    "actions": {
+      "addVehicle": "Add vehicle"
+    },
+    "filters": {
+      "make": "Make",
+      "customer": "Customer",
+      "allMakes": "All makes",
+      "allCustomers": "All customers",
+      "reset": "Reset filters"
+    },
+    "summary": {
+      "visible": "Showing {count} of {total} vehicles",
+      "filtered": "Filtered"
+    },
+    "empty": {
+      "noneTitle": "No vehicles yet",
+      "noneDescription": "Add the first vehicle to start linking service history, quotes, and documents.",
+      "matchTitle": "No vehicles match",
+      "matchDescription": "Try a different search term or clear the filters."
+    },
+    "table": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "plate": "Plate",
+      "vin": "VIN",
+      "lastService": "Last service",
+      "updated": "Updated"
+    },
+    "labels": {
+      "vin": "VIN",
+      "lastService": "Last service"
+    },
+    "fallback": {
+      "noCustomer": "No linked customer",
+      "none": "—"
+    },
+    "error": {
+      "title": "Vehicles failed to load",
+      "description": "The vehicle list could not be loaded right now. Try again or return later.",
+      "backLabel": "Go to dashboard"
+    },
+    "new": {
+      "title": "Add vehicle",
+      "description": "Create a vehicle record and link it to an existing customer.",
+      "back": "Back to vehicles",
+      "submit": "Create vehicle",
+      "emptyTitle": "No customers yet",
+      "emptyDescription": "Create a customer first, then add their vehicle.",
+      "emptyAction": "Add customer"
+    },
+    "edit": {
+      "title": "Edit vehicle",
+      "description": "Update the vehicle and keep it linked to the correct customer.",
+      "back": "Back to vehicle",
+      "submit": "Save changes",
+      "emptyTitle": "No customers yet",
+      "emptyDescription": "Create or restore a customer before editing vehicle ownership.",
+      "emptyAction": "Add customer"
+    }
+  },
+  "dashboardJobsPage": {
+    "title": "Jobs",
+    "description": "Work orders created from approved quotes.",
+    "empty": {
+      "title": "No jobs yet",
+      "description": "Approved work orders will appear here once they are created from quotes."
+    }
+  },
+  "dashboardJobs": {
+    "searchPlaceholder": "Search jobs, customers, branches",
+    "filters": {
+      "status": "Filter by status",
+      "allStatuses": "All statuses",
+      "reset": "Reset filters"
+    },
+    "summary": {
+      "visible": "{count} visible"
+    },
+    "empty": {
+      "title": "No jobs match",
+      "description": "Try a different search or reset the filters."
+    },
+    "fallback": {
+      "noBranch": "No branch",
+      "noDueDate": "No due date",
+      "none": "—"
+    },
+    "table": {
+      "job": "Job",
+      "customer": "Customer",
+      "branch": "Branch",
+      "status": "Status",
+      "due": "Due"
+    }
+  },
+  "dashboardQuotations": {
+    "title": "Quotations",
+    "description": "Quotes, product transparency, and digital approvals.",
+    "actions": {
+      "newQuote": "New quote"
+    },
+    "empty": {
+      "title": "No quotations yet",
+      "description": "Quotes created in this business will appear here once they are saved.",
+      "action": "Create your first quote"
+    },
+    "table": {
+      "quote": "Quote",
+      "customer": "Customer",
+      "status": "Status",
+      "total": "Total"
+    },
+    "fallback": {
+      "noCustomer": "No customer",
+      "none": "—"
+    },
+    "new": {
+      "title": "New quotation",
+      "description": "Pick the customer to start a draft.",
+      "needCustomer": "You need a customer first.",
+      "addCustomer": "Add a customer"
+    },
+    "detail": {
+      "back": "Back to quotations",
+      "lineItems": "Line items",
+      "lineItemsDescription": "Services, labor, parts, and products with transparency details.",
+      "noItems": "No items yet.",
+      "thItem": "Item",
+      "thType": "Type",
+      "thTransparency": "Transparency",
+      "thQty": "Qty",
+      "thUnit": "Unit",
+      "thTotal": "Total",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "tax": "Tax",
+      "total": "Total",
+      "details": "Details",
+      "approval": "Approval",
+      "approvalDescription": "Digital approval with signature and audit metadata.",
+      "approved": "Approved",
+      "approvedOn": "Approved on {date}",
+      "signedBy": "Signed by {name} · version {version}",
+      "signedFallback": "customer",
+      "note": "Note: {note}",
+      "declined": "Declined",
+      "declinedOn": "Declined on {date}",
+      "reason": "Reason: {reason}",
+      "addItemsFirst": "Add at least one line item before sending.",
+      "sendPrompt": "Send the quote to collect the customer's digital approval.",
+      "awaitingApproval": "Awaiting customer approval."
+    }
+  },
+  "dashboardComplaints": {
+    "title": "Complaints",
+    "description": "Customer complaints, internal follow-up, and resolution tracking.",
+    "accessRestrictedDescription": "Complaint handling is restricted to staff roles.",
+    "accessRestricted": "You do not have access to complaint management.",
+    "stats": {
+      "openActive": "Open / active",
+      "resolvedClosed": "Resolved / closed"
+    },
+    "queue": {
+      "title": "Complaint queue",
+      "description": "Manage status, severity, assignees, and threaded replies."
+    },
+    "empty": {
+      "title": "No complaints yet",
+      "description": "Complaints submitted by customers will appear here once they are linked to this business.",
+      "action": "View customer portal"
+    },
+    "table": {
+      "subject": "Subject",
+      "customer": "Customer",
+      "status": "Status",
+      "severity": "Severity",
+      "assignee": "Assignee",
+      "updated": "Updated"
+    },
+    "fallback": {
+      "noCustomer": "No customer",
+      "none": "—",
+      "unassigned": "Unassigned"
+    }
+  },
+  "dashboardDocuments": {
+    "title": "Documents",
+    "description": "Contracts, PDFs, and audit reports.",
+    "actions": {
+      "uploadDocument": "Upload document",
+      "download": "Download",
+      "unavailable": "Unavailable"
+    },
+    "library": {
+      "title": "Document library",
+      "description": "Stored files linked to quotes, complaints, jobs, and customers."
+    },
+    "empty": {
+      "title": "No documents yet",
+      "description": "Upload contracts, PDFs, and service records to keep them linked to quotes, jobs, and complaints."
+    },
+    "table": {
+      "document": "Document",
+      "type": "Type",
+      "relatedTo": "Related to",
+      "file": "File",
+      "created": "Created",
+      "action": "Action"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "portalJobs": {
+    "title": "Jobs",
+    "description": "Track the progress of your work orders.",
+    "stats": {
+      "jobs": "Jobs",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "list": {
+      "title": "Your jobs",
+      "description": "Open a job to see its latest updates and attachments."
+    },
+    "empty": {
+      "noLinkedJobsTitle": "No jobs are linked to your account yet",
+      "noLinkedJobsDescription": "Once the workshop creates a job for one of your vehicles or quotes, it will appear here.",
+      "title": "No jobs linked to your account yet",
+      "description": "Once the workshop creates a job, it will appear here."
+    },
+    "actions": {
+      "backToPortal": "Back to portal"
+    },
+    "labels": {
+      "expected": "Expected:",
+      "updated": "Updated"
+    },
+    "table": {
+      "job": "Job",
+      "workshop": "Workshop",
+      "branch": "Branch",
+      "status": "Status",
+      "expected": "Expected",
+      "updated": "Updated"
+    },
+    "fallback": {
+      "workshop": "Workshop",
+      "noBranch": "No branch",
+      "none": "—"
+    }
+  },
+  "portalQuotes": {
+    "title": "Quotes",
+    "description": "Review and approve quotations from your workshop.",
+    "list": {
+      "title": "Your quotes",
+      "description": "Open a quote to see the line items and approve it."
+    },
+    "empty": "No quotes yet.",
+    "table": {
+      "quote": "Quote",
+      "workshop": "Workshop",
+      "status": "Status",
+      "total": "Total"
+    },
+    "fallback": {
+      "workshop": "Workshop",
+      "none": "—"
+    }
+  },
+  "portalComplaints": {
+    "title": "Complaints",
+    "description": "Track the status of every complaint you have submitted.",
+    "actions": {
+      "submitComplaint": "Submit complaint"
+    },
+    "empty": {
+      "noLinkedTitle": "No complaints are available for this portal account yet.",
+      "noLinkedDescription": "Use the same email address your workshop has on file, or ask them to invite/link your customer record.",
+      "noComplaintsTitle": "No complaints yet",
+      "noComplaintsDescription": "When you need support, submit a complaint and track the response here."
+    },
+    "history": {
+      "title": "Complaint history",
+      "description": "Status, severity, and linked business for each complaint."
+    },
+    "table": {
+      "subject": "Subject",
+      "workshop": "Workshop",
+      "status": "Status",
+      "severity": "Severity"
+    },
+    "fallback": {
+      "workshop": "Workshop",
+      "none": "—"
+    }
+  },
+  "portalDocuments": {
+    "title": "Documents",
+    "description": "Files shared by your workshop and linked to your account.",
+    "actions": {
+      "backToPortal": "Back to portal",
+      "open": "Open",
+      "unavailable": "Unavailable"
+    },
+    "library": {
+      "title": "Your documents",
+      "description": "Contracts, PDFs, and images tied to your jobs, quotes, or complaints."
+    },
+    "empty": {
+      "noLinkedTitle": "No documents are available yet",
+      "noLinkedDescription": "The workshop has not shared any customer-linked documents yet.",
+      "noDocumentsTitle": "No documents are available yet",
+      "noDocumentsDescription": "The workshop has not shared any customer-linked documents yet."
+    },
+    "table": {
+      "document": "Document",
+      "type": "Type",
+      "relatedTo": "Related to",
+      "file": "File",
+      "created": "Created",
+      "action": "Action"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "portalSettings": {
+    "title": "Settings",
+    "description": "Read-only profile and account details for the customer portal.",
+    "empty": {
+      "title": "No linked customer account",
+      "description": "We could not find a customer record linked to your sign-in. Use the same email address your workshop has on file, or ask them to invite/link you."
+    },
+    "summary": {
+      "title": "Signed-in account",
+      "description": "The email and linked customer records associated with this portal account.",
+      "email": "Email",
+      "linkedRecords": "Linked records",
+      "recordsValue": "{count, plural, one {# customer account} other {# customer accounts}}",
+      "primaryWorkshop": "Primary workshop",
+      "readOnly": "Read-only"
+    },
+    "accounts": {
+      "title": "Linked customer accounts",
+      "description": "These records are available through the portal and are kept separate by tenant."
+    },
+    "account": {
+      "phone": "Phone",
+      "language": "Language",
+      "created": "Created"
+    },
+    "security": {
+      "title": "Security and communication",
+      "description": "Portal access is linked to your signed-in email. Editable customer settings are not enabled yet.",
+      "body": "Communication preferences, delivery channels, and account edits are managed by the workshop for now."
+    },
+    "fallback": {
+      "noEmail": "No email",
+      "workshop": "Workshop"
+    }
+  },
+  "adminTenants": {
+    "title": "Tenants",
+    "description": "Every business on the platform.",
+    "cardTitle": "Businesses ({count})",
+    "cardDescription": "Owner, team size, and activity per tenant.",
+    "empty": {
+      "title": "No businesses yet",
+      "description": "Tenant records will appear here once a business signs up and creates its workspace."
+    }
+  },
+  "adminUsers": {
+    "title": "Users",
+    "description": "All registered platform users and their tenant footprint.",
+    "stats": {
+      "totalUsers": "Total users",
+      "superAdmins": "Super admins",
+      "linkedCustomers": "Linked customers",
+      "businessMemberships": "Business memberships"
+    },
+    "cardTitle": "User table ({count})",
+    "cardDescription": "Platform signups, super-admin status, and tenant linkage.",
+    "empty": {
+      "title": "No users yet",
+      "description": "Users will appear here once the platform starts collecting signups and memberships."
+    }
+  },
+  "adminSubscriptions": {
+    "title": "Subscriptions",
+    "description": "Platform subscription rollup across tenants.",
+    "stats": {
+      "active": "Active",
+      "trialing": "Trialing",
+      "pastDue": "Past due",
+      "total": "Total"
+    },
+    "cardTitle": "Subscription overview ({count})",
+    "cardDescription": "Stripe-backed tenants and their current plan state.",
+    "empty": {
+      "title": "No subscriptions yet",
+      "description": "Stripe-backed subscription records will appear here once tenants are billed."
+    }
+  },
+  "adminBilling": {
+    "title": "Billing",
+    "description": "Platform-level billing and subscription control.",
+    "actions": {
+      "subscriptionTable": "Subscription table"
+    },
+    "stats": {
+      "businessesBilled": "Businesses billed",
+      "activeSubscriptions": "Active subscriptions",
+      "pastDue": "Past due",
+      "platformUsers": "Platform users"
+    },
+    "cardTitle": "Billing overview",
+    "cardDescription": "Read-only platform billing overview backed by subscription data.",
+    "note": "Stripe webhook sync keeps this view current; plan changes and portal actions still happen in the tenant billing flow.",
+    "empty": {
+      "title": "No subscription records yet",
+      "description": "Subscription rows will appear here once Stripe starts syncing tenant billing."
+    },
+    "table": {
+      "business": "Business",
+      "plan": "Plan",
+      "status": "Status",
+      "periodStart": "Period start",
+      "periodEnd": "Period end"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "adminAuditLogs": {
+    "title": "Audit logs",
+    "description": "Cross-tenant record changes and administrative actions.",
+    "cardTitle": "Activity stream ({count})",
+    "cardDescription": "Latest create, update, and delete events across the platform.",
+    "empty": {
+      "title": "No audit events yet",
+      "description": "Administrative activity will appear here once tenants and platform operators start making changes."
+    }
+  },
+  "adminNotifications": {
+    "title": "Notifications",
+    "description": "Queued and delivered platform notifications.",
+    "stats": {
+      "sent": "Sent",
+      "queued": "Queued",
+      "failed": "Failed",
+      "unread": "Unread"
+    },
+    "cardTitle": "Notification center ({count})",
+    "cardDescription": "Delivery state across email, SMS, and channel integrations.",
+    "empty": {
+      "title": "No notifications yet",
+      "description": "Queued and delivered notifications will appear here once the platform sends activity."
+    }
+  },
+  "adminAnalytics": {
+    "title": "Analytics",
+    "description": "Cross-tenant activity, operations, and growth signals.",
+    "stats": {
+      "businesses": "Businesses",
+      "customers": "Customers",
+      "quotes": "Quotes",
+      "complaints": "Complaints"
+    },
+    "cardTitle": "Top tenants",
+    "cardDescription": "Businesses with the most quote and complaint activity.",
+    "empty": {
+      "title": "No tenant activity yet",
+      "description": "Analytics will fill in once businesses start generating quotes, complaints, and customer growth."
+    },
+    "table": {
+      "business": "Business",
+      "owner": "Owner",
+      "members": "Members",
+      "quotes": "Quotes",
+      "complaints": "Complaints"
+    }
   }
 }

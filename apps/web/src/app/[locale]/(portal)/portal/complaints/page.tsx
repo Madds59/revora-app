@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
+import { EmptyState } from "@/components/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,27 +27,22 @@ import {
 type ComplaintRow = Complaint & { business_name: string | null };
 
 export default async function PortalComplaintsPage() {
+  const t = await getTranslations("portalComplaints");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
       <>
-        <PageHeader
-          title="Complaints"
-          description="Track the status of every complaint you have submitted."
-          action={
-            <Link href="/portal/complaints/new" className={buttonVariants()}>
-              Submit complaint
-            </Link>
-          }
-        />
+        <PageHeader title={t("title")} description={t("description")} />
         <div className="p-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
-                No complaints are available for this portal account yet.
-              </div>
-            </CardContent>
-          </Card>
+          <EmptyState
+            title={t("empty.noLinkedTitle")}
+            description={t("empty.noLinkedDescription")}
+            action={
+              <Link href="/portal/complaints/new" className={buttonVariants()}>
+                {t("actions.submitComplaint")}
+              </Link>
+            }
+          />
         </div>
       </>
     );
@@ -77,27 +74,26 @@ export default async function PortalComplaintsPage() {
   return (
     <>
       <PageHeader
-        title="Complaints"
-        description="Track the status of every complaint you have submitted."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href="/portal/complaints/new" className={buttonVariants()}>
-            Submit complaint
+            {t("actions.submitComplaint")}
           </Link>
         }
       />
       <div className="p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Complaint history</CardTitle>
-            <CardDescription>
-              Status, severity, and linked business for each complaint.
-            </CardDescription>
+            <CardTitle>{t("history.title")}</CardTitle>
+            <CardDescription>{t("history.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             {rows.length === 0 ? (
-              <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
-                No complaints yet.
-              </div>
+              <EmptyState
+                title={t("empty.noComplaintsTitle")}
+                description={t("empty.noComplaintsDescription")}
+              />
             ) : (
               <>
                 <MobileDataList
@@ -111,7 +107,7 @@ export default async function PortalComplaintsPage() {
                           {complaint.subject}
                         </Link>
                       }
-                      subtitle={complaint.business_name ?? "Workshop"}
+                      subtitle={complaint.business_name ?? t("fallback.workshop")}
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
@@ -128,41 +124,41 @@ export default async function PortalComplaintsPage() {
 
                 <div className="hidden rounded-lg border md:block">
                   <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Business</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Severity</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((complaint) => (
-                      <TableRow key={complaint.id}>
-                        <TableCell>
-                          <Link
-                            href={`/portal/complaints/${complaint.id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {complaint.subject}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{complaint.business_name ?? "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
-                            {COMPLAINT_STATUS_LABELS[complaint.status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
-                            {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
-                          </Badge>
-                        </TableCell>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("table.subject")}</TableHead>
+                        <TableHead>{t("table.workshop")}</TableHead>
+                        <TableHead>{t("table.status")}</TableHead>
+                        <TableHead>{t("table.severity")}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((complaint) => (
+                        <TableRow key={complaint.id}>
+                          <TableCell>
+                            <Link
+                              href={`/portal/complaints/${complaint.id}`}
+                              className="font-medium hover:underline"
+                            >
+                              {complaint.subject}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{complaint.business_name ?? t("fallback.none")}</TableCell>
+                          <TableCell>
+                            <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
+                              {COMPLAINT_STATUS_LABELS[complaint.status]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
+                              {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </>
             )}
           </CardContent>

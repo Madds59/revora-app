@@ -30,6 +30,11 @@ import type {
   BillingRevenueSummary,
   PaginatedListResult,
 } from "@/lib/billing-views";
+import {
+  formatDate,
+  formatDateTime,
+  formatNumber,
+} from "@/lib/formatters";
 import { formatCurrency } from "@/lib/money";
 import { canManageBusiness } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +46,7 @@ type SubscriptionView = Subscription & {
 
 function formatEntitlement(value: unknown) {
   if (typeof value === "boolean") return value ? "Enabled" : "Disabled";
-  if (typeof value === "number") return value.toLocaleString();
+  if (typeof value === "number") return formatNumber(value);
   if (typeof value === "string") return value;
   if (Array.isArray(value)) return value.join(", ");
   if (value && typeof value === "object") return JSON.stringify(value);
@@ -84,7 +89,7 @@ function invoiceStatusLabel(status: BillingInvoiceSummaryRow["status"]) {
 function featureValue(feature: BillingPlanCatalogRow["features"][number]) {
   if (!feature.included) return "Not included";
   if (feature.limit_value == null) return "Included";
-  return `${feature.limit_value.toLocaleString()}${feature.limit_unit ? ` ${feature.limit_unit}` : ""}`;
+  return `${formatNumber(feature.limit_value)}${feature.limit_unit ? ` ${feature.limit_unit}` : ""}`;
 }
 
 function currentPlanInterval(
@@ -279,14 +284,12 @@ export default async function BillingPage() {
               {
                 label: "Current period",
                 value: current.current_period_end
-                  ? `${current.current_period_start ? new Date(current.current_period_start).toLocaleDateString() : "—"} → ${new Date(current.current_period_end).toLocaleDateString()}`
+                  ? `${current.current_period_start ? formatDate(current.current_period_start) : "—"} → ${formatDate(current.current_period_end)}`
                   : "Unavailable",
               },
               {
                 label: "Renewal",
-                value: current.current_period_end
-                  ? new Date(current.current_period_end).toLocaleDateString()
-                  : "Unavailable",
+                value: current.current_period_end ? formatDate(current.current_period_end) : "Unavailable",
               },
               {
                 label: "Auto-renew",
@@ -540,9 +543,9 @@ export default async function BillingPage() {
                           </span>
                           <span>
                             {invoice.paid_at
-                              ? `Paid ${new Date(invoice.paid_at).toLocaleDateString()}`
+                              ? `Paid ${formatDate(invoice.paid_at)}`
                               : invoice.due_date
-                                ? `Due ${new Date(invoice.due_date).toLocaleDateString()}`
+                                ? `Due ${formatDate(invoice.due_date)}`
                                 : "No due date"}
                           </span>
                         </div>
@@ -590,16 +593,16 @@ export default async function BillingPage() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {invoice.period_start && invoice.period_end
-                              ? `${new Date(invoice.period_start).toLocaleDateString()} → ${new Date(invoice.period_end).toLocaleDateString()}`
+                              ? `${formatDate(invoice.period_start)} → ${formatDate(invoice.period_end)}`
                               : "—"}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {invoice.due_date
-                              ? new Date(invoice.due_date).toLocaleDateString()
+                              ? formatDate(invoice.due_date)
                               : "—"}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : "—"}
+                            {formatDate(invoice.paid_at)}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-2">
@@ -674,7 +677,7 @@ export default async function BillingPage() {
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">{event.status}</Badge>
                           <span>{formatMoney(event.amount, event.currency)}</span>
-                          <span>{new Date(event.occurred_at).toLocaleString()}</span>
+                          <span>{formatDateTime(event.occurred_at)}</span>
                         </div>
                       }
                     />
@@ -705,7 +708,7 @@ export default async function BillingPage() {
                             {formatMoney(event.amount, event.currency)}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {new Date(event.occurred_at).toLocaleString()}
+                            {formatDateTime(event.occurred_at)}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {event.invoice_id ?? "—"}

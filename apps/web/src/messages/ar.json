@@ -1,7 +1,179 @@
 {
   "common": {
     "appName": "Revora",
-    "tagline": "مبنيٌّ على الثقة. مدعومٌ بالعمليات."
+    "tagline": "مبنيٌّ على الثقة. مدعومٌ بالعمليات.",
+    "actions": {
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "create": "إنشاء",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "submit": "إرسال",
+      "reset": "إعادة تعيين",
+      "back": "رجوع",
+      "close": "إغلاق",
+      "change": "تغيير",
+      "remove": "إزالة"
+    },
+    "filters": {
+      "search": "بحث",
+      "searchPlaceholder": "بحث",
+      "status": "الحالة",
+      "dateRange": "النطاق الزمني"
+    },
+    "pagination": {
+      "total": "{count} الإجمالي",
+      "pageOf": "صفحة {page} من {pageCount}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "states": {
+      "errorRetry": "حاول مرة أخرى",
+      "errorBack": "العودة",
+      "errorReference": "المرجع: {digest}",
+      "noEvidence": "لم يتم رفع أي أدلة بعد."
+    }
+  },
+  "forms": {
+    "customer": {
+      "fullName": "الاسم الكامل",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "preferredLanguage": "اللغة المفضّلة",
+      "languageEnglish": "الإنجليزية",
+      "languageArabic": "العربية"
+    },
+    "vehicle": {
+      "customer": "العميل",
+      "selectCustomer": "اختر عميلاً",
+      "selectedCustomer": "العميل المحدّد",
+      "make": "الصنع",
+      "model": "الطراز",
+      "year": "السنة",
+      "plateNumber": "رقم اللوحة",
+      "vin": "رقم الهيكل (VIN)",
+      "color": "اللون"
+    },
+    "upload": {
+      "defaultLabel": "رفع ملف",
+      "uploaded": "تم الرفع."
+    },
+    "business": {
+      "activeBusiness": "النشاط التجاري الحالي",
+      "selectBusiness": "اختر النشاط التجاري",
+      "switchBusiness": "تبديل النشاط التجاري"
+    },
+    "billing": {
+      "openPortal": "فتح بوابة الفوترة"
+    },
+    "notifications": {
+      "markRead": "تحديد كمقروء",
+      "read": "مقروء"
+    },
+    "quote": {
+      "customer": "العميل",
+      "selectCustomer": "اختر عميلاً",
+      "vehicleOptional": "المركبة (اختياري)",
+      "noVehicle": "بدون مركبة",
+      "createDraft": "إنشاء عرض سعر مبدئي",
+      "type": "النوع",
+      "name": "الاسم",
+      "description": "الوصف",
+      "qty": "الكمية",
+      "unitPrice": "سعر الوحدة",
+      "discount": "الخصم",
+      "taxRate": "الضريبة %",
+      "productTransparency": "شفافية المنتج",
+      "category": "الفئة",
+      "brand": "العلامة التجارية",
+      "warranty": "الضمان",
+      "origin": "بلد المنشأ",
+      "supplier": "المورّد",
+      "expectedLifespan": "العمر الافتراضي المتوقّع",
+      "addLineItem": "إضافة بند",
+      "expectedCompletion": "موعد الإنجاز المتوقّع",
+      "warrantyTerms": "شروط الضمان",
+      "customerNotes": "ملاحظات العميل",
+      "internalNotes": "ملاحظات داخلية (للموظفين فقط)",
+      "saveDetails": "حفظ التفاصيل",
+      "removeItem": "إزالة البند",
+      "sendToCustomer": "إرسال إلى العميل",
+      "acknowledge": "أقرّ بالقطع والأسعار والضمان وشروط عرض السعر هذا.",
+      "signLabel": "اكتب اسمك الكامل للتوقيع",
+      "signPlaceholder": "اسمك الكامل",
+      "optionalNote": "ملاحظة اختيارية",
+      "noteForWorkshop": "أضف ملاحظة للورشة",
+      "approve": "اعتماد عرض السعر",
+      "approvalRecorded": "يُسجَّل اعتمادك بطابع زمني آمن وتوقيع رقمي.",
+      "optionalReason": "سبب اختياري",
+      "rejectPlaceholder": "أخبر الورشة بما تودّ تغييره",
+      "decline": "رفض عرض السعر"
+    }
+  },
+  "complaints": {
+    "submission": {
+      "businessAccount": "الحساب التجاري",
+      "selectAccount": "اختر حساباً",
+      "severity": "درجة الخطورة",
+      "subject": "الموضوع",
+      "description": "الوصف",
+      "submit": "إرسال الشكوى"
+    },
+    "management": {
+      "status": "الحالة",
+      "severity": "درجة الخطورة",
+      "resolutionSummary": "ملخّص الحل",
+      "submit": "حفظ الشكوى"
+    },
+    "messages": {
+      "topLevel": "المستوى الأعلى",
+      "replyTo": "الرد على",
+      "message": "الرسالة",
+      "internalOnly": "داخلي فقط",
+      "internal": "داخلي",
+      "empty": "لا توجد رسائل بعد. استخدم مربع الرد أدناه لبدء المحادثة.",
+      "panelTitle": "الرسائل المتسلسلة",
+      "panelDescription": "ردود الفريق وردود العملاء والملاحظات الداخلية في محادثة واحدة."
+    },
+    "assignment": {
+      "change": "تغيير المُكلَّف",
+      "description": "انقل هذه الشكوى إلى عضو فريق نشط آخر أو ألغِ التكليف.",
+      "assignedTo": "مُكلَّف إلى",
+      "unassigned": "غير مُكلَّف",
+      "submit": "حفظ التكليف"
+    }
+  },
+  "settings": {
+    "business": {
+      "name": "اسم النشاط التجاري",
+      "legalName": "الاسم القانوني",
+      "tagline": "الشعار النصي",
+      "country": "الدولة",
+      "defaultLanguage": "اللغة الافتراضية",
+      "save": "حفظ التغييرات",
+      "ownersOnly": "يمكن للمالكين فقط تعديل تفاصيل النشاط التجاري."
+    },
+    "branch": {
+      "name": "الاسم",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "add": "إضافة فرع"
+    },
+    "service": {
+      "name": "الاسم",
+      "defaultPrice": "السعر الافتراضي (AED)",
+      "description": "الوصف",
+      "add": "إضافة خدمة"
+    }
+  },
+  "team": {
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "sendInvitation": "إرسال دعوة",
+    "revoke": "إلغاء",
+    "member": "العضو",
+    "pendingInvitations": "الدعوات المعلّقة",
+    "ownersOnly": "يمكن للمالكين فقط دعوة أعضاء الفريق."
   },
   "nav": {
     "home": "الرئيسية",
@@ -16,7 +188,95 @@
     "analytics": "التحليلات",
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
-    "soon": "قريبًا"
+    "soon": "قريبًا",
+    "overview": "نظرة عامة",
+    "tenants": "العملاء",
+    "users": "المستخدمون",
+    "subscriptions": "الاشتراكات",
+    "auditLogs": "سجلات التدقيق",
+    "superAdmins": "المشرفون العامون"
+  },
+  "shell": {
+    "openNavigation": "فتح التنقّل",
+    "closeNavigation": "إغلاق التنقّل",
+    "openAccountMenu": "فتح قائمة الحساب",
+    "theme": "المظهر",
+    "language": "اللغة",
+    "signOut": "تسجيل الخروج",
+    "businessSettings": "إعدادات النشاط",
+    "billing": "الفوترة",
+    "platformAdmin": "إدارة المنصة",
+    "platformConsole": "وحدة التحكم",
+    "adminAccess": "وصول الإدارة",
+    "customerPortalAccess": "وصول البوابة",
+    "platformOwner": "مالك المنصة",
+    "linkedAccounts": "{count, plural, one {# حساب مرتبط} other {# حسابات مرتبطة}}",
+    "languageOptions": {
+      "label": "اللغة",
+      "en": "الإنجليزية",
+      "ar": "العربية",
+      "switchToEnglish": "التبديل إلى الإنجليزية",
+      "switchToArabic": "التبديل إلى العربية"
+    },
+    "themeOptions": {
+      "label": "سمة الألوان",
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "النظام"
+    }
+  },
+  "auth": {
+    "layout": {
+      "trustBuilt": "مبنيٌّ على الثقة",
+      "trustBuiltBody": "عروض أسعار شفافة وسجل قابل للتحقق يمكن للعملاء الاعتماد عليه.",
+      "digitalApprovals": "اعتمادات رقمية",
+      "digitalApprovalsBody": "اعتماد موقّع ومدقّق لكل مهمة - بلا نزاعات.",
+      "resolveWithCare": "حلٌّ بعناية",
+      "resolveWithCareBody": "الشكاوى تُدار بوضوح من البداية إلى النهاية.",
+      "madeForUAE": "مصممٌ لأعمال الخدمات في الإمارات",
+      "tagline": "مبنيٌّ على الثقة. مدعومٌ بالعمليات."
+    },
+    "actions": {
+      "emailRequired": "البريد الإلكتروني وكلمة المرور مطلوبان.",
+      "passwordMin": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+      "chooseAccountType": "اختر نوع الحساب للمتابعة.",
+      "checkEmail": "تحقق من بريدك لتأكيد الحساب، ثم سجّل الدخول.",
+      "magicLinkSent": "تم إرسال الرابط السحري. تحقق من بريدك لتسجيل الدخول."
+    },
+    "login": {
+      "title": "تسجيل الدخول",
+      "description": "ادخل إلى مساحة عمل Revora الخاصة بك.",
+      "passwordTab": "كلمة المرور",
+      "magicTab": "رابط سحري",
+      "emailLabel": "البريد الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "signIn": "تسجيل الدخول",
+      "sendMagicLink": "إرسال الرابط السحري",
+      "noAccount": "لا تملك حسابًا؟",
+      "createOne": "أنشئ حسابًا"
+    },
+    "signup": {
+      "title": "إنشاء حسابك",
+      "description": "اختر نوع الحساب المناسب لطريقة استخدامك لـ Revora.",
+      "fullNameLabel": "الاسم الكامل",
+      "emailLabel": "البريد الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "createAccount": "إنشاء الحساب",
+      "haveAccount": "لديك حساب بالفعل؟",
+      "signIn": "تسجيل الدخول",
+      "superAdminNote": "لا يمكن اختيار المشرف العام هنا. وصول الموظفين يتطلب دعوة.",
+      "checkEmail": "تحقق من بريدك لتأكيد الحساب، ثم سجّل الدخول.",
+      "chooseAccountType": "اختر نوع الحساب للمتابعة.",
+      "accountTypes": {
+        "businessOwnerTitle": "أملك/أدير نشاطًا خدميًا",
+        "businessOwnerDescription": "أنشئ مساحة عمل للورشة أو مركز الخدمة أو فريق التشغيل.",
+        "customerTitle": "أنا عميل/مستهلك",
+        "customerDescription": "اطّلع على عروض الأسعار والموافقات والمهام والشكاوى والمستندات التي يشاركها النشاط.",
+        "staffTitle": "تمت دعوتي كموظف",
+        "staffDescription": "انضم إلى فريق نشاط باستخدام دعوة من المالك أو المدير.",
+        "invitationRequired": "الدعوة مطلوبة"
+      }
+    }
   },
   "notFound": {
     "code": "404",
@@ -38,5 +298,596 @@
     "title": "واجه التطبيق مشكلة",
     "description": "حدث خطأ أثناء تحميل Revora. عادةً ما تؤدي إعادة التحميل إلى حل المشكلة.",
     "reload": "إعادة تحميل Revora"
+  },
+  "metadata": {
+    "siteName": "Revora",
+    "homeTitle": "لوحة التحكم",
+    "homeDescription": "إدارة عملياتك في لمحة.",
+    "loginTitle": "تسجيل الدخول",
+    "loginDescription": "ادخل إلى مساحة عمل Revora الخاصة بك.",
+    "signupTitle": "إنشاء حسابك",
+    "signupDescription": "اختر نوع الحساب المناسب لطريقة استخدامك لـ Revora.",
+    "portalTitle": "بوابة العملاء",
+    "portalDescription": "حساباتك المرتبطة وسجل الشكاوى.",
+    "adminTitle": "إدارة المنصة",
+    "adminDescription": "مقاييس المستأجرين والاستخدام عبر Revora.",
+    "dashboardTitle": "لوحة التحكم",
+    "dashboardDescription": "التحكم التشغيلي لنشاطك."
+  },
+  "dashboardHome": {
+    "title": "مرحبًا بك في {businessName}",
+    "description": "إدارة عملياتك في لمحة.",
+    "stats": {
+      "customers": "العملاء",
+      "vehicles": "المركبات",
+      "quotesAwaitingApproval": "عروض الأسعار بانتظار الموافقة",
+      "openComplaints": "الشكاوى المفتوحة",
+      "activeJobs": "المهام النشطة"
+    },
+    "status": {
+      "live": "مباشر",
+      "laterRelease": "متاح في إصدار لاحق"
+    },
+    "getStarted": {
+      "title": "ابدأ الآن",
+      "description": "الأساس جاهز. أضف عملاءك واضبط ملف نشاطك.",
+      "addCustomer": "إضافة عميل",
+      "manageVehicles": "إدارة المركبات",
+      "businessSettings": "إعدادات النشاط"
+    }
+  },
+  "portalHome": {
+    "title": "البوابة",
+    "description": "حساباتك المرتبطة وسجل الشكاوى.",
+    "business": "النشاط",
+    "linkedAccount": "حساب مرتبط",
+    "workshop": "الورشة",
+    "noLinkedAccountTitle": "لا يوجد حساب عميل مرتبط بعد",
+    "noLinkedAccountDescription": "استخدم نفس عنوان البريد الإلكتروني الموجود لدى ورشتك، أو اطلب منهم دعوتك/ربط سجل العميل. بعد التطابق ستظهر عروض الأسعار والمهام والشكاوى والمستندات تلقائيًا هنا.",
+    "submitComplaint": "إرسال شكوى",
+    "quotesAwaitingApproval": "عروض الأسعار بانتظار موافقتك",
+    "reviewAndApprove": "مراجعة والموافقة",
+    "activeJobs": "المهام النشطة",
+    "workInProgress": "العمل الجاري حاليًا.",
+    "recentComplaints": "الشكاوى الأخيرة",
+    "complaintsDescription": "اطّلع على حالة الشكاوى النشطة والسابقة.",
+    "noComplaintsYet": "لا توجد شكاوى بعد",
+    "complaintsEmpty": "عندما تحتاج إلى دعم، أرسل شكوى وتابع الرد هنا.",
+    "submitComplaintSecondary": "إرسال شكوى",
+    "reviewAndApproveDescription": "راجع التفاصيل ووافق عليها بتوقيعك الرقمي."
+  },
+  "adminOverview": {
+    "title": "نظرة عامة على المنصة",
+    "description": "مقاييس المستأجرين والاستخدام عبر Revora.",
+    "stats": {
+      "businesses": "الأنشطة",
+      "registeredUsers": "المستخدمون المسجلون",
+      "customers": "العملاء",
+      "quotations": "عروض الأسعار",
+      "approvedQuotes": "العروض المعتمدة",
+      "complaints": "الشكاوى",
+      "openComplaints": "الشكاوى المفتوحة",
+      "superAdmins": "المشرفون العامون"
+    }
+  },
+  "dashboardCustomers": {
+    "title": "العملاء",
+    "description": "الأشخاص والأنشطة التي تخدمهم.",
+    "actions": {
+      "addCustomer": "إضافة عميل"
+    },
+    "empty": {
+      "title": "لا يوجد عملاء بعد",
+      "description": "أضف أول عميل لبدء ربط المركبات وعروض الأسعار والمهام والمستندات.",
+      "action": "إضافة أول عميل"
+    },
+    "table": {
+      "name": "الاسم",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "created": "تاريخ الإنشاء"
+    },
+    "fallback": {
+      "noEmail": "لا يوجد بريد",
+      "noPhone": "لا يوجد هاتف",
+      "none": "—"
+    },
+    "new": {
+      "title": "إضافة عميل",
+      "description": "إنشاء سجل عميل.",
+      "submit": "إنشاء عميل"
+    },
+    "detail": {
+      "editSubmit": "حفظ التغييرات",
+      "addVehicleSubmit": "إضافة مركبة"
+    }
+  },
+  "dashboardVehicles": {
+    "title": "المركبات",
+    "description": "سجلات المركبات المرتبطة بالعملاء وتاريخ الخدمة.",
+    "searchPlaceholder": "ابحث عن اللوحة أو الماركة أو الطراز أو العميل أو VIN",
+    "actions": {
+      "addVehicle": "إضافة مركبة"
+    },
+    "filters": {
+      "make": "الماركة",
+      "customer": "العميل",
+      "allMakes": "كل الماركات",
+      "allCustomers": "كل العملاء",
+      "reset": "إعادة ضبط الفلاتر"
+    },
+    "summary": {
+      "visible": "عرض {count} من أصل {total} مركبة",
+      "filtered": "مصفّى"
+    },
+    "empty": {
+      "noneTitle": "لا توجد مركبات بعد",
+      "noneDescription": "أضف أول مركبة لبدء ربط تاريخ الخدمة وعروض الأسعار والمستندات.",
+      "matchTitle": "لا توجد مركبات مطابقة",
+      "matchDescription": "جرّب عبارة بحث مختلفة أو امسح الفلاتر."
+    },
+    "table": {
+      "vehicle": "المركبة",
+      "customer": "العميل",
+      "plate": "اللوحة",
+      "vin": "VIN",
+      "lastService": "آخر خدمة",
+      "updated": "تم التحديث"
+    },
+    "labels": {
+      "vin": "VIN",
+      "lastService": "آخر خدمة"
+    },
+    "fallback": {
+      "noCustomer": "لا يوجد عميل مرتبط",
+      "none": "—"
+    },
+    "error": {
+      "title": "تعذّر تحميل المركبات",
+      "description": "تعذّر تحميل قائمة المركبات الآن. حاول مرة أخرى أو عد لاحقًا.",
+      "backLabel": "العودة إلى لوحة التحكم"
+    },
+    "new": {
+      "title": "إضافة مركبة",
+      "description": "أنشئ سجل مركبة واربطه بعميل موجود.",
+      "back": "العودة إلى المركبات",
+      "submit": "إنشاء مركبة",
+      "emptyTitle": "لا يوجد عملاء بعد",
+      "emptyDescription": "أنشئ عميلاً أولاً، ثم أضف مركبته.",
+      "emptyAction": "إضافة عميل"
+    },
+    "edit": {
+      "title": "تعديل المركبة",
+      "description": "حدّث المركبة وأبقِها مرتبطة بالعميل الصحيح.",
+      "back": "العودة إلى المركبة",
+      "submit": "حفظ التغييرات",
+      "emptyTitle": "لا يوجد عملاء بعد",
+      "emptyDescription": "أنشئ عميلاً أو استعده قبل تعديل ملكية المركبة.",
+      "emptyAction": "إضافة عميل"
+    }
+  },
+  "dashboardJobsPage": {
+    "title": "المهام",
+    "description": "أوامر العمل التي أُنشئت من عروض الأسعار المعتمدة.",
+    "empty": {
+      "title": "لا توجد مهام بعد",
+      "description": "ستظهر أوامر العمل المعتمدة هنا بمجرد إنشائها من عروض الأسعار."
+    }
+  },
+  "dashboardJobs": {
+    "searchPlaceholder": "ابحث عن المهام أو العملاء أو الفروع",
+    "filters": {
+      "status": "تصفية حسب الحالة",
+      "allStatuses": "كل الحالات",
+      "reset": "إعادة ضبط الفلاتر"
+    },
+    "summary": {
+      "visible": "الظاهر {count}"
+    },
+    "empty": {
+      "title": "لا توجد مهام مطابقة",
+      "description": "جرّب بحثًا مختلفًا أو أعد ضبط الفلاتر."
+    },
+    "fallback": {
+      "noBranch": "لا يوجد فرع",
+      "noDueDate": "لا يوجد موعد",
+      "none": "—"
+    },
+    "table": {
+      "job": "المهمة",
+      "customer": "العميل",
+      "branch": "الفرع",
+      "status": "الحالة",
+      "due": "الموعد"
+    }
+  },
+  "dashboardQuotations": {
+    "title": "عروض الأسعار",
+    "description": "العروض وشفافية البنود والموافقات الرقمية.",
+    "actions": {
+      "newQuote": "عرض سعر جديد"
+    },
+    "empty": {
+      "title": "لا توجد عروض أسعار بعد",
+      "description": "ستظهر العروض التي أُنشئت لهذا النشاط هنا بمجرد حفظها.",
+      "action": "إنشاء أول عرض سعر"
+    },
+    "table": {
+      "quote": "عرض السعر",
+      "customer": "العميل",
+      "status": "الحالة",
+      "total": "الإجمالي"
+    },
+    "fallback": {
+      "noCustomer": "لا يوجد عميل",
+      "none": "—"
+    },
+    "new": {
+      "title": "عرض سعر جديد",
+      "description": "اختر العميل لبدء مسودّة.",
+      "needCustomer": "تحتاج إلى عميل أولاً.",
+      "addCustomer": "إضافة عميل"
+    },
+    "detail": {
+      "back": "العودة إلى عروض الأسعار",
+      "lineItems": "بنود العرض",
+      "lineItemsDescription": "الخدمات والعمالة والقطع والمنتجات مع تفاصيل الشفافية.",
+      "noItems": "لا توجد بنود بعد.",
+      "thItem": "البند",
+      "thType": "النوع",
+      "thTransparency": "الشفافية",
+      "thQty": "الكمية",
+      "thUnit": "الوحدة",
+      "thTotal": "الإجمالي",
+      "subtotal": "المجموع الفرعي",
+      "discount": "الخصم",
+      "tax": "الضريبة",
+      "total": "الإجمالي",
+      "details": "التفاصيل",
+      "approval": "الاعتماد",
+      "approvalDescription": "اعتماد رقمي بتوقيع وبيانات تدقيق.",
+      "approved": "مُعتمد",
+      "approvedOn": "اعتُمد في {date}",
+      "signedBy": "وقّعه {name} · النسخة {version}",
+      "signedFallback": "العميل",
+      "note": "ملاحظة: {note}",
+      "declined": "مرفوض",
+      "declinedOn": "رُفض في {date}",
+      "reason": "السبب: {reason}",
+      "addItemsFirst": "أضف بنداً واحداً على الأقل قبل الإرسال.",
+      "sendPrompt": "أرسل العرض للحصول على اعتماد العميل الرقمي.",
+      "awaitingApproval": "بانتظار اعتماد العميل."
+    }
+  },
+  "dashboardComplaints": {
+    "title": "الشكاوى",
+    "description": "شكاوى العملاء والمتابعة الداخلية وتتبع الحلول.",
+    "accessRestrictedDescription": "إدارة الشكاوى مقصورة على أدوار الموظفين.",
+    "accessRestricted": "ليس لديك صلاحية إدارة الشكاوى.",
+    "stats": {
+      "openActive": "مفتوحة / نشطة",
+      "resolvedClosed": "محلولة / مغلقة"
+    },
+    "queue": {
+      "title": "طابور الشكاوى",
+      "description": "إدارة الحالة، والحدة، والمكلّفين، والردود المتسلسلة."
+    },
+    "empty": {
+      "title": "لا توجد شكاوى بعد",
+      "description": "ستظهر الشكاوى التي يرسلها العملاء هنا بمجرد ربطها بهذا النشاط.",
+      "action": "عرض بوابة العملاء"
+    },
+    "table": {
+      "subject": "الموضوع",
+      "customer": "العميل",
+      "status": "الحالة",
+      "severity": "الحدّة",
+      "assignee": "المسند إليه",
+      "updated": "تم التحديث"
+    },
+    "fallback": {
+      "noCustomer": "لا يوجد عميل",
+      "none": "—",
+      "unassigned": "غير مسند"
+    }
+  },
+  "dashboardDocuments": {
+    "title": "المستندات",
+    "description": "العقود وملفات PDF وتقارير التدقيق.",
+    "actions": {
+      "uploadDocument": "رفع مستند",
+      "download": "تنزيل",
+      "unavailable": "غير متاح"
+    },
+    "library": {
+      "title": "مكتبة المستندات",
+      "description": "ملفات محفوظة ومرتبطة بعروض الأسعار والشكاوى والمهام والعملاء."
+    },
+    "empty": {
+      "title": "لا توجد مستندات بعد",
+      "description": "ارفع العقود وملفات PDF وسجلات الخدمة لإبقائها مرتبطة بعروض الأسعار والمهام والشكاوى."
+    },
+    "table": {
+      "document": "المستند",
+      "type": "النوع",
+      "relatedTo": "مرتبط بـ",
+      "file": "الملف",
+      "created": "تاريخ الإنشاء",
+      "action": "الإجراء"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "portalJobs": {
+    "title": "المهام",
+    "description": "تابع تقدّم أوامر عملك.",
+    "stats": {
+      "jobs": "المهام",
+      "active": "النشطة",
+      "completed": "المكتملة"
+    },
+    "list": {
+      "title": "مهامك",
+      "description": "افتح المهمة لعرض آخر التحديثات والمرفقات."
+    },
+    "empty": {
+      "noLinkedJobsTitle": "لا توجد مهام مرتبطة بحسابك بعد",
+      "noLinkedJobsDescription": "بمجرد أن ينشئ النشاط مهمة لإحدى مركباتك أو عروض أسعارك ستظهر هنا.",
+      "title": "لا توجد مهام مرتبطة بحسابك بعد",
+      "description": "بمجرد أن ينشئ النشاط مهمة ستظهر هنا."
+    },
+    "actions": {
+      "backToPortal": "العودة إلى البوابة"
+    },
+    "labels": {
+      "expected": "المتوقع:",
+      "updated": "تم التحديث"
+    },
+    "table": {
+      "job": "المهمة",
+      "workshop": "الورشة",
+      "branch": "الفرع",
+      "status": "الحالة",
+      "expected": "المتوقع",
+      "updated": "تم التحديث"
+    },
+    "fallback": {
+      "workshop": "الورشة",
+      "noBranch": "لا يوجد فرع",
+      "none": "—"
+    }
+  },
+  "portalQuotes": {
+    "title": "عروض الأسعار",
+    "description": "راجع عروض الأسعار القادمة من ورشتك ووافق عليها.",
+    "list": {
+      "title": "عروضك",
+      "description": "افتح العرض لعرض البنود والموافقة عليه."
+    },
+    "empty": "لا توجد عروض أسعار بعد.",
+    "table": {
+      "quote": "عرض السعر",
+      "workshop": "الورشة",
+      "status": "الحالة",
+      "total": "الإجمالي"
+    },
+    "fallback": {
+      "workshop": "الورشة",
+      "none": "—"
+    }
+  },
+  "portalComplaints": {
+    "title": "الشكاوى",
+    "description": "تابع حالة كل شكوى قدّمتها.",
+    "actions": {
+      "submitComplaint": "إرسال شكوى"
+    },
+    "empty": {
+      "noLinkedTitle": "لا توجد شكاوى متاحة لهذا الحساب بعد.",
+      "noLinkedDescription": "استخدم نفس عنوان البريد الإلكتروني الموجود لدى ورشتك، أو اطلب منهم دعوتك/ربط سجل العميل.",
+      "noComplaintsTitle": "لا توجد شكاوى بعد",
+      "noComplaintsDescription": "عندما تحتاج إلى دعم، أرسل شكوى وتابع الرد هنا."
+    },
+    "history": {
+      "title": "سجل الشكاوى",
+      "description": "الحالة والحدّة والنشاط المرتبط بكل شكوى."
+    },
+    "table": {
+      "subject": "الموضوع",
+      "workshop": "الورشة",
+      "status": "الحالة",
+      "severity": "الحدّة"
+    },
+    "fallback": {
+      "workshop": "الورشة",
+      "none": "—"
+    }
+  },
+  "portalDocuments": {
+    "title": "المستندات",
+    "description": "ملفات يشاركها النشاط ومربوطة بحسابك.",
+    "actions": {
+      "backToPortal": "العودة إلى البوابة",
+      "open": "فتح",
+      "unavailable": "غير متاح"
+    },
+    "library": {
+      "title": "مستنداتك",
+      "description": "العقود وملفات PDF والصور المرتبطة بمهامك أو عروض أسعارك أو شكاواك."
+    },
+    "empty": {
+      "noLinkedTitle": "لا توجد مستندات متاحة بعد",
+      "noLinkedDescription": "لم يشارك النشاط أي مستندات مرتبطة بالعميل بعد.",
+      "noDocumentsTitle": "لا توجد مستندات متاحة بعد",
+      "noDocumentsDescription": "لم يشارك النشاط أي مستندات مرتبطة بالعميل بعد."
+    },
+    "table": {
+      "document": "المستند",
+      "type": "النوع",
+      "relatedTo": "مرتبط بـ",
+      "file": "الملف",
+      "created": "تاريخ الإنشاء",
+      "action": "الإجراء"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "portalSettings": {
+    "title": "الإعدادات",
+    "description": "تفاصيل الحساب والملف الشخصي للبوابة بوضع القراءة فقط.",
+    "empty": {
+      "title": "لا يوجد حساب عميل مرتبط",
+      "description": "لم نعثر على سجل عميل مرتبط بتسجيل دخولك. استخدم نفس عنوان البريد الإلكتروني الموجود لدى ورشتك، أو اطلب منهم دعوتك/ربطك."
+    },
+    "summary": {
+      "title": "الحساب المسجّل",
+      "description": "البريد الإلكتروني وسجلات العملاء المرتبطة بهذا الحساب.",
+      "email": "البريد الإلكتروني",
+      "linkedRecords": "السجلات المرتبطة",
+      "recordsValue": "{count, plural, one {# حساب عميل} other {# حسابات عميل}}",
+      "primaryWorkshop": "الورشة الرئيسية",
+      "readOnly": "للقراءة فقط"
+    },
+    "accounts": {
+      "title": "حسابات العملاء المرتبطة",
+      "description": "هذه السجلات متاحة عبر البوابة ويتم فصلها حسب المستأجر."
+    },
+    "account": {
+      "phone": "الهاتف",
+      "language": "اللغة",
+      "created": "تاريخ الإنشاء"
+    },
+    "security": {
+      "title": "الأمان والتواصل",
+      "description": "الوصول إلى البوابة مرتبط بالبريد الإلكتروني المستخدم في تسجيل الدخول. لا تتوفر بعد إعدادات العميل القابلة للتعديل.",
+      "body": "تتم إدارة تفضيلات التواصل، وقنوات التسليم، وتعديلات الحساب من قبل النشاط في الوقت الحالي."
+    },
+    "fallback": {
+      "noEmail": "لا يوجد بريد",
+      "workshop": "الورشة"
+    }
+  },
+  "adminTenants": {
+    "title": "المستأجرون",
+    "description": "كل نشاط على المنصة.",
+    "cardTitle": "الأنشطة ({count})",
+    "cardDescription": "المالك وحجم الفريق والنشاط لكل مستأجر.",
+    "empty": {
+      "title": "لا توجد أنشطة بعد",
+      "description": "ستظهر سجلات المستأجرين هنا بمجرد أن يسجل نشاط ويُنشئ مساحة عمله."
+    }
+  },
+  "adminUsers": {
+    "title": "المستخدمون",
+    "description": "جميع مستخدمي المنصة المسجلين وبصمتهم داخل المستأجرين.",
+    "stats": {
+      "totalUsers": "إجمالي المستخدمين",
+      "superAdmins": "المشرفون العامون",
+      "linkedCustomers": "العملاء المرتبطون",
+      "businessMemberships": "العضويات داخل الأنشطة"
+    },
+    "cardTitle": "جدول المستخدمين ({count})",
+    "cardDescription": "عمليات التسجيل، وحالة المشرف العام، والارتباط بالمستأجرين.",
+    "empty": {
+      "title": "لا يوجد مستخدمون بعد",
+      "description": "سيظهر المستخدمون هنا بمجرد أن تبدأ المنصة في جمع عمليات التسجيل والعضويات."
+    }
+  },
+  "adminSubscriptions": {
+    "title": "الاشتراكات",
+    "description": "ملخص اشتراكات المنصة عبر المستأجرين.",
+    "stats": {
+      "active": "نشط",
+      "trialing": "تجريبي",
+      "pastDue": "متأخر",
+      "total": "الإجمالي"
+    },
+    "cardTitle": "نظرة عامة على الاشتراكات ({count})",
+    "cardDescription": "المستأجرون المدعومون من Stripe وحالة خطتهم الحالية.",
+    "empty": {
+      "title": "لا توجد اشتراكات بعد",
+      "description": "ستظهر سجلات الاشتراكات المدعومة من Stripe هنا بمجرد أن تبدأ الفوترة."
+    }
+  },
+  "adminBilling": {
+    "title": "الفوترة",
+    "description": "التحكم في الفوترة والاشتراكات على مستوى المنصة.",
+    "actions": {
+      "subscriptionTable": "جدول الاشتراكات"
+    },
+    "stats": {
+      "businessesBilled": "الأنشطة المفوترة",
+      "activeSubscriptions": "الاشتراكات النشطة",
+      "pastDue": "المتأخرة",
+      "platformUsers": "مستخدمو المنصة"
+    },
+    "cardTitle": "نظرة عامة على الفوترة",
+    "cardDescription": "نظرة قراءة فقط للفوترة على مستوى المنصة مدعومة ببيانات الاشتراكات.",
+    "note": "يحافظ مزامنة Stripe webhook على تحديث هذا العرض؛ بينما تبقى تغييرات الخطط وإجراءات البوابة داخل تدفق فوترة المستأجر.",
+    "empty": {
+      "title": "لا توجد سجلات اشتراك بعد",
+      "description": "ستظهر صفوف الاشتراكات هنا بمجرد أن تبدأ Stripe في مزامنة فوترة المستأجر."
+    },
+    "table": {
+      "business": "النشاط",
+      "plan": "الخطة",
+      "status": "الحالة",
+      "periodStart": "بداية الفترة",
+      "periodEnd": "نهاية الفترة"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "adminAuditLogs": {
+    "title": "سجلات التدقيق",
+    "description": "تغييرات السجلات عبر المستأجرين والإجراءات الإدارية.",
+    "cardTitle": "تدفق النشاط ({count})",
+    "cardDescription": "أحدث أحداث الإنشاء والتحديث والحذف عبر المنصة.",
+    "empty": {
+      "title": "لا توجد أحداث تدقيق بعد",
+      "description": "سيظهر النشاط الإداري هنا بمجرد أن يبدأ المستأجرون ومشغلو المنصة بإجراء التغييرات."
+    }
+  },
+  "adminNotifications": {
+    "title": "الإشعارات",
+    "description": "الإشعارات المرسلة والمنتظرة على مستوى المنصة.",
+    "stats": {
+      "sent": "مرسلة",
+      "queued": "في الطابور",
+      "failed": "فاشلة",
+      "unread": "غير مقروءة"
+    },
+    "cardTitle": "مركز الإشعارات ({count})",
+    "cardDescription": "حالة التسليم عبر البريد الإلكتروني وSMS والتكاملات الأخرى.",
+    "empty": {
+      "title": "لا توجد إشعارات بعد",
+      "description": "ستظهر الإشعارات المرسلة أو المنتظرة هنا بمجرد أن ترسل المنصة نشاطًا."
+    }
+  },
+  "adminAnalytics": {
+    "title": "التحليلات",
+    "description": "نشاط المنصة عبر المستأجرين والعمليات وإشارات النمو.",
+    "stats": {
+      "businesses": "الأنشطة",
+      "customers": "العملاء",
+      "quotes": "عروض الأسعار",
+      "complaints": "الشكاوى"
+    },
+    "cardTitle": "أبرز المستأجرين",
+    "cardDescription": "الأنشطة التي لديها أعلى حركة لعروض الأسعار والشكاوى.",
+    "empty": {
+      "title": "لا يوجد نشاط للمستأجرين بعد",
+      "description": "ستظهر التحليلات بمجرد أن تبدأ الأنشطة في إنشاء عروض الأسعار والشكاوى ونمو العملاء."
+    },
+    "table": {
+      "business": "النشاط",
+      "owner": "المالك",
+      "members": "الأعضاء",
+      "quotes": "عروض الأسعار",
+      "complaints": "الشكاوى"
+    }
   }
 }
