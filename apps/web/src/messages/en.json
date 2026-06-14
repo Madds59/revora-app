@@ -104,6 +104,38 @@
       "submit": "Save assignment"
     }
   },
+  "settings": {
+    "business": {
+      "name": "Business name",
+      "legalName": "Legal name",
+      "tagline": "Tagline",
+      "country": "Country",
+      "defaultLanguage": "Default language",
+      "save": "Save changes",
+      "ownersOnly": "Only owners can edit business details."
+    },
+    "branch": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "add": "Add branch"
+    },
+    "service": {
+      "name": "Name",
+      "defaultPrice": "Default price (AED)",
+      "description": "Description",
+      "add": "Add service"
+    }
+  },
+  "team": {
+    "email": "Email",
+    "role": "Role",
+    "sendInvitation": "Send invitation",
+    "revoke": "Revoke",
+    "member": "Member",
+    "pendingInvitations": "Pending invitations",
+    "ownersOnly": "Only owners can invite teammates."
+  },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
@@ -318,6 +350,15 @@
       "noEmail": "No email",
       "noPhone": "No phone",
       "none": "—"
+    },
+    "new": {
+      "title": "Add customer",
+      "description": "Create a customer record.",
+      "submit": "Create customer"
+    },
+    "detail": {
+      "editSubmit": "Save changes",
+      "addVehicleSubmit": "Add vehicle"
     }
   },
   "dashboardVehicles": {
@@ -364,6 +405,24 @@
       "title": "Vehicles failed to load",
       "description": "The vehicle list could not be loaded right now. Try again or return later.",
       "backLabel": "Go to dashboard"
+    },
+    "new": {
+      "title": "Add vehicle",
+      "description": "Create a vehicle record and link it to an existing customer.",
+      "back": "Back to vehicles",
+      "submit": "Create vehicle",
+      "emptyTitle": "No customers yet",
+      "emptyDescription": "Create a customer first, then add their vehicle.",
+      "emptyAction": "Add customer"
+    },
+    "edit": {
+      "title": "Edit vehicle",
+      "description": "Update the vehicle and keep it linked to the correct customer.",
+      "back": "Back to vehicle",
+      "submit": "Save changes",
+      "emptyTitle": "No customers yet",
+      "emptyDescription": "Create or restore a customer before editing vehicle ownership.",
+      "emptyAction": "Add customer"
     }
   },
   "dashboardJobsPage": {

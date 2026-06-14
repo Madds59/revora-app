@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default async function CustomerDetailPage({
   const { member, business } = await requireMembership();
   const canManage = canManageCustomers(member.role);
   const supabase = await createClient();
+  const tDetail = await getTranslations("dashboardCustomers.detail");
 
   const { data: customer } = await supabase
     .from("customers")
@@ -155,7 +157,7 @@ export default async function CustomerDetailPage({
                   <CustomerForm
                     action={updateCustomer}
                     customer={typedCustomer}
-                    submitLabel="Save changes"
+                    submitLabel={tDetail("editSubmit")}
                   />
                 ) : (
                   <p className="text-muted-foreground text-sm">

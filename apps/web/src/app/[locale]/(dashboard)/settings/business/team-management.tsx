@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -36,6 +37,7 @@ type TeamMember = { id: string; name: string; role: MemberRole };
 
 function InviteForm() {
   const [state, action] = useActionState(inviteTeammate, initial);
+  const t = useTranslations("team");
   const formRef = useRef<HTMLFormElement>(null);
   const last = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -50,7 +52,7 @@ function InviteForm() {
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
         <div className="grid gap-2">
-          <Label htmlFor="invite-email">Email</Label>
+          <Label htmlFor="invite-email">{t("email")}</Label>
           <Input
             id="invite-email"
             name="email"
@@ -60,7 +62,7 @@ function InviteForm() {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="invite-role">Role</Label>
+          <Label htmlFor="invite-role">{t("role")}</Label>
           <Select name="role" defaultValue="employee">
             <SelectTrigger id="invite-role" className="w-40">
               <SelectValue />
@@ -74,7 +76,7 @@ function InviteForm() {
       </div>
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Send invitation</SubmitButton>
+        <SubmitButton variant="secondary">{t("sendInvitation")}</SubmitButton>
       </div>
     </form>
   );
@@ -82,6 +84,7 @@ function InviteForm() {
 
 function RevokeButton({ id }: { id: string }) {
   const [state, action] = useActionState(revokeInvitation, initial);
+  const t = useTranslations("team");
   const last = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (state.message && state.message !== last.current) {
@@ -97,7 +100,7 @@ function RevokeButton({ id }: { id: string }) {
     <form action={action}>
       <input type="hidden" name="id" value={id} />
       <SubmitButton variant="ghost" size="sm">
-        Revoke
+        {t("revoke")}
       </SubmitButton>
     </form>
   );
@@ -112,14 +115,15 @@ export function TeamManagement({
   pending: PendingInvite[];
   canManage: boolean;
 }) {
+  const t = useTranslations("team");
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Member</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>{t("member")}</TableHead>
+              <TableHead>{t("role")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -135,13 +139,13 @@ export function TeamManagement({
 
       {pending.length > 0 && (
         <div>
-          <p className="mb-2 text-sm font-medium">Pending invitations</p>
+          <p className="mb-2 text-sm font-medium">{t("pendingInvitations")}</p>
           <div className="rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>{t("email")}</TableHead>
+                  <TableHead>{t("role")}</TableHead>
                   {canManage && <TableHead />}
                 </TableRow>
               </TableHeader>
@@ -167,7 +171,7 @@ export function TeamManagement({
         <InviteForm />
       ) : (
         <p className="text-muted-foreground text-sm">
-          Only owners can invite teammates.
+          {t("ownersOnly")}
         </p>
       )}
     </div>
