@@ -158,6 +158,8 @@
     "superAdmins": "المشرفون العامون"
   },
   "shell": {
+    "openNavigation": "فتح التنقّل",
+    "closeNavigation": "إغلاق التنقّل",
     "openAccountMenu": "فتح قائمة الحساب",
     "theme": "المظهر",
     "language": "اللغة",

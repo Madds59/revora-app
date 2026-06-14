@@ -158,6 +158,8 @@
     "superAdmins": "Super admins"
   },
   "shell": {
+    "openNavigation": "Open navigation",
+    "closeNavigation": "Close navigation",
     "openAccountMenu": "Open account menu",
     "theme": "Theme",
     "language": "Language",
