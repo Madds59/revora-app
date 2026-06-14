@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
@@ -33,6 +34,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 };
 
 export default async function AdminBillingPage() {
+  const t = await getTranslations("adminBilling");
   await requireSuperAdmin();
   const supabase = await createClient();
 
@@ -49,11 +51,11 @@ export default async function AdminBillingPage() {
   return (
     <>
       <PageHeader
-        title="Billing"
-        description="Platform-level billing and subscription control."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href="/admin/subscriptions" className={buttonVariants({ variant: "outline" })}>
-            Subscription table
+            {t("actions.subscriptionTable")}
           </Link>
         }
       />
@@ -61,7 +63,7 @@ export default async function AdminBillingPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Businesses billed</CardDescription>
+              <CardDescription>{t("stats.businessesBilled")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.businesses ?? 0}
               </CardTitle>
@@ -69,19 +71,19 @@ export default async function AdminBillingPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Active subscriptions</CardDescription>
+              <CardDescription>{t("stats.activeSubscriptions")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{active}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Past due</CardDescription>
+              <CardDescription>{t("stats.pastDue")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{overdue}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Platform users</CardDescription>
+              <CardDescription>{t("stats.platformUsers")}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">
                 {metrics?.users ?? 0}
               </CardTitle>
@@ -91,34 +93,31 @@ export default async function AdminBillingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Billing overview</CardTitle>
-            <CardDescription>
-              Read-only platform billing overview backed by subscription data.
-            </CardDescription>
+            <CardTitle>{t("cardTitle")}</CardTitle>
+            <CardDescription>{t("cardDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-              Stripe webhook sync now keeps this view current; plan changes and portal
-              actions still happen in the tenant billing flow.
+              {t("note")}
             </div>
 
             {error ? (
               <p className="text-sm text-destructive">{error.message}</p>
             ) : subscriptions.length === 0 ? (
               <EmptyState
-                title="No subscription records yet"
-                description="Subscription rows will appear here once Stripe starts syncing tenant billing."
+                title={t("empty.title")}
+                description={t("empty.description")}
               />
             ) : (
               <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Business</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Period start</TableHead>
-                      <TableHead>Period end</TableHead>
+                      <TableHead>{t("table.business")}</TableHead>
+                      <TableHead>{t("table.plan")}</TableHead>
+                      <TableHead>{t("table.status")}</TableHead>
+                      <TableHead>{t("table.periodStart")}</TableHead>
+                      <TableHead>{t("table.periodEnd")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -134,12 +133,12 @@ export default async function AdminBillingPage() {
                         <TableCell className="text-muted-foreground">
                           {sub.current_period_start
                             ? new Date(sub.current_period_start).toLocaleDateString()
-                            : "—"}
+                            : t("fallback.none")}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {sub.current_period_end
                             ? new Date(sub.current_period_end).toLocaleDateString()
-                            : "—"}
+                            : t("fallback.none")}
                         </TableCell>
                       </TableRow>
                     ))}

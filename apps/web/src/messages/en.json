@@ -531,5 +531,126 @@
       "noEmail": "No email",
       "workshop": "Workshop"
     }
+  },
+  "adminTenants": {
+    "title": "Tenants",
+    "description": "Every business on the platform.",
+    "cardTitle": "Businesses ({count})",
+    "cardDescription": "Owner, team size, and activity per tenant.",
+    "empty": {
+      "title": "No businesses yet",
+      "description": "Tenant records will appear here once a business signs up and creates its workspace."
+    }
+  },
+  "adminUsers": {
+    "title": "Users",
+    "description": "All registered platform users and their tenant footprint.",
+    "stats": {
+      "totalUsers": "Total users",
+      "superAdmins": "Super admins",
+      "linkedCustomers": "Linked customers",
+      "businessMemberships": "Business memberships"
+    },
+    "cardTitle": "User table ({count})",
+    "cardDescription": "Platform signups, super-admin status, and tenant linkage.",
+    "empty": {
+      "title": "No users yet",
+      "description": "Users will appear here once the platform starts collecting signups and memberships."
+    }
+  },
+  "adminSubscriptions": {
+    "title": "Subscriptions",
+    "description": "Platform subscription rollup across tenants.",
+    "stats": {
+      "active": "Active",
+      "trialing": "Trialing",
+      "pastDue": "Past due",
+      "total": "Total"
+    },
+    "cardTitle": "Subscription overview ({count})",
+    "cardDescription": "Stripe-backed tenants and their current plan state.",
+    "empty": {
+      "title": "No subscriptions yet",
+      "description": "Stripe-backed subscription records will appear here once tenants are billed."
+    }
+  },
+  "adminBilling": {
+    "title": "Billing",
+    "description": "Platform-level billing and subscription control.",
+    "actions": {
+      "subscriptionTable": "Subscription table"
+    },
+    "stats": {
+      "businessesBilled": "Businesses billed",
+      "activeSubscriptions": "Active subscriptions",
+      "pastDue": "Past due",
+      "platformUsers": "Platform users"
+    },
+    "cardTitle": "Billing overview",
+    "cardDescription": "Read-only platform billing overview backed by subscription data.",
+    "note": "Stripe webhook sync keeps this view current; plan changes and portal actions still happen in the tenant billing flow.",
+    "empty": {
+      "title": "No subscription records yet",
+      "description": "Subscription rows will appear here once Stripe starts syncing tenant billing."
+    },
+    "table": {
+      "business": "Business",
+      "plan": "Plan",
+      "status": "Status",
+      "periodStart": "Period start",
+      "periodEnd": "Period end"
+    },
+    "fallback": {
+      "none": "—"
+    }
+  },
+  "adminAuditLogs": {
+    "title": "Audit logs",
+    "description": "Cross-tenant record changes and administrative actions.",
+    "cardTitle": "Activity stream ({count})",
+    "cardDescription": "Latest create, update, and delete events across the platform.",
+    "empty": {
+      "title": "No audit events yet",
+      "description": "Administrative activity will appear here once tenants and platform operators start making changes."
+    }
+  },
+  "adminNotifications": {
+    "title": "Notifications",
+    "description": "Queued and delivered platform notifications.",
+    "stats": {
+      "sent": "Sent",
+      "queued": "Queued",
+      "failed": "Failed",
+      "unread": "Unread"
+    },
+    "cardTitle": "Notification center ({count})",
+    "cardDescription": "Delivery state across email, SMS, and channel integrations.",
+    "empty": {
+      "title": "No notifications yet",
+      "description": "Queued and delivered notifications will appear here once the platform sends activity."
+    }
+  },
+  "adminAnalytics": {
+    "title": "Analytics",
+    "description": "Cross-tenant activity, operations, and growth signals.",
+    "stats": {
+      "businesses": "Businesses",
+      "customers": "Customers",
+      "quotes": "Quotes",
+      "complaints": "Complaints"
+    },
+    "cardTitle": "Top tenants",
+    "cardDescription": "Businesses with the most quote and complaint activity.",
+    "empty": {
+      "title": "No tenant activity yet",
+      "description": "Analytics will fill in once businesses start generating quotes, complaints, and customer growth."
+    },
+    "table": {
+      "business": "Business",
+      "owner": "Owner",
+      "members": "Members",
+      "quotes": "Quotes",
+      "complaints": "Complaints"
+    }
   }
 }
