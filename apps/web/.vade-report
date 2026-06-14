@@ -1,0 +1,46 @@
+# Vercel Speed Insights Installation Report
+
+## Summary
+Successfully installed and configured Vercel Speed Insights for the Next.js (App Router) project following the latest official Vercel documentation.
+
+## Changes Made
+
+### 1. Package Installation
+- **Added dependency**: `@vercel/speed-insights` version `^2.0.0`
+- **Package manager**: pnpm
+- **File modified**: `apps/web/package.json`
+- **Lockfile updated**: `apps/web/pnpm-lock.yaml`
+
+### 2. Component Integration
+- **File modified**: `apps/web/src/app/layout.tsx`
+- **Import added**: `import { SpeedInsights } from "@vercel/speed-insights/next";`
+- **Component placement**: Added `<SpeedInsights />` component in the root layout's `<body>` tag, right after the closing `</ThemeProvider>` tag
+
+### 3. Implementation Details
+The Speed Insights component was added to the root layout file (`src/app/layout.tsx`) following Next.js App Router best practices:
+- Used the framework-specific import from `@vercel/speed-insights/next`
+- Placed the component at the root level to track all pages in the application
+- Preserved all existing code structure and formatting
+- No breaking changes to existing functionality
+
+## Verification Steps Completed
+✅ TypeScript type checking passed (`pnpm run typecheck`)
+✅ ESLint linting passed with no errors (`pnpm run lint`)
+✅ Code compilation successful
+✅ Lockfile properly updated with new dependency
+
+## Next Steps (Manual)
+To complete the Speed Insights setup:
+1. Enable Speed Insights in your Vercel dashboard:
+   - Navigate to your project in Vercel
+   - Select "Speed Insights" from the sidebar
+   - Click "Enable" button
+2. Deploy the application to Vercel
+3. Visit your deployed site to generate traffic
+4. View Speed Insights data in your Vercel dashboard
+
+## Technical Notes
+- The implementation follows the official Vercel Speed Insights quickstart guide fetched on 2026-06-14
+- Speed Insights will automatically track Core Web Vitals (LCP, FID, CLS, etc.)
+- No additional configuration is required - the component works out of the box
+- The component is lightweight and has minimal performance impact
