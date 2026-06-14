@@ -1,0 +1,192 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-brand-green: var(--brand-green);
+  --color-brand-red: var(--brand-red);
+  --color-brand-amber: var(--brand-amber);
+  --color-brand-graphite: var(--brand-graphite);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --font-sans:
+    "Inter", "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-geist-mono:
+    "SFMono-Regular", "SF Mono", "Consolas", "Liberation Mono", monospace;
+  /* Desert Graphite + UAE flag — warm-white surfaces, graphite ink, UAE green as the
+     trust/primary color, UAE red for alerts, brass as a warm tertiary accent. */
+  --background: oklch(0.992 0.003 80);
+  --foreground: oklch(0.225 0.008 65);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.225 0.008 65);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.225 0.008 65);
+  --primary: oklch(0.54 0.13 154);
+  --primary-foreground: oklch(0.985 0.012 150);
+  --secondary: oklch(0.955 0.006 80);
+  --secondary-foreground: oklch(0.30 0.008 65);
+  --muted: oklch(0.962 0.005 80);
+  --muted-foreground: oklch(0.505 0.012 70);
+  --accent: oklch(0.95 0.032 154);
+  --accent-foreground: oklch(0.38 0.10 154);
+  --destructive: oklch(0.55 0.205 25);
+  --border: oklch(0.905 0.006 80);
+  --input: oklch(0.905 0.006 80);
+  --ring: oklch(0.54 0.13 154);
+  --chart-1: oklch(0.55 0.13 154);
+  --chart-2: oklch(0.74 0.11 76);
+  --chart-3: oklch(0.57 0.19 25);
+  --chart-4: oklch(0.46 0.09 178);
+  --chart-5: oklch(0.36 0.012 65);
+  --radius: 0.7rem;
+
+  /* Brand primitives — used by the brandmark, flag stripe, and accents. */
+  --brand-green: oklch(0.54 0.13 154);
+  --brand-red: oklch(0.55 0.205 25);
+  --brand-amber: oklch(0.74 0.11 76);
+  --brand-graphite: oklch(0.225 0.008 65);
+
+  /* Status colors (approve / caution) layered on the brand. */
+  --success: oklch(0.54 0.13 154);
+  --success-foreground: oklch(0.985 0.012 150);
+  --warning: oklch(0.74 0.11 76);
+  --warning-foreground: oklch(0.28 0.04 70);
+
+  /* Sidebar is graphite in both themes — the premium-automotive signature. */
+  --sidebar: oklch(0.235 0.008 70);
+  --sidebar-foreground: oklch(0.92 0.005 85);
+  --sidebar-primary: oklch(0.62 0.14 154);
+  --sidebar-primary-foreground: oklch(0.16 0.012 70);
+  --sidebar-accent: oklch(0.305 0.009 72);
+  --sidebar-accent-foreground: oklch(0.97 0.005 85);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.62 0.14 154);
+}
+
+.dark {
+  --background: oklch(0.185 0.006 70);
+  --foreground: oklch(0.95 0.004 85);
+  --card: oklch(0.225 0.008 70);
+  --card-foreground: oklch(0.95 0.004 85);
+  --popover: oklch(0.225 0.008 70);
+  --popover-foreground: oklch(0.95 0.004 85);
+  --primary: oklch(0.64 0.14 154);
+  --primary-foreground: oklch(0.16 0.012 70);
+  --secondary: oklch(0.285 0.009 70);
+  --secondary-foreground: oklch(0.95 0.004 85);
+  --muted: oklch(0.285 0.009 70);
+  --muted-foreground: oklch(0.715 0.008 78);
+  --accent: oklch(0.33 0.03 154);
+  --accent-foreground: oklch(0.90 0.04 154);
+  --destructive: oklch(0.63 0.19 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.64 0.14 154);
+  --chart-1: oklch(0.64 0.14 154);
+  --chart-2: oklch(0.78 0.11 76);
+  --chart-3: oklch(0.64 0.18 25);
+  --chart-4: oklch(0.56 0.10 178);
+  --chart-5: oklch(0.80 0.006 85);
+
+  --brand-green: oklch(0.64 0.14 154);
+  --brand-red: oklch(0.63 0.19 25);
+  --brand-amber: oklch(0.78 0.11 76);
+  --brand-graphite: oklch(0.185 0.006 70);
+
+  --success: oklch(0.64 0.14 154);
+  --success-foreground: oklch(0.16 0.012 70);
+  --warning: oklch(0.78 0.11 76);
+  --warning-foreground: oklch(0.20 0.03 70);
+
+  --sidebar: oklch(0.165 0.006 70);
+  --sidebar-foreground: oklch(0.92 0.005 85);
+  --sidebar-primary: oklch(0.64 0.14 154);
+  --sidebar-primary-foreground: oklch(0.16 0.012 70);
+  --sidebar-accent: oklch(0.27 0.009 72);
+  --sidebar-accent-foreground: oklch(0.97 0.005 85);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.64 0.14 154);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+@layer components {
+  /* UAE flag accent — red hoist bar then green / white / black stripes.
+     Render as a thin horizontal rule under brand chrome. */
+  .uae-flag-stripe {
+    background-image: linear-gradient(
+      to right,
+      var(--brand-red) 0,
+      var(--brand-red) 12%,
+      var(--brand-green) 12%,
+      var(--brand-green) 41%,
+      oklch(0.97 0.004 85) 41%,
+      oklch(0.97 0.004 85) 70%,
+      var(--brand-graphite) 70%,
+      var(--brand-graphite) 100%
+    );
+  }
+}

@@ -1,0 +1,173 @@
+import Link from "next/link";
+
+import { PageHeader } from "@/components/page-header";
+import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
+import { buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { requireCustomerPortal } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import type { Business, Complaint } from "@/lib/database.types";
+import {
+  COMPLAINT_SEVERITY_LABELS,
+  COMPLAINT_SEVERITY_VARIANT,
+  COMPLAINT_STATUS_LABELS,
+  COMPLAINT_STATUS_VARIANT,
+} from "@/lib/complaints";
+
+type ComplaintRow = Complaint & { business_name: string | null };
+
+export default async function PortalComplaintsPage() {
+  const { accounts } = await requireCustomerPortal();
+  if (accounts.length === 0) {
+    return (
+      <>
+        <PageHeader
+          title="Complaints"
+          description="Track the status of every complaint you have submitted."
+          action={
+            <Link href="/portal/complaints/new" className={buttonVariants()}>
+              Submit complaint
+            </Link>
+          }
+        />
+        <div className="p-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
+                No complaints are available for this portal account yet.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  const supabase = await createClient();
+  const customerIds = accounts.map((account) => account.id);
+
+  const { data: complaintsData } = await supabase
+    .from("complaints")
+    .select("*")
+    .in("customer_id", customerIds)
+    .order("created_at", { ascending: false });
+
+  const complaints = (complaintsData ?? []) as Complaint[];
+  const businessIds = [...new Set(complaints.map((complaint) => complaint.business_id))];
+  const { data: businessData } = businessIds.length
+    ? await supabase.from("businesses").select("id, name").in("id", businessIds)
+    : { data: [] as Pick<Business, "id" | "name">[] };
+  const businessMap = new Map(
+    (businessData ?? []).map((business) => [business.id, business.name]),
+  );
+
+  const rows: ComplaintRow[] = complaints.map((complaint) => ({
+    ...complaint,
+    business_name: businessMap.get(complaint.business_id) ?? null,
+  }));
+
+  return (
+    <>
+      <PageHeader
+        title="Complaints"
+        description="Track the status of every complaint you have submitted."
+        action={
+          <Link href="/portal/complaints/new" className={buttonVariants()}>
+            Submit complaint
+          </Link>
+        }
+      />
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Complaint history</CardTitle>
+            <CardDescription>
+              Status, severity, and linked business for each complaint.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rows.length === 0 ? (
+              <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
+                No complaints yet.
+              </div>
+            ) : (
+              <>
+                <MobileDataList
+                  items={rows}
+                  empty={null}
+                  getKey={(complaint) => complaint.id}
+                  renderItem={(complaint) => (
+                    <MobileDataCard
+                      title={
+                        <Link href={`/portal/complaints/${complaint.id}`} className="font-medium hover:underline">
+                          {complaint.subject}
+                        </Link>
+                      }
+                      subtitle={complaint.business_name ?? "Workshop"}
+                      meta={
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
+                            {COMPLAINT_STATUS_LABELS[complaint.status]}
+                          </Badge>
+                          <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
+                            {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                          </Badge>
+                        </div>
+                      }
+                    />
+                  )}
+                />
+
+                <div className="hidden rounded-lg border md:block">
+                  <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Business</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Severity</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((complaint) => (
+                      <TableRow key={complaint.id}>
+                        <TableCell>
+                          <Link
+                            href={`/portal/complaints/${complaint.id}`}
+                            className="font-medium hover:underline"
+                          >
+                            {complaint.subject}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{complaint.business_name ?? "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
+                            {COMPLAINT_STATUS_LABELS[complaint.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
+                            {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
