@@ -69,6 +69,45 @@
     "notifications": {
       "markRead": "Mark read",
       "read": "Read"
+    },
+    "quote": {
+      "customer": "Customer",
+      "selectCustomer": "Select a customer",
+      "vehicleOptional": "Vehicle (optional)",
+      "noVehicle": "No vehicle",
+      "createDraft": "Create draft quote",
+      "type": "Type",
+      "name": "Name",
+      "description": "Description",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "taxRate": "Tax %",
+      "productTransparency": "Product transparency",
+      "category": "Category",
+      "brand": "Brand",
+      "warranty": "Warranty",
+      "origin": "Origin",
+      "supplier": "Supplier",
+      "expectedLifespan": "Expected lifespan",
+      "addLineItem": "Add line item",
+      "expectedCompletion": "Expected completion",
+      "warrantyTerms": "Warranty terms",
+      "customerNotes": "Customer notes",
+      "internalNotes": "Internal notes (staff only)",
+      "saveDetails": "Save details",
+      "removeItem": "Remove item",
+      "sendToCustomer": "Send to customer",
+      "acknowledge": "I acknowledge the parts, pricing, warranty, and terms of this quotation.",
+      "signLabel": "Type your full name to sign",
+      "signPlaceholder": "Your full name",
+      "optionalNote": "Optional note",
+      "noteForWorkshop": "Add a note for the workshop",
+      "approve": "Approve quotation",
+      "approvalRecorded": "Your approval is recorded with a secure timestamp and digital signature.",
+      "optionalReason": "Optional reason",
+      "rejectPlaceholder": "Tell the workshop what you would like changed",
+      "decline": "Decline quotation"
     }
   },
   "complaints": {
@@ -482,6 +521,12 @@
     "fallback": {
       "noCustomer": "No customer",
       "none": "—"
+    },
+    "new": {
+      "title": "New quotation",
+      "description": "Pick the customer to start a draft.",
+      "needCustomer": "You need a customer first.",
+      "addCustomer": "Add a customer"
     }
   },
   "dashboardComplaints": {

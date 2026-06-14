@@ -69,6 +69,45 @@
     "notifications": {
       "markRead": "تحديد كمقروء",
       "read": "مقروء"
+    },
+    "quote": {
+      "customer": "العميل",
+      "selectCustomer": "اختر عميلاً",
+      "vehicleOptional": "المركبة (اختياري)",
+      "noVehicle": "بدون مركبة",
+      "createDraft": "إنشاء عرض سعر مبدئي",
+      "type": "النوع",
+      "name": "الاسم",
+      "description": "الوصف",
+      "qty": "الكمية",
+      "unitPrice": "سعر الوحدة",
+      "discount": "الخصم",
+      "taxRate": "الضريبة %",
+      "productTransparency": "شفافية المنتج",
+      "category": "الفئة",
+      "brand": "العلامة التجارية",
+      "warranty": "الضمان",
+      "origin": "بلد المنشأ",
+      "supplier": "المورّد",
+      "expectedLifespan": "العمر الافتراضي المتوقّع",
+      "addLineItem": "إضافة بند",
+      "expectedCompletion": "موعد الإنجاز المتوقّع",
+      "warrantyTerms": "شروط الضمان",
+      "customerNotes": "ملاحظات العميل",
+      "internalNotes": "ملاحظات داخلية (للموظفين فقط)",
+      "saveDetails": "حفظ التفاصيل",
+      "removeItem": "إزالة البند",
+      "sendToCustomer": "إرسال إلى العميل",
+      "acknowledge": "أقرّ بالقطع والأسعار والضمان وشروط عرض السعر هذا.",
+      "signLabel": "اكتب اسمك الكامل للتوقيع",
+      "signPlaceholder": "اسمك الكامل",
+      "optionalNote": "ملاحظة اختيارية",
+      "noteForWorkshop": "أضف ملاحظة للورشة",
+      "approve": "اعتماد عرض السعر",
+      "approvalRecorded": "يُسجَّل اعتمادك بطابع زمني آمن وتوقيع رقمي.",
+      "optionalReason": "سبب اختياري",
+      "rejectPlaceholder": "أخبر الورشة بما تودّ تغييره",
+      "decline": "رفض عرض السعر"
     }
   },
   "complaints": {
@@ -482,6 +521,12 @@
     "fallback": {
       "noCustomer": "لا يوجد عميل",
       "none": "—"
+    },
+    "new": {
+      "title": "عرض سعر جديد",
+      "description": "اختر العميل لبدء مسودّة.",
+      "needCustomer": "تحتاج إلى عميل أولاً.",
+      "addCustomer": "إضافة عميل"
     }
   },
   "dashboardComplaints": {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { requireMembership } from "@/lib/auth";
@@ -31,6 +32,9 @@ export default async function NewQuotePage() {
     .order("full_name");
   const rows = (data ?? []) as unknown as CustomerRow[];
 
+  const t = await getTranslations("dashboardQuotations.new");
+  const tVehicle = await getTranslations("dashboardVehicles.table");
+
   const customers: CustomerOption[] = rows.map((c) => ({
     id: c.id,
     full_name: c.full_name,
@@ -38,22 +42,22 @@ export default async function NewQuotePage() {
       id: v.id,
       label:
         [v.make, v.model].filter(Boolean).join(" ") +
-          (v.plate_number ? ` · ${v.plate_number}` : "") || "Vehicle",
+          (v.plate_number ? ` · ${v.plate_number}` : "") || tVehicle("vehicle"),
     })),
   }));
 
   return (
     <>
       <PageHeader
-        title="New quotation"
-        description="Pick the customer to start a draft."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="p-6">
         {customers.length === 0 ? (
           <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
-            You need a customer first.{" "}
+            {t("needCustomer")}{" "}
             <Link href="/customers/new" className="text-foreground underline">
-              Add a customer
+              {t("addCustomer")}
             </Link>
             .
           </div>

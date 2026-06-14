@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { approveQuote, type FormState } from "../actions";
@@ -26,6 +27,7 @@ export function ApproveForm({
   language: string;
 }) {
   const [state, action] = useActionState(approveQuote, initial);
+  const t = useTranslations("forms.quote");
   const last = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -49,40 +51,36 @@ export function ApproveForm({
           className="accent-primary mt-0.5 size-4"
           required
         />
-        <span>
-          I acknowledge the parts, pricing, warranty, and terms of this
-          quotation.
-        </span>
+        <span>{t("acknowledge")}</span>
       </label>
       <div className="grid gap-2">
-        <Label htmlFor="signature">Type your full name to sign</Label>
+        <Label htmlFor="signature">{t("signLabel")}</Label>
         <Input
           id="signature"
           name="signature"
           required
           autoComplete="name"
-          placeholder="Your full name"
+          placeholder={t("signPlaceholder")}
           className="font-heading max-w-sm text-base"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="customer_note">Optional note</Label>
+        <Label htmlFor="customer_note">{t("optionalNote")}</Label>
         <Textarea
           id="customer_note"
           name="customer_note"
           rows={3}
-          placeholder="Add a note for the workshop"
+          placeholder={t("noteForWorkshop")}
         />
       </div>
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div className="flex flex-col gap-2">
         <SubmitButton size="lg">
           <ShieldCheck />
-          Approve quotation
+          {t("approve")}
         </SubmitButton>
         <p className="text-muted-foreground text-xs">
-          Your approval is recorded with a secure timestamp and digital
-          signature.
+          {t("approvalRecorded")}
         </p>
       </div>
     </form>

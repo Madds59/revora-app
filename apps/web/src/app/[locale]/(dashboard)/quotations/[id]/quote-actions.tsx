@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -40,6 +41,7 @@ export function RemoveItemButton({
   quotationId: string;
 }) {
   const [state, action] = useActionState(removeItem, initial);
+  const t = useTranslations("forms.quote");
   useToastFromState(state);
   return (
     <form action={action}>
@@ -49,7 +51,7 @@ export function RemoveItemButton({
         type="submit"
         variant="ghost"
         size="icon-sm"
-        aria-label="Remove item"
+        aria-label={t("removeItem")}
       >
         <Trash2 className="size-4" />
       </Button>
@@ -59,11 +61,12 @@ export function RemoveItemButton({
 
 export function SendQuoteButton({ quotationId }: { quotationId: string }) {
   const [state, action] = useActionState(sendQuote, initial);
+  const t = useTranslations("forms.quote");
   useToastFromState(state);
   return (
     <form action={action}>
       <input type="hidden" name="id" value={quotationId} />
-      <SubmitButton>Send to customer</SubmitButton>
+      <SubmitButton>{t("sendToCustomer")}</SubmitButton>
     </form>
   );
 }
@@ -82,6 +85,7 @@ export function ApproveForm({
   language: string;
 }) {
   const [state, action] = useActionState(approveQuote, initial);
+  const t = useTranslations("forms.quote");
   useToastFromState(state);
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -97,27 +101,24 @@ export function ApproveForm({
           className="mt-0.5 size-4"
           required
         />
-        <span>
-          I acknowledge the parts, pricing, warranty, and terms of this
-          quotation.
-        </span>
+        <span>{t("acknowledge")}</span>
       </label>
       <div className="grid max-w-sm gap-2">
-        <Label htmlFor="signature">Type your full name to sign</Label>
+        <Label htmlFor="signature">{t("signLabel")}</Label>
         <Input id="signature" name="signature" required />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="customer_note">Optional note</Label>
+        <Label htmlFor="customer_note">{t("optionalNote")}</Label>
         <Textarea
           id="customer_note"
           name="customer_note"
           rows={3}
-          placeholder="Add a note for the workshop"
+          placeholder={t("noteForWorkshop")}
         />
       </div>
       {state.error && <p className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton>Approve quotation</SubmitButton>
+        <SubmitButton>{t("approve")}</SubmitButton>
       </div>
     </form>
   );
