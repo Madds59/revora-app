@@ -54,6 +54,10 @@ pnpm approve-builds --all
   invitation is required.
 - Sign in as a business user and confirm `/`, `/analytics`, `/notifications`, and `/billing`.
 - Open `/vehicles` and confirm list, filters, and vehicle detail navigation work.
+- Open `/ai/vin-decoder`, `/ai/dtc-decoder`, and `/ai/vehicle-diagnosis` and
+  confirm the forms render cleanly in English and Arabic.
+- Open `/portal/vehicles` and `/portal/ai/health-check` and confirm customer
+  vehicle intelligence stays scoped to linked records.
 - Open `/customers`, `/jobs`, `/quotations`, `/complaints`, and `/documents` on mobile and desktop.
 - Sign in as a portal user and verify `/portal`, `/portal/jobs`, `/portal/quotes`, `/portal/complaints`, `/portal/documents`, and `/portal/settings`.
 - Sign in as a super admin and verify the root admin list pages and pagination controls.
@@ -62,6 +66,8 @@ pnpm approve-builds --all
 - Run `node scripts/sync-stripe-plan-prices.mjs --dry-run` before applying live plan updates.
 - Confirm Supabase Auth Site URL is `https://revora-app.vercel.app` and redirect URLs include both production and localhost patterns.
 - Confirm AED and date/time values use Western digits on billing-heavy views.
+- Confirm Vehicle Intelligence pages display structured diagnostics, safety
+  warnings, and customer-safe explanations without layout overflow.
 - Confirm `/api/stripe/webhook` is not behind auth middleware by checking an
   unsigned POST returns a non-redirect failure code.
 

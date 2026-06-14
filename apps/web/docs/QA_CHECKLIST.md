@@ -18,6 +18,13 @@
 - `/admin/subscriptions`
 - `/admin/audit-logs`
 - `/admin/notifications`
+- `/ai`
+- `/ai/vin-decoder`
+- `/ai/dtc-decoder`
+- `/ai/vehicle-diagnosis`
+- `/portal/vehicles`
+- `/portal/vehicles/[id]`
+- `/portal/ai/health-check`
 
 ## Manual Checks
 
@@ -47,6 +54,10 @@
 - Confirm billing invoices and payment events only appear after Stripe webhook sync.
 - Confirm AED and date/time values use Western digits in the shell and billing
   surfaces.
+- Confirm Vehicle Intelligence screens show stop-driving warnings for critical
+  symptoms and do not expose unsafe DIY instructions.
+- Confirm quote draft generation remains advisor-only and never finalizes an
+  official quotation automatically.
 
 ## Automated Checks
 

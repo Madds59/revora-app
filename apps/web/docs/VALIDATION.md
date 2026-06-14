@@ -6,6 +6,7 @@ Run these commands from `apps/web`:
 pnpm lint
 pnpm build
 pnpm typecheck
+pnpm test
 pnpm smoke:routes
 ```
 
@@ -83,6 +84,20 @@ Use that document when validating:
 - customer signup and portal linking
 - invited staff onboarding
 - super admin bootstrap through `platform_admins`
+
+## Vehicle Intelligence
+
+The Vehicle Intelligence module adds:
+
+- `/en/ai`
+- `/en/ai/vin-decoder`
+- `/en/ai/dtc-decoder`
+- `/en/ai/vehicle-diagnosis`
+- `/en/portal/vehicles`
+- `/en/portal/vehicles/[id]`
+- `/en/portal/ai/health-check`
+
+The Arabic equivalents are available under `/ar/...`. See [VEHICLE_INTELLIGENCE.md](./VEHICLE_INTELLIGENCE.md) for the safety and validation contract.
 
 ## Formatting
 
