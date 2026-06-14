@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { FormState } from "./actions";
@@ -33,6 +34,7 @@ export function CustomerForm({
   submitLabel: string;
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("forms.customer");
   const lastMessage = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function CustomerForm({
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
       {customer && <input type="hidden" name="id" value={customer.id} />}
       <div className="grid gap-2">
-        <Label htmlFor="full_name">Full name</Label>
+        <Label htmlFor="full_name">{t("fullName")}</Label>
         <Input
           id="full_name"
           name="full_name"
@@ -56,7 +58,7 @@ export function CustomerForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">{t("phone")}</Label>
           <Input
             id="phone"
             name="phone"
@@ -65,7 +67,7 @@ export function CustomerForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("email")}</Label>
           <Input
             id="email"
             name="email"
@@ -75,7 +77,7 @@ export function CustomerForm({
         </div>
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="preferred_language">Preferred language</Label>
+        <Label htmlFor="preferred_language">{t("preferredLanguage")}</Label>
         <Select
           name="preferred_language"
           defaultValue={customer?.preferred_language ?? "en"}
@@ -84,8 +86,8 @@ export function CustomerForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="en">English</SelectItem>
-            <SelectItem value="ar">Arabic</SelectItem>
+            <SelectItem value="en">{t("languageEnglish")}</SelectItem>
+            <SelectItem value="ar">{t("languageArabic")}</SelectItem>
           </SelectContent>
         </Select>
       </div>

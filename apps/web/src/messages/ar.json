@@ -34,6 +34,43 @@
       "noEvidence": "لم يتم رفع أي أدلة بعد."
     }
   },
+  "forms": {
+    "customer": {
+      "fullName": "الاسم الكامل",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "preferredLanguage": "اللغة المفضّلة",
+      "languageEnglish": "الإنجليزية",
+      "languageArabic": "العربية"
+    },
+    "vehicle": {
+      "customer": "العميل",
+      "selectCustomer": "اختر عميلاً",
+      "selectedCustomer": "العميل المحدّد",
+      "make": "الصنع",
+      "model": "الطراز",
+      "year": "السنة",
+      "plateNumber": "رقم اللوحة",
+      "vin": "رقم الهيكل (VIN)",
+      "color": "اللون"
+    },
+    "upload": {
+      "defaultLabel": "رفع ملف",
+      "uploaded": "تم الرفع."
+    },
+    "business": {
+      "activeBusiness": "النشاط التجاري الحالي",
+      "selectBusiness": "اختر النشاط التجاري",
+      "switchBusiness": "تبديل النشاط التجاري"
+    },
+    "billing": {
+      "openPortal": "فتح بوابة الفوترة"
+    },
+    "notifications": {
+      "markRead": "تحديد كمقروء",
+      "read": "مقروء"
+    }
+  },
   "nav": {
     "home": "الرئيسية",
     "dashboard": "لوحة التحكم",

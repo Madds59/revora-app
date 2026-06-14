@@ -34,6 +34,43 @@
       "noEvidence": "No evidence uploaded yet."
     }
   },
+  "forms": {
+    "customer": {
+      "fullName": "Full name",
+      "phone": "Phone",
+      "email": "Email",
+      "preferredLanguage": "Preferred language",
+      "languageEnglish": "English",
+      "languageArabic": "Arabic"
+    },
+    "vehicle": {
+      "customer": "Customer",
+      "selectCustomer": "Select a customer",
+      "selectedCustomer": "Selected customer",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "plateNumber": "Plate number",
+      "vin": "VIN",
+      "color": "Color"
+    },
+    "upload": {
+      "defaultLabel": "Upload file",
+      "uploaded": "Uploaded."
+    },
+    "business": {
+      "activeBusiness": "Active business",
+      "selectBusiness": "Select business",
+      "switchBusiness": "Switch business"
+    },
+    "billing": {
+      "openPortal": "Open billing portal"
+    },
+    "notifications": {
+      "markRead": "Mark read",
+      "read": "Read"
+    }
+  },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",

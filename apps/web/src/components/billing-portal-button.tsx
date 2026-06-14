@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { openBillingPortal, type BillingActionState } from "@/app/[locale]/(dashboard)/billing/actions";
@@ -10,6 +11,7 @@ const initial: BillingActionState = {};
 
 export function BillingPortalButton() {
   const [state, action] = useActionState(openBillingPortal, initial);
+  const t = useTranslations("forms.billing");
   const last = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export function BillingPortalButton() {
   return (
     <form action={action}>
       {state.message && <p className="sr-only">{state.message}</p>}
-      <SubmitButton>Open billing portal</SubmitButton>
+      <SubmitButton>{t("openPortal")}</SubmitButton>
     </form>
   );
 }

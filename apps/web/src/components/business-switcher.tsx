@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -36,6 +37,7 @@ export function BusinessSwitcher({
   activeBusinessId: string;
 }) {
   const [state, formAction] = useActionState(action, initial);
+  const t = useTranslations("forms.business");
   const [selectedBusinessId, setSelectedBusinessId] = useState(activeBusinessId);
   const lastMessage = useRef<string | undefined>(undefined);
   const router = useRouter();
@@ -63,7 +65,7 @@ export function BusinessSwitcher({
     return (
       <div className="border-sidebar-border bg-sidebar-accent/40 grid gap-1 rounded-lg border p-3">
         <p className="text-sidebar-foreground/50 text-[10px] font-medium uppercase tracking-wide">
-          Active business
+          {t("activeBusiness")}
         </p>
         <p className="text-sidebar-foreground text-sm font-medium">
           {option.label}
@@ -82,7 +84,7 @@ export function BusinessSwitcher({
 
       <div className="grid gap-2">
         <Label htmlFor="business_id" className="text-sidebar-foreground/70">
-          Active business
+          {t("activeBusiness")}
         </Label>
         <Select
           name="business_id"
@@ -90,7 +92,7 @@ export function BusinessSwitcher({
           onValueChange={(value) => setSelectedBusinessId(value ?? "")}
         >
           <SelectTrigger id="business_id" className="w-full">
-            <SelectValue placeholder="Select business" />
+            <SelectValue placeholder={t("selectBusiness")} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
@@ -108,7 +110,7 @@ export function BusinessSwitcher({
 
       <SubmitButton variant="secondary" className="w-full">
         <ChevronDown />
-        Switch business
+        {t("switchBusiness")}
       </SubmitButton>
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
     </form>
