@@ -1,9 +1,7 @@
+import { formatCurrency as formatMoneyCurrency } from "@/lib/formatters";
+
 export function formatCurrency(amount: number, currency = "AED"): string {
-  return new Intl.NumberFormat("en-AE", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
+  return formatMoneyCurrency(amount, currency);
 }
 
 /** Per-line math shared by the quote builder and totals recompute. */

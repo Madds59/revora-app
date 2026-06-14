@@ -23,6 +23,7 @@ import {
 import { getUser, requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
 import { formatCurrency } from "@/lib/money";
+import { formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import type { Approval, Quotation, QuotationItem } from "@/lib/database.types";
 
@@ -245,9 +246,9 @@ export default async function QuoteBuilderPage({
             {isApproved ? (
               <StatusBanner
                 tone="success"
-                title={`Approved${
-                  approval
-                    ? ` on ${new Date(approval.approved_at).toLocaleString()}`
+              title={`Approved${
+                approval
+                    ? ` on ${formatDateTime(approval.approved_at)}`
                     : ""
                 }`}
               >
@@ -264,9 +265,9 @@ export default async function QuoteBuilderPage({
             ) : isDeclined ? (
               <StatusBanner
                 tone="destructive"
-                title={`Declined${
-                  quote.customer_rejected_at
-                    ? ` on ${new Date(quote.customer_rejected_at).toLocaleString()}`
+              title={`Declined${
+                quote.customer_rejected_at
+                    ? ` on ${formatDateTime(quote.customer_rejected_at)}`
                     : ""
                 }`}
               >

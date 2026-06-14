@@ -16,7 +16,93 @@
     "analytics": "Analytics",
     "notifications": "Notifications",
     "settings": "Settings",
-    "soon": "soon"
+    "soon": "soon",
+    "overview": "Overview",
+    "tenants": "Tenants",
+    "users": "Users",
+    "subscriptions": "Subscriptions",
+    "auditLogs": "Audit logs",
+    "superAdmins": "Super admins"
+  },
+  "shell": {
+    "openAccountMenu": "Open account menu",
+    "theme": "Theme",
+    "language": "Language",
+    "signOut": "Sign out",
+    "businessSettings": "Business settings",
+    "billing": "Billing",
+    "platformAdmin": "Platform admin",
+    "platformConsole": "Platform console",
+    "adminAccess": "Admin access",
+    "customerPortalAccess": "Customer portal access",
+    "platformOwner": "Platform owner",
+    "linkedAccounts": "{count, plural, one {# linked account} other {# linked accounts}}",
+    "languageOptions": {
+      "label": "Language",
+      "en": "English",
+      "ar": "Arabic",
+      "switchToEnglish": "Switch language to English",
+      "switchToArabic": "Switch language to Arabic"
+    },
+    "themeOptions": {
+      "label": "Color theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "auth": {
+    "layout": {
+      "trustBuilt": "Built on trust",
+      "trustBuiltBody": "Transparent quotes and a verifiable record customers can rely on.",
+      "digitalApprovals": "Digital approvals",
+      "digitalApprovalsBody": "Signed, audited sign-off on every job - no more disputes.",
+      "resolveWithCare": "Resolve with care",
+      "resolveWithCareBody": "Complaints handled in the open, start to finish.",
+      "madeForUAE": "Made for UAE service businesses",
+      "tagline": "Built on Trust. Powered by Operations."
+    },
+    "actions": {
+      "emailRequired": "Email and password are required.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "chooseAccountType": "Choose an account type to continue.",
+      "checkEmail": "Check your email to confirm your account, then sign in.",
+      "magicLinkSent": "Magic link sent. Check your email to sign in."
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Access your Revora workspace.",
+      "passwordTab": "Password",
+      "magicTab": "Magic link",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "signIn": "Sign in",
+      "sendMagicLink": "Send magic link",
+      "noAccount": "No account?",
+      "createOne": "Create one"
+    },
+    "signup": {
+      "title": "Create your account",
+      "description": "Choose the account type that fits how you will use Revora.",
+      "fullNameLabel": "Full name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "createAccount": "Create account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "superAdminNote": "Super admin is never selectable here. Staff access requires an invitation.",
+      "checkEmail": "Check your email to confirm your account, then sign in.",
+      "chooseAccountType": "Choose an account type to continue.",
+      "accountTypes": {
+        "businessOwnerTitle": "I own/manage a service business",
+        "businessOwnerDescription": "Create a workspace for your workshop, detailing center, tire shop, or service team.",
+        "customerTitle": "I am a customer/consumer",
+        "customerDescription": "Access quotes, approvals, jobs, complaints, and documents shared by a business.",
+        "staffTitle": "I was invited as staff",
+        "staffDescription": "Join a business team using an invitation from an owner or manager.",
+        "invitationRequired": "Invitation required"
+      }
+    }
   },
   "notFound": {
     "code": "404",
@@ -38,5 +124,20 @@
     "title": "The app ran into a problem",
     "description": "Something went wrong while loading Revora. Reloading usually fixes it.",
     "reload": "Reload Revora"
+  },
+  "metadata": {
+    "siteName": "Revora",
+    "homeTitle": "Dashboard",
+    "homeDescription": "Your operations at a glance.",
+    "loginTitle": "Sign in",
+    "loginDescription": "Access your Revora workspace.",
+    "signupTitle": "Create your account",
+    "signupDescription": "Choose the account type that fits how you will use Revora.",
+    "portalTitle": "Customer portal",
+    "portalDescription": "Your linked accounts and complaint history.",
+    "adminTitle": "Platform admin",
+    "adminDescription": "Tenant and usage metrics across all of Revora.",
+    "dashboardTitle": "Dashboard",
+    "dashboardDescription": "Operational control for your business."
   }
 }

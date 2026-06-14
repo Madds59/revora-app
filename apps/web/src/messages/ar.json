@@ -16,7 +16,93 @@
     "analytics": "التحليلات",
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
-    "soon": "قريبًا"
+    "soon": "قريبًا",
+    "overview": "نظرة عامة",
+    "tenants": "العملاء",
+    "users": "المستخدمون",
+    "subscriptions": "الاشتراكات",
+    "auditLogs": "سجلات التدقيق",
+    "superAdmins": "المشرفون العامون"
+  },
+  "shell": {
+    "openAccountMenu": "فتح قائمة الحساب",
+    "theme": "المظهر",
+    "language": "اللغة",
+    "signOut": "تسجيل الخروج",
+    "businessSettings": "إعدادات النشاط",
+    "billing": "الفوترة",
+    "platformAdmin": "إدارة المنصة",
+    "platformConsole": "وحدة التحكم",
+    "adminAccess": "وصول الإدارة",
+    "customerPortalAccess": "وصول البوابة",
+    "platformOwner": "مالك المنصة",
+    "linkedAccounts": "{count, plural, one {# حساب مرتبط} other {# حسابات مرتبطة}}",
+    "languageOptions": {
+      "label": "اللغة",
+      "en": "الإنجليزية",
+      "ar": "العربية",
+      "switchToEnglish": "التبديل إلى الإنجليزية",
+      "switchToArabic": "التبديل إلى العربية"
+    },
+    "themeOptions": {
+      "label": "سمة الألوان",
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "النظام"
+    }
+  },
+  "auth": {
+    "layout": {
+      "trustBuilt": "مبنيٌّ على الثقة",
+      "trustBuiltBody": "عروض أسعار شفافة وسجل قابل للتحقق يمكن للعملاء الاعتماد عليه.",
+      "digitalApprovals": "اعتمادات رقمية",
+      "digitalApprovalsBody": "اعتماد موقّع ومدقّق لكل مهمة - بلا نزاعات.",
+      "resolveWithCare": "حلٌّ بعناية",
+      "resolveWithCareBody": "الشكاوى تُدار بوضوح من البداية إلى النهاية.",
+      "madeForUAE": "مصممٌ لأعمال الخدمات في الإمارات",
+      "tagline": "مبنيٌّ على الثقة. مدعومٌ بالعمليات."
+    },
+    "actions": {
+      "emailRequired": "البريد الإلكتروني وكلمة المرور مطلوبان.",
+      "passwordMin": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+      "chooseAccountType": "اختر نوع الحساب للمتابعة.",
+      "checkEmail": "تحقق من بريدك لتأكيد الحساب، ثم سجّل الدخول.",
+      "magicLinkSent": "تم إرسال الرابط السحري. تحقق من بريدك لتسجيل الدخول."
+    },
+    "login": {
+      "title": "تسجيل الدخول",
+      "description": "ادخل إلى مساحة عمل Revora الخاصة بك.",
+      "passwordTab": "كلمة المرور",
+      "magicTab": "رابط سحري",
+      "emailLabel": "البريد الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "signIn": "تسجيل الدخول",
+      "sendMagicLink": "إرسال الرابط السحري",
+      "noAccount": "لا تملك حسابًا؟",
+      "createOne": "أنشئ حسابًا"
+    },
+    "signup": {
+      "title": "إنشاء حسابك",
+      "description": "اختر نوع الحساب المناسب لطريقة استخدامك لـ Revora.",
+      "fullNameLabel": "الاسم الكامل",
+      "emailLabel": "البريد الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "createAccount": "إنشاء الحساب",
+      "haveAccount": "لديك حساب بالفعل؟",
+      "signIn": "تسجيل الدخول",
+      "superAdminNote": "لا يمكن اختيار المشرف العام هنا. وصول الموظفين يتطلب دعوة.",
+      "checkEmail": "تحقق من بريدك لتأكيد الحساب، ثم سجّل الدخول.",
+      "chooseAccountType": "اختر نوع الحساب للمتابعة.",
+      "accountTypes": {
+        "businessOwnerTitle": "أملك/أدير نشاطًا خدميًا",
+        "businessOwnerDescription": "أنشئ مساحة عمل للورشة أو مركز الخدمة أو فريق التشغيل.",
+        "customerTitle": "أنا عميل/مستهلك",
+        "customerDescription": "اطّلع على عروض الأسعار والموافقات والمهام والشكاوى والمستندات التي يشاركها النشاط.",
+        "staffTitle": "تمت دعوتي كموظف",
+        "staffDescription": "انضم إلى فريق نشاط باستخدام دعوة من المالك أو المدير.",
+        "invitationRequired": "الدعوة مطلوبة"
+      }
+    }
   },
   "notFound": {
     "code": "404",
@@ -38,5 +124,20 @@
     "title": "واجه التطبيق مشكلة",
     "description": "حدث خطأ أثناء تحميل Revora. عادةً ما تؤدي إعادة التحميل إلى حل المشكلة.",
     "reload": "إعادة تحميل Revora"
+  },
+  "metadata": {
+    "siteName": "Revora",
+    "homeTitle": "لوحة التحكم",
+    "homeDescription": "إدارة عملياتك في لمحة.",
+    "loginTitle": "تسجيل الدخول",
+    "loginDescription": "ادخل إلى مساحة عمل Revora الخاصة بك.",
+    "signupTitle": "إنشاء حسابك",
+    "signupDescription": "اختر نوع الحساب المناسب لطريقة استخدامك لـ Revora.",
+    "portalTitle": "بوابة العملاء",
+    "portalDescription": "حساباتك المرتبطة وسجل الشكاوى.",
+    "adminTitle": "إدارة المنصة",
+    "adminDescription": "مقاييس المستأجرين والاستخدام عبر Revora.",
+    "dashboardTitle": "لوحة التحكم",
+    "dashboardDescription": "التحكم التشغيلي لنشاطك."
   }
 }
