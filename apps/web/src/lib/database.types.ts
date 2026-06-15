@@ -3433,16 +3433,15 @@ export type DocumentUpdate = AppTables["documents"]["Update"];
 
 export type Job = AppTables["jobs"]["Row"];
 export type JobInsert = AppTables["jobs"]["Insert"];
+export type JobUpdate = AppTables["job_updates"]["Row"];
+export type JobUpdateInsert = AppTables["job_updates"]["Insert"];
+export type JobUpdateUpdate = AppTables["job_updates"]["Update"];
 
 export type JobStatus = AppEnums["job_status"];
 
 export type JobTask = AppTables["job_tasks"]["Row"];
 export type JobTaskInsert = AppTables["job_tasks"]["Insert"];
 export type JobTaskUpdate = AppTables["job_tasks"]["Update"];
-
-export type JobUpdate = AppTables["job_updates"]["Row"];
-export type JobUpdateInsert = AppTables["job_updates"]["Insert"];
-export type JobUpdateUpdate = AppTables["job_updates"]["Update"];
 
 export type ItemKind = AppEnums["item_kind"];
 
