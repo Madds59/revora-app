@@ -6,17 +6,26 @@
  * @returns {string}
  */
 export function switchLocalePath(pathname, nextLocale) {
-  const normalizedPathname = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  const raw = String(pathname ?? "");
+  const hashIndex = raw.indexOf("#");
+  const searchIndex = raw.indexOf("?");
+  const cutIndex =
+    hashIndex === -1
+      ? searchIndex
+      : searchIndex === -1
+        ? hashIndex
+        : Math.min(searchIndex, hashIndex);
+
+  const pathPart = cutIndex === -1 ? raw : raw.slice(0, cutIndex);
+  const suffix = cutIndex === -1 ? "" : raw.slice(cutIndex);
+  const normalizedPathname = pathPart.startsWith("/") ? pathPart : `/${pathPart}`;
   const segments = normalizedPathname.split("/").filter(Boolean);
 
-  if (segments.length > 0 && (segments[0] === "en" || segments[0] === "ar")) {
-    segments[0] = nextLocale;
-    return `/${segments.join("/")}`;
+  while (segments.length > 0 && (segments[0] === "en" || segments[0] === "ar")) {
+    segments.shift();
   }
 
-  if (normalizedPathname === "/") {
-    return `/${nextLocale}`;
-  }
-
-  return `/${nextLocale}${normalizedPathname}`;
+  const normalizedPath = segments.length > 0 ? `/${segments.join("/")}` : "/";
+  const nextPath = normalizedPath === "/" ? `/${nextLocale}` : `/${nextLocale}${normalizedPath}`;
+  return `${nextPath}${suffix}`;
 }
