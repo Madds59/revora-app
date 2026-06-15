@@ -319,9 +319,12 @@
     "actions": {
       "emailRequired": "Email and password are required.",
       "passwordMin": "Password must be at least 8 characters.",
+      "passwordRequired": "Password is required.",
+      "passwordMismatch": "Passwords do not match.",
       "chooseAccountType": "Choose an account type to continue.",
       "checkEmail": "Check your email to confirm your account, then sign in.",
-      "magicLinkSent": "Magic link sent. Check your email to sign in."
+      "magicLinkSent": "Magic link sent. Check your email to sign in.",
+      "passwordResetSent": "If an account exists, a reset link was sent."
     },
     "login": {
       "title": "Sign in",
@@ -332,8 +335,25 @@
       "passwordLabel": "Password",
       "signIn": "Sign in",
       "sendMagicLink": "Send magic link",
+      "forgotPassword": "Forgot password?",
+      "passwordResetSuccess": "Password updated. Sign in with your new password.",
       "noAccount": "No account?",
       "createOne": "Create one"
+    },
+    "forgotPassword": {
+      "title": "Reset your password",
+      "description": "We will email a reset link if an account exists.",
+      "emailLabel": "Email",
+      "submit": "Send reset link",
+      "backToSignIn": "Back to sign in"
+    },
+    "resetPassword": {
+      "title": "Set a new password",
+      "description": "Enter a new password for your Revora account.",
+      "passwordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password",
+      "submit": "Update password",
+      "backToSignIn": "Back to sign in"
     },
     "signup": {
       "title": "Create your account",
@@ -385,6 +405,10 @@
     "homeDescription": "Your operations at a glance.",
     "loginTitle": "Sign in",
     "loginDescription": "Access your Revora workspace.",
+    "forgotPasswordTitle": "Reset your password",
+    "forgotPasswordDescription": "Request a password reset link for your Revora account.",
+    "resetPasswordTitle": "Set a new password",
+    "resetPasswordDescription": "Choose a new password for your Revora account.",
     "signupTitle": "Create your account",
     "signupDescription": "Choose the account type that fits how you will use Revora.",
     "portalTitle": "Customer portal",

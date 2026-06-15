@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useActionState } from "react";
 
 import { signIn, signInWithMagicLink, type AuthState } from "../actions";
+import { buildForgotPasswordPath, buildSignupPath } from "@/lib/auth-links";
 import { SubmitButton } from "@/components/submit-button";
 import {
   Card,
@@ -28,9 +30,14 @@ function FormMessage({ state }: { state: AuthState }) {
   return null;
 }
 
-export function LoginClient() {
+export function LoginClient({
+  passwordResetSuccess = false,
+}: {
+  passwordResetSuccess?: boolean;
+}) {
   const [pwState, pwAction] = useActionState(signIn, initial);
   const [linkState, linkAction] = useActionState(signInWithMagicLink, initial);
+  const locale = useLocale();
   const t = useTranslations("auth.login");
 
   return (
@@ -40,6 +47,9 @@ export function LoginClient() {
         <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
+        {passwordResetSuccess && (
+          <p className="text-sm text-emerald-600">{t("passwordResetSuccess")}</p>
+        )}
         <Tabs defaultValue="password" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="password">{t("passwordTab")}</TabsTrigger>
@@ -60,6 +70,14 @@ export function LoginClient() {
                   type="password"
                   required
                 />
+              </div>
+              <div className="text-sm">
+                <Link
+                  href={buildForgotPasswordPath(locale as "en" | "ar")}
+                  className="text-foreground underline"
+                >
+                  {t("forgotPassword")}
+                </Link>
               </div>
               <FormMessage state={pwState} />
               <SubmitButton className="w-full">{t("signIn")}</SubmitButton>
@@ -87,7 +105,10 @@ export function LoginClient() {
       </CardContent>
       <CardFooter className="text-muted-foreground text-sm">
         {t("noAccount")}{" "}
-        <Link href="/signup" className="text-foreground ms-1 underline">
+        <Link
+          href={buildSignupPath(locale as "en" | "ar")}
+          className="text-foreground ms-1 underline"
+        >
           {t("createOne")}
         </Link>
       </CardFooter>

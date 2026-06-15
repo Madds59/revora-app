@@ -17,7 +17,12 @@ function splitLocale(pathname: string): { locale: string; rest: string } {
 
 /** Routes reachable without an authenticated session (checked on the de-localized path). */
 function isPublicPath(rest: string): boolean {
-  return rest === "/login" || rest === "/signup" || rest.startsWith("/auth");
+  return (
+    rest === "/login" ||
+    rest === "/signup" ||
+    rest === "/forgot-password" ||
+    rest.startsWith("/auth")
+  );
 }
 
 /**
