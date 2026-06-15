@@ -953,7 +953,9 @@
     },
     "fallback": {
       "noCustomer": "No customer",
-      "none": "—"
+      "none": "—",
+      "unknownCustomer": "Unknown customer",
+      "unknownVehicle": "Unknown vehicle"
     },
     "new": {
       "title": "New quotation",
