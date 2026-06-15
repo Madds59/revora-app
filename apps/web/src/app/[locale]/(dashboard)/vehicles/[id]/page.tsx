@@ -86,6 +86,40 @@ function vehicleLabel(vehicle: VehicleDetailRow) {
   return [vehicle.make, vehicle.model].filter(Boolean).join(" ") || vehicle.plate_number || vehicle.vin || "Vehicle";
 }
 
+type MaintenancePlanItem = {
+  title: string;
+  interval: string;
+  rationale: string;
+  priority: "low" | "medium" | "high";
+};
+
+function getMaintenancePlanItems(planJson: unknown): MaintenancePlanItem[] {
+  if (!planJson || typeof planJson !== "object" || Array.isArray(planJson)) {
+    return [];
+  }
+
+  const items = (planJson as { items?: unknown }).items;
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items.filter((item): item is MaintenancePlanItem => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return false;
+    }
+
+    const candidate = item as Partial<MaintenancePlanItem>;
+    return (
+      typeof candidate.title === "string" &&
+      typeof candidate.interval === "string" &&
+      typeof candidate.rationale === "string" &&
+      (candidate.priority === "low" ||
+        candidate.priority === "medium" ||
+        candidate.priority === "high")
+    );
+  });
+}
+
 export default async function VehicleDetailPage({
   params,
 }: {
@@ -225,16 +259,7 @@ export default async function VehicleDetailPage({
     description: string | null;
     created_at: string;
   }>;
-  const maintenancePlanItems = Array.isArray(
-    maintenance ? (maintenance.plan_json as { items?: unknown }).items : [],
-  )
-    ? ((maintenance?.plan_json as { items?: Array<{
-        title: string;
-        interval: string;
-        rationale: string;
-        priority: "low" | "medium" | "high";
-      }> }).items ?? [])
-    : [];
+  const maintenancePlanItems = getMaintenancePlanItems(maintenance?.plan_json);
 
   const jobIds = new Set(jobs.map((job) => job.id));
   const relatedDocuments = documents.filter(
