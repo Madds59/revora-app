@@ -22,9 +22,19 @@
 - `/ai/vin-decoder`
 - `/ai/dtc-decoder`
 - `/ai/vehicle-diagnosis`
+- `/en/ai/vin-decoder`
+- `/ar/ai/vin-decoder`
+- `/en/ai/dtc-decoder`
+- `/ar/ai/dtc-decoder`
+- `/en/ai/vehicle-diagnosis`
+- `/ar/ai/vehicle-diagnosis`
 - `/portal/vehicles`
 - `/portal/vehicles/[id]`
 - `/portal/ai/health-check`
+- `/en/portal/vehicles`
+- `/ar/portal/vehicles`
+- `/en/portal/ai/health-check`
+- `/ar/portal/ai/health-check`
 
 ## Manual Checks
 
@@ -66,6 +76,10 @@
   symptoms and do not expose unsafe DIY instructions.
 - Confirm quote draft generation remains advisor-only and never finalizes an
   official quotation automatically.
+- Confirm AI-assisted diagnostics fall back safely when `OPENAI_API_KEY` is
+  missing or the provider is unavailable.
+- Confirm VIN decoding returns a safe unavailable state if the public VIN
+  service cannot be reached and does not invent vehicle specifications.
 
 ## Automated Checks
 

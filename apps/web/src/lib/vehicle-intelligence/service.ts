@@ -13,6 +13,7 @@ import {
   validateMaintenancePlan,
   validateVinDecode,
 } from "./schemas.js";
+import { callOpenAiJson } from "./openai.js";
 import type { Json } from "@/lib/database.types";
 import type {
   AiToolCallEntry,
@@ -26,20 +27,6 @@ import type {
   VehicleSymptomReportWrite,
   VehicleVinDecode,
 } from "./types";
-
-type OpenAiJsonResponse = {
-  diagnosis?: VehicleDiagnosticJson;
-  maintenancePlan?: VehicleMaintenancePlan;
-  customerExplanation?: string;
-  advisorSummary?: string;
-  suggestedServiceCategory?: string;
-  suggestedLineItems?: Array<{
-    name: string;
-    description: string;
-    quantity: number;
-    unitPrice: number;
-  }>;
-};
 
 type VehicleRow = {
   id: string;
@@ -60,13 +47,6 @@ type VehicleBusinessContext = {
   customerName: string | null;
   customerEmail: string | null;
 };
-
-function openAiConfig() {
-  return {
-    apiKey: process.env.OPENAI_API_KEY ?? null,
-    model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
-  };
-}
 
 function joinParts(parts: Array<string | number | null | undefined>) {
   return parts
@@ -321,54 +301,6 @@ export function buildAdvisorSummary({
     `Quote draft eligible: ${diagnosis.quoteDraftEligible ? "yes" : "no"}`,
   ].filter(Boolean);
   return bits.join("\n");
-}
-
-export async function callOpenAiJson({
-  systemPrompt,
-  userPrompt,
-}: {
-  systemPrompt: string;
-  userPrompt: string;
-}) {
-  const { apiKey, model } = openAiConfig();
-  if (!apiKey) return { ok: false as const, error: "OpenAI is not configured." };
-
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      return { ok: false as const, error: `OpenAI request failed with ${response.status}.` };
-    }
-
-    const payload = await response.json();
-    const content = payload?.choices?.[0]?.message?.content;
-    if (typeof content !== "string" || !content.trim()) {
-      return { ok: false as const, error: "OpenAI returned empty content." };
-    }
-
-    const parsed = JSON.parse(content) as OpenAiJsonResponse;
-    return { ok: true as const, data: parsed, model };
-  } catch (error) {
-    return {
-      ok: false as const,
-      error: error instanceof Error ? error.message : "OpenAI request failed.",
-    };
-  }
 }
 
 export async function loadVehicleBusinessContext(vehicleId: string) {
@@ -909,7 +841,7 @@ export async function analyzeVehicleSymptoms({
     customerExplanation,
     diagnosis: safetyApplied,
     generatedBy,
-    model: ai.ok ? ai.model : modelHint,
+    model: ai.ok ? ai.model ?? null : modelHint ?? null,
     symptomReportId: report.data.id,
     vehicleId,
   });
@@ -958,9 +890,9 @@ export async function analyzeVehicleSymptoms({
       advisorSummary,
       safetySeed,
     },
-    model: ai.ok ? ai.model : modelHint,
+    model: ai.ok ? ai.model ?? null : modelHint ?? null,
     status: ai.ok ? "success" : "blocked",
-    errorMessage: ai.ok ? null : ai.error,
+    errorMessage: ai.ok ? null : ai.error ?? "OpenAI request failed.",
     safetyFlagged: assessment.severity !== "low",
     durationMs: null,
   });
@@ -975,7 +907,7 @@ export async function analyzeVehicleSymptoms({
       customerExplanation,
       advisorSummary,
       aiUsed: ai.ok,
-      model: ai.ok ? ai.model : modelHint,
+      model: ai.ok ? ai.model ?? null : modelHint ?? null,
       vehicle: vehicleContext.vehicle,
     },
   };

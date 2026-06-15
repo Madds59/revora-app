@@ -37,6 +37,11 @@ pnpm approve-builds --all
 - No route should return a 500.
 - `/api/stripe/webhook` should reject unsigned POST requests.
 
+If the sandbox cannot reach the local Supabase stack or the live URL, the smoke
+runner prints `blocked` and exits with code `2`. Treat that as an environment
+constraint; keep the same smoke coverage and confirm the live route behavior
+with direct HTTP checks when possible.
+
 ## Manual browser checklist
 
 - Open `/login` and `/signup` and confirm they redirect to `/en/login` and
@@ -61,10 +66,13 @@ pnpm approve-builds --all
   invitation is required.
 - Sign in as a business user and confirm `/`, `/analytics`, `/notifications`, and `/billing`.
 - Open `/vehicles` and confirm list, filters, and vehicle detail navigation work.
-- Open `/ai/vin-decoder`, `/ai/dtc-decoder`, and `/ai/vehicle-diagnosis` and
-  confirm the forms render cleanly in English and Arabic.
-- Open `/portal/vehicles` and `/portal/ai/health-check` and confirm customer
-  vehicle intelligence stays scoped to linked records.
+- Open `/en/ai/vin-decoder`, `/ar/ai/vin-decoder`, `/en/ai/dtc-decoder`,
+  `/ar/ai/dtc-decoder`, `/en/ai/vehicle-diagnosis`, and
+  `/ar/ai/vehicle-diagnosis` and confirm the forms render cleanly in English
+  and Arabic.
+- Open `/en/portal/vehicles`, `/ar/portal/vehicles`, `/en/portal/ai/health-check`,
+  and `/ar/portal/ai/health-check` and confirm customer vehicle intelligence
+  stays scoped to linked records.
 - Open `/customers`, `/jobs`, `/quotations`, `/complaints`, and `/documents` on mobile and desktop.
 - Sign in as a portal user and verify `/portal`, `/portal/jobs`, `/portal/quotes`, `/portal/complaints`, `/portal/documents`, and `/portal/settings`.
 - Sign in as a super admin and verify the root admin list pages and pagination controls.

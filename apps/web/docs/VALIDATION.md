@@ -56,10 +56,16 @@ The smoke runner reports:
 - `unexpected 404`
 - `unexpected 500`
 - `connection unavailable`
+- `blocked`
 
 The local e2e harness uses disposable smoke-test users and a test-only password.
 Those credentials are not production accounts and must not be reused for
 super-admin bootstrap.
+
+When the smoke runner prints `blocked` and exits with code `2`, the sandbox or
+network could not reach the local Supabase stack or the live URL. Treat that as
+an environment limitation, not an application regression. Keep the route
+coverage intact; do not silence real route failures.
 
 ## Canonical locale routes
 
@@ -137,6 +143,11 @@ The Vehicle Intelligence module adds:
 - `/en/portal/ai/health-check`
 
 The Arabic equivalents are available under `/ar/...`. See [VEHICLE_INTELLIGENCE.md](./VEHICLE_INTELLIGENCE.md) for the safety and validation contract.
+
+Vehicle Intelligence verification also depends on:
+
+- `OPENAI_API_KEY` for AI-assisted diagnostics, if you want the AI path active.
+- No VIN API key in this release; the decoder uses the public NHTSA service.
 
 ## Formatting
 

@@ -18,6 +18,8 @@ import {
   validateDtcCodes,
 } from "../src/lib/vehicle-intelligence/dtc.js";
 import { validateDiagnosticJson } from "../src/lib/vehicle-intelligence/schemas.js";
+import { decodeVin } from "../src/lib/vehicle-intelligence/vin.js";
+import { callOpenAiJson } from "../src/lib/vehicle-intelligence/openai.js";
 
 test("VIN normalization accepts a valid VIN", () => {
   const result = validateVin("jtebu5jr9j5a12345");
@@ -148,4 +150,67 @@ test("advisor summaries include structured operational context", () => {
     diagnosis: diagnostic,
   });
   assert.match(summary, /Severity:/);
+});
+
+test("missing OpenAI key fails safely", async () => {
+  const prevKey = process.env.OPENAI_API_KEY;
+  const prevFetch = global.fetch;
+  delete process.env.OPENAI_API_KEY;
+  global.fetch = async () => {
+    throw new Error("fetch should not be called when OpenAI is missing");
+  };
+
+  try {
+    const result = await callOpenAiJson({
+      systemPrompt: "system",
+      userPrompt: "user",
+    });
+    assert.equal(result.ok, false);
+    assert.match(result.error, /not configured/i);
+  } finally {
+    if (prevKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = prevKey;
+    global.fetch = prevFetch;
+  }
+});
+
+test("invalid OpenAI JSON fails safely", async () => {
+  const prevKey = process.env.OPENAI_API_KEY;
+  const prevFetch = global.fetch;
+  process.env.OPENAI_API_KEY = "test-key";
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: "{not valid json" } }],
+    }),
+  });
+
+  try {
+    const result = await callOpenAiJson({
+      systemPrompt: "system",
+      userPrompt: "user",
+    });
+    assert.equal(result.ok, false);
+    assert.match(result.error, /unexpected token|json/i);
+  } finally {
+    if (prevKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = prevKey;
+    global.fetch = prevFetch;
+  }
+});
+
+test("VIN provider outage returns a safe unavailable decode", async () => {
+  const prevFetch = global.fetch;
+  global.fetch = async () => {
+    throw new Error("network down");
+  };
+
+  try {
+    const result = await decodeVin("1HGCM82633A004352");
+    assert.equal(result.status, "unavailable");
+    assert.equal(result.valid, true);
+    assert.match(result.notes[0] ?? "", /unavailable/i);
+  } finally {
+    global.fetch = prevFetch;
+  }
 });
