@@ -219,6 +219,27 @@
       "submit": "Save assignment"
     }
   },
+  "ratings": {
+    "summary": {
+      "title": "Review scores",
+      "helper": "Based on {count, plural, one {# review} other {# reviews}}",
+      "empty": "No ratings yet"
+    },
+    "form": {
+      "title": "Rate this business",
+      "description": "Share how your experience went. You can update your rating later.",
+      "ratingLabel": "Rating",
+      "ratingPlaceholder": "Select a rating",
+      "reviewLabel": "Review",
+      "reviewPlaceholder": "Share anything that would help the workshop improve.",
+      "submit": "Save rating",
+      "saved": "Rating saved.",
+      "error": "Could not save your rating. Try again.",
+      "invalid": "Select a rating between 1 and 5.",
+      "notEligible": "You do not have access to rate this business.",
+      "editableNote": "You can update this rating later."
+    }
+  },
   "settings": {
     "business": {
       "name": "Business name",

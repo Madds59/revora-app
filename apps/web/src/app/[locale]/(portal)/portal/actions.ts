@@ -3,12 +3,13 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { getUser, requireCustomerPortal } from "@/lib/auth";
 import type { ComplaintSeverity } from "@/lib/database.types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { businessRatingInputSchema } from "@/lib/ratings";
 
 export type FormState = { error?: string; message?: string };
 
@@ -107,6 +108,46 @@ export async function createComplaint(
   revalidatePath("/portal");
   revalidatePath("/portal/complaints");
   redirect(`/${locale}/portal/complaints`);
+}
+
+export async function saveBusinessRating(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { accounts } = await requireCustomerPortal();
+  const t = await getTranslations("ratings");
+
+  const parsed = businessRatingInputSchema.safeParse({
+    businessId: str(formData, "business_id"),
+    customerId: str(formData, "customer_id"),
+    rating: str(formData, "rating"),
+    review: optional(formData, "review"),
+  });
+  if (!parsed.success) return { error: t("form.invalid") };
+
+  const account = accounts.find(
+    (item) =>
+      item.business_id === parsed.data.businessId && item.id === parsed.data.customerId,
+  );
+  if (!account) return { error: t("form.notEligible") };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("business_ratings").upsert(
+    {
+      business_id: account.business_id,
+      customer_id: account.id,
+      rating: parsed.data.rating,
+      review: parsed.data.review ?? null,
+    },
+    { onConflict: "business_id,customer_id" },
+  );
+  if (error) return { error: t("form.error") };
+
+  revalidatePath("/portal");
+  revalidatePath("/portal/jobs");
+  revalidatePath("/portal/quotes");
+  revalidatePath("/analytics");
+  return { message: t("form.saved") };
 }
 
 export async function addComplaintReply(

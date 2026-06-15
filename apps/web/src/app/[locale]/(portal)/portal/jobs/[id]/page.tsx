@@ -16,6 +16,7 @@ import { JOB_STATUS_LABELS, JOB_STATUS_VARIANT } from "@/lib/jobs";
 import { loadJobAttachments } from "@/lib/documents";
 import { createClient } from "@/lib/supabase/server";
 import { EvidenceGallery } from "@/components/evidence-gallery";
+import { BusinessRatingForm } from "@/components/business-rating-form";
 import type { Job, JobUpdate } from "@/lib/database.types";
 
 type JobWithBusiness = Job & { business: { name: string } | null };
@@ -105,6 +106,8 @@ export default async function PortalJobDetailPage({
             </CardContent>
           </Card>
         )}
+
+        <BusinessRatingForm businessId={job.business_id} customerId={job.customer_id} />
       </div>
     </>
   );
