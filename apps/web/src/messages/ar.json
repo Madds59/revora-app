@@ -319,9 +319,12 @@
     "actions": {
       "emailRequired": "البريد الإلكتروني وكلمة المرور مطلوبان.",
       "passwordMin": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+      "passwordRequired": "كلمة المرور مطلوبة.",
+      "passwordMismatch": "كلمتا المرور غير متطابقتين.",
       "chooseAccountType": "اختر نوع الحساب للمتابعة.",
       "checkEmail": "تحقق من بريدك لتأكيد الحساب، ثم سجّل الدخول.",
-      "magicLinkSent": "تم إرسال الرابط السحري. تحقق من بريدك لتسجيل الدخول."
+      "magicLinkSent": "تم إرسال الرابط السحري. تحقق من بريدك لتسجيل الدخول.",
+      "passwordResetSent": "إذا كان الحساب موجودًا، فقد تم إرسال رابط إعادة التعيين."
     },
     "login": {
       "title": "تسجيل الدخول",
@@ -332,8 +335,25 @@
       "passwordLabel": "كلمة المرور",
       "signIn": "تسجيل الدخول",
       "sendMagicLink": "إرسال الرابط السحري",
+      "forgotPassword": "هل نسيت كلمة المرور؟",
+      "passwordResetSuccess": "تم تحديث كلمة المرور. سجّل الدخول بكلمة المرور الجديدة.",
       "noAccount": "لا تملك حسابًا؟",
       "createOne": "أنشئ حسابًا"
+    },
+    "forgotPassword": {
+      "title": "إعادة تعيين كلمة المرور",
+      "description": "سنرسل رابط إعادة تعيين إذا كان الحساب موجودًا.",
+      "emailLabel": "البريد الإلكتروني",
+      "submit": "إرسال رابط إعادة التعيين",
+      "backToSignIn": "العودة إلى تسجيل الدخول"
+    },
+    "resetPassword": {
+      "title": "تعيين كلمة مرور جديدة",
+      "description": "أدخل كلمة مرور جديدة لحساب Revora الخاص بك.",
+      "passwordLabel": "كلمة المرور الجديدة",
+      "confirmPasswordLabel": "تأكيد كلمة المرور الجديدة",
+      "submit": "تحديث كلمة المرور",
+      "backToSignIn": "العودة إلى تسجيل الدخول"
     },
     "signup": {
       "title": "إنشاء حسابك",
@@ -385,6 +405,10 @@
     "homeDescription": "إدارة عملياتك في لمحة.",
     "loginTitle": "تسجيل الدخول",
     "loginDescription": "ادخل إلى مساحة عمل Revora الخاصة بك.",
+    "forgotPasswordTitle": "إعادة تعيين كلمة المرور",
+    "forgotPasswordDescription": "اطلب رابط إعادة تعيين كلمة المرور لحساب Revora الخاص بك.",
+    "resetPasswordTitle": "تعيين كلمة مرور جديدة",
+    "resetPasswordDescription": "اختر كلمة مرور جديدة لحساب Revora الخاص بك.",
     "signupTitle": "إنشاء حسابك",
     "signupDescription": "اختر نوع الحساب المناسب لطريقة استخدامك لـ Revora.",
     "portalTitle": "بوابة العملاء",
