@@ -9,6 +9,7 @@ import {
   Files,
   Settings,
   CarFront,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 type NavItem = {
-  labelKey: "home" | "vehicles" | "quotes" | "jobs" | "complaints" | "documents" | "settings";
+  labelKey: "home" | "vehicles" | "quotes" | "jobs" | "complaints" | "documents" | "settings" | "memberships";
   href: string;
   icon: LucideIcon;
 };
@@ -24,6 +25,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { labelKey: "home", href: "/portal", icon: Home },
   { labelKey: "vehicles", href: "/portal/vehicles", icon: CarFront },
+  { labelKey: "memberships", href: "/portal/memberships", icon: Layers },
   { labelKey: "quotes", href: "/portal/quotes", icon: FileText },
   { labelKey: "jobs", href: "/portal/jobs", icon: Wrench },
   { labelKey: "complaints", href: "/portal/complaints", icon: MessageSquare },

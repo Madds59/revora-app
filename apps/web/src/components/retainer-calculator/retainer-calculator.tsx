@@ -35,6 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { calculateRetainer } from "@/lib/retainer/calculate-retainer.js";
+import { generateScenarioTiers } from "@/lib/retainer/tiers.js";
 import type {
   BillingCycle,
   Currency,
@@ -699,32 +700,15 @@ export function RetainerCalculator({
   );
 
   const result = useMemo(() => calculateRetainer(draft.input), [draft.input]);
-  const tierResults = useMemo(() => {
-    const base = calculateRetainer(draft.input);
-    const essential = calculateRetainer({
-      ...draft.input,
-      pricing: {
-        ...draft.input.pricing,
-        targetMargin: Math.max(draft.input.pricing.minimumMargin, draft.input.pricing.targetMargin - 0.05),
-        discount: Math.min(0.08, draft.input.pricing.discount + 0.02),
-      },
-    });
-    const premium = calculateRetainer({
-      ...draft.input,
-      slaLevel: "vip",
-      pricing: {
-        ...draft.input.pricing,
-        targetMargin: Math.min(0.9, draft.input.pricing.targetMargin + 0.07),
-        discount: Math.max(0, draft.input.pricing.discount - 0.01),
-        rounding: "nearest_100",
-      },
-    });
-    return [
-      { title: t("tiers.essential"), result: essential, tone: "neutral" as const },
-      { title: t("tiers.growth"), result: base, tone: "positive" as const },
-      { title: t("tiers.premium"), result: premium, tone: "warning" as const },
-    ];
-  }, [draft.input, t]);
+  const tierResults = useMemo(
+    () =>
+      generateScenarioTiers(draft.input).map((tier) => ({
+        title: t(`tiers.${tier.key}`),
+        result: tier.result,
+        tone: tier.tone,
+      })),
+    [draft.input, t],
+  );
 
   const [saveState, saveAction] = useActionState(saveRetainerScenario, {});
   const [compareState, compareAction] = useActionState(compareRetainerScenarios, {});
