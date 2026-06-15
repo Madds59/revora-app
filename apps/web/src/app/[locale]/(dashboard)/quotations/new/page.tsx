@@ -20,6 +20,28 @@ type CustomerRow = {
   }[];
 };
 
+function formatCustomerLabel(fullName: string | null | undefined, fallback: string) {
+  const label = fullName?.trim();
+  return label ? label : fallback;
+}
+
+function formatVehicleLabel(
+  vehicle: {
+    make: string | null;
+    model: string | null;
+    plate_number: string | null;
+  },
+  fallback: string,
+) {
+  const makeModel = [vehicle.make?.trim(), vehicle.model?.trim()].filter(Boolean).join(" ");
+  const plate = vehicle.plate_number?.trim();
+
+  if (makeModel && plate) return `${makeModel} · ${plate}`;
+  if (makeModel) return makeModel;
+  if (plate) return plate;
+  return fallback;
+}
+
 export default async function NewQuotePage() {
   const { member } = await requireMembership();
   if (!canManageQuotes(member.role)) redirect("/quotations");
@@ -33,16 +55,14 @@ export default async function NewQuotePage() {
   const rows = (data ?? []) as unknown as CustomerRow[];
 
   const t = await getTranslations("dashboardQuotations.new");
-  const tVehicle = await getTranslations("dashboardVehicles.table");
+  const tFallback = await getTranslations("dashboardQuotations.fallback");
 
   const customers: CustomerOption[] = rows.map((c) => ({
     id: c.id,
-    full_name: c.full_name,
+    full_name: formatCustomerLabel(c.full_name, tFallback("unknownCustomer")),
     vehicles: c.vehicles.map((v) => ({
       id: v.id,
-      label:
-        [v.make, v.model].filter(Boolean).join(" ") +
-          (v.plate_number ? ` · ${v.plate_number}` : "") || tVehicle("vehicle"),
+      label: formatVehicleLabel(v, tFallback("unknownVehicle")),
     })),
   }));
 
