@@ -64,6 +64,13 @@ Optional AI env vars:
 
 If they are absent, Revora uses the safe fallback path.
 
+VIN decoding does not require a VIN API key in this release. It uses the
+public NHTSA VIN decoder. If the provider is unreachable, Revora returns a
+safe `unavailable` decode result and does not invent vehicle specifications.
+
+If `OPENAI_API_KEY` is missing or the model request fails, diagnostics fall back
+to the rule-based safety engine and stay advisory only.
+
 ## Validation
 
 Run from `apps/web`:
@@ -75,6 +82,10 @@ pnpm typecheck
 pnpm test
 APP_URL=https://revora-app.vercel.app pnpm smoke:routes
 ```
+
+`pnpm smoke:routes` exits with code `2` when the sandbox cannot reach the local
+Supabase stack or the live production URL. That is an environment block, not an
+application regression. Real route or auth failures still exit nonzero.
 
 ## Notes
 

@@ -34,6 +34,7 @@ const ANON =
 const stamp = Date.now();
 let passed = 0;
 let failed = 0;
+let blocked = 0;
 function ok(label) {
   passed++;
   console.log(`  PASS  ${label}`);
@@ -41,6 +42,10 @@ function ok(label) {
 function bad(label, detail) {
   failed++;
   console.log(`  FAIL  ${label}${detail ? ` -> ${detail}` : ""}`);
+}
+function envBlocked(label, detail) {
+  blocked++;
+  console.log(`  BLOCKED  ${label}${detail ? ` -> ${detail}` : ""}`);
 }
 function assert(cond, label, detail) {
   if (cond) {
@@ -257,14 +262,14 @@ try {
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("fetch failed") || message.includes("EPERM") || message.includes("connect")) {
-    console.log(`  SKIP  live local DB smoke unavailable -> ${message}`);
+    envBlocked("live local DB smoke unavailable", message);
   } else {
     bad("live local DB smoke", message);
   }
   console.log("  SKIP  continuing with route smoke only");
 }
 
-console.log(`\n== ${passed} passed, ${failed} failed ==\n`);
+console.log(`\n== ${passed} passed, ${failed} failed, ${blocked} blocked ==\n`);
 const appBase = process.env.APP_URL;
 if (appBase) {
   const smokeRoutes = [
@@ -277,11 +282,16 @@ if (appBase) {
     { route: "/customers", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/vehicles", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/vehicles/new", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/ai", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/ai/vin-decoder", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/ai/dtc-decoder", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/ai/vehicle-diagnosis", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/jobs", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/quotations", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/complaints", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/documents", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/portal", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/portal/ai/health-check", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/portal/jobs", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/portal/quotes", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/portal/complaints", expected: ["OK", "unauthorized as expected", "expected redirect"] },
@@ -316,7 +326,10 @@ if (appBase) {
         `${classification}${location ? ` (${location})` : ""}`,
       );
     } catch (error) {
-      bad(`route ${route}`, `connection unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      envBlocked(
+        `route ${route}`,
+        `connection unavailable: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -346,7 +359,7 @@ if (appBase) {
         `unexpected status ${res.status}`,
       );
     } catch (error) {
-      bad(
+      envBlocked(
         `public locale auth route ${route}`,
         error instanceof Error ? error.message : String(error),
       );
@@ -367,7 +380,7 @@ if (appBase) {
     );
     assert(!res.headers.get("location"), "stripe webhook does not redirect", res.headers.get("location") ?? "redirect present");
   } catch (error) {
-    bad(
+    envBlocked(
       "stripe webhook rejects unsigned requests",
       error instanceof Error ? error.message : String(error),
     );
@@ -376,4 +389,4 @@ if (appBase) {
   console.log("\n== route smoke skipped (APP_URL not set) ==\n");
 }
 
-process.exit(failed === 0 ? 0 : 1);
+process.exit(failed > 0 ? 1 : blocked > 0 ? 2 : 0);
