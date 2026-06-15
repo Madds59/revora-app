@@ -2721,6 +2721,119 @@ export type Database = {
           },
         ]
       }
+      retainer_pricing_scenarios: {
+        Row: {
+          billing_cycle: string
+          business_id: string
+          calculated_results: Json
+          contract_length_months: number
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_type: string
+          currency: string
+          description: string | null
+          expected_monthly_visits: number
+          id: string
+          labor_items: Json
+          overhead_items: Json
+          parts_items: Json
+          pricing_settings: Json
+          quote_id: string | null
+          risk_settings: Json
+          service_category: string
+          sla_level: string
+          status: string
+          title: string
+          tool_items: Json
+          updated_at: string
+          number_of_vehicles: number
+        }
+        Insert: {
+          billing_cycle?: string
+          business_id: string
+          calculated_results?: Json
+          contract_length_months?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          customer_type: string
+          currency?: string
+          description?: string | null
+          expected_monthly_visits?: number
+          id?: string
+          labor_items?: Json
+          overhead_items?: Json
+          parts_items?: Json
+          pricing_settings?: Json
+          quote_id?: string | null
+          risk_settings?: Json
+          service_category: string
+          sla_level?: string
+          status?: string
+          title: string
+          tool_items?: Json
+          updated_at?: string
+          number_of_vehicles?: number
+        }
+        Update: {
+          billing_cycle?: string
+          business_id?: string
+          calculated_results?: Json
+          contract_length_months?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          customer_type?: string
+          currency?: string
+          description?: string | null
+          expected_monthly_visits?: number
+          id?: string
+          labor_items?: Json
+          overhead_items?: Json
+          parts_items?: Json
+          pricing_settings?: Json
+          quote_id?: string | null
+          risk_settings?: Json
+          service_category?: string
+          sla_level?: string
+          status?: string
+          title?: string
+          tool_items?: Json
+          updated_at?: string
+          number_of_vehicles?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retainer_pricing_scenarios_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retainer_pricing_scenarios_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retainer_pricing_scenarios_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retainer_pricing_scenarios_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

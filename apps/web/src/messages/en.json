@@ -189,6 +189,7 @@
     "notifications": "Notifications",
     "settings": "Settings",
     "vehicleIntelligence": "Vehicle Intelligence",
+    "retainerCalculator": "Retainer calculator",
     "soon": "soon",
     "overview": "Overview",
     "tenants": "Tenants",
@@ -322,6 +323,8 @@
     "vehicleIntelligenceDtcDescription": "Interpret diagnostic trouble codes with safety checks.",
     "vehicleIntelligenceDiagnosisTitle": "Vehicle diagnosis",
     "vehicleIntelligenceDiagnosisDescription": "Structured diagnostic triage with workshop review support.",
+    "retainerCalculatorTitle": "Retainer calculator",
+    "retainerCalculatorDescription": "Model monthly retainers, compare scenario tiers, and convert approved scenarios into quotations.",
     "portalVehiclesTitle": "Portal vehicles",
     "portalVehiclesDescription": "Your linked vehicles and service context.",
     "portalVehicleTitle": "Portal vehicle",
@@ -566,6 +569,196 @@
     "detail": {
       "editSubmit": "Save changes",
       "addVehicleSubmit": "Add vehicle"
+    }
+  },
+  "retainerCalculator": {
+    "title": "Retainer calculator",
+    "subtitle": "Model monthly retainers, compare scenario tiers, and convert approved scenarios into quotations.",
+    "noAccessTitle": "Pricing tools restricted",
+    "noAccess": "Only the business owner or business manager can use the retainer calculator.",
+    "backHome": "Back to dashboard",
+    "errorTitle": "Could not load retainer scenarios",
+    "errorDescription": "Please try again. The saved scenarios could not be loaded.",
+    "page": {
+      "editing": "Editing",
+      "createDescription": "Create, compare, and convert retainer scenarios.",
+      "defaultTitle": "New retainer scenario",
+      "defaultDescription": "Monthly retainer pricing draft."
+    },
+    "defaults": {
+      "laborRole": "Technician",
+      "laborDepartment": "Workshop",
+      "serviceAdvisorRole": "Service advisor",
+      "frontOfficeDepartment": "Front office",
+      "partsName": "Consumables",
+      "toolName": "Scan tool",
+      "detailingLeadRole": "Detailing lead",
+      "detailingDepartment": "Detailing",
+      "prepTechnicianRole": "Prep technician",
+      "valveStems": "Valve stems",
+      "balancingWeights": "Balancing weights",
+      "inspectionTablet": "Inspection tablet"
+    },
+    "customer": {
+      "emailFallback": "No email provided"
+    },
+    "actions": {
+      "save": "Save scenario",
+      "reset": "Reset draft",
+      "exportPdf": "Export PDF",
+      "loadScenario": "Load scenario",
+      "compare": "Compare scenarios",
+      "addRow": "Add row",
+      "duplicateRow": "Duplicate",
+      "removeRow": "Delete",
+      "createQuote": "Create quote",
+      "markRecommended": "Mark active",
+      "loadSelected": "Load selected"
+    },
+    "context": {
+      "heading": "Scenario context",
+      "vehicles": "Set the customer, vehicle count, and contract shape.",
+      "title": "Scenario title",
+      "customerType": "Customer type",
+      "serviceCategory": "Service category",
+      "currency": "Currency",
+      "billingCycle": "Billing cycle",
+      "contractLength": "Contract length (months)",
+      "vehicles": "Vehicles covered",
+      "vehiclesLabel": "Vehicles covered",
+      "visits": "Expected monthly visits",
+      "sla": "SLA level",
+      "attachCustomer": "Attach customer",
+      "description": "Scenario description"
+    },
+    "customerTypes": {
+      "individual": "Individual",
+      "fleet": "Fleet",
+      "corporate": "Corporate",
+      "government": "Government",
+      "insurancePartner": "Insurance partner"
+    },
+    "serviceCategories": {
+      "generalWorkshopMaintenance": "General workshop maintenance",
+      "detailing": "Detailing",
+      "tireServices": "Tire services",
+      "inspectionPackage": "Inspection package",
+      "fleetMaintenance": "Fleet maintenance",
+      "custom": "Custom"
+    },
+    "currencies": {
+      "aed": "AED",
+      "usd": "USD",
+      "sar": "SAR"
+    },
+    "billingCycles": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "annual": "Annual"
+    },
+    "slaLevels": {
+      "standard": "Standard",
+      "priority": "Priority",
+      "vip": "VIP"
+    },
+    "rounding": {
+      "none": "No rounding",
+      "nearest10": "Nearest 10",
+      "nearest50": "Nearest 50",
+      "nearest100": "Nearest 100",
+      "psychological": "Psychological"
+    },
+    "labor": {
+      "heading": "Labor",
+      "role": "Role",
+      "department": "Department",
+      "hourlyCost": "Hourly cost",
+      "hours": "Estimated hours",
+      "utilization": "Utilization"
+    },
+    "parts": {
+      "heading": "Parts",
+      "item": "Item",
+      "unitCost": "Unit cost",
+      "quantity": "Quantity",
+      "markup": "Markup"
+    },
+    "tools": {
+      "heading": "Tools and equipment",
+      "name": "Name",
+      "monthlyCost": "Monthly cost",
+      "allocation": "Allocation"
+    },
+    "overhead": {
+      "heading": "Overhead",
+      "rent": "Rent",
+      "utilities": "Utilities",
+      "equipment": "Equipment depreciation",
+      "insurance": "Insurance",
+      "admin": "Admin overhead",
+      "misc": "Miscellaneous"
+    },
+    "risk": {
+      "heading": "Risk buffers",
+      "rework": "Rework buffer",
+      "emergency": "Emergency support buffer",
+      "slaPremium": "Priority SLA premium",
+      "warranty": "Warranty reserve",
+      "latePayment": "Late payment risk"
+    },
+    "pricing": {
+      "heading": "Pricing",
+      "targetMargin": "Target margin",
+      "minMargin": "Minimum margin",
+      "discount": "Discount",
+      "vat": "VAT",
+      "annualPrepayDiscount": "Annual prepay discount",
+      "rounding": "Rounding strategy"
+    },
+    "results": {
+      "heading": "Results",
+      "finalPrice": "Final monthly retainer",
+      "grossMargin": "Gross margin",
+      "totalValue": "Contract value",
+      "perVehicle": "Per vehicle",
+      "internalCost": "Internal monthly cost",
+      "recommended": "Recommended retainer",
+      "vat": "VAT",
+      "grossProfit": "Gross profit",
+      "breakEven": "Break-even price",
+      "annualValue": "Annual value"
+    },
+    "insights": {
+      "heading": "Insights"
+    },
+    "comparison": {
+      "monthlySpread": "Monthly spread",
+      "marginSpread": "Margin spread"
+    },
+    "scenarios": {
+      "heading": "Saved scenarios",
+      "empty": "Save a scenario to compare, duplicate, and convert it later.",
+      "status": "Use the saved scenarios below to compare pricing tiers."
+    },
+    "tiers": {
+      "heading": "Pricing tiers",
+      "essential": "Essential",
+      "growth": "Growth",
+      "premium": "Premium"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "active": "Active",
+      "archived": "Archived",
+      "convertedToQuote": "Converted to quote"
+    },
+    "presets": {
+      "generalWorkshopMaintenance": "General workshop maintenance",
+      "detailing": "Detailing",
+      "tireServices": "Tire services",
+      "inspectionPackage": "Inspection package",
+      "fleetMaintenance": "Fleet maintenance",
+      "custom": "Custom scenario"
     }
   },
   "dashboardVehicles": {

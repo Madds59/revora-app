@@ -189,6 +189,7 @@
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
     "vehicleIntelligence": "ذكاء المركبات",
+    "retainerCalculator": "حاسبة الاحتفاظ",
     "soon": "قريبًا",
     "overview": "نظرة عامة",
     "tenants": "العملاء",
@@ -322,6 +323,8 @@
     "vehicleIntelligenceDtcDescription": "تفسير رموز الأعطال مع فحص السلامة.",
     "vehicleIntelligenceDiagnosisTitle": "تشخيص المركبة",
     "vehicleIntelligenceDiagnosisDescription": "فرز منظم للأعراض مع دعم مراجعة الورشة.",
+    "retainerCalculatorTitle": "حاسبة الاحتفاظ",
+    "retainerCalculatorDescription": "نمذجة الاحتفاظ الشهري، ومقارنة مستويات السيناريوهات، وتحويل السيناريوهات المعتمدة إلى عروض أسعار.",
     "portalVehiclesTitle": "مركبات البوابة",
     "portalVehiclesDescription": "مركباتك المرتبطة وسياق الخدمة.",
     "portalVehicleTitle": "مركبة البوابة",
@@ -566,6 +569,196 @@
     "detail": {
       "editSubmit": "حفظ التغييرات",
       "addVehicleSubmit": "إضافة مركبة"
+    }
+  },
+  "retainerCalculator": {
+    "title": "حاسبة الاحتفاظ",
+    "subtitle": "نمذجة الاحتفاظ الشهري، ومقارنة مستويات السيناريوهات، وتحويل السيناريوهات المعتمدة إلى عروض أسعار.",
+    "noAccessTitle": "أدوات التسعير مقيّدة",
+    "noAccess": "لا يمكن استخدام حاسبة الاحتفاظ إلا لمالك النشاط أو مدير النشاط.",
+    "backHome": "العودة إلى لوحة التحكم",
+    "errorTitle": "تعذّر تحميل سيناريوهات الاحتفاظ",
+    "errorDescription": "حاول مرة أخرى. لم نتمكّن من تحميل السيناريوهات المحفوظة.",
+    "page": {
+      "editing": "جارٍ التعديل:",
+      "createDescription": "أنشئ سيناريوهات الاحتفاظ وقارنها وحوّلها إلى عروض أسعار.",
+      "defaultTitle": "سيناريو احتفاظ جديد",
+      "defaultDescription": "مسودة تسعير الاحتفاظ الشهري."
+    },
+    "defaults": {
+      "laborRole": "فني",
+      "laborDepartment": "الورشة",
+      "serviceAdvisorRole": "مستشار خدمة",
+      "frontOfficeDepartment": "الاستقبال",
+      "partsName": "مستهلكات",
+      "toolName": "جهاز فحص",
+      "detailingLeadRole": "مسؤول التلميع",
+      "detailingDepartment": "التلميع",
+      "prepTechnicianRole": "فني تجهيز",
+      "valveStems": "سيقان الصمامات",
+      "balancingWeights": "أوزان الموازنة",
+      "inspectionTablet": "جهاز الفحص اللوحي"
+    },
+    "customer": {
+      "emailFallback": "لا يوجد بريد إلكتروني"
+    },
+    "actions": {
+      "save": "حفظ السيناريو",
+      "reset": "إعادة ضبط المسودة",
+      "exportPdf": "تصدير PDF",
+      "loadScenario": "تحميل السيناريو",
+      "compare": "مقارنة السيناريوهات",
+      "addRow": "إضافة صف",
+      "duplicateRow": "نسخ",
+      "removeRow": "حذف",
+      "createQuote": "إنشاء عرض سعر",
+      "markRecommended": "تعيين كفعّال",
+      "loadSelected": "تحميل المحدد"
+    },
+    "context": {
+      "heading": "سياق السيناريو",
+      "vehicles": "حدّد العميل وعدد المركبات وهيكل العقد.",
+      "title": "عنوان السيناريو",
+      "customerType": "نوع العميل",
+      "serviceCategory": "فئة الخدمة",
+      "currency": "العملة",
+      "billingCycle": "دورة الفوترة",
+      "contractLength": "مدة العقد (بالأشهر)",
+      "vehicles": "المركبات المشمولة",
+      "vehiclesLabel": "المركبات المشمولة",
+      "visits": "الزيارات الشهرية المتوقعة",
+      "sla": "مستوى SLA",
+      "attachCustomer": "ربط عميل",
+      "description": "وصف السيناريو"
+    },
+    "customerTypes": {
+      "individual": "فردي",
+      "fleet": "أسطول",
+      "corporate": "شركة",
+      "government": "حكومي",
+      "insurancePartner": "شريك تأمين"
+    },
+    "serviceCategories": {
+      "generalWorkshopMaintenance": "صيانة ورشة عامة",
+      "detailing": "تلميع",
+      "tireServices": "خدمات الإطارات",
+      "inspectionPackage": "حزمة فحص",
+      "fleetMaintenance": "صيانة أساطيل",
+      "custom": "مخصص"
+    },
+    "currencies": {
+      "aed": "AED",
+      "usd": "USD",
+      "sar": "SAR"
+    },
+    "billingCycles": {
+      "monthly": "شهري",
+      "quarterly": "ربع سنوي",
+      "annual": "سنوي"
+    },
+    "slaLevels": {
+      "standard": "قياسي",
+      "priority": "أولوية",
+      "vip": "VIP"
+    },
+    "rounding": {
+      "none": "بدون تقريب",
+      "nearest10": "أقرب 10",
+      "nearest50": "أقرب 50",
+      "nearest100": "أقرب 100",
+      "psychological": "نفسي"
+    },
+    "labor": {
+      "heading": "العمالة",
+      "role": "الدور",
+      "department": "القسم",
+      "hourlyCost": "التكلفة بالساعة",
+      "hours": "الساعات المقدرة",
+      "utilization": "معدل الاستفادة"
+    },
+    "parts": {
+      "heading": "القطع",
+      "item": "البند",
+      "unitCost": "تكلفة الوحدة",
+      "quantity": "الكمية",
+      "markup": "هامش الربح"
+    },
+    "tools": {
+      "heading": "الأدوات والمعدات",
+      "name": "الاسم",
+      "monthlyCost": "التكلفة الشهرية",
+      "allocation": "نسبة التخصيص"
+    },
+    "overhead": {
+      "heading": "المصاريف العامة",
+      "rent": "الإيجار",
+      "utilities": "المرافق",
+      "equipment": "إهلاك المعدات",
+      "insurance": "التأمين",
+      "admin": "المصروفات الإدارية",
+      "misc": "متفرقات"
+    },
+    "risk": {
+      "heading": "احتياطات المخاطر",
+      "rework": "احتياطي إعادة العمل",
+      "emergency": "احتياطي الدعم الطارئ",
+      "slaPremium": "علاوة SLA للأولوية",
+      "warranty": "احتياطي الضمان",
+      "latePayment": "مخاطر التأخر في السداد"
+    },
+    "pricing": {
+      "heading": "التسعير",
+      "targetMargin": "هامش الربح المستهدف",
+      "minMargin": "الحد الأدنى للهامش",
+      "discount": "الخصم",
+      "vat": "ضريبة القيمة المضافة",
+      "annualPrepayDiscount": "خصم الدفع السنوي المسبق",
+      "rounding": "استراتيجية التقريب"
+    },
+    "results": {
+      "heading": "النتائج",
+      "finalPrice": "الاحتفاظ الشهري النهائي",
+      "grossMargin": "هامش الربح الإجمالي",
+      "totalValue": "قيمة العقد",
+      "perVehicle": "لكل مركبة",
+      "internalCost": "التكلفة الشهرية الداخلية",
+      "recommended": "الاحتفاظ الموصى به",
+      "vat": "ضريبة القيمة المضافة",
+      "grossProfit": "الربح الإجمالي",
+      "breakEven": "سعر التعادل",
+      "annualValue": "القيمة السنوية"
+    },
+    "insights": {
+      "heading": "الرؤى"
+    },
+    "comparison": {
+      "monthlySpread": "الفرق الشهري",
+      "marginSpread": "فرق الهامش"
+    },
+    "scenarios": {
+      "heading": "السيناريوهات المحفوظة",
+      "empty": "احفظ سيناريوًّا لتتمكن من مقارنته ونسخه وتحويله لاحقًا.",
+      "status": "استخدم السيناريوهات المحفوظة أدناه لمقارنة مستويات التسعير."
+    },
+    "tiers": {
+      "heading": "مستويات التسعير",
+      "essential": "أساسي",
+      "growth": "نمو",
+      "premium": "متميز"
+    },
+    "statuses": {
+      "draft": "مسودة",
+      "active": "نشط",
+      "archived": "مؤرشف",
+      "convertedToQuote": "تم التحويل إلى عرض سعر"
+    },
+    "presets": {
+      "generalWorkshopMaintenance": "صيانة ورشة عامة",
+      "detailing": "تلميع",
+      "tireServices": "خدمات الإطارات",
+      "inspectionPackage": "حزمة فحص",
+      "fleetMaintenance": "صيانة أساطيل",
+      "custom": "سيناريو مخصص"
     }
   },
   "dashboardVehicles": {

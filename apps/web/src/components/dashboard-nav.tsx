@@ -2,6 +2,7 @@
 
 import { Link, usePathname } from "@/i18n/navigation";
 import {
+  Calculator,
   Home,
   Users,
   FileText,
@@ -33,6 +34,7 @@ type NavItem = {
     | "analytics"
     | "notifications"
     | "settings"
+    | "retainerCalculator"
     | "vehicleIntelligence";
   href: string;
   icon: LucideIcon;
@@ -51,16 +53,21 @@ const NAV: NavItem[] = [
   { labelKey: "analytics", href: "/analytics", icon: BarChart3 },
   { labelKey: "notifications", href: "/notifications", icon: Bell },
   { labelKey: "settings", href: "/settings", icon: Settings, aliases: ["/settings/business"] },
+  { labelKey: "retainerCalculator", href: "/tools/retainer-calculator", icon: Calculator },
   { labelKey: "vehicleIntelligence", href: "/ai", icon: ScanSearch, aliases: ["/ai/vin-decoder", "/ai/dtc-decoder", "/ai/vehicle-diagnosis"] },
 ];
 
-export function DashboardNav() {
+export function DashboardNav({
+  showRetainerCalculator = true,
+}: {
+  showRetainerCalculator?: boolean;
+} = {}) {
   const pathname = usePathname();
   const t = useTranslations("nav");
 
   return (
     <nav className="flex flex-col gap-0.5 px-2">
-      {NAV.map((item) => {
+      {NAV.filter((item) => item.labelKey !== "retainerCalculator" || showRetainerCalculator).map((item) => {
         const active = isActive(pathname, item.href, item.aliases);
         const Icon = item.icon;
         return (
