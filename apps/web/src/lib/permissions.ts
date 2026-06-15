@@ -1,4 +1,5 @@
 import type { MemberRole } from "@/lib/database.types";
+import { canUseRetainerCalculator } from "@/lib/retainer/access.js";
 
 /**
  * Client/server role gates that mirror the Postgres RLS helper
@@ -42,6 +43,13 @@ export function canManageCustomers(
 /** Quotations and their items (owner + manager per RLS). */
 export function canManageQuotes(role: MemberRole | null | undefined): boolean {
   return hasRole(role, ["business_owner", "manager"]);
+}
+
+/** Retainer pricing tools (business owner + business manager; super admin handled separately). */
+export function canManagePricingTools(
+  role: MemberRole | null | undefined,
+): boolean {
+  return canUseRetainerCalculator(role);
 }
 
 /** Jobs, tasks, and updates (owner + manager + employee per RLS jobs_manage_staff). */

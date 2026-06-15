@@ -6,7 +6,7 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { ShellAccountMenu, type ShellMenuLink } from "@/components/shell-account-menu";
 import { getUser, getCurrentMemberships, isSuperAdmin, requireMembership } from "@/lib/auth";
 import { ResponsiveSidebarShell } from "@/components/responsive-sidebar-shell";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { ROLE_LABELS, canManagePricingTools } from "@/lib/permissions";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -33,6 +33,7 @@ export default async function DashboardLayout({
     };
   });
   const memberRole = member.role as keyof typeof ROLE_LABELS;
+  const showRetainerCalculator = canManagePricingTools(member.role) || superAdmin;
   const accountLinks: ShellMenuLink[] = [
     { href: "/settings", label: t("businessSettings"), icon: "settings" as const },
     { href: "/billing", label: t("billing"), icon: "billing" as const },
@@ -45,7 +46,7 @@ export default async function DashboardLayout({
     <ResponsiveSidebarShell
       brandTitle="Revora"
       brandSubtitle={business.name}
-      nav={<DashboardNav />}
+      nav={<DashboardNav showRetainerCalculator={showRetainerCalculator} />}
       mobileHeaderEnd={
         user ? (
           <ShellAccountMenu
