@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ComplaintSeverity } from "@/lib/database.types";
+import { getComplaintSeverityLabel } from "@/lib/complaints";
 
 const COMPLAINT_SEVERITIES: ComplaintSeverity[] = [
   "low",
@@ -44,6 +45,7 @@ export function ComplaintSubmissionForm({
 }) {
   const [state, formAction] = useActionState(action, initial);
   const t = useTranslations("complaints.submission");
+  const locale = useLocale();
   const [accountIndex, setAccountIndex] = useState(accounts[0]?.customer_id ?? "");
   const lastMessage = useRef<string | undefined>(undefined);
 
@@ -96,12 +98,12 @@ export function ComplaintSubmissionForm({
         <Label htmlFor="severity">{t("severity")}</Label>
         <Select name="severity" defaultValue="medium">
           <SelectTrigger id="severity" className="w-full">
-            <SelectValue />
+            <SelectValue placeholder={t("severity")} />
           </SelectTrigger>
           <SelectContent>
             {COMPLAINT_SEVERITIES.map((severity) => (
               <SelectItem key={severity} value={severity}>
-                {severity}
+                {getComplaintSeverityLabel(severity, locale)}
               </SelectItem>
             ))}
           </SelectContent>

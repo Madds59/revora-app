@@ -2,9 +2,12 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 
 import { getUser, requireCustomerPortal } from "@/lib/auth";
 import type { ComplaintSeverity } from "@/lib/database.types";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type FormState = { error?: string; message?: string };
@@ -16,6 +19,42 @@ function str(formData: FormData, key: string): string {
 function optional(formData: FormData, key: string): string | undefined {
   const value = str(formData, key);
   return value === "" ? undefined : value;
+}
+
+async function recordComplaintNotification({
+  businessId,
+  customerId,
+  complaintId,
+  subject,
+  severity,
+}: {
+  businessId: string;
+  complaintId: string;
+  customerId: string;
+  severity: ComplaintSeverity;
+  subject: string;
+}) {
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("notification_events").insert({
+      business_id: businessId,
+      customer_id: customerId,
+      channel: "push",
+      template_key: "complaint_submitted",
+      payload: {
+        type: "complaint_submitted",
+        complaint_id: complaintId,
+        subject,
+        severity,
+      },
+      status: "queued",
+      scheduled_for: new Date().toISOString(),
+    });
+
+    return error;
+  } catch {
+    return null;
+  }
 }
 
 export async function createComplaint(
@@ -39,7 +78,7 @@ export async function createComplaint(
   if (!description) return { error: "Description is required." };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("complaints")
     .insert({
       business_id: account.business_id,
@@ -48,12 +87,26 @@ export async function createComplaint(
       description,
       severity,
       created_by: user?.id ?? null,
-    });
-  if (error) return { error: error.message };
+    })
+    .select("id")
+    .single();
+  if (error || !data) return { error: error?.message ?? "Could not submit complaint." };
 
+  const notificationError = await recordComplaintNotification({
+    businessId: account.business_id,
+    customerId: account.id,
+    complaintId: data.id,
+    subject,
+    severity,
+  });
+  if (notificationError) {
+    // Complaints must still be created even if notification write fails.
+  }
+
+  const locale = await getLocale();
   revalidatePath("/portal");
   revalidatePath("/portal/complaints");
-  return { message: "Complaint submitted." };
+  redirect(`/${locale}/portal/complaints`);
 }
 
 export async function addComplaintReply(
