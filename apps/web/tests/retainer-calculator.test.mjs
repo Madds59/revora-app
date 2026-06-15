@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { calculateRetainer } from "../src/lib/retainer/calculate-retainer.js";
 import { buildRetainerQuoteLine, buildRetainerQuoteNotes } from "../src/lib/retainer/quote.js";
 import { canUseRetainerCalculator } from "../src/lib/retainer/access.js";
+import { generateScenarioTiers } from "../src/lib/retainer/tiers.js";
 
 const baseInput = {
   currency: "AED",
@@ -102,6 +103,29 @@ test("retainer quote helper preserves scenario-to-quote math", () => {
   assert.match(notes.customer_notes, /Fleet maintenance retainer/);
   assert.match(notes.internal_notes, /Scenario: Fleet maintenance retainer/);
   assert.match(notes.warranty_terms, /converted from/);
+});
+
+test("scenario tiers generate Essential/Growth/Premium with shared math", () => {
+  const tiers = generateScenarioTiers(baseInput);
+  assert.deepEqual(
+    tiers.map((tier) => tier.key),
+    ["essential", "growth", "premium"],
+  );
+  // Growth keeps the base input unchanged.
+  assert.equal(tiers[1].input, baseInput);
+  // Essential softens the margin (down 0.05, floored at the minimum).
+  assert.ok(Math.abs(tiers[0].input.pricing.targetMargin - 0.3) < 1e-9);
+  // Premium upgrades SLA and lifts the margin.
+  assert.equal(tiers[2].input.slaLevel, "vip");
+  assert.ok(tiers[2].input.pricing.targetMargin > baseInput.pricing.targetMargin);
+  assert.equal(tiers[2].input.pricing.rounding, "nearest_100");
+  // Every tier recomputes a real, viable result.
+  for (const tier of tiers) {
+    assert.equal(tier.result.ok, true);
+    assert.ok(tier.result.finalMonthlyRetainer > 0);
+  }
+  // Higher target margin yields a higher customer price than Essential.
+  assert.ok(tiers[2].result.finalMonthlyRetainer >= tiers[0].result.finalMonthlyRetainer);
 });
 
 test("retainer pricing access stays owner/admin-only", () => {
