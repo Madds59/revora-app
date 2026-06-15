@@ -3,10 +3,11 @@
 import { Languages } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
-import { usePathname, getPathname, Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import { switchLocalePath } from "@/lib/locale-path.js";
 
 const OPTIONS = [
   { locale: "en", label: "EN" },
@@ -23,7 +24,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const links = useMemo(
     () =>
       OPTIONS.map((option) => {
-        const base = getPathname({ href: pathname, locale: option.locale });
+        const base = switchLocalePath(pathname, option.locale);
         return {
           ...option,
           href: query ? `${base}?${query}` : base,
