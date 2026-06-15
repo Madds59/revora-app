@@ -13,6 +13,7 @@ import {
   BarChart3,
   Bell,
   CarFront,
+  ScanSearch,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,7 +32,8 @@ type NavItem = {
     | "billing"
     | "analytics"
     | "notifications"
-    | "settings";
+    | "settings"
+    | "vehicleIntelligence";
   href: string;
   icon: LucideIcon;
   aliases?: string[];
@@ -49,6 +51,7 @@ const NAV: NavItem[] = [
   { labelKey: "analytics", href: "/analytics", icon: BarChart3 },
   { labelKey: "notifications", href: "/notifications", icon: Bell },
   { labelKey: "settings", href: "/settings", icon: Settings, aliases: ["/settings/business"] },
+  { labelKey: "vehicleIntelligence", href: "/ai", icon: ScanSearch, aliases: ["/ai/vin-decoder", "/ai/dtc-decoder", "/ai/vehicle-diagnosis"] },
 ];
 
 export function DashboardNav() {

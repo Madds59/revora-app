@@ -24,11 +24,15 @@ export default async function DashboardLayout({
   const user = await getUser();
   const memberships = await getCurrentMemberships();
   const superAdmin = await isSuperAdmin();
-  const businessOptions: BusinessOption[] = memberships.map((membership) => ({
-    id: membership.business.id,
-    label: membership.business.name,
-    detail: `${membership.business.legal_name ?? membership.business.name} · ${ROLE_LABELS[membership.member.role]}`,
-  }));
+  const businessOptions: BusinessOption[] = memberships.map((membership) => {
+    const role = membership.member.role as keyof typeof ROLE_LABELS;
+    return {
+      id: membership.business.id,
+      label: membership.business.name,
+      detail: `${membership.business.legal_name ?? membership.business.name} · ${ROLE_LABELS[role]}`,
+    };
+  });
+  const memberRole = member.role as keyof typeof ROLE_LABELS;
   const accountLinks: ShellMenuLink[] = [
     { href: "/settings", label: t("businessSettings"), icon: "settings" as const },
     { href: "/billing", label: t("billing"), icon: "billing" as const },
@@ -47,7 +51,7 @@ export default async function DashboardLayout({
           <ShellAccountMenu
             compact
             email={user.email ?? "Signed-in user"}
-            title={ROLE_LABELS[member.role]}
+            title={ROLE_LABELS[memberRole]}
             subtitle={business.name}
             links={accountLinks}
           />
@@ -64,7 +68,7 @@ export default async function DashboardLayout({
         user ? (
           <ShellAccountMenu
             email={user.email ?? "Signed-in user"}
-            title={ROLE_LABELS[member.role]}
+            title={ROLE_LABELS[memberRole]}
             subtitle={business.name}
             links={accountLinks}
           />
