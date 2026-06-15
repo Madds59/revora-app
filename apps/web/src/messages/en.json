@@ -606,6 +606,71 @@
       "stopDriving": "Stop driving"
     }
   },
+  "viSearch": {
+    "title": "VI quick search",
+    "description": "Describe a symptom, VIN, or diagnostic code and get the right workshop tool plus the next step.",
+    "queryLabel": "Search query",
+    "placeholder": "Try \"engine misfire\", a VIN, or \"P0300\"",
+    "submit": "Find the right tool",
+    "emptyState": "Enter a symptom, VIN, or diagnostic code to get a guided next step.",
+    "error": {
+      "emptyQuery": "Enter a symptom, VIN, or diagnostic code to get guidance."
+    },
+    "result": {
+      "title": "Recommended next step",
+      "queryLabel": "Query",
+      "inputsTitle": "Required inputs",
+      "nextStepsTitle": "Next steps",
+      "safetyTitle": "Safety guidance",
+      "openTool": "Open tool",
+      "ruleBased": "Rule-based guidance",
+      "aiAssisted": "AI-assisted guidance",
+      "advisory": "This guidance is advisory only and does not diagnose the fault.",
+      "stopDriving": "Stop driving safely and contact the workshop or roadside assistance."
+    },
+    "tools": {
+      "diagnosis": {
+        "title": "Vehicle diagnosis",
+        "description": "Run symptom triage, review safety, and prepare the workshop review."
+      },
+      "vin": {
+        "title": "VIN decoder",
+        "description": "Decode a VIN, verify the vehicle profile, and enrich the record."
+      },
+      "dtc": {
+        "title": "DTC decoder",
+        "description": "Interpret trouble codes and keep the safety triage verified."
+      }
+    },
+    "inputs": {
+      "vehicle": "Vehicle",
+      "symptoms": "Symptoms",
+      "warningLights": "Warning lights",
+      "drivingCondition": "Driving condition",
+      "mileage": "Mileage",
+      "vin": "VIN",
+      "codes": "Diagnostic codes"
+    },
+    "nextSteps": {
+      "captureVehicle": "Select or confirm the vehicle",
+      "captureSymptoms": "Capture the customer's description exactly",
+      "captureWarnings": "Record warning lights or messages",
+      "captureDrivingCondition": "Note when the issue happens",
+      "captureMileage": "Record the mileage if available",
+      "captureVin": "Copy the VIN before opening the decoder",
+      "captureCodes": "Copy the diagnostic codes exactly as shown",
+      "reviewSafety": "Review the safety guidance first",
+      "openDiagnosis": "Open diagnosis workspace",
+      "openVin": "Open VIN decoder",
+      "openDtc": "Open DTC decoder"
+    },
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    }
+  },
   "dashboardHome": {
     "title": "Welcome to {businessName}",
     "description": "Your operations at a glance.",

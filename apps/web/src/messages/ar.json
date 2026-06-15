@@ -606,6 +606,71 @@
       "stopDriving": "أوقف القيادة"
     }
   },
+  "viSearch": {
+    "title": "بحث سريع لذكاء المركبات",
+    "description": "صف عرضًا أو VIN أو رمزًا تشخيصيًا وسنوجهك إلى أداة الورشة المناسبة والخطوة التالية.",
+    "queryLabel": "عبارة البحث",
+    "placeholder": "جرّب \"تذبذب المحرك\" أو VIN أو \"P0300\"",
+    "submit": "إيجاد الأداة المناسبة",
+    "emptyState": "أدخل عرضًا أو VIN أو رمزًا تشخيصيًا للحصول على خطوة إرشادية.",
+    "error": {
+      "emptyQuery": "أدخل عرضًا أو VIN أو رمزًا تشخيصيًا للحصول على الإرشاد."
+    },
+    "result": {
+      "title": "الخطوة التالية المقترحة",
+      "queryLabel": "الاستعلام",
+      "inputsTitle": "المدخلات المطلوبة",
+      "nextStepsTitle": "الخطوات التالية",
+      "safetyTitle": "إرشادات السلامة",
+      "openTool": "فتح الأداة",
+      "ruleBased": "إرشاد قائم على القواعد",
+      "aiAssisted": "إرشاد بمساعدة الذكاء الاصطناعي",
+      "advisory": "هذا الإرشاد استشاري فقط ولا يشخّص العطل.",
+      "stopDriving": "أوقف القيادة بأمان وتواصل مع الورشة أو المساعدة على الطريق."
+    },
+    "tools": {
+      "diagnosis": {
+        "title": "تشخيص المركبة",
+        "description": "شغّل فرز الأعراض، وراجع السلامة، وجهّز مراجعة الورشة."
+      },
+      "vin": {
+        "title": "فك VIN",
+        "description": "فك VIN، وتحقق من ملف المركبة، وأثرِ السجل."
+      },
+      "dtc": {
+        "title": "فك DTC",
+        "description": "فسّر الرموز وحافظ على فرز السلامة موثوقًا."
+      }
+    },
+    "inputs": {
+      "vehicle": "المركبة",
+      "symptoms": "الأعراض",
+      "warningLights": "أضواء التحذير",
+      "drivingCondition": "ظرف القيادة",
+      "mileage": "عدد الكيلومترات",
+      "vin": "VIN",
+      "codes": "رموز التشخيص"
+    },
+    "nextSteps": {
+      "captureVehicle": "اختر المركبة أو أكدها",
+      "captureSymptoms": "سجّل وصف العميل كما هو",
+      "captureWarnings": "سجّل أضواء التحذير أو الرسائل",
+      "captureDrivingCondition": "دوّن متى تحدث المشكلة",
+      "captureMileage": "سجّل عدد الكيلومترات إن توفر",
+      "captureVin": "انسخ VIN قبل فتح الأداة",
+      "captureCodes": "انسخ رموز التشخيص كما هي",
+      "reviewSafety": "راجع إرشادات السلامة أولًا",
+      "openDiagnosis": "فتح مساحة التشخيص",
+      "openVin": "فتح فك VIN",
+      "openDtc": "فتح فك DTC"
+    },
+    "severity": {
+      "low": "منخفضة",
+      "medium": "متوسطة",
+      "high": "عالية",
+      "critical": "حرجة"
+    }
+  },
   "dashboardHome": {
     "title": "مرحبًا بك في {businessName}",
     "description": "إدارة عملياتك في لمحة.",

@@ -22,6 +22,10 @@ import {
   validateDtcCodes,
 } from "./dtc.js";
 import { validateVin } from "./vin.js";
+import {
+  buildVehicleIntelligenceSearchResult,
+  enrichVehicleIntelligenceSearchResult,
+} from "./search.js";
 import { buildFallbackMaintenancePlan, buildFallbackDiagnostic } from "./service";
 import { createClient } from "@/lib/supabase/server";
 import type { VehicleDtcInterpretation, VehicleVinDecode } from "./types";
@@ -53,6 +57,24 @@ export type DtcDecoderState = FormState<{
   codes: ReturnType<typeof interpretDtcCodes>;
   storedCount: number;
   vehicleId: string | null;
+}>;
+
+export type ViSearchState = FormState<{
+  aiUsed: boolean;
+  assistantSummary: string | null;
+  model: string | null;
+  nextSteps: string[];
+  query: string;
+  requiredInputs: string[];
+  route: string;
+  safety: {
+    matchedTerms: string[];
+    reason: string;
+    severity: "low" | "medium" | "high" | "critical";
+    stopDrivingWarning: boolean;
+    workshopRequired: boolean;
+  };
+  tool: "diagnosis" | "vin" | "dtc";
 }>;
 
 export type MaintenanceState = FormState<{
@@ -555,4 +577,42 @@ export async function uploadVehicleMediaAction(
       vehicleId,
     },
   };
+}
+
+function localeFromFormData(formData: FormData) {
+  return String(formData.get("locale") ?? "").toLowerCase() === "ar" ? "ar" : "en";
+}
+
+function emptySearchError(locale: "en" | "ar") {
+  return locale === "ar"
+    ? "اكتب عرضًا أو VIN أو رمزًا تشخيصيًا للحصول على الإرشاد."
+    : "Enter a symptom, VIN, or diagnostic code to get guidance.";
+}
+
+export async function routeVehicleIntelligenceSearchAction(
+  _prev: ViSearchState,
+  formData: FormData,
+): Promise<ViSearchState> {
+  await requireMembership();
+  const locale = localeFromFormData(formData);
+  const query = String(formData.get("query") ?? "").trim();
+  if (!query) {
+    return { error: emptySearchError(locale) };
+  }
+
+  const baseResult = buildVehicleIntelligenceSearchResult(query);
+  if (!baseResult) {
+    return { error: emptySearchError(locale) };
+  }
+
+  const enrichedResult = await enrichVehicleIntelligenceSearchResult({
+    baseResult,
+    locale,
+  });
+
+  if (!enrichedResult) {
+    return { error: emptySearchError(locale) };
+  }
+
+  return { result: enrichedResult };
 }
