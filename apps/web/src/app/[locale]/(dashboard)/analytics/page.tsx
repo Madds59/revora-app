@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import { DateRange, withinDateRange } from "@/lib/filtering";
 import type {
   Complaint,
   Customer,
+  BusinessRating,
   Job,
   Quotation,
   Subscription,
@@ -30,6 +32,7 @@ import {
   COMPLAINT_STATUS_LABELS,
   COMPLAINT_STATUS_VARIANT,
 } from "@/lib/complaints";
+import { summarizeRatings } from "@/lib/ratings";
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 
 type SubscriptionRow = Pick<
@@ -209,12 +212,14 @@ export default async function AnalyticsPage({
   const canSeeBilling = canManageBusiness(member.role);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const period = parsePeriod(resolvedSearchParams?.period);
+  const ratingT = await getTranslations("ratings");
 
   const [
     { data: customerRows, error: customerError },
     { data: jobRows, error: jobError },
     { data: quoteRows, error: quoteError },
     { data: complaintRows, error: complaintError },
+    { data: ratingRows },
     { data: documentRows, error: documentError },
     { data: subscriptionRows, error: subscriptionError },
     { data: revenueSummaryData, error: revenueSummaryError },
@@ -240,6 +245,11 @@ export default async function AnalyticsPage({
     supabase
       .from("complaints")
       .select("id, subject, status, severity, created_at, resolved_at, escalated_at")
+      .eq("business_id", business.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("business_ratings")
+      .select("rating")
       .eq("business_id", business.id)
       .order("created_at", { ascending: false }),
     supabase
@@ -371,6 +381,9 @@ export default async function AnalyticsPage({
       (complaint) => toMonthKey(complaint.created_at) === point.key,
     ).length,
   }));
+  const ratingSummary = summarizeRatings(
+    (ratingRows ?? []) as Array<Pick<BusinessRating, "rating">>,
+  );
 
   const recentJobs = periodJobs.slice(0, 5);
   const totalQuoteValue = periodQuotes.reduce((sum, quote) => sum + quote.total, 0);
@@ -559,6 +572,19 @@ export default async function AnalyticsPage({
                 : "—"
             }
             helper={revenueSyncReady ? "Paid invoices only" : "Awaiting invoice sync"}
+          />
+          <MetricCard
+            label={ratingT("summary.title")}
+            value={
+              ratingSummary.count > 0
+                ? `${ratingSummary.roundedAverage.toFixed(1)} / 5`
+                : "—"
+            }
+            helper={
+              ratingSummary.count > 0
+                ? ratingT("summary.helper", { count: ratingSummary.count })
+                : ratingT("summary.empty")
+            }
           />
         </div>
 
