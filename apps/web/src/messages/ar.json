@@ -191,6 +191,10 @@
       "description": "الوصف",
       "submit": "إرسال الشكوى"
     },
+    "complaintForm": {
+      "linkedAccount": "الحساب المرتبط",
+      "unknownLinkedAccount": "حساب مرتبط غير معروف"
+    },
     "management": {
       "status": "الحالة",
       "severity": "درجة الخطورة",

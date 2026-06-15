@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { SubmitButton } from "@/components/submit-button";
@@ -18,6 +18,10 @@ import type {
   ComplaintSeverity,
   ComplaintStatus,
 } from "@/lib/database.types";
+import {
+  getComplaintSeverityLabel,
+  getComplaintStatusLabel,
+} from "@/lib/complaints";
 
 const COMPLAINT_STATUSES: ComplaintStatus[] = [
   "open",
@@ -50,9 +54,10 @@ export function ComplaintManagementForm({
   complaintId: string;
   currentSeverity: ComplaintSeverity;
   currentStatus: ComplaintStatus;
-}) {
+  }) {
   const [state, formAction] = useActionState(action, initial);
   const t = useTranslations("complaints.management");
+  const locale = useLocale();
   const lastMessage = useRef<string | undefined>(undefined);
   const statusOptions = useMemo(() => COMPLAINT_STATUSES, []);
 
@@ -75,12 +80,12 @@ export function ComplaintManagementForm({
           <Label htmlFor="status">{t("status")}</Label>
           <Select name="status" defaultValue={currentStatus}>
             <SelectTrigger id="status" className="w-full">
-              <SelectValue />
+              <SelectValue placeholder={t("status")} />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {status}
+                  {getComplaintStatusLabel(status, locale)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -91,12 +96,12 @@ export function ComplaintManagementForm({
           <Label htmlFor="severity">{t("severity")}</Label>
           <Select name="severity" defaultValue={currentSeverity}>
             <SelectTrigger id="severity" className="w-full">
-              <SelectValue />
+              <SelectValue placeholder={t("severity")} />
             </SelectTrigger>
             <SelectContent>
               {COMPLAINT_SEVERITIES.map((severity) => (
                 <SelectItem key={severity} value={severity}>
-                  {severity}
+                  {getComplaintSeverityLabel(severity, locale)}
                 </SelectItem>
               ))}
             </SelectContent>

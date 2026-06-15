@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
@@ -28,10 +28,10 @@ import { canManageComplaints } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { Complaint, Customer, Profile } from "@/lib/database.types";
 import {
-  COMPLAINT_SEVERITY_LABELS,
   COMPLAINT_SEVERITY_VARIANT,
-  COMPLAINT_STATUS_LABELS,
   COMPLAINT_STATUS_VARIANT,
+  getComplaintSeverityLabel,
+  getComplaintStatusLabel,
 } from "@/lib/complaints";
 
 type ComplaintListItem = Complaint & {
@@ -68,6 +68,7 @@ function ComplaintEmptyState({
 
 export default async function ComplaintsPage() {
   const t = await getTranslations("dashboardComplaints");
+  const locale = await getLocale();
   const { member, business } = await requireMembership();
   if (!canManageComplaints(member.role)) {
     return (
@@ -206,10 +207,10 @@ export default async function ComplaintsPage() {
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
-                            {COMPLAINT_STATUS_LABELS[complaint.status]}
+                            {getComplaintStatusLabel(complaint.status, locale)}
                           </Badge>
                           <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
-                            {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                            {getComplaintSeverityLabel(complaint.severity, locale)}
                           </Badge>
                           <span>{formatDate(complaint.updated_at)}</span>
                         </div>
@@ -256,12 +257,12 @@ export default async function ComplaintsPage() {
                           </TableCell>
                           <TableCell className="align-top">
                             <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
-                              {COMPLAINT_STATUS_LABELS[complaint.status]}
+                              {getComplaintStatusLabel(complaint.status, locale)}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden align-top lg:table-cell">
                             <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
-                              {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                              {getComplaintSeverityLabel(complaint.severity, locale)}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden align-top text-muted-foreground xl:table-cell">

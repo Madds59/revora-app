@@ -16,18 +16,20 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { getLocale } from "next-intl/server";
 import type { Business, Complaint } from "@/lib/database.types";
 import {
-  COMPLAINT_SEVERITY_LABELS,
   COMPLAINT_SEVERITY_VARIANT,
-  COMPLAINT_STATUS_LABELS,
   COMPLAINT_STATUS_VARIANT,
+  getComplaintSeverityLabel,
+  getComplaintStatusLabel,
 } from "@/lib/complaints";
 
 type ComplaintRow = Complaint & { business_name: string | null };
 
 export default async function PortalComplaintsPage() {
   const t = await getTranslations("portalComplaints");
+  const locale = await getLocale();
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
@@ -111,10 +113,10 @@ export default async function PortalComplaintsPage() {
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
-                            {COMPLAINT_STATUS_LABELS[complaint.status]}
+                            {getComplaintStatusLabel(complaint.status, locale)}
                           </Badge>
                           <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
-                            {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                            {getComplaintSeverityLabel(complaint.severity, locale)}
                           </Badge>
                         </div>
                       }
@@ -146,12 +148,12 @@ export default async function PortalComplaintsPage() {
                           <TableCell>{complaint.business_name ?? t("fallback.none")}</TableCell>
                           <TableCell>
                             <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
-                              {COMPLAINT_STATUS_LABELS[complaint.status]}
+                              {getComplaintStatusLabel(complaint.status, locale)}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant={COMPLAINT_SEVERITY_VARIANT[complaint.severity]}>
-                              {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                              {getComplaintSeverityLabel(complaint.severity, locale)}
                             </Badge>
                           </TableCell>
                         </TableRow>
