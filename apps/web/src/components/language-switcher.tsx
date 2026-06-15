@@ -3,7 +3,8 @@
 import { Languages } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
-import { Link, usePathname } from "@/i18n/navigation";
+import Link from "next/link";
+import { usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";

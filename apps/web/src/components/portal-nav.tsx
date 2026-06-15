@@ -1,6 +1,7 @@
 "use client";
 
 import { Link, usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   Home,
   FileText,
@@ -14,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
 
 type NavItem = {
   labelKey: "home" | "vehicles" | "quotes" | "jobs" | "complaints" | "documents" | "settings" | "memberships";
