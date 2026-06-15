@@ -8,6 +8,7 @@ import {
   Wrench,
   Files,
   Settings,
+  CarFront,
   type LucideIcon,
 } from "lucide-react";
 
@@ -15,13 +16,14 @@ import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 type NavItem = {
-  labelKey: "home" | "quotes" | "jobs" | "complaints" | "documents" | "settings";
+  labelKey: "home" | "vehicles" | "quotes" | "jobs" | "complaints" | "documents" | "settings";
   href: string;
   icon: LucideIcon;
 };
 
 const NAV: NavItem[] = [
   { labelKey: "home", href: "/portal", icon: Home },
+  { labelKey: "vehicles", href: "/portal/vehicles", icon: CarFront },
   { labelKey: "quotes", href: "/portal/quotes", icon: FileText },
   { labelKey: "jobs", href: "/portal/jobs", icon: Wrench },
   { labelKey: "complaints", href: "/portal/complaints", icon: MessageSquare },

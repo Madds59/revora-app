@@ -18,6 +18,13 @@
 - `/admin/subscriptions`
 - `/admin/audit-logs`
 - `/admin/notifications`
+- `/ai`
+- `/ai/vin-decoder`
+- `/ai/dtc-decoder`
+- `/ai/vehicle-diagnosis`
+- `/portal/vehicles`
+- `/portal/vehicles/[id]`
+- `/portal/ai/health-check`
 
 ## Manual Checks
 
@@ -55,6 +62,10 @@
   through `platform_admins`.
 - Confirm `owner@vrf.test` / `password1234` remain smoke-test-only credentials
   and are never used as production admin access.
+- Confirm Vehicle Intelligence screens show stop-driving warnings for critical
+  symptoms and do not expose unsafe DIY instructions.
+- Confirm quote draft generation remains advisor-only and never finalizes an
+  official quotation automatically.
 
 ## Automated Checks
 

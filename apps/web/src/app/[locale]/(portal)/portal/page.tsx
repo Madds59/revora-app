@@ -40,6 +40,7 @@ type ComplaintRow = Complaint & { business_name: string | null };
 
 export default async function PortalHomePage() {
   const t = await getTranslations("portalHome");
+  const ai = await getTranslations("vehicleIntelligence");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
@@ -135,6 +136,22 @@ export default async function PortalHomePage() {
             </Card>
           ))}
         </div>
+
+        <Card className="border-primary/20 overflow-hidden">
+          <div aria-hidden className="uae-flag-stripe h-1 w-full" />
+          <CardHeader>
+            <CardTitle>{ai("portal.vehiclesTitle")}</CardTitle>
+            <CardDescription>{ai("portal.vehiclesDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            <Link href="/portal/vehicles" className={buttonVariants({ variant: "secondary" })}>
+              {ai("portal.viewVehicle")}
+            </Link>
+            <Link href="/portal/ai/health-check" className={buttonVariants()}>
+              {ai("portal.healthCheckAction")}
+            </Link>
+          </CardContent>
+        </Card>
 
         {pendingQuotes.length > 0 && (
           <Card className="border-primary/25 overflow-hidden">
