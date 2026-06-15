@@ -25,6 +25,7 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { formatCurrency } from "@/lib/money";
 import { formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
+import { BusinessRatingForm } from "@/components/business-rating-form";
 import type { Approval, Quotation, QuotationItem } from "@/lib/database.types";
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 
@@ -257,6 +258,11 @@ export default async function PortalQuoteDetailPage({
             )}
           </CardContent>
         </Card>
+
+        <BusinessRatingForm
+          businessId={quote.business_id}
+          customerId={quote.customer_id}
+        />
       </div>
     </>
   );

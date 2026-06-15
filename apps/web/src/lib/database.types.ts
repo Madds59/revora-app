@@ -854,6 +854,51 @@ export type Database = {
           },
         ]
       }
+      business_ratings: {
+        Row: {
+          business_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          rating: number
+          review: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          rating: number
+          review?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          rating?: number
+          review?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_ratings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_ratings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           branding: Json
@@ -3411,6 +3456,10 @@ export type BusinessInvitationUpdate = AppTables["business_invitations"]["Update
 export type BusinessMember = AppTables["business_members"]["Row"];
 export type BusinessMemberInsert = AppTables["business_members"]["Insert"];
 export type BusinessMemberUpdate = AppTables["business_members"]["Update"];
+
+export type BusinessRating = AppTables["business_ratings"]["Row"];
+export type BusinessRatingInsert = AppTables["business_ratings"]["Insert"];
+export type BusinessRatingUpdate = AppTables["business_ratings"]["Update"];
 
 export type Complaint = AppTables["complaints"]["Row"];
 export type ComplaintInsert = AppTables["complaints"]["Insert"];
