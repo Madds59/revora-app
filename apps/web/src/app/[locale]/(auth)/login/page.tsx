@@ -11,6 +11,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function LoginPage() {
-  return <LoginClient />;
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ reset?: string }>;
+}) {
+  const params = searchParams ? await searchParams : undefined;
+  return <LoginClient passwordResetSuccess={params?.reset === "success"} />;
 }

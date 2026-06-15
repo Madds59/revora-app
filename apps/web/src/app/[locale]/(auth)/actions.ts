@@ -2,9 +2,13 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { isAccountIntent, type AccountIntent } from "@/lib/account-intent";
+import {
+  buildLoginPath,
+  buildResetPasswordPath,
+} from "@/lib/auth-links";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = { error?: string; message?: string };
@@ -88,6 +92,45 @@ export async function signInWithMagicLink(
 
 export async function signOut() {
   const supabase = await createClient();
+  const locale = await getLocale();
   await supabase.auth.signOut();
-  redirect("/login");
+  redirect(buildLoginPath(locale as "en" | "ar"));
+}
+
+export async function requestPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const t = await getTranslations("auth.actions");
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: t("emailRequired") };
+
+  const supabase = await createClient();
+  const locale = (await getLocale()) as "en" | "ar";
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: await callbackUrl(buildResetPasswordPath(locale)),
+  });
+  if (error) return { error: error.message };
+
+  return { message: t("passwordResetSent") };
+}
+
+export async function updatePassword(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const t = await getTranslations("auth.actions");
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirm_password") ?? "");
+  if (!password) return { error: t("passwordRequired") };
+  if (password.length < 8) return { error: t("passwordMin") };
+  if (password !== confirmPassword) return { error: t("passwordMismatch") };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+
+  const locale = (await getLocale()) as "en" | "ar";
+  await supabase.auth.signOut();
+  redirect(`${buildLoginPath(locale)}?reset=success`);
 }
