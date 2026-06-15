@@ -34,6 +34,78 @@
       "noEvidence": "No evidence uploaded yet."
     }
   },
+  "bundles": {
+    "manageTitle": "Membership bundles",
+    "manageSubtitle": "Create and publish recurring service tiers for your customers.",
+    "empty": "No bundles yet. Generate tiers from a saved retainer scenario or add one manually.",
+    "backHome": "Back to dashboard",
+    "actions": {
+      "add": "Add bundle",
+      "edit": "Edit",
+      "delete": "Delete",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "generate": "Generate tiers from scenario",
+      "createQuote": "Create quote",
+      "save": "Save bundle",
+      "cancel": "Cancel"
+    },
+    "fields": {
+      "name": "Name",
+      "tier": "Tier",
+      "description": "Description",
+      "currency": "Currency",
+      "billingCycle": "Billing cycle",
+      "price": "Monthly price",
+      "includedVisits": "Included visits",
+      "includedLaborHours": "Included labor hours",
+      "sla": "SLA level",
+      "status": "Status",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "tiers": {
+      "essential": "Essential",
+      "growth": "Growth",
+      "premium": "Premium",
+      "custom": "Custom"
+    },
+    "slaLabels": {
+      "standard": "Standard",
+      "priority": "Priority",
+      "vip": "VIP"
+    },
+    "generate": {
+      "heading": "Generate from scenario",
+      "description": "Turn a saved retainer scenario into Essential, Growth, and Premium bundles.",
+      "selectScenario": "Select a scenario",
+      "noScenarios": "Save a retainer scenario first to generate tiers."
+    },
+    "quote": {
+      "heading": "Create a quote",
+      "selectCustomer": "Select a customer",
+      "selectBundle": "Select a bundle"
+    },
+    "portal": {
+      "title": "Membership plans",
+      "subtitle": "Choose a recurring service plan from your workshop.",
+      "empty": "No plans are published yet.",
+      "perMonth": "/ month",
+      "perQuarter": "/ quarter",
+      "perYear": "/ year",
+      "select": "Select this plan",
+      "includedVisits": "{count} included visits",
+      "sla": "SLA: {level}"
+    },
+    "states": {
+      "denied": "You do not have access to pricing tools.",
+      "saved": "Bundle saved.",
+      "deleted": "Bundle deleted.",
+      "generated": "Tiers generated from scenario.",
+      "selected": "Your interest has been registered. The workshop will prepare your quote.",
+      "error": "Something went wrong. Try again."
+    }
+  },
   "forms": {
     "customer": {
       "fullName": "Full name",
@@ -190,6 +262,8 @@
     "settings": "Settings",
     "vehicleIntelligence": "Vehicle Intelligence",
     "retainerCalculator": "Retainer calculator",
+    "membershipBundles": "Membership bundles",
+    "memberships": "Membership plans",
     "soon": "soon",
     "overview": "Overview",
     "tenants": "Tenants",

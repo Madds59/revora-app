@@ -34,6 +34,78 @@
       "noEvidence": "لم يتم رفع أي أدلة بعد."
     }
   },
+  "bundles": {
+    "manageTitle": "باقات العضوية",
+    "manageSubtitle": "أنشئ وانشر باقات خدمات متكررة لعملائك.",
+    "empty": "لا توجد باقات بعد. أنشئ الباقات من سيناريو عقد محفوظ أو أضف واحدة يدوياً.",
+    "backHome": "العودة إلى لوحة التحكم",
+    "actions": {
+      "add": "إضافة باقة",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "publish": "نشر",
+      "unpublish": "إلغاء النشر",
+      "generate": "إنشاء باقات من سيناريو",
+      "createQuote": "إنشاء عرض سعر",
+      "save": "حفظ الباقة",
+      "cancel": "إلغاء"
+    },
+    "fields": {
+      "name": "الاسم",
+      "tier": "الفئة",
+      "description": "الوصف",
+      "currency": "العملة",
+      "billingCycle": "دورة الفوترة",
+      "price": "السعر الشهري",
+      "includedVisits": "الزيارات المشمولة",
+      "includedLaborHours": "ساعات العمل المشمولة",
+      "sla": "مستوى اتفاقية الخدمة",
+      "status": "الحالة",
+      "published": "منشور",
+      "draft": "مسودة"
+    },
+    "tiers": {
+      "essential": "أساسية",
+      "growth": "نمو",
+      "premium": "متميزة",
+      "custom": "مخصصة"
+    },
+    "slaLabels": {
+      "standard": "قياسي",
+      "priority": "أولوية",
+      "vip": "كبار الشخصيات"
+    },
+    "generate": {
+      "heading": "إنشاء من سيناريو",
+      "description": "حوّل سيناريو عقد محفوظاً إلى باقات أساسية ونمو ومتميزة.",
+      "selectScenario": "اختر سيناريو",
+      "noScenarios": "احفظ سيناريو عقد أولاً لإنشاء الباقات."
+    },
+    "quote": {
+      "heading": "إنشاء عرض سعر",
+      "selectCustomer": "اختر عميلاً",
+      "selectBundle": "اختر باقة"
+    },
+    "portal": {
+      "title": "باقات العضوية",
+      "subtitle": "اختر باقة خدمة متكررة من ورشتك.",
+      "empty": "لا توجد باقات منشورة بعد.",
+      "perMonth": "/ شهرياً",
+      "perQuarter": "/ ربع سنوي",
+      "perYear": "/ سنوياً",
+      "select": "اختر هذه الباقة",
+      "includedVisits": "{count} زيارة مشمولة",
+      "sla": "اتفاقية الخدمة: {level}"
+    },
+    "states": {
+      "denied": "ليس لديك صلاحية الوصول إلى أدوات التسعير.",
+      "saved": "تم حفظ الباقة.",
+      "deleted": "تم حذف الباقة.",
+      "generated": "تم إنشاء الباقات من السيناريو.",
+      "selected": "تم تسجيل اهتمامك. ستقوم الورشة بإعداد عرض السعر الخاص بك.",
+      "error": "حدث خطأ ما. حاول مرة أخرى."
+    }
+  },
   "forms": {
     "customer": {
       "fullName": "الاسم الكامل",
@@ -190,6 +262,8 @@
     "settings": "الإعدادات",
     "vehicleIntelligence": "ذكاء المركبات",
     "retainerCalculator": "حاسبة الاحتفاظ",
+    "membershipBundles": "باقات العضوية",
+    "memberships": "باقات العضوية",
     "soon": "قريبًا",
     "overview": "نظرة عامة",
     "tenants": "العملاء",

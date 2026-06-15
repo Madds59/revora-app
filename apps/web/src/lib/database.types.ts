@@ -2721,6 +2721,91 @@ export type Database = {
           },
         ]
       }
+      membership_bundles: {
+        Row: {
+          billing_cycle: string
+          business_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          included_labor_hours: number
+          included_visits: number
+          is_published: boolean
+          name: string
+          price: number
+          scenario_id: string | null
+          sla_level: string
+          sort_order: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          included_labor_hours?: number
+          included_visits?: number
+          is_published?: boolean
+          name: string
+          price?: number
+          scenario_id?: string | null
+          sla_level?: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          included_labor_hours?: number
+          included_visits?: number
+          is_published?: boolean
+          name?: string
+          price?: number
+          scenario_id?: string | null
+          sla_level?: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_bundles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_bundles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_bundles_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "retainer_pricing_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retainer_pricing_scenarios: {
         Row: {
           billing_cycle: string
