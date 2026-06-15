@@ -14,6 +14,7 @@ import {
 import { requireMembership } from "@/lib/auth";
 import { canManageComplaints } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { getLocale } from "next-intl/server";
 import type {
   Complaint,
   ComplaintMessage,
@@ -21,9 +22,11 @@ import type {
   Profile,
 } from "@/lib/database.types";
 import {
-  COMPLAINT_SEVERITY_LABELS,
+  getComplaintSeverityLabel,
+  getComplaintStatusLabel,
+} from "@/lib/complaints";
+import {
   COMPLAINT_SEVERITY_VARIANT,
-  COMPLAINT_STATUS_LABELS,
   COMPLAINT_STATUS_VARIANT,
 } from "@/lib/complaints";
 
@@ -84,6 +87,7 @@ export default async function ComplaintDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const locale = await getLocale();
   const { member, business } = await requireMembership();
   if (!canManageComplaints(member.role)) notFound();
 
@@ -207,14 +211,14 @@ export default async function ComplaintDetailPage({
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 <Badge variant={COMPLAINT_STATUS_VARIANT[typedComplaint.status]}>
-                  {COMPLAINT_STATUS_LABELS[typedComplaint.status]}
+                  {getComplaintStatusLabel(typedComplaint.status, locale)}
                 </Badge>
                 <Badge variant={COMPLAINT_SEVERITY_VARIANT[typedComplaint.severity]}>
-                  {COMPLAINT_SEVERITY_LABELS[typedComplaint.severity]}
+                  {getComplaintSeverityLabel(typedComplaint.severity, locale)}
                 </Badge>
                 {typedComplaint.assignee_name && (
                   <Badge variant="outline">
-                    Assigned to {typedComplaint.assignee_name}
+                    {locale === "ar" ? `مُسندة إلى ${typedComplaint.assignee_name}` : `Assigned to ${typedComplaint.assignee_name}`}
                   </Badge>
                 )}
               </div>
@@ -224,12 +228,12 @@ export default async function ComplaintDetailPage({
               </p>
 
               <dl className="grid gap-4 sm:grid-cols-2">
-                <ComplaintMeta label="Customer" value={typedComplaint.customer_name ?? "—"} />
-                <ComplaintMeta label="Customer email" value={typedComplaint.customer_email ?? "—"} />
-                <ComplaintMeta label="Customer phone" value={typedComplaint.customer_phone ?? "—"} />
-                <ComplaintMeta label="Created" value={formatDate(typedComplaint.created_at)} />
-                <ComplaintMeta label="Resolved" value={formatDate(typedComplaint.resolved_at)} />
-                <ComplaintMeta label="Escalated" value={formatDate(typedComplaint.escalated_at)} />
+                <ComplaintMeta label={locale === "ar" ? "العميل" : "Customer"} value={typedComplaint.customer_name ?? "—"} />
+                <ComplaintMeta label={locale === "ar" ? "البريد الإلكتروني للعميل" : "Customer email"} value={typedComplaint.customer_email ?? "—"} />
+                <ComplaintMeta label={locale === "ar" ? "هاتف العميل" : "Customer phone"} value={typedComplaint.customer_phone ?? "—"} />
+                <ComplaintMeta label={locale === "ar" ? "تاريخ الإنشاء" : "Created"} value={formatDate(typedComplaint.created_at)} />
+                <ComplaintMeta label={locale === "ar" ? "تم الحل" : "Resolved"} value={formatDate(typedComplaint.resolved_at)} />
+                <ComplaintMeta label={locale === "ar" ? "تم التصعيد" : "Escalated"} value={formatDate(typedComplaint.escalated_at)} />
               </dl>
             </div>
 

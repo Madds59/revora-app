@@ -1,14 +1,33 @@
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireCustomerPortal } from "@/lib/auth";
 import { ComplaintSubmissionForm } from "@/components/complaint-submission-form";
-import Link from "next/link";
 
 import { createComplaint } from "../../actions";
 
 export default async function NewComplaintPage() {
   const { accounts } = await requireCustomerPortal();
+  const t = await getTranslations("complaints");
+
+  function linkedAccountLabel(account: {
+    business?: { name?: string | null } | null;
+    email?: string | null;
+    full_name?: string | null;
+  }) {
+    const businessName = account.business?.name?.trim();
+    const customerName = account.full_name?.trim();
+    const email = account.email?.trim();
+    if (businessName && customerName) return `${businessName} · ${customerName}`;
+    if (businessName && email) return `${businessName} · ${email}`;
+    if (customerName) return customerName;
+    if (email) return email;
+    if (businessName) return `${businessName} · ${t("complaintForm.linkedAccount")}`;
+    return t("complaintForm.unknownLinkedAccount");
+  }
 
   return (
     <>
@@ -38,7 +57,7 @@ export default async function NewComplaintPage() {
                 accounts={accounts.map((account) => ({
                   customer_id: account.id,
                   business_id: account.business_id,
-                  label: `${account.business?.name ?? "Business"} · ${account.full_name}`,
+                  label: linkedAccountLabel(account),
                 }))}
               />
             )}

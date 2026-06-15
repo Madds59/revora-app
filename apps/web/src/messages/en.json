@@ -191,6 +191,10 @@
       "description": "Description",
       "submit": "Submit complaint"
     },
+    "complaintForm": {
+      "linkedAccount": "Linked account",
+      "unknownLinkedAccount": "Unknown linked account"
+    },
     "management": {
       "status": "Status",
       "severity": "Severity",
