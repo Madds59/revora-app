@@ -97,7 +97,7 @@ function currentPlanInterval(
   plan: BillingPlanCatalogRow | null | undefined,
 ) {
   if (!subscription || !plan) return "Unavailable";
-  const priceIds = new Set(subscription.items.map((item) => item.stripe_price_id));
+  const priceIds = new Set(subscription.items.map((item: SubscriptionItem) => item.stripe_price_id));
   if (plan.stripe_price_id_monthly && priceIds.has(plan.stripe_price_id_monthly)) return "monthly";
   if (plan.stripe_price_id_yearly && priceIds.has(plan.stripe_price_id_yearly)) return "yearly";
   return "unknown";
@@ -139,7 +139,7 @@ export default async function BillingPage() {
     : { data: [] as SubscriptionItem[] };
 
   const itemMap = new Map<string, SubscriptionItem[]>();
-  (itemRows ?? []).forEach((item) => {
+  (itemRows ?? []).forEach((item: SubscriptionItem) => {
     const existing = itemMap.get(item.subscription_id) ?? [];
     existing.push(item);
     itemMap.set(item.subscription_id, existing);
@@ -734,7 +734,7 @@ export default async function BillingPage() {
             {current && current.items.length > 0 ? (
               <>
                 <MobileDataList
-                  items={current.items}
+                  items={current.items as SubscriptionItem[]}
                   empty={null}
                   getKey={(item) => item.id}
                   renderItem={(item) => (
@@ -756,7 +756,7 @@ export default async function BillingPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {current.items.map((item) => (
+                      {current.items.map((item: SubscriptionItem) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.product_key}</TableCell>
                           <TableCell className="text-muted-foreground">

@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -1577,6 +1572,91 @@ export type Database = {
           },
         ]
       }
+      membership_bundles: {
+        Row: {
+          billing_cycle: string
+          business_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          included_labor_hours: number
+          included_visits: number
+          is_published: boolean
+          name: string
+          price: number
+          scenario_id: string | null
+          sla_level: string
+          sort_order: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          included_labor_hours?: number
+          included_visits?: number
+          is_published?: boolean
+          name: string
+          price?: number
+          scenario_id?: string | null
+          sla_level?: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          included_labor_hours?: number
+          included_visits?: number
+          is_published?: boolean
+          name?: string
+          price?: number
+          scenario_id?: string | null
+          sla_level?: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_bundles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_bundles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_bundles_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "retainer_pricing_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_events: {
         Row: {
           business_id: string
@@ -2102,6 +2182,119 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retainer_pricing_scenarios: {
+        Row: {
+          billing_cycle: string
+          business_id: string
+          calculated_results: Json
+          contract_length_months: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string | null
+          customer_type: string
+          description: string | null
+          expected_monthly_visits: number
+          id: string
+          labor_items: Json
+          number_of_vehicles: number
+          overhead_items: Json
+          parts_items: Json
+          pricing_settings: Json
+          quote_id: string | null
+          risk_settings: Json
+          service_category: string
+          sla_level: string
+          status: string
+          title: string
+          tool_items: Json
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          business_id: string
+          calculated_results?: Json
+          contract_length_months?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string | null
+          customer_type: string
+          description?: string | null
+          expected_monthly_visits?: number
+          id?: string
+          labor_items?: Json
+          number_of_vehicles?: number
+          overhead_items?: Json
+          parts_items?: Json
+          pricing_settings?: Json
+          quote_id?: string | null
+          risk_settings?: Json
+          service_category: string
+          sla_level?: string
+          status?: string
+          title: string
+          tool_items?: Json
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          business_id?: string
+          calculated_results?: Json
+          contract_length_months?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string | null
+          customer_type?: string
+          description?: string | null
+          expected_monthly_visits?: number
+          id?: string
+          labor_items?: Json
+          number_of_vehicles?: number
+          overhead_items?: Json
+          parts_items?: Json
+          pricing_settings?: Json
+          quote_id?: string | null
+          risk_settings?: Json
+          service_category?: string
+          sla_level?: string
+          status?: string
+          title?: string
+          tool_items?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retainer_pricing_scenarios_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retainer_pricing_scenarios_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retainer_pricing_scenarios_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retainer_pricing_scenarios_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
             referencedColumns: ["id"]
           },
         ]
@@ -2721,204 +2914,6 @@ export type Database = {
           },
         ]
       }
-      membership_bundles: {
-        Row: {
-          billing_cycle: string
-          business_id: string
-          created_at: string
-          created_by: string | null
-          currency: string
-          description: string | null
-          features: Json
-          id: string
-          included_labor_hours: number
-          included_visits: number
-          is_published: boolean
-          name: string
-          price: number
-          scenario_id: string | null
-          sla_level: string
-          sort_order: number
-          tier: string
-          updated_at: string
-        }
-        Insert: {
-          billing_cycle?: string
-          business_id: string
-          created_at?: string
-          created_by?: string | null
-          currency?: string
-          description?: string | null
-          features?: Json
-          id?: string
-          included_labor_hours?: number
-          included_visits?: number
-          is_published?: boolean
-          name: string
-          price?: number
-          scenario_id?: string | null
-          sla_level?: string
-          sort_order?: number
-          tier?: string
-          updated_at?: string
-        }
-        Update: {
-          billing_cycle?: string
-          business_id?: string
-          created_at?: string
-          created_by?: string | null
-          currency?: string
-          description?: string | null
-          features?: Json
-          id?: string
-          included_labor_hours?: number
-          included_visits?: number
-          is_published?: boolean
-          name?: string
-          price?: number
-          scenario_id?: string | null
-          sla_level?: string
-          sort_order?: number
-          tier?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "membership_bundles_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "membership_bundles_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "membership_bundles_scenario_id_fkey"
-            columns: ["scenario_id"]
-            isOneToOne: false
-            referencedRelation: "retainer_pricing_scenarios"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      retainer_pricing_scenarios: {
-        Row: {
-          billing_cycle: string
-          business_id: string
-          calculated_results: Json
-          contract_length_months: number
-          created_at: string
-          created_by: string | null
-          customer_id: string | null
-          customer_type: string
-          currency: string
-          description: string | null
-          expected_monthly_visits: number
-          id: string
-          labor_items: Json
-          overhead_items: Json
-          parts_items: Json
-          pricing_settings: Json
-          quote_id: string | null
-          risk_settings: Json
-          service_category: string
-          sla_level: string
-          status: string
-          title: string
-          tool_items: Json
-          updated_at: string
-          number_of_vehicles: number
-        }
-        Insert: {
-          billing_cycle?: string
-          business_id: string
-          calculated_results?: Json
-          contract_length_months?: number
-          created_at?: string
-          created_by?: string | null
-          customer_id?: string | null
-          customer_type: string
-          currency?: string
-          description?: string | null
-          expected_monthly_visits?: number
-          id?: string
-          labor_items?: Json
-          overhead_items?: Json
-          parts_items?: Json
-          pricing_settings?: Json
-          quote_id?: string | null
-          risk_settings?: Json
-          service_category: string
-          sla_level?: string
-          status?: string
-          title: string
-          tool_items?: Json
-          updated_at?: string
-          number_of_vehicles?: number
-        }
-        Update: {
-          billing_cycle?: string
-          business_id?: string
-          calculated_results?: Json
-          contract_length_months?: number
-          created_at?: string
-          created_by?: string | null
-          customer_id?: string | null
-          customer_type?: string
-          currency?: string
-          description?: string | null
-          expected_monthly_visits?: number
-          id?: string
-          labor_items?: Json
-          overhead_items?: Json
-          parts_items?: Json
-          pricing_settings?: Json
-          quote_id?: string | null
-          risk_settings?: Json
-          service_category?: string
-          sla_level?: string
-          status?: string
-          title?: string
-          tool_items?: Json
-          updated_at?: string
-          number_of_vehicles?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "retainer_pricing_scenarios_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "retainer_pricing_scenarios_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "retainer_pricing_scenarios_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "retainer_pricing_scenarios_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "quotations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -3378,34 +3373,119 @@ export const Constants = {
   },
 } as const
 
-export type Branch = Database["public"]["Tables"]["branches"]["Row"];
-export type BillingInvoice = Database["public"]["Tables"]["billing_invoices"]["Row"];
-export type BillingPlan = Database["public"]["Tables"]["billing_plans"]["Row"];
-export type BillingPlanFeature = Database["public"]["Tables"]["billing_plan_features"]["Row"];
-export type Business = Database["public"]["Tables"]["businesses"]["Row"];
-export type BusinessInvitation = Database["public"]["Tables"]["business_invitations"]["Row"];
-export type BusinessMember = Database["public"]["Tables"]["business_members"]["Row"];
-export type Complaint = Database["public"]["Tables"]["complaints"]["Row"];
-export type ComplaintMessage = Database["public"]["Tables"]["complaint_messages"]["Row"];
-export type ComplaintSeverity = Database["public"]["Enums"]["complaint_severity"];
-export type ComplaintStatus = Database["public"]["Enums"]["complaint_status"];
-export type Customer = Database["public"]["Tables"]["customers"]["Row"];
-export type Document = Database["public"]["Tables"]["documents"]["Row"];
-export type ItemKind = Database["public"]["Enums"]["item_kind"];
-export type Job = Database["public"]["Tables"]["jobs"]["Row"];
-export type JobStatus = Database["public"]["Enums"]["job_status"];
-export type JobTask = Database["public"]["Tables"]["job_tasks"]["Row"];
-export type JobUpdate = Database["public"]["Tables"]["job_updates"]["Row"];
-export type MemberRole = Database["public"]["Enums"]["member_role"];
-export type NotificationEvent = Database["public"]["Tables"]["notification_events"]["Row"];
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-export type Approval = Database["public"]["Tables"]["approvals"]["Row"];
-export type ProductCategory = Database["public"]["Enums"]["product_category"];
-export type Quotation = Database["public"]["Tables"]["quotations"]["Row"];
-export type QuotationItem = Database["public"]["Tables"]["quotation_items"]["Row"];
-export type QuoteStatus = Database["public"]["Enums"]["quote_status"];
-export type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
-export type SubscriptionItem = Database["public"]["Tables"]["subscription_items"]["Row"];
-export type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
-export type Service = Database["public"]["Tables"]["services"]["Row"];
-export type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
+// App-owned compatibility aliases.
+// The generated `Database` type above remains the source of truth; this layer
+// preserves the convenience exports the app already imports.
+type PublicSchema = Database["public"];
+type AppTables = PublicSchema["Tables"];
+type AppEnums = PublicSchema["Enums"];
+
+export type Approval = AppTables["approvals"]["Row"];
+export type ApprovalInsert = AppTables["approvals"]["Insert"];
+export type ApprovalUpdate = AppTables["approvals"]["Update"];
+
+export type BillingInvoice = AppTables["billing_invoices"]["Row"];
+export type BillingInvoiceInsert = AppTables["billing_invoices"]["Insert"];
+export type BillingInvoiceUpdate = AppTables["billing_invoices"]["Update"];
+
+export type BillingPlan = AppTables["billing_plans"]["Row"];
+export type BillingPlanInsert = AppTables["billing_plans"]["Insert"];
+export type BillingPlanUpdate = AppTables["billing_plans"]["Update"];
+
+export type BillingPlanFeature = AppTables["billing_plan_features"]["Row"];
+export type BillingPlanFeatureInsert = AppTables["billing_plan_features"]["Insert"];
+export type BillingPlanFeatureUpdate = AppTables["billing_plan_features"]["Update"];
+
+export type Branch = AppTables["branches"]["Row"];
+export type BranchInsert = AppTables["branches"]["Insert"];
+export type BranchUpdate = AppTables["branches"]["Update"];
+
+export type Business = AppTables["businesses"]["Row"];
+export type BusinessInsert = AppTables["businesses"]["Insert"];
+export type BusinessUpdate = AppTables["businesses"]["Update"];
+
+export type BusinessInvitation = AppTables["business_invitations"]["Row"];
+export type BusinessInvitationInsert = AppTables["business_invitations"]["Insert"];
+export type BusinessInvitationUpdate = AppTables["business_invitations"]["Update"];
+
+export type BusinessMember = AppTables["business_members"]["Row"];
+export type BusinessMemberInsert = AppTables["business_members"]["Insert"];
+export type BusinessMemberUpdate = AppTables["business_members"]["Update"];
+
+export type Complaint = AppTables["complaints"]["Row"];
+export type ComplaintInsert = AppTables["complaints"]["Insert"];
+export type ComplaintUpdate = AppTables["complaints"]["Update"];
+
+export type ComplaintMessage = AppTables["complaint_messages"]["Row"];
+export type ComplaintMessageInsert = AppTables["complaint_messages"]["Insert"];
+export type ComplaintMessageUpdate = AppTables["complaint_messages"]["Update"];
+
+export type ComplaintSeverity = AppEnums["complaint_severity"];
+export type ComplaintStatus = AppEnums["complaint_status"];
+
+export type Customer = AppTables["customers"]["Row"];
+export type CustomerInsert = AppTables["customers"]["Insert"];
+export type CustomerUpdate = AppTables["customers"]["Update"];
+
+export type Document = AppTables["documents"]["Row"];
+export type DocumentInsert = AppTables["documents"]["Insert"];
+export type DocumentUpdate = AppTables["documents"]["Update"];
+
+export type Job = AppTables["jobs"]["Row"];
+export type JobInsert = AppTables["jobs"]["Insert"];
+
+export type JobStatus = AppEnums["job_status"];
+
+export type JobTask = AppTables["job_tasks"]["Row"];
+export type JobTaskInsert = AppTables["job_tasks"]["Insert"];
+export type JobTaskUpdate = AppTables["job_tasks"]["Update"];
+
+export type JobUpdate = AppTables["job_updates"]["Row"];
+export type JobUpdateInsert = AppTables["job_updates"]["Insert"];
+export type JobUpdateUpdate = AppTables["job_updates"]["Update"];
+
+export type ItemKind = AppEnums["item_kind"];
+
+export type MemberRole = AppEnums["member_role"];
+
+export type MembershipBundle = AppTables["membership_bundles"]["Row"];
+export type MembershipBundleInsert = AppTables["membership_bundles"]["Insert"];
+export type MembershipBundleUpdate = AppTables["membership_bundles"]["Update"];
+
+export type NotificationEvent = AppTables["notification_events"]["Row"];
+export type NotificationEventInsert = AppTables["notification_events"]["Insert"];
+export type NotificationEventUpdate = AppTables["notification_events"]["Update"];
+
+export type Profile = AppTables["profiles"]["Row"];
+export type ProfileInsert = AppTables["profiles"]["Insert"];
+export type ProfileUpdate = AppTables["profiles"]["Update"];
+
+export type ProductCategory = AppEnums["product_category"];
+
+export type Quotation = AppTables["quotations"]["Row"];
+export type QuotationInsert = AppTables["quotations"]["Insert"];
+export type QuotationUpdate = AppTables["quotations"]["Update"];
+
+export type QuotationItem = AppTables["quotation_items"]["Row"];
+export type QuotationItemInsert = AppTables["quotation_items"]["Insert"];
+export type QuotationItemUpdate = AppTables["quotation_items"]["Update"];
+
+export type QuoteStatus = AppEnums["quote_status"];
+
+export type Service = AppTables["services"]["Row"];
+export type ServiceInsert = AppTables["services"]["Insert"];
+export type ServiceUpdate = AppTables["services"]["Update"];
+
+export type Subscription = AppTables["subscriptions"]["Row"];
+export type SubscriptionInsert = AppTables["subscriptions"]["Insert"];
+export type SubscriptionUpdate = AppTables["subscriptions"]["Update"];
+
+export type SubscriptionItem = AppTables["subscription_items"]["Row"];
+export type SubscriptionItemInsert = AppTables["subscription_items"]["Insert"];
+export type SubscriptionItemUpdate = AppTables["subscription_items"]["Update"];
+
+export type SubscriptionStatus = AppEnums["subscription_status"];
+
+export type Vehicle = AppTables["vehicles"]["Row"];
+export type VehicleInsert = AppTables["vehicles"]["Insert"];
+export type VehicleUpdate = AppTables["vehicles"]["Update"];

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { getUser, isSuperAdmin, requireMembership } from "@/lib/auth";
+import { getUser, isSuperAdmin, requireCustomerPortal, requireMembership } from "@/lib/auth";
 import { canManagePricingTools } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { computeTotals } from "@/lib/money";
@@ -432,8 +432,10 @@ export async function selectBundle(
   _prev: FormState<{ bundleId: string }>,
   formData: FormData,
 ): Promise<FormState<{ bundleId: string }>> {
-  const user = await getUser();
-  if (!user) return { error: "Please sign in to select a plan." };
+  const { accounts } = await requireCustomerPortal();
+  if (accounts.length === 0) {
+    return { error: "You need a linked customer portal account to select a plan." };
+  }
 
   const bundleId = str(formData, "bundleId");
   if (!bundleId) return { error: "Select a plan." };
