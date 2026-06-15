@@ -953,7 +953,9 @@
     },
     "fallback": {
       "noCustomer": "لا يوجد عميل",
-      "none": "—"
+      "none": "—",
+      "unknownCustomer": "عميل غير معروف",
+      "unknownVehicle": "مركبة غير معروفة"
     },
     "new": {
       "title": "عرض سعر جديد",
