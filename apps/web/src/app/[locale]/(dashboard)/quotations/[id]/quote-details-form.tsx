@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useRouter } from "@/i18n/navigation";
 
 import { updateQuoteDetails, type FormState } from "../actions";
 import { SubmitButton } from "@/components/submit-button";
@@ -16,6 +17,7 @@ const initial: FormState = {};
 export function QuoteDetailsForm({
   quote,
   disabled,
+  redirectTo,
 }: {
   quote: Pick<
     Quotation,
@@ -26,16 +28,19 @@ export function QuoteDetailsForm({
     | "internal_notes"
   >;
   disabled: boolean;
+  redirectTo?: string;
 }) {
   const [state, action] = useActionState(updateQuoteDetails, initial);
   const t = useTranslations("forms.quote");
+  const router = useRouter();
   const last = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (state.message && state.message !== last.current) {
       last.current = state.message;
       toast.success(state.message);
+      if (redirectTo) router.replace(redirectTo);
     }
-  }, [state.message]);
+  }, [redirectTo, router, state.message]);
 
   return (
     <form action={action} className="flex flex-col gap-4">

@@ -107,7 +107,11 @@ export default async function PortalJobDetailPage({
           </Card>
         )}
 
-        <BusinessRatingForm businessId={job.business_id} customerId={job.customer_id} />
+        <BusinessRatingForm
+          businessId={job.business_id}
+          customerId={job.customer_id}
+          redirectTo="/portal/jobs"
+        />
       </div>
     </>
   );

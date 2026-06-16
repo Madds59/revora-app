@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useRouter } from "@/i18n/navigation";
 
 import { SubmitButton } from "@/components/submit-button";
 import { Label } from "@/components/ui/label";
@@ -49,15 +50,18 @@ export function ComplaintManagementForm({
   complaintId,
   currentSeverity,
   currentStatus,
+  redirectTo,
 }: {
   action: Action;
   complaintId: string;
   currentSeverity: ComplaintSeverity;
   currentStatus: ComplaintStatus;
-  }) {
+  redirectTo?: string;
+}) {
   const [state, formAction] = useActionState(action, initial);
   const t = useTranslations("complaints.management");
   const locale = useLocale();
+  const router = useRouter();
   const lastMessage = useRef<string | undefined>(undefined);
   const statusOptions = useMemo(() => COMPLAINT_STATUSES, []);
 
@@ -65,12 +69,13 @@ export function ComplaintManagementForm({
     if (state.message && state.message !== lastMessage.current) {
       lastMessage.current = state.message;
       toast.success(state.message);
+      if (redirectTo) router.replace(redirectTo);
     }
     if (state.error && state.error !== lastMessage.current) {
       lastMessage.current = state.error;
       toast.error(state.error);
     }
-  }, [state.error, state.message]);
+  }, [redirectTo, router, state.error, state.message]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
