@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { requireMembership } from "@/lib/auth";
+import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { NotificationEvent } from "@/lib/database.types";
 
@@ -13,6 +14,7 @@ type NotificationRow = NotificationEvent & {
 
 export default async function NotificationsPage() {
   const { business } = await requireMembership();
+  const locale = await getLocale();
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -32,16 +34,22 @@ export default async function NotificationsPage() {
   return (
     <>
       <PageHeader
-        title="Notifications"
-        description="Tenant notifications, delivery state, and read tracking."
+        title={locale === "ar" ? "الإشعارات" : "Notifications"}
+        description={
+          locale === "ar"
+            ? "إشعارات المستأجر، وحالة التسليم، وتتبع القراءة."
+            : "Tenant notifications, delivery state, and read tracking."
+        }
       />
 
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Notification center</CardTitle>
+            <CardTitle>{locale === "ar" ? "مركز الإشعارات" : "Notification center"}</CardTitle>
             <CardDescription>
-              Business notifications across quotes, complaints, jobs, and billing.
+              {locale === "ar"
+                ? "إشعارات النشاط عبر عروض الأسعار والشكاوى والمهام والفوترة."
+                : "Business notifications across quotes, complaints, jobs, and billing."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -49,8 +57,12 @@ export default async function NotificationsPage() {
               <p className="text-sm text-destructive">{error.message}</p>
             ) : notifications.length === 0 ? (
               <EmptyState
-                title="No tenant notifications yet"
-                description="This business does not have any notification events configured yet."
+                title={locale === "ar" ? "لا توجد إشعارات لهذا النشاط بعد" : "No tenant notifications yet"}
+                description={
+                  locale === "ar"
+                    ? "لا يحتوي هذا النشاط على أي أحداث إشعار مهيأة بعد."
+                    : "This business does not have any notification events configured yet."
+                }
               />
             ) : (
               <NotificationsPanel

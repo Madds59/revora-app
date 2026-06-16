@@ -16,7 +16,7 @@ import type {
   VehicleDtcInterpretation,
 } from "@/lib/vehicle-intelligence/types";
 import { AlertTriangle, CheckCircle2, ShieldAlert, Wrench } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const SEVERITY_VARIANT: Record<
   VehicleDiagnosticJson["severity"],
@@ -29,7 +29,22 @@ const SEVERITY_VARIANT: Record<
 };
 
 export function VehicleVinDecodeCard({ decode }: { decode: VehicleVinDecode }) {
+  const locale = useLocale();
   const t = useTranslations("vehicleIntelligence");
+  const fieldLabels = {
+    vin: locale === "ar" ? "رقم الهيكل" : "VIN",
+    make: locale === "ar" ? "الشركة" : "Make",
+    model: locale === "ar" ? "الطراز" : "Model",
+    year: locale === "ar" ? "السنة" : "Year",
+    trim: locale === "ar" ? "الفئة" : "Trim",
+    bodyClass: locale === "ar" ? "نوع الهيكل" : "Body class",
+    engine: locale === "ar" ? "المحرك" : "Engine",
+    fuelType: locale === "ar" ? "نوع الوقود" : "Fuel type",
+    driveType: locale === "ar" ? "نظام الدفع" : "Drive type",
+    transmission: locale === "ar" ? "ناقل الحركة" : "Transmission",
+    manufacturer: locale === "ar" ? "الشركة المصنعة" : "Manufacturer",
+    source: locale === "ar" ? "المصدر" : "Source",
+  } as const;
   return (
     <Card>
       <CardHeader>
@@ -42,22 +57,24 @@ export function VehicleVinDecodeCard({ decode }: { decode: VehicleVinDecode }) {
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         {[
-          ["VIN", decode.vin],
-          ["Make", decode.make ?? "—"],
-          ["Model", decode.model ?? "—"],
-          ["Year", decode.year ?? "—"],
-          ["Trim", decode.trim ?? "—"],
-          ["Body class", decode.bodyClass ?? "—"],
-          ["Engine", decode.engine ?? "—"],
-          ["Fuel type", decode.fuelType ?? "—"],
-          ["Drive type", decode.driveType ?? "—"],
-          ["Transmission", decode.transmission ?? "—"],
-          ["Manufacturer", decode.manufacturer ?? "—"],
-          ["Source", decode.decodeSource],
+          [fieldLabels.vin, decode.vin],
+          [fieldLabels.make, decode.make ?? "—"],
+          [fieldLabels.model, decode.model ?? "—"],
+          [fieldLabels.year, decode.year ?? "—"],
+          [fieldLabels.trim, decode.trim ?? "—"],
+          [fieldLabels.bodyClass, decode.bodyClass ?? "—"],
+          [fieldLabels.engine, decode.engine ?? "—"],
+          [fieldLabels.fuelType, decode.fuelType ?? "—"],
+          [fieldLabels.driveType, decode.driveType ?? "—"],
+          [fieldLabels.transmission, decode.transmission ?? "—"],
+          [fieldLabels.manufacturer, decode.manufacturer ?? "—"],
+          [fieldLabels.source, decode.decodeSource],
         ].map(([label, value]) => (
           <div key={label} className="space-y-1">
             <div className="text-muted-foreground text-xs uppercase tracking-wide">{label}</div>
-            <div className="text-sm">{value}</div>
+            <div className="text-sm" dir={typeof value === "string" && /[0-9A-Za-z]/.test(value) ? "ltr" : undefined}>
+              {value}
+            </div>
           </div>
         ))}
       </CardContent>
@@ -82,7 +99,11 @@ export function VehicleDiagnosticCard({
   maintenancePlan?: VehicleMaintenancePlan | null;
   quoteDraftEligible?: boolean;
 }) {
+  const locale = useLocale();
   const t = useTranslations("vehicleIntelligence");
+  const severityLabels = locale === "ar"
+    ? { low: "منخفضة", medium: "متوسطة", high: "عالية", critical: "حرجة" }
+    : { low: "Low", medium: "Medium", high: "High", critical: "Critical" };
   return (
     <div className="grid gap-4">
       <Card className={diagnostic.stopDrivingWarning ? "border-destructive/40" : undefined}>
@@ -102,7 +123,7 @@ export function VehicleDiagnosticCard({
               </CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant={SEVERITY_VARIANT[diagnostic.severity]}>{diagnostic.severity}</Badge>
+              <Badge variant={SEVERITY_VARIANT[diagnostic.severity]}>{severityLabels[diagnostic.severity]}</Badge>
               <Badge variant={quoteDraftEligible ? "secondary" : "outline"}>
                 {quoteDraftEligible
                   ? t("result.quoteDraftEligible")
@@ -126,7 +147,7 @@ export function VehicleDiagnosticCard({
                   <div key={cause.cause} className="rounded-lg border p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="font-medium">{cause.cause}</div>
-                      <Badge variant="outline">{Math.round(cause.confidence * 100)}%</Badge>
+                      <Badge variant="outline" dir="ltr">{Math.round(cause.confidence * 100)}%</Badge>
                     </div>
                     <p className="text-muted-foreground mt-2 text-sm leading-6">{cause.explanation}</p>
                   </div>
@@ -164,11 +185,11 @@ export function VehicleDiagnosticCard({
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground text-xs uppercase tracking-wide">{t("result.serviceCategory")}</dt>
-              <dd className="text-sm">{diagnostic.suggestedServiceCategory}</dd>
+              <dd className="text-sm" dir={locale === "ar" ? "ltr" : undefined}>{diagnostic.suggestedServiceCategory}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground text-xs uppercase tracking-wide">{t("result.inspectionTime")}</dt>
-              <dd className="text-sm tabular-nums">{diagnostic.estimatedInspectionMinutes} min</dd>
+              <dd className="text-sm tabular-nums" dir="ltr">{diagnostic.estimatedInspectionMinutes} min</dd>
             </div>
           </dl>
 
@@ -182,7 +203,7 @@ export function VehicleDiagnosticCard({
           {advisorSummary && (
             <div className="rounded-lg border bg-muted/20 p-4">
               <div className="text-sm font-medium">{t("result.advisorSummary")}</div>
-              <pre className="text-muted-foreground mt-2 overflow-auto text-xs leading-6 whitespace-pre-wrap">
+              <pre className="text-muted-foreground mt-2 overflow-auto text-xs leading-6 whitespace-pre-wrap" dir={locale === "ar" ? "ltr" : undefined}>
                 {advisorSummary}
               </pre>
             </div>
@@ -199,14 +220,14 @@ export function VehicleDiagnosticCard({
                 {maintenancePlan.items.map((item) => (
                   <div key={item.title} className="rounded-lg border bg-background p-3">
                     <div className="font-medium">{item.title}</div>
-                    <div className="text-muted-foreground text-xs">{item.interval}</div>
+                    <div className="text-muted-foreground text-xs" dir={locale === "ar" ? "ltr" : undefined}>{item.interval}</div>
                     <p className="text-muted-foreground mt-2 text-sm leading-6">{item.rationale}</p>
                   </div>
                 ))}
               </div>
               <div className="text-muted-foreground mt-3 text-xs">
                 {maintenancePlan.nextServiceDate
-                ? `${t("result.nextServiceDate")}: ${formatDate(maintenancePlan.nextServiceDate)}`
+                  ? `${t("result.nextServiceDate")}: ${formatDate(maintenancePlan.nextServiceDate, undefined, locale)}`
                   : `${t("result.nextServiceDate")}: —`}
               </div>
             </div>
@@ -224,6 +245,7 @@ export function VehicleDtcResultsCard({
 }: {
   codes: Array<VehicleDtcInterpretation | undefined>;
 }) {
+  const locale = useLocale();
   const t = useTranslations("vehicleIntelligence");
   const visibleCodes = codes.filter(
     (entry): entry is VehicleDtcInterpretation => Boolean(entry),
@@ -238,9 +260,13 @@ export function VehicleDtcResultsCard({
         {visibleCodes.map((entry) => (
           <div key={entry.code} className="rounded-lg border p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="font-medium">{entry.code} · {entry.title}</div>
+                <div className="font-medium" dir="ltr">{entry.code} · {entry.title}</div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant={SEVERITY_VARIANT[entry.severity]}>{entry.severity}</Badge>
+                  <Badge variant={SEVERITY_VARIANT[entry.severity]}>
+                    {locale === "ar"
+                      ? ({ low: "منخفضة", medium: "متوسطة", high: "عالية", critical: "حرجة" }[entry.severity])
+                      : entry.severity}
+                  </Badge>
                 {entry.stopDrivingWarning && <Badge variant="destructive">{t("result.stopDriving")}</Badge>}
                 </div>
               </div>

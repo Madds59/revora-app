@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { getRoleLabel } from "@/lib/display-labels";
 import type { MemberRole } from "@/lib/database.types";
 
 const initial: FormState = {};
@@ -37,6 +37,7 @@ type TeamMember = { id: string; name: string; role: MemberRole };
 
 function InviteForm() {
   const [state, action] = useActionState(inviteTeammate, initial);
+  const locale = useLocale();
   const t = useTranslations("team");
   const formRef = useRef<HTMLFormElement>(null);
   const last = useRef<string | undefined>(undefined);
@@ -57,7 +58,7 @@ function InviteForm() {
             id="invite-email"
             name="email"
             type="email"
-            placeholder="teammate@example.com"
+            placeholder={locale === "ar" ? "زميل@مثال.com" : "teammate@example.com"}
             required
           />
         </div>
@@ -68,8 +69,8 @@ function InviteForm() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="employee">Service advisor</SelectItem>
+              <SelectItem value="manager">{getRoleLabel("manager", locale)}</SelectItem>
+              <SelectItem value="employee">{getRoleLabel("employee", locale)}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -115,6 +116,7 @@ export function TeamManagement({
   pending: PendingInvite[];
   canManage: boolean;
 }) {
+  const locale = useLocale();
   const t = useTranslations("team");
   return (
     <div className="flex flex-col gap-6">
@@ -126,11 +128,11 @@ export function TeamManagement({
               <TableHead>{t("role")}</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+              <TableBody>
             {members.map((m) => (
               <TableRow key={m.id}>
                 <TableCell className="font-medium">{m.name}</TableCell>
-                <TableCell>{ROLE_LABELS[m.role]}</TableCell>
+                <TableCell>{getRoleLabel(m.role, locale)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -149,11 +151,11 @@ export function TeamManagement({
                   {canManage && <TableHead />}
                 </TableRow>
               </TableHeader>
-              <TableBody>
+                  <TableBody>
                 {pending.map((inv) => (
                   <TableRow key={inv.id}>
                     <TableCell className="font-medium">{inv.email}</TableCell>
-                    <TableCell>{ROLE_LABELS[inv.role]}</TableCell>
+                    <TableCell>{getRoleLabel(inv.role, locale)}</TableCell>
                     {canManage && (
                       <TableCell className="text-end">
                         <RevokeButton id={inv.id} />

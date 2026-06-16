@@ -1,3 +1,5 @@
+import { getLocale } from "next-intl/server";
+
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -26,6 +28,7 @@ import type {
 } from "@/lib/database.types";
 
 import { PUBLIC_BUCKET } from "@/lib/storage";
+import { formatCurrency } from "@/lib/formatters";
 import { FileUpload } from "@/components/file-upload";
 import {
   AddBranchForm,
@@ -43,6 +46,7 @@ type MemberRow = {
 };
 
 export default async function BusinessSettingsPage() {
+  const locale = await getLocale();
   const { member, business } = await requireMembership();
   const isOwner = canManageBusiness(member.role);
   const canManage = canManageSettings(member.role);
@@ -91,14 +95,14 @@ export default async function BusinessSettingsPage() {
   return (
     <>
       <PageHeader
-        title="Business settings"
-        description="Profile, branches, and services."
+        title={locale === "ar" ? "إعدادات النشاط" : "Business settings"}
+        description={locale === "ar" ? "الملف الشخصي، والفروع، والخدمات." : "Profile, branches, and services."}
       />
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Business profile</CardTitle>
-            <CardDescription>Your company information.</CardDescription>
+            <CardTitle>{locale === "ar" ? "ملف النشاط" : "Business profile"}</CardTitle>
+            <CardDescription>{locale === "ar" ? "معلومات شركتك." : "Your company information."}</CardDescription>
           </CardHeader>
           <CardContent>
             <BusinessProfileForm
@@ -110,9 +114,11 @@ export default async function BusinessSettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Branding</CardTitle>
+            <CardTitle>{locale === "ar" ? "الهوية البصرية" : "Branding"}</CardTitle>
             <CardDescription>
-              Your logo appears on the customer portal and documents.
+              {locale === "ar"
+                ? "يظهر شعارك في بوابة العميل والمستندات."
+                : "Your logo appears on the customer portal and documents."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -124,7 +130,9 @@ export default async function BusinessSettingsPage() {
                 className="h-16 w-auto rounded-lg border bg-white object-contain p-2"
               />
             ) : (
-              <p className="text-muted-foreground text-sm">No logo uploaded.</p>
+              <p className="text-muted-foreground text-sm">
+                {locale === "ar" ? "لم يتم رفع شعار بعد." : "No logo uploaded."}
+              </p>
             )}
             {isOwner && (
               <FileUpload
@@ -132,7 +140,7 @@ export default async function BusinessSettingsPage() {
                 businessId={business.id}
                 entity="branding"
                 accept="image/*"
-                label="Upload logo"
+                label={locale === "ar" ? "رفع الشعار" : "Upload logo"}
                 onUpload={uploadBusinessLogo}
               />
             )}
@@ -141,32 +149,35 @@ export default async function BusinessSettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Branches</CardTitle>
-            <CardDescription>Locations you operate from.</CardDescription>
+            <CardTitle>{locale === "ar" ? "الفروع" : "Branches"}</CardTitle>
+            <CardDescription>{locale === "ar" ? "المواقع التي تعمل منها." : "Locations you operate from."}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             {typedBranches.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No branches yet.</p>
+              <p className="text-muted-foreground text-sm">
+                {locale === "ar" ? "لا توجد فروع بعد." : "No branches yet."}
+              </p>
             ) : (
               <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Email</TableHead>
+                      <TableHead>{locale === "ar" ? "الاسم" : "Name"}</TableHead>
+                      <TableHead>{locale === "ar" ? "الهاتف" : "Phone"}</TableHead>
+                      <TableHead>{locale === "ar" ? "البريد الإلكتروني" : "Email"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {typedBranches.map((b) => (
                       <TableRow key={b.id}>
                         <TableCell className="font-medium">{b.name}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {b.phone ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {b.email ?? "—"}
-                        </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {b.phone ?? (locale === "ar" ? "—" : "—")}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {b.email ?? (locale === "ar" ? "—" : "—")}
+                      </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -179,12 +190,14 @@ export default async function BusinessSettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Services</CardTitle>
-            <CardDescription>What you offer to customers.</CardDescription>
+            <CardTitle>{locale === "ar" ? "الخدمات" : "Services"}</CardTitle>
+            <CardDescription>{locale === "ar" ? "ما تقدمه للعملاء." : "What you offer to customers."}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             {typedServices.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No services yet.</p>
+              <p className="text-muted-foreground text-sm">
+                {locale === "ar" ? "لا توجد خدمات بعد." : "No services yet."}
+              </p>
             ) : (
               <div className="rounded-lg border">
                 <Table>
@@ -192,7 +205,7 @@ export default async function BusinessSettingsPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead className="text-end">Default price</TableHead>
+                      <TableHead className="text-end">{locale === "ar" ? "السعر الافتراضي" : "Default price"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -204,7 +217,7 @@ export default async function BusinessSettingsPage() {
                         </TableCell>
                         <TableCell className="text-end tabular-nums">
                           {s.default_price != null
-                            ? `AED ${s.default_price}`
+                            ? formatCurrency(s.default_price, "AED")
                             : "—"}
                         </TableCell>
                       </TableRow>
@@ -219,10 +232,11 @@ export default async function BusinessSettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Team</CardTitle>
+            <CardTitle>{locale === "ar" ? "الفريق" : "Team"}</CardTitle>
             <CardDescription>
-              Members and invitations. Invite managers and service advisors by email —
-              they join after signing up with that address.
+              {locale === "ar"
+                ? "الأعضاء والدعوات. ادعُ المديرين ومستشاري الخدمة عبر البريد الإلكتروني، وينضمون بعد التسجيل بهذا العنوان."
+                : "Members and invitations. Invite managers and service advisors by email — they join after signing up with that address."}
             </CardDescription>
           </CardHeader>
           <CardContent>

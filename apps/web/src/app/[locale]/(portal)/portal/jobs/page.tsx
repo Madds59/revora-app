@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { requireCustomerPortal } from "@/lib/auth";
-import { JOB_STATUS_LABELS, JOB_STATUS_VARIANT } from "@/lib/jobs";
+import { getLocale, getTranslations } from "next-intl/server";
+import { getJobStatusLabel, JOB_STATUS_VARIANT } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/formatters";
 import type { Job } from "@/lib/database.types";
@@ -23,6 +23,7 @@ type JobRow = Pick<
 
 export default async function PortalJobsPage() {
   const t = await getTranslations("portalJobs");
+  const locale = await getLocale();
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
@@ -125,7 +126,7 @@ export default async function PortalJobsPage() {
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={JOB_STATUS_VARIANT[job.status]}>
-                            {JOB_STATUS_LABELS[job.status]}
+                            {getJobStatusLabel(job.status, locale)}
                           </Badge>
                           <span>{job.branch?.name ?? t("fallback.noBranch")}</span>
                         </div>
@@ -166,7 +167,7 @@ export default async function PortalJobsPage() {
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap">
                             <Badge variant={JOB_STATUS_VARIANT[job.status]}>
-                              {JOB_STATUS_LABELS[job.status]}
+                              {getJobStatusLabel(job.status, locale)}
                             </Badge>
                           </td>
                           <td className="p-2 align-middle whitespace-nowrap text-muted-foreground">

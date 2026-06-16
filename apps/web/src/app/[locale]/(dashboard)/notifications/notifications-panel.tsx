@@ -1,34 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useLocale } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { FilterToolbar } from "@/components/filter-toolbar";
+import { buttonVariants } from "@/components/ui/button";
 import { NotificationReadButton } from "./notification-read-button";
 import { MarkAllReadButton } from "./mark-all-read-button";
 import type { NotificationEvent } from "@/lib/database.types";
+import {
+  getCommonLabel,
+  getNotificationStatusLabel,
+  getNotificationTemplateLabel,
+} from "@/lib/display-labels";
+import { formatDateTime } from "@/lib/formatters";
 
 export type DashboardNotificationRow = NotificationEvent & {
   customer: { full_name: string | null; email: string | null } | null;
 };
-
-const STATUS_OPTIONS = [
-  { label: "All statuses", value: "all" },
-  { label: "Unread", value: "unread" },
-  { label: "Read", value: "read" },
-  { label: "Queued", value: "queued" },
-  { label: "Sent", value: "sent" },
-  { label: "Failed", value: "failed" },
-];
-
-const DATE_OPTIONS = [
-  { label: "All time", value: "all" },
-  { label: "Today", value: "today" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-];
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   queued: "secondary",
@@ -36,40 +29,6 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
   delivered: "default",
   failed: "destructive",
 };
-
-function titleCase(value: string) {
-  return value
-    .split(/[_-]/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function notificationLabel(templateKey: string): string {
-  const key = templateKey.toLowerCase();
-  if (key.includes("quote") && (key.includes("approved") || key.includes("approved"))) {
-    return "Quote approved";
-  }
-  if (key.includes("quote") && (key.includes("rejected") || key.includes("declined"))) {
-    return "Quote rejected";
-  }
-  if (key.includes("complaint") && key.includes("reply")) {
-    return "Complaint replied";
-  }
-  if (key.includes("complaint") && (key.includes("new") || key.includes("submitted") || key.includes("created"))) {
-    return "Complaint submitted";
-  }
-  if (key.includes("job") && key.includes("update")) {
-    return "Job updated";
-  }
-  if (key.includes("invoice") || key.includes("payment") || key.includes("billing")) {
-    return "Billing event";
-  }
-  return titleCase(templateKey);
-}
-
-function formatDate(value: string | null) {
-  return value ? new Date(value).toLocaleString() : "—";
-}
 
 function withinDateRange(value: string, range: string) {
   if (range === "all") return true;
@@ -91,14 +50,31 @@ export function NotificationsPanel({
   businessId: string;
   notifications: DashboardNotificationRow[];
 }) {
+  const locale = useLocale();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [dateRange, setDateRange] = useState("all");
 
+  const statusOptions = [
+    { label: locale === "ar" ? "كل الحالات" : "All statuses", value: "all" },
+    { label: getNotificationStatusLabel("unread", locale), value: "unread" },
+    { label: getNotificationStatusLabel("read", locale), value: "read" },
+    { label: getNotificationStatusLabel("queued", locale), value: "queued" },
+    { label: getNotificationStatusLabel("sent", locale), value: "sent" },
+    { label: getNotificationStatusLabel("failed", locale), value: "failed" },
+  ];
+
+  const dateOptions = [
+    { label: locale === "ar" ? "كل الوقت" : "All time", value: "all" },
+    { label: locale === "ar" ? "اليوم" : "Today", value: "today" },
+    { label: locale === "ar" ? "آخر 7 أيام" : "Last 7 days", value: "7d" },
+    { label: locale === "ar" ? "آخر 30 يومًا" : "Last 30 days", value: "30d" },
+  ];
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return notifications.filter((notification) => {
-      const label = notificationLabel(notification.template_key);
+      const label = getNotificationTemplateLabel(notification.template_key, locale);
       const matchesSearch =
         q.length === 0 ||
         label.toLowerCase().includes(q) ||
@@ -114,65 +90,74 @@ export function NotificationsPanel({
       const matchesDate = withinDateRange(notification.created_at, dateRange);
       return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [dateRange, notifications, search, status]);
+  }, [dateRange, locale, notifications, search, status]);
 
   const unreadCount = notifications.filter((notification) => !notification.read_at).length;
   const failedCount = notifications.filter((notification) => notification.status === "failed").length;
   const queuedCount = notifications.filter((notification) => notification.status === "queued").length;
   const sentCount = notifications.filter((notification) => ["sent", "delivered"].includes(notification.status)).length;
+  const channelLabel = (channel: string) => {
+    if (channel === "push") return locale === "ar" ? "إشعار فوري" : "Push";
+    if (channel === "email") return locale === "ar" ? "بريد إلكتروني" : "Email";
+    if (channel === "sms") return locale === "ar" ? "رسالة نصية" : "SMS";
+    if (channel === "whatsapp") return locale === "ar" ? "واتساب" : "WhatsApp";
+    return channel;
+  };
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Unread</CardDescription>
+            <CardDescription>{locale === "ar" ? "غير مقروء" : "Unread"}</CardDescription>
             <CardTitle className="text-3xl tabular-nums">{unreadCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Sent</CardDescription>
+            <CardDescription>{locale === "ar" ? "مرسلة" : "Sent"}</CardDescription>
             <CardTitle className="text-3xl tabular-nums">{sentCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Queued</CardDescription>
+            <CardDescription>{locale === "ar" ? "في الانتظار" : "Queued"}</CardDescription>
             <CardTitle className="text-3xl tabular-nums">{queuedCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Failed</CardDescription>
+            <CardDescription>{locale === "ar" ? "فاشلة" : "Failed"}</CardDescription>
             <CardTitle className="text-3xl tabular-nums">{failedCount}</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
       <FilterToolbar
-        searchPlaceholder="Search notifications, customers, or channels"
+        searchPlaceholder={locale === "ar" ? "ابحث عن الإشعارات أو العملاء أو القنوات" : "Search notifications, customers, or channels"}
         searchValue={search}
         onSearchValueChange={setSearch}
         statusValue={status}
         onStatusValueChange={setStatus}
-        statusOptions={STATUS_OPTIONS}
+        statusOptions={statusOptions}
         dateValue={dateRange}
         onDateValueChange={setDateRange}
-        dateOptions={DATE_OPTIONS}
+        dateOptions={dateOptions}
         action={<MarkAllReadButton businessId={businessId} />}
       />
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="No notifications match"
-          description="Try a different search or date range."
+          title={locale === "ar" ? "لا توجد إشعارات مطابقة" : "No notifications match"}
+          description={locale === "ar" ? "جرّب بحثًا أو نطاقًا زمنيًا مختلفًا." : "Try a different search or date range."}
         />
       ) : (
         <div className="grid gap-3">
           {filtered.map((notification) => {
-            const label = notificationLabel(notification.template_key);
+            const label = getNotificationTemplateLabel(notification.template_key, locale);
             const unread = !notification.read_at;
+            const payload = notification.payload as Record<string, unknown> | null;
+            const complaintId = typeof payload?.complaint_id === "string" ? payload.complaint_id : null;
             return (
               <Card key={notification.id}>
                 <CardContent className="flex flex-col gap-4 p-4">
@@ -181,14 +166,17 @@ export function NotificationsPanel({
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-medium">{label}</h3>
                         <Badge variant={STATUS_VARIANT[notification.status] ?? "outline"}>
-                          {notification.status}
+                          {getNotificationStatusLabel(
+                            notification.status as Parameters<typeof getNotificationStatusLabel>[0],
+                            locale,
+                          )}
                         </Badge>
                         <Badge variant={unread ? "default" : "outline"}>
-                          {unread ? "Unread" : "Read"}
+                          {unread ? getNotificationStatusLabel("unread", locale) : getNotificationStatusLabel("read", locale)}
                         </Badge>
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {notification.template_key} · {notification.channel}
+                        {label} · {channelLabel(notification.channel)}
                       </p>
                     </div>
                     <NotificationReadButton
@@ -200,53 +188,63 @@ export function NotificationsPanel({
                   <dl className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
                       <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-                        Customer
+                        {locale === "ar" ? "العميل" : "Customer"}
                       </dt>
                       <dd className="text-sm">
-                        {notification.customer?.full_name ?? "—"}
+                        {notification.customer?.full_name ?? getCommonLabel("none", locale)}
                       </dd>
                       <div className="text-muted-foreground text-xs">
-                        {notification.customer?.email ?? "—"}
+                        {notification.customer?.email ?? getCommonLabel("none", locale)}
                       </div>
                     </div>
                     <div className="space-y-1">
                       <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-                        Created
+                        {locale === "ar" ? "تاريخ الإنشاء" : "Created"}
                       </dt>
-                      <dd className="text-sm">{formatDate(notification.created_at)}</dd>
+                      <dd className="text-sm">{formatDateTime(notification.created_at, undefined, locale)}</dd>
                     </div>
                     <div className="space-y-1">
                       <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-                        Scheduled
+                        {locale === "ar" ? "مجدول" : "Scheduled"}
                       </dt>
-                      <dd className="text-sm">{formatDate(notification.scheduled_for)}</dd>
+                      <dd className="text-sm">{formatDateTime(notification.scheduled_for, undefined, locale)}</dd>
                     </div>
                     <div className="space-y-1">
                       <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-                        Sent / failed
+                        {locale === "ar" ? "الإرسال / الفشل" : "Sent / failed"}
                       </dt>
                       <dd className="text-sm">
                         {notification.sent_at
-                          ? formatDate(notification.sent_at)
+                          ? formatDateTime(notification.sent_at, undefined, locale)
                           : notification.failed_at
-                            ? formatDate(notification.failed_at)
-                            : "—"}
+                            ? formatDateTime(notification.failed_at, undefined, locale)
+                            : getCommonLabel("none", locale)}
                       </dd>
                     </div>
                   </dl>
 
-                  {notification.failure_reason && (
-                    <p className="text-destructive text-sm">{notification.failure_reason}</p>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {complaintId && (
+                      <Link
+                        href={`/${locale}/complaints/${complaintId}`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        {locale === "ar" ? "عرض الشكوى" : "View complaint"}
+                      </Link>
+                    )}
+                    {notification.failure_reason && (
+                      <p className="text-destructive text-sm">{notification.failure_reason}</p>
+                    )}
+                  </div>
 
-                  <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                    <div className="text-muted-foreground mb-1 uppercase tracking-wide">
-                      Payload
-                    </div>
-                    <pre className="overflow-x-auto whitespace-pre-wrap break-words">
+                  <details className="rounded-lg border bg-muted/30 p-3 text-xs">
+                    <summary className="cursor-pointer text-muted-foreground uppercase tracking-wide">
+                      {locale === "ar" ? "تفاصيل تقنية" : "Technical details"}
+                    </summary>
+                    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words">
                       {JSON.stringify(notification.payload, null, 2)}
                     </pre>
-                  </div>
+                  </details>
                 </CardContent>
               </Card>
             );

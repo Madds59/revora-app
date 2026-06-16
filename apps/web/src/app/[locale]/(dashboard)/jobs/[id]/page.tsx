@@ -13,13 +13,15 @@ import {
 } from "@/components/ui/card";
 import { requireMembership } from "@/lib/auth";
 import { canManageJobs } from "@/lib/permissions";
+import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { JOB_STATUS_LABELS } from "@/lib/jobs";
+import { getJobStatusLabel } from "@/lib/jobs";
 import { loadJobAttachments } from "@/lib/documents";
 import { uploadDocument } from "@/lib/document-actions";
 import { PRIVATE_BUCKET } from "@/lib/storage";
 import { EvidenceGallery } from "@/components/evidence-gallery";
 import { FileUpload } from "@/components/file-upload";
+import { formatDateTime } from "@/lib/formatters";
 import type { Job, JobTask, JobUpdate } from "@/lib/database.types";
 
 import {
@@ -49,6 +51,7 @@ export default async function JobDetailPage({
   const { id } = await params;
   const { member, business } = await requireMembership();
   const canManage = canManageJobs(member.role);
+  const locale = await getLocale();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -90,15 +93,15 @@ export default async function JobDetailPage({
     <>
       <PageHeader
         title={
-          <span className="flex items-center gap-3">
+            <span className="flex items-center gap-3">
             {job.title}
-            <Badge>{JOB_STATUS_LABELS[job.status]}</Badge>
+            <Badge>{getJobStatusLabel(job.status, locale)}</Badge>
           </span>
         }
         description={[job.customer?.full_name, vehicleLabel].filter(Boolean).join(" · ")}
         action={
-          <Link href="/jobs" className={buttonVariants({ variant: "outline" })}>
-            Back to jobs
+          <Link href={`/${locale}/jobs`} className={buttonVariants({ variant: "outline" })}>
+            {locale === "ar" ? "العودة إلى المهام" : "Back to jobs"}
           </Link>
         }
       />
@@ -106,13 +109,13 @@ export default async function JobDetailPage({
       <div className="flex flex-col gap-6 p-6">
         {canManage && (
           <Card>
-            <CardHeader>
-              <CardTitle>Status</CardTitle>
+          <CardHeader>
+              <CardTitle>{locale === "ar" ? "الحالة" : "Status"}</CardTitle>
               {job.quotation && job.quotation_id && (
                 <CardDescription>
-                  From quote{" "}
+                  {locale === "ar" ? "من عرض السعر " : "From quote "}
                   <Link
-                    href={`/quotations/${job.quotation_id}`}
+                    href={`/${locale}/quotations/${job.quotation_id}`}
                     className="underline"
                   >
                     {job.quotation.quote_number}
@@ -128,11 +131,11 @@ export default async function JobDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Tasks ({tasks.filter((t) => t.is_completed).length}/{tasks.length})</CardTitle>
+            <CardTitle>{locale === "ar" ? "المهام" : "Tasks"} ({tasks.filter((t) => t.is_completed).length}/{tasks.length})</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {tasks.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No tasks yet.</p>
+              <p className="text-muted-foreground text-sm">{locale === "ar" ? "لا توجد مهام بعد." : "No tasks yet."}</p>
             ) : (
               tasks.map((t) => (
                 <div
@@ -154,9 +157,11 @@ export default async function JobDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Photos &amp; attachments</CardTitle>
+            <CardTitle>{locale === "ar" ? "الصور والمرفقات" : "Photos &amp; attachments"}</CardTitle>
             <CardDescription>
-              Progress photos and files. Visible to the customer in their portal.
+              {locale === "ar"
+                ? "صور التقدم والملفات. تظهر للعميل في بوابته."
+                : "Progress photos and files. Visible to the customer in their portal."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -166,7 +171,7 @@ export default async function JobDetailPage({
                 bucket={PRIVATE_BUCKET}
                 businessId={job.business_id}
                 entity="job-photos"
-                label="Add photo / file"
+                label={locale === "ar" ? "إضافة صورة / ملف" : "Add photo / file"}
                 onUpload={uploadDocument.bind(null, {
                   documentType: "job_photo",
                   jobId: job.id,
@@ -180,23 +185,25 @@ export default async function JobDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Updates</CardTitle>
+            <CardTitle>{locale === "ar" ? "التحديثات" : "Updates"}</CardTitle>
             <CardDescription>
-              Progress notes. Customer-visible updates appear in their portal.
+              {locale === "ar"
+                ? "ملاحظات التقدم. تظهر التحديثات المرئية للعميل في بوابته."
+                : "Progress notes. Customer-visible updates appear in their portal."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {canManage && <PostUpdateForm jobId={job.id} />}
             <div className="flex flex-col gap-3">
               {updates.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No updates yet.</p>
+                <p className="text-muted-foreground text-sm">{locale === "ar" ? "لا توجد تحديثات بعد." : "No updates yet."}</p>
               ) : (
                 updates.map((u) => (
                   <div key={u.id} className="rounded-lg border p-3 text-sm">
                     <div className="text-muted-foreground mb-1 flex items-center gap-2 text-xs">
-                      <span>{new Date(u.created_at).toLocaleString()}</span>
-                      {u.status && <Badge variant="outline">{JOB_STATUS_LABELS[u.status]}</Badge>}
-                      {!u.visible_to_customer && <Badge variant="secondary">Internal</Badge>}
+                      <span>{formatDateTime(u.created_at, undefined, locale)}</span>
+                      {u.status && <Badge variant="outline">{getJobStatusLabel(u.status, locale)}</Badge>}
+                      {!u.visible_to_customer && <Badge variant="secondary">{locale === "ar" ? "داخلي" : "Internal"}</Badge>}
                     </div>
                     {u.message}
                   </div>

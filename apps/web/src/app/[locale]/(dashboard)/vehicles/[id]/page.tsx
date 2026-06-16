@@ -28,11 +28,13 @@ import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { Complaint, Document, Job, Quotation, Vehicle } from "@/lib/database.types";
-import { JOB_STATUS_LABELS, JOB_STATUS_VARIANT } from "@/lib/jobs";
-import { COMPLAINT_SEVERITY_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_VARIANT } from "@/lib/complaints";
+import { JOB_STATUS_VARIANT, getJobStatusLabel } from "@/lib/jobs";
+import { COMPLAINT_STATUS_VARIANT, getComplaintSeverityLabel, getComplaintStatusLabel } from "@/lib/complaints";
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 import { formatAED, formatDate, formatDateTime } from "@/lib/formatters";
 import type { VehicleDiagnosticJson } from "@/lib/vehicle-intelligence/types";
+import { getLocale } from "next-intl/server";
+import { getUnknownVehicleLabel } from "@/lib/display-labels";
 
 type VehicleDetailRow = Pick<
   Vehicle,
@@ -82,8 +84,13 @@ type VehicleDocumentRow = Pick<
   customer: { full_name: string | null } | null;
 };
 
-function vehicleLabel(vehicle: VehicleDetailRow) {
-  return [vehicle.make, vehicle.model].filter(Boolean).join(" ") || vehicle.plate_number || vehicle.vin || "Vehicle";
+function vehicleLabel(vehicle: VehicleDetailRow, locale: "en" | "ar") {
+  return (
+    [vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
+    vehicle.plate_number ||
+    vehicle.vin ||
+    getUnknownVehicleLabel(locale)
+  );
 }
 
 type MaintenancePlanItem = {
@@ -127,6 +134,7 @@ export default async function VehicleDetailPage({
 }) {
   const { id } = await params;
   const { member, business } = await requireMembership();
+  const locale = await getLocale();
   const canManage = canManageCustomers(member.role);
   const supabase = await createClient();
 
@@ -272,7 +280,7 @@ export default async function VehicleDetailPage({
   return (
     <>
       <PageHeader
-        title={vehicleLabel(vehicle)}
+        title={vehicleLabel(vehicle, locale)}
         description={
           [vehicle.customer?.full_name, vehicle.plate_number, vehicle.vin]
             .filter(Boolean)
@@ -297,8 +305,8 @@ export default async function VehicleDetailPage({
             { label: "Plate", value: vehicle.plate_number ?? "—" },
             { label: "VIN", value: vehicle.vin ?? "—" },
             { label: "Color", value: vehicle.color ?? "—" },
-            { label: "Created", value: formatDateTime(vehicle.created_at) },
-            { label: "Updated", value: formatDateTime(vehicle.updated_at) },
+            { label: locale === "ar" ? "تاريخ الإنشاء" : "Created", value: formatDateTime(vehicle.created_at, undefined, locale) },
+            { label: locale === "ar" ? "تاريخ التحديث" : "Updated", value: formatDateTime(vehicle.updated_at, undefined, locale) },
           ]}
           status={{ label: vehicle.customer ? "Linked" : "Unlinked", variant: vehicle.customer ? "default" : "outline" }}
           action={
@@ -342,9 +350,9 @@ export default async function VehicleDetailPage({
                         meta={
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={JOB_STATUS_VARIANT[job.status]}>
-                              {JOB_STATUS_LABELS[job.status]}
+                              {getJobStatusLabel(job.status, locale)}
                             </Badge>
-                            <span>{formatDate(job.expected_completion_at)}</span>
+                            <span>{formatDate(job.expected_completion_at, undefined, locale)}</span>
                           </div>
                         }
                       />
@@ -367,14 +375,14 @@ export default async function VehicleDetailPage({
                             <TableCell className="font-medium">{job.title}</TableCell>
                             <TableCell>
                               <Badge variant={JOB_STATUS_VARIANT[job.status]}>
-                                {JOB_STATUS_LABELS[job.status]}
+                                {getJobStatusLabel(job.status, locale)}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {job.quotation?.quote_number ?? "—"}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
-                              {formatDate(job.expected_completion_at)}
+                              {formatDate(job.expected_completion_at, undefined, locale)}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -412,13 +420,13 @@ export default async function VehicleDetailPage({
                             {quote.quote_number}
                           </Link>
                         }
-                        subtitle={formatDate(quote.created_at)}
+                        subtitle={formatDate(quote.created_at, undefined, locale)}
                         meta={
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
                               {quote.status}
                             </Badge>
-                            <span>{formatAED(quote.total, { currency: quote.currency })}</span>
+                            <span dir="ltr">{formatAED(quote.total, { currency: quote.currency }, locale)}</span>
                           </div>
                         }
                       />
@@ -449,10 +457,10 @@ export default async function VehicleDetailPage({
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
-                              {formatAED(quote.total, { currency: quote.currency })}
+                              {formatAED(quote.total, { currency: quote.currency }, locale)}
                             </TableCell>
                             <TableCell className="text-muted-foreground">
-                              {formatDate(quote.created_at)}
+                              {formatDate(quote.created_at, undefined, locale)}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -522,7 +530,7 @@ export default async function VehicleDetailPage({
                   <div className="font-medium">Latest symptom report</div>
                   <p className="text-muted-foreground mt-2 leading-6">{symptom.symptoms}</p>
                   <div className="text-muted-foreground mt-2 text-xs">
-                    {formatDateTime(symptom.created_at)}
+                    {formatDateTime(symptom.created_at, undefined, locale)}
                   </div>
                 </div>
               )}
@@ -551,7 +559,7 @@ export default async function VehicleDetailPage({
                     <div key={media.id} className="rounded-lg border p-3 text-sm">
                       <div className="font-medium">{media.description ?? media.storage_path}</div>
                       <div className="text-muted-foreground text-xs">{media.media_type}</div>
-                      <div className="text-muted-foreground mt-1 text-xs">{formatDateTime(media.created_at)}</div>
+                      <div className="text-muted-foreground mt-1 text-xs">{formatDateTime(media.created_at, undefined, locale)}</div>
                     </div>
                   ))}
                 </div>
@@ -583,14 +591,14 @@ export default async function VehicleDetailPage({
                           {complaint.subject}
                         </Link>
                         <Badge variant={COMPLAINT_STATUS_VARIANT[complaint.status]}>
-                          {COMPLAINT_STATUS_LABELS[complaint.status]}
+                          {getComplaintStatusLabel(complaint.status, locale)}
                         </Badge>
                         <Badge variant="outline">
-                          {COMPLAINT_SEVERITY_LABELS[complaint.severity]}
+                          {getComplaintSeverityLabel(complaint.severity, locale)}
                         </Badge>
                       </div>
                       <div className="text-muted-foreground mt-2 text-xs">
-                        {formatDate(complaint.created_at)}
+                        {formatDate(complaint.created_at, undefined, locale)}
                       </div>
                     </div>
                   ))}
@@ -624,7 +632,7 @@ export default async function VehicleDetailPage({
                         {document.customer?.full_name ?? document.quotation?.quote_number ?? document.job?.title ?? "Linked record"}
                       </div>
                       <div className="text-muted-foreground mt-2 text-xs">
-                        {formatDate(document.created_at)}
+                        {formatDate(document.created_at, undefined, locale)}
                       </div>
                     </div>
                   ))}
