@@ -250,6 +250,7 @@ export default async function ComplaintDetailPage({
                   complaintId={typedComplaint.id}
                   currentAssigneeId={typedComplaint.assigned_to}
                   assignees={assignees}
+                  redirectTo="/complaints"
                 />
               </div>
 
@@ -258,6 +259,7 @@ export default async function ComplaintDetailPage({
                 complaintId={typedComplaint.id}
                 currentSeverity={typedComplaint.severity}
                 currentStatus={typedComplaint.status}
+                redirectTo="/complaints"
               />
             </div>
           </CardContent>

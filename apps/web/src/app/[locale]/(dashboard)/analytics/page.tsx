@@ -18,6 +18,7 @@ import { canManageBusiness } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { summarizeBillingInvoices } from "@/lib/billing-summary";
 import { DateRange, withinDateRange } from "@/lib/filtering";
 import type {
   Complaint,
@@ -222,8 +223,8 @@ export default async function AnalyticsPage({
     { data: ratingRows },
     { data: documentRows, error: documentError },
     { data: subscriptionRows, error: subscriptionError },
-    { data: revenueSummaryData, error: revenueSummaryError },
     { data: revenueTrendData, error: revenueTrendError },
+    { data: billingRevenueRowsData, error: billingRevenueRowsError },
     { data: invoiceListData, error: invoiceListError },
   ] = await Promise.all([
     supabase
@@ -266,12 +267,6 @@ export default async function AnalyticsPage({
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as SubscriptionRow[], error: null }),
     canSeeBilling
-      ? supabase.rpc("get_business_revenue_summary", {
-          p_business_id: business.id,
-          p_period: period,
-        })
-      : Promise.resolve({ data: null, error: null }),
-    canSeeBilling
       ? supabase.rpc("get_business_revenue_trend", {
           p_business_id: business.id,
           p_period: period,
@@ -283,6 +278,27 @@ export default async function AnalyticsPage({
             invoice_count: number;
             currency: string;
           }>,
+          error: null,
+        }),
+    canSeeBilling
+      ? supabase
+          .from("billing_invoices")
+          .select("currency, status, total_amount, amount_due, due_date, paid_at, created_at")
+          .eq("business_id", business.id)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({
+          data: [] as Array<
+            Pick<
+              BillingInvoiceSummaryRow,
+              | "currency"
+              | "status"
+              | "total_amount"
+              | "amount_due"
+              | "due_date"
+              | "paid_at"
+              | "created_at"
+            >
+          >,
           error: null,
         }),
     canSeeBilling
@@ -390,7 +406,20 @@ export default async function AnalyticsPage({
   const approvedRate =
     periodQuotes.length > 0 ? Math.round((approvedQuotes.length / periodQuotes.length) * 100) : 0;
   const currentPeriodLabel = periodText(period);
-  const revenueSummary = (revenueSummaryData ?? null) as unknown as BillingRevenueSummary | null;
+  const billingRevenueRows =
+    (billingRevenueRowsData ?? []) as Array<
+      Pick<
+        BillingInvoiceSummaryRow,
+        | "currency"
+        | "status"
+        | "total_amount"
+        | "amount_due"
+        | "due_date"
+        | "paid_at"
+        | "created_at"
+      >
+    >;
+  const revenueSummary = summarizeBillingInvoices(billingRevenueRows, period) as BillingRevenueSummary;
   const revenueTrendRows = (revenueTrendData ??
     []) as Array<{ bucket_start: string; revenue: number; invoice_count: number; currency: string }>;
   const invoiceList = (invoiceListData ?? {
@@ -398,7 +427,7 @@ export default async function AnalyticsPage({
     total_count: 0,
   }) as unknown as PaginatedListResult<BillingInvoiceSummaryRow>;
   const hasInvoiceRows = invoiceList.rows.length > 0;
-  const revenueCurrency = revenueSummary?.currency ?? invoiceList.rows[0]?.currency ?? "AED";
+  const revenueCurrency = revenueSummary.currency ?? invoiceList.rows[0]?.currency ?? "AED";
   const revenueSyncReady = hasInvoiceRows;
   const revenueTrendSeries =
     period === "7d"
@@ -454,7 +483,7 @@ export default async function AnalyticsPage({
           complaintError ||
           documentError ||
           subscriptionError ||
-          revenueSummaryError ||
+          billingRevenueRowsError ||
           revenueTrendError ||
           invoiceListError
         ) && (
@@ -541,7 +570,7 @@ export default async function AnalyticsPage({
             label="Paid revenue"
             value={
               revenueSyncReady
-                ? formatMoney(revenueSummary?.total_paid_revenue ?? 0, revenueCurrency)
+                ? formatMoney(revenueSummary.total_paid_revenue ?? 0, revenueCurrency)
                 : "—"
             }
             helper={
@@ -554,21 +583,21 @@ export default async function AnalyticsPage({
             label="Open invoice amount"
             value={
               revenueSyncReady
-                ? formatMoney(revenueSummary?.open_invoice_amount ?? 0, revenueCurrency)
+                ? formatMoney(revenueSummary.open_invoice_amount ?? 0, revenueCurrency)
                 : "—"
             }
             helper={revenueSyncReady ? "Outstanding balance" : "Awaiting invoice sync"}
           />
           <MetricCard
             label="Open invoices"
-            value={revenueSyncReady ? revenueSummary?.open_invoices_count ?? 0 : "—"}
+            value={revenueSyncReady ? revenueSummary.open_invoices_count ?? 0 : "—"}
             helper={revenueSyncReady ? "Awaiting payment or review" : "Awaiting invoice sync"}
           />
           <MetricCard
             label="Average invoice"
             value={
               revenueSyncReady
-                ? formatMoney(revenueSummary?.average_invoice_value ?? 0, revenueCurrency)
+                ? formatMoney(revenueSummary.average_invoice_value ?? 0, revenueCurrency)
                 : "—"
             }
             helper={revenueSyncReady ? "Paid invoices only" : "Awaiting invoice sync"}

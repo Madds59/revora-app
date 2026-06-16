@@ -233,7 +233,11 @@ export default async function QuoteBuilderPage({
             <CardTitle>{t("details")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <QuoteDetailsForm quote={quote} disabled={!isStaff || !isDraft} />
+            <QuoteDetailsForm
+              quote={quote}
+              disabled={!isStaff || !isDraft}
+              redirectTo="/quotations"
+            />
           </CardContent>
         </Card>
 
