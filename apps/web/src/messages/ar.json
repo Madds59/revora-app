@@ -604,7 +604,8 @@
       "dtcTitle": "تفسير DTC",
       "structuredInterpretation": "تفسير منظم لكل رمز تشخيص.",
       "stopDriving": "أوقف القيادة"
-    }
+    },
+    "unknownVehicle": "مركبة غير معروفة"
   },
   "dashboardHome": {
     "title": "مرحبًا بك في {businessName}",
@@ -1145,6 +1146,10 @@
   "portalQuotes": {
     "title": "عروض الأسعار",
     "description": "راجع عروض الأسعار القادمة من ورشتك ووافق عليها.",
+    "success": {
+      "approved": "تم اعتماد عرض السعر.",
+      "declined": "تم رفض عرض السعر."
+    },
     "list": {
       "title": "عروضك",
       "description": "افتح العرض لعرض البنود والموافقة عليه."

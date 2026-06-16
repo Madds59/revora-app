@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
+import { getLocale } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { StatusBanner } from "@/components/status-banner";
@@ -47,6 +48,7 @@ export default async function PortalQuoteDetailPage({
 }) {
   const { id } = await params;
   await requireCustomerPortal();
+  const locale = await getLocale();
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -92,7 +94,7 @@ export default async function PortalQuoteDetailPage({
         description={quote.business?.name ?? undefined}
         action={
           <Link
-            href="/portal/quotes"
+            href={`/${locale}/portal/quotes`}
             className={buttonVariants({ variant: "outline" })}
           >
             Back to quotes
@@ -237,7 +239,7 @@ export default async function PortalQuoteDetailPage({
                     customerId={quote.customer_id}
                     version={quote.current_version}
                     language={quote.language}
-                    redirectTo="/portal/quotes"
+                    redirectTo={`/${locale}/portal/quotes`}
                   />
                 </div>
                 <div className="rounded-lg border border-dashed p-4">
@@ -248,7 +250,7 @@ export default async function PortalQuoteDetailPage({
                     quotationId={quote.id}
                     businessId={quote.business_id}
                     customerId={quote.customer_id}
-                    redirectTo="/portal/quotes"
+                    redirectTo={`/${locale}/portal/quotes`}
                   />
                 </div>
               </div>
@@ -264,7 +266,7 @@ export default async function PortalQuoteDetailPage({
         <BusinessRatingForm
           businessId={quote.business_id}
           customerId={quote.customer_id}
-          redirectTo="/portal/quotes"
+          redirectTo={`/${locale}/portal/quotes`}
         />
       </div>
     </>

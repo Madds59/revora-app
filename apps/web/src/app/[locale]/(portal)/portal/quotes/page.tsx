@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { StatusBanner } from "@/components/status-banner";
 import {
   Table,
   TableBody,
@@ -30,8 +31,13 @@ type Row = Pick<
   "id" | "quote_number" | "status" | "total" | "currency" | "created_at"
 > & { business: { name: string } | null };
 
-export default async function PortalQuotesPage() {
+export default async function PortalQuotesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ quote_status?: string }>;
+}) {
   const t = await getTranslations("portalQuotes");
+  const params = searchParams ? await searchParams : undefined;
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
   const customerIds = accounts.map((account) => account.id);
@@ -44,11 +50,26 @@ export default async function PortalQuotesPage() {
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
   const quotes = (data ?? []) as unknown as Row[];
+  const quoteStatus =
+    params && typeof params === "object" && "quote_status" in params
+      ? String((params as { quote_status?: string }).quote_status ?? "")
+      : "";
+  const quoteStatusMessage =
+    quoteStatus === "approved"
+      ? t("success.approved")
+      : quoteStatus === "declined"
+        ? t("success.declined")
+        : null;
 
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} />
       <div className="p-6">
+        {quoteStatusMessage && (
+          <div className="mb-4">
+            <StatusBanner tone="success" title={quoteStatusMessage} />
+          </div>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>{t("list.title")}</CardTitle>

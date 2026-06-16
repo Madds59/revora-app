@@ -18,7 +18,10 @@ import { canManageBusiness } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import { summarizeBillingInvoices } from "@/lib/billing-summary";
+import {
+  summarizeBillingInvoices,
+  summarizeBillingRevenueTrend,
+} from "@/lib/billing-summary";
 import { DateRange, withinDateRange } from "@/lib/filtering";
 import type {
   Complaint,
@@ -137,6 +140,11 @@ function formatMoney(value: number, currency: string) {
   return formatCurrency(value, currency);
 }
 
+function monthKeyFromIso(value: string) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
 function MetricCard({
   label,
   value,
@@ -223,7 +231,6 @@ export default async function AnalyticsPage({
     { data: ratingRows },
     { data: documentRows, error: documentError },
     { data: subscriptionRows, error: subscriptionError },
-    { data: revenueTrendData, error: revenueTrendError },
     { data: billingRevenueRowsData, error: billingRevenueRowsError },
     { data: invoiceListData, error: invoiceListError },
   ] = await Promise.all([
@@ -266,20 +273,6 @@ export default async function AnalyticsPage({
           .eq("business_id", business.id)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as SubscriptionRow[], error: null }),
-    canSeeBilling
-      ? supabase.rpc("get_business_revenue_trend", {
-          p_business_id: business.id,
-          p_period: period,
-        })
-      : Promise.resolve({
-          data: [] as Array<{
-            bucket_start: string;
-            revenue: number;
-            invoice_count: number;
-            currency: string;
-          }>,
-          error: null,
-        }),
     canSeeBilling
       ? supabase
           .from("billing_invoices")
@@ -420,8 +413,12 @@ export default async function AnalyticsPage({
       >
     >;
   const revenueSummary = summarizeBillingInvoices(billingRevenueRows, period) as BillingRevenueSummary;
-  const revenueTrendRows = (revenueTrendData ??
-    []) as Array<{ bucket_start: string; revenue: number; invoice_count: number; currency: string }>;
+  const revenueTrendRows = summarizeBillingRevenueTrend(billingRevenueRows, period) as Array<{
+    bucket_start: string;
+    revenue: number;
+    invoice_count: number;
+    currency: string;
+  }>;
   const invoiceList = (invoiceListData ?? {
     rows: [],
     total_count: 0,
@@ -442,9 +439,7 @@ export default async function AnalyticsPage({
           label: point.label,
           value:
             revenueTrendRows.find(
-              (row) =>
-                `${new Date(row.bucket_start).getFullYear()}-${new Date(row.bucket_start).getMonth()}` ===
-                point.key,
+              (row) => monthKeyFromIso(row.bucket_start) === point.key,
             )?.revenue ?? 0,
         }));
   const paidInvoices = invoiceList.rows.filter((invoice) => invoice.status === "paid");
@@ -484,7 +479,6 @@ export default async function AnalyticsPage({
           documentError ||
           subscriptionError ||
           billingRevenueRowsError ||
-          revenueTrendError ||
           invoiceListError
         ) && (
           <Card className="border-destructive/20 bg-destructive/5">
