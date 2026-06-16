@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,15 +14,12 @@ import { Separator } from "@/components/ui/separator";
 import { ComplaintMessageForm, type ComplaintParentOption } from "@/components/complaint-message-form";
 import type { ComplaintMessage } from "@/lib/database.types";
 import { buildComplaintThread, type ThreadNode } from "@/lib/complaint-thread";
+import { formatDateTime } from "@/lib/formatters";
 
 type ComplaintMessageAction = (
   prev: { error?: string; message?: string },
   formData: FormData,
 ) => Promise<{ error?: string; message?: string }>;
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString();
-}
 
 function EmptyThread() {
   const t = useTranslations("complaints.messages");
@@ -35,6 +32,7 @@ function EmptyThread() {
 
 function ThreadList({ entries }: { entries: ThreadNode[] }) {
   const t = useTranslations("complaints.messages");
+  const locale = useLocale();
   if (entries.length === 0) return <EmptyThread />;
 
   return (
@@ -49,9 +47,17 @@ function ThreadList({ entries }: { entries: ThreadNode[] }) {
             <span className="font-medium text-foreground">
               {message.sender_name ?? message.sender_role}
             </span>
-            <span className="uppercase tracking-wide">{message.sender_role}</span>
+            <span className="uppercase tracking-wide">
+              {message.sender_role === "customer"
+                ? locale === "ar"
+                  ? "العميل"
+                  : "Customer"
+                : locale === "ar"
+                  ? "عضو الفريق"
+                  : "Team member"}
+            </span>
             {message.internal_only && <Badge variant="outline">{t("internal")}</Badge>}
-            <span>{formatDate(message.created_at)}</span>
+            <span>{formatDateTime(message.created_at, undefined, locale)}</span>
           </div>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
             {message.body}
@@ -81,13 +87,20 @@ export function ComplaintMessagingPanel({
   replyLabel: string;
   title?: string;
 }) {
+  const locale = useLocale();
   const t = useTranslations("complaints.messages");
   const resolvedTitle = title ?? t("panelTitle");
   const resolvedDescription = description ?? t("panelDescription");
   const threaded = buildComplaintThread(entries);
   const parentReplyOptions: ComplaintParentOption[] = threaded.map((message) => ({
     id: message.id,
-    label: `${message.sender_name ?? message.sender_role} · ${message.body.slice(0, 40)}`,
+    label: `${message.sender_name ?? (message.sender_role === "customer"
+      ? locale === "ar"
+        ? "العميل"
+        : "Customer"
+      : locale === "ar"
+        ? "عضو الفريق"
+        : "Team member")} · ${message.body.slice(0, 40)}`,
   }));
 
   return (

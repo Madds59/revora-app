@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { JOB_STATUS_LABELS } from "@/lib/jobs";
+import { JOB_STATUS_LABELS, getJobStatusLabel } from "@/lib/jobs";
 import type { JobStatus } from "@/lib/database.types";
+import { useLocale } from "next-intl";
 
 const initial: FormState = {};
 
@@ -53,6 +54,7 @@ export function JobStatusForm({
 }) {
   const [state, action] = useActionState(updateJobStatus, initial);
   const [status, setStatus] = useState<JobStatus>(current);
+  const locale = useLocale();
   useToast(state);
   return (
     <form action={action} className="flex items-end gap-3">
@@ -69,8 +71,8 @@ export function JobStatusForm({
           </SelectTrigger>
           <SelectContent>
             {STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {JOB_STATUS_LABELS[s]}
+            <SelectItem key={s} value={s}>
+                {getJobStatusLabel(s, locale)}
               </SelectItem>
             ))}
           </SelectContent>

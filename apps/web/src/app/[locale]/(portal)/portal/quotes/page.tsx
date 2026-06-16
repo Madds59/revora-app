@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
@@ -24,7 +23,8 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { formatCurrency } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import type { Quotation } from "@/lib/database.types";
-import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
+import { getLocale, getTranslations } from "next-intl/server";
+import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 
 type Row = Pick<
   Quotation,
@@ -37,6 +37,7 @@ export default async function PortalQuotesPage({
   searchParams?: Promise<{ quote_status?: string }>;
 }) {
   const t = await getTranslations("portalQuotes");
+  const locale = await getLocale();
   const params = searchParams ? await searchParams : undefined;
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
@@ -99,7 +100,7 @@ export default async function PortalQuotesPage({
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
-                            {quote.status}
+                            {getQuoteStatusLabel(quote.status, locale)}
                           </Badge>
                           <span className="tabular-nums">{formatCurrency(quote.total, quote.currency)}</span>
                         </div>
@@ -132,7 +133,7 @@ export default async function PortalQuotesPage({
                           <TableCell>{q.business?.name ?? t("fallback.none")}</TableCell>
                           <TableCell>
                             <Badge variant={QUOTE_STATUS_VARIANT[q.status]}>
-                              {q.status}
+                              {getQuoteStatusLabel(q.status, locale)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-end tabular-nums">

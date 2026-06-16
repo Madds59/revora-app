@@ -28,7 +28,7 @@ import { formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import { BusinessRatingForm } from "@/components/business-rating-form";
 import type { Approval, Quotation, QuotationItem } from "@/lib/database.types";
-import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
+import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 
 import { ApproveForm } from "../approve-form";
 import { RejectForm } from "../reject-form";
@@ -87,7 +87,7 @@ export default async function PortalQuoteDetailPage({
           <span className="flex items-center gap-3">
             {quote.quote_number}
             <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
-              {quote.status}
+              {getQuoteStatusLabel(quote.status, locale)}
             </Badge>
           </span>
         }
@@ -97,7 +97,7 @@ export default async function PortalQuoteDetailPage({
             href={`/${locale}/portal/quotes`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to quotes
+            {locale === "ar" ? "العودة إلى عروض الأسعار" : "Back to quotes"}
           </Link>
         }
       />
@@ -105,9 +105,11 @@ export default async function PortalQuoteDetailPage({
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Quotation</CardTitle>
+            <CardTitle>{locale === "ar" ? "عرض السعر" : "Quotation"}</CardTitle>
             <CardDescription>
-              Parts, labor, and pricing with transparency details.
+              {locale === "ar"
+                ? "القطع والعمالة والتسعير مع تفاصيل الشفافية."
+                : "Parts, labor, and pricing with transparency details."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
@@ -120,11 +122,11 @@ export default async function PortalQuoteDetailPage({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Transparency</TableHead>
-                      <TableHead className="text-end">Qty</TableHead>
-                      <TableHead className="text-end">Total</TableHead>
+                      <TableHead>{locale === "ar" ? "البند" : "Item"}</TableHead>
+                      <TableHead>{locale === "ar" ? "النوع" : "Type"}</TableHead>
+                      <TableHead>{locale === "ar" ? "الشفافية" : "Transparency"}</TableHead>
+                      <TableHead className="text-end">{locale === "ar" ? "الكمية" : "Qty"}</TableHead>
+                      <TableHead className="text-end">{locale === "ar" ? "الإجمالي" : "Total"}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -157,25 +159,25 @@ export default async function PortalQuoteDetailPage({
 
             <dl className="ms-auto grid w-full max-w-xs gap-1 text-sm">
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Subtotal</dt>
+                <dt className="text-muted-foreground">{locale === "ar" ? "المجموع الفرعي" : "Subtotal"}</dt>
                 <dd className="tabular-nums">
                   {formatCurrency(quote.subtotal, quote.currency)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Discount</dt>
+                <dt className="text-muted-foreground">{locale === "ar" ? "الخصم" : "Discount"}</dt>
                 <dd className="tabular-nums">
                   −{formatCurrency(quote.discount_total, quote.currency)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Tax</dt>
+                <dt className="text-muted-foreground">{locale === "ar" ? "الضريبة" : "Tax"}</dt>
                 <dd className="tabular-nums">
                   {formatCurrency(quote.tax_total, quote.currency)}
                 </dd>
               </div>
               <div className="mt-1 flex items-baseline justify-between border-t pt-2 text-base font-semibold">
-                <dt>Total</dt>
+                <dt>{locale === "ar" ? "الإجمالي" : "Total"}</dt>
                 <dd className="text-primary tabular-nums">
                   {formatCurrency(quote.total, quote.currency)}
                 </dd>
@@ -186,42 +188,39 @@ export default async function PortalQuoteDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Approval</CardTitle>
+            <CardTitle>{locale === "ar" ? "الموافقة" : "Approval"}</CardTitle>
             <CardDescription>
-              Approve or decline with a note. This is recorded with a timestamp
-              for your records.
+              {locale === "ar"
+                ? "وافق أو ارفض مع ملاحظة. يُسجل هذا مع الطابع الزمني للرجوع إليه."
+                : "Approve or decline with a note. This is recorded with a timestamp for your records."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isApproved ? (
               <StatusBanner
                 tone="success"
-              title={`Approved${
-                approval
-                    ? ` on ${formatDateTime(approval.approved_at)}`
-                    : ""
+                title={`${locale === "ar" ? "معتمد" : "Approved"}${
+                  approval ? ` ${locale === "ar" ? "في" : "on"} ${formatDateTime(approval.approved_at, undefined, locale)}` : ""
                 }`}
               >
                 {approval && (
                   <p>
-                    Signed by{" "}
+                    {locale === "ar" ? "تم التوقيع بواسطة " : "Signed by "}
                     {(approval.device_data as Record<string, string>)
                       ?.signed_name ?? "you"}
                   </p>
                 )}
-                {approvalNote && <p>Note: {approvalNote}</p>}
+                {approvalNote && <p>{locale === "ar" ? "ملاحظة: " : "Note: "}{approvalNote}</p>}
               </StatusBanner>
             ) : isDeclined ? (
               <StatusBanner
                 tone="destructive"
-              title={`Declined${
-                quote.customer_rejected_at
-                    ? ` on ${formatDateTime(quote.customer_rejected_at)}`
-                    : ""
+                title={`${locale === "ar" ? "مرفوض" : "Declined"}${
+                  quote.customer_rejected_at ? ` ${locale === "ar" ? "في" : "on"} ${formatDateTime(quote.customer_rejected_at, undefined, locale)}` : ""
                 }`}
               >
                 {quote.customer_rejection_note && (
-                  <p>Reason: {quote.customer_rejection_note}</p>
+                  <p>{locale === "ar" ? "السبب: " : "Reason: "}{quote.customer_rejection_note}</p>
                 )}
               </StatusBanner>
             ) : canApprove ? (
@@ -230,7 +229,7 @@ export default async function PortalQuoteDetailPage({
                   <div className="mb-4 flex items-center gap-2">
                     <ShieldCheck className="text-primary size-4" />
                     <span className="text-sm font-medium">
-                      Approve this quotation
+                      {locale === "ar" ? "اعتمد عرض السعر هذا" : "Approve this quotation"}
                     </span>
                   </div>
                   <ApproveForm
@@ -244,7 +243,7 @@ export default async function PortalQuoteDetailPage({
                 </div>
                 <div className="rounded-lg border border-dashed p-4">
                   <div className="mb-4 text-sm font-medium">
-                    Prefer to decline?
+                    {locale === "ar" ? "هل تفضّل الرفض؟" : "Prefer to decline?"}
                   </div>
                   <RejectForm
                     quotationId={quote.id}
@@ -256,8 +255,9 @@ export default async function PortalQuoteDetailPage({
               </div>
             ) : (
               <p className="text-muted-foreground text-sm">
-                This quote isn&apos;t ready for approval yet. You&apos;ll be
-                able to approve it once the workshop sends it to you.
+                {locale === "ar"
+                  ? "عرض السعر غير جاهز للموافقة بعد. ستتمكن من الموافقة عليه بعد أن يرسله لك الورشة."
+                  : "This quote isn&apos;t ready for approval yet. You&apos;ll be able to approve it once the workshop sends it to you."}
               </p>
             )}
           </CardContent>

@@ -1,4 +1,6 @@
 import type { JobStatus } from "@/lib/database.types";
+import type { AppLocale } from "@/lib/formatters";
+import { getJobStatusLabel as getDisplayJobStatusLabel } from "@/lib/display-labels";
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   pending: "Pending",
@@ -30,3 +32,7 @@ export const ACTIVE_JOB_STATUSES: JobStatus[] = [
   "waiting_parts",
   "delayed",
 ];
+
+export function getJobStatusLabel(status: JobStatus, locale: AppLocale = "en"): string {
+  return getDisplayJobStatusLabel(status, locale);
+}

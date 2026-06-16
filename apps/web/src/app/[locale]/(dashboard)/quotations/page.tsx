@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 import type { Quotation } from "@/lib/database.types";
-import { QUOTE_STATUS_VARIANT } from "./status";
+import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "./status";
 
 type Row = Pick<
   Quotation,
@@ -28,6 +28,7 @@ type Row = Pick<
 
 export default async function QuotationsPage() {
   const t = await getTranslations("dashboardQuotations");
+  const locale = await getLocale();
   const { member, business } = await requireMembership();
   const canManage = canManageQuotes(member.role);
   const supabase = await createClient();
@@ -86,7 +87,7 @@ export default async function QuotationsPage() {
                   meta={
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
-                        {quote.status}
+                        {getQuoteStatusLabel(quote.status, locale)}
                       </Badge>
                       <span>{formatCurrency(quote.total, quote.currency)}</span>
                     </div>
@@ -119,7 +120,7 @@ export default async function QuotationsPage() {
                     <TableCell>{q.customer?.full_name ?? t("fallback.none")}</TableCell>
                     <TableCell>
                       <Badge variant={QUOTE_STATUS_VARIANT[q.status]}>
-                        {q.status}
+                        {getQuoteStatusLabel(q.status, locale)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-end tabular-nums">

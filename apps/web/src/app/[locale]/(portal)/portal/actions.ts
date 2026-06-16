@@ -190,6 +190,7 @@ export async function approveQuote(
 ): Promise<FormState> {
   const { accounts } = await requireCustomerPortal();
   const user = await getUser();
+  const t = await getTranslations("portalQuotes.success");
 
   const quotationId = str(formData, "quotation_id");
   const businessId = str(formData, "business_id");
@@ -230,8 +231,7 @@ export async function approveQuote(
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
-  const locale = await getLocale();
-  redirect(`/${locale}/portal/quotes?quote_status=approved`);
+  return { message: t("approved") };
 }
 
 export async function rejectQuote(
@@ -239,6 +239,7 @@ export async function rejectQuote(
   formData: FormData,
 ): Promise<FormState> {
   const { accounts } = await requireCustomerPortal();
+  const t = await getTranslations("portalQuotes.success");
 
   const quotationId = str(formData, "quotation_id");
   const businessId = str(formData, "business_id");
@@ -265,6 +266,5 @@ export async function rejectQuote(
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
-  const locale = await getLocale();
-  redirect(`/${locale}/portal/quotes?quote_status=declined`);
+  return { message: t("declined") };
 }
