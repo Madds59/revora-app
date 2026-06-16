@@ -230,7 +230,8 @@ export async function approveQuote(
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
-  return { message: "Quotation approved. Thank you." };
+  const locale = await getLocale();
+  redirect(`/${locale}/portal/quotes?quote_status=approved`);
 }
 
 export async function rejectQuote(
@@ -264,5 +265,6 @@ export async function rejectQuote(
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
-  return { message: "Quotation declined." };
+  const locale = await getLocale();
+  redirect(`/${locale}/portal/quotes?quote_status=declined`);
 }

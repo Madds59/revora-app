@@ -20,6 +20,7 @@ import {
 import { validateDiagnosticJson } from "../src/lib/vehicle-intelligence/schemas.js";
 import { decodeVin } from "../src/lib/vehicle-intelligence/vin.js";
 import { callOpenAiJson } from "../src/lib/vehicle-intelligence/openai.js";
+import { formatVehicleLabel } from "../src/lib/vehicle-intelligence/labels.js";
 
 test("VIN normalization accepts a valid VIN", () => {
   const result = validateVin("jtebu5jr9j5a12345");
@@ -213,4 +214,40 @@ test("VIN provider outage returns a safe unavailable decode", async () => {
   } finally {
     global.fetch = prevFetch;
   }
+});
+
+test("vehicle labels prefer readable vehicle attributes over UUIDs", () => {
+  assert.equal(
+    formatVehicleLabel(
+      {
+        id: "3ccb6f7c-8bf2-49f7-a65e-e2f4139a23c0",
+        make: "Harley Davidson",
+        model: "Softail Deluxe",
+        year: 2008,
+        plate_number: "15400 1",
+        vin: "1HD1JRW18KY123456",
+      },
+      "Vehicle",
+      "Unknown vehicle",
+    ),
+    "Harley Davidson Softail Deluxe · 15400 1 · 2008",
+  );
+});
+
+test("vehicle labels fall back without exposing raw UUIDs", () => {
+  assert.equal(
+    formatVehicleLabel(
+      {
+        id: "3ccb6f7c-8bf2-49f7-a65e-e2f4139a23c0",
+        make: null,
+        model: null,
+        year: null,
+        plate_number: null,
+        vin: null,
+      },
+      "Vehicle",
+      "Unknown vehicle",
+    ),
+    "Unknown vehicle",
+  );
 });

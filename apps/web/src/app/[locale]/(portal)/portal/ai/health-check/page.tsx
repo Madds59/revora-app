@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
 import { PortalHealthCheckForm } from "./portal-health-check-form";
 
@@ -35,11 +36,7 @@ export default async function PortalHealthCheckPage({
   const vehicles =
     (data ?? []).map((vehicle) => ({
       id: vehicle.id,
-      label:
-        [vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
-        vehicle.plate_number ||
-        vehicle.vin ||
-        t("portal.vehicleFallback"),
+      label: formatVehicleLabel(vehicle, t("portal.vehicleFallback"), t("unknownVehicle")),
       detail: vehicle.vin ?? t("portal.linkedVehicle"),
       customerId: vehicle.customer_id,
     })) ?? [];

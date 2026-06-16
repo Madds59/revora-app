@@ -71,4 +71,55 @@ function summarizeBillingInvoices(rows, period = "90d") {
   };
 }
 
-export { summarizeBillingInvoices };
+function getTrendBucketStart(date, period) {
+  const copy = new Date(date);
+  copy.setSeconds(0, 0);
+  if (String(period ?? "90d").toLowerCase() === "7d") {
+    copy.setHours(0, 0, 0, 0);
+  } else {
+    copy.setDate(1);
+    copy.setHours(0, 0, 0, 0);
+  }
+  return copy;
+}
+
+function summarizeBillingRevenueTrend(rows, period = "90d") {
+  const invoices = Array.isArray(rows) ? rows : [];
+  const periodStart = getPeriodStart(period);
+  const periodEnd = new Date();
+  const latestInvoice = invoices.reduce((latest, invoice) => {
+    if (!latest) return invoice ?? null;
+    const latestDate = toDate(latest.created_at);
+    const invoiceDate = toDate(invoice.created_at);
+    if (!invoiceDate) return latest;
+    if (!latestDate || invoiceDate > latestDate) return invoice;
+    return latest;
+  }, null);
+  const currency = latestInvoice?.currency ?? "AED";
+
+  const buckets = new Map();
+  invoices.forEach((invoice) => {
+    if (invoice.status !== "paid") return;
+    const activityDate = toDate(invoice.paid_at) ?? toDate(invoice.created_at);
+    if (!activityDate || activityDate < periodStart || activityDate > periodEnd) return;
+
+    const bucketStart = getTrendBucketStart(activityDate, period);
+    const key = bucketStart.toISOString();
+    const current = buckets.get(key) ?? {
+      bucket_start: key,
+      revenue: 0,
+      invoice_count: 0,
+      currency,
+    };
+    current.revenue += Number(invoice.total_amount ?? 0);
+    current.invoice_count += 1;
+    current.currency = currency;
+    buckets.set(key, current);
+  });
+
+  return [...buckets.values()].sort(
+    (left, right) => new Date(left.bucket_start).getTime() - new Date(right.bucket_start).getTime(),
+  );
+}
+
+export { summarizeBillingInvoices, summarizeBillingRevenueTrend };

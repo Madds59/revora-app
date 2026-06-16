@@ -604,7 +604,8 @@
       "dtcTitle": "DTC interpretation",
       "structuredInterpretation": "Structured interpretation of each diagnostic code.",
       "stopDriving": "Stop driving"
-    }
+    },
+    "unknownVehicle": "Unknown vehicle"
   },
   "dashboardHome": {
     "title": "Welcome to {businessName}",
@@ -1145,6 +1146,10 @@
   "portalQuotes": {
     "title": "Quotes",
     "description": "Review and approve quotations from your workshop.",
+    "success": {
+      "approved": "Quotation approved.",
+      "declined": "Quotation declined."
+    },
     "list": {
       "title": "Your quotes",
       "description": "Open a quote to see the line items and approve it."

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
+import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
 import { VehicleDiagnosisForm } from "./vehicle-diagnosis-form";
 
@@ -44,11 +45,7 @@ export default async function VehicleDiagnosisPage({
   const vehicles =
     (vehicleRows ?? []).map((vehicle) => ({
       id: vehicle.id,
-      label:
-        [vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
-        vehicle.plate_number ||
-        vehicle.vin ||
-        t("diagnosis.vehicleFallback"),
+      label: formatVehicleLabel(vehicle, t("diagnosis.vehicleFallback"), t("unknownVehicle")),
       detail: [vehicle.customer?.full_name, vehicle.customer?.email].filter(Boolean).join(" · "),
       customerId: vehicle.customer_id,
     })) ?? [];
