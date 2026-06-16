@@ -25,13 +25,14 @@ import { getUser, requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
 import { formatCurrency } from "@/lib/money";
 import { formatDateTime } from "@/lib/formatters";
+import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { Approval, Quotation, QuotationItem } from "@/lib/database.types";
 
 import { AddItemForm } from "./add-item-form";
 import { QuoteDetailsForm } from "./quote-details-form";
 import { ApproveForm, RemoveItemButton, SendQuoteButton } from "./quote-actions";
-import { QUOTE_STATUS_VARIANT } from "../status";
+import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "../status";
 
 type QuoteWithRelations = Quotation & {
   customer: {
@@ -59,6 +60,7 @@ export default async function QuoteBuilderPage({
   const { member, business } = await requireMembership();
   const isStaff = canManageQuotes(member.role);
   const user = await getUser();
+  const locale = await getLocale();
   const supabase = await createClient();
   const t = await getTranslations("dashboardQuotations.detail");
 
@@ -109,10 +111,10 @@ export default async function QuoteBuilderPage({
     <>
       <PageHeader
         title={
-          <span className="flex items-center gap-3">
+            <span className="flex items-center gap-3">
             {quote.quote_number}
             <Badge variant={QUOTE_STATUS_VARIANT[quote.status]}>
-              {quote.status}
+              {getQuoteStatusLabel(quote.status, locale)}
             </Badge>
           </span>
         }
@@ -252,10 +254,8 @@ export default async function QuoteBuilderPage({
             {isApproved ? (
               <StatusBanner
                 tone="success"
-              title={`Approved${
-                approval
-                    ? ` on ${formatDateTime(approval.approved_at)}`
-                    : ""
+                title={`${getQuoteStatusLabel("approved", locale)}${
+                  approval ? ` on ${formatDateTime(approval.approved_at, undefined, locale)}` : ""
                 }`}
               >
                 {approval && (
@@ -271,9 +271,9 @@ export default async function QuoteBuilderPage({
             ) : isDeclined ? (
               <StatusBanner
                 tone="destructive"
-              title={`Declined${
-                quote.customer_rejected_at
-                    ? ` on ${formatDateTime(quote.customer_rejected_at)}`
+                title={`${getQuoteStatusLabel("declined", locale)}${
+                  quote.customer_rejected_at
+                    ? ` on ${formatDateTime(quote.customer_rejected_at, undefined, locale)}`
                     : ""
                 }`}
               >

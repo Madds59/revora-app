@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import type {
 } from "@/lib/billing-views";
 import { canManageBusiness } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import {
   summarizeBillingInvoices,
@@ -32,12 +31,15 @@ import type {
   Subscription,
 } from "@/lib/database.types";
 import { ACTIVE_JOB_STATUSES } from "@/lib/jobs";
-import {
-  COMPLAINT_STATUS_LABELS,
-  COMPLAINT_STATUS_VARIANT,
-} from "@/lib/complaints";
+import { COMPLAINT_STATUS_VARIANT, getComplaintStatusLabel } from "@/lib/complaints";
+import { getJobStatusLabel } from "@/lib/jobs";
 import { summarizeRatings } from "@/lib/ratings";
-import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
+import {
+  QUOTE_STATUS_VARIANT,
+  getQuoteStatusLabel,
+} from "@/app/[locale]/(dashboard)/quotations/status";
+import { getCommonLabel } from "@/lib/display-labels";
+import { formatCurrency as formatLocalizedCurrency } from "@/lib/formatters";
 
 type SubscriptionRow = Pick<
   Subscription,
@@ -136,8 +138,8 @@ function periodText(period: DateRange) {
   }
 }
 
-function formatMoney(value: number, currency: string) {
-  return formatCurrency(value, currency);
+function formatMoney(value: number, currency: string, locale: "en" | "ar") {
+  return formatLocalizedCurrency(value, currency, undefined, locale);
 }
 
 function monthKeyFromIso(value: string) {
@@ -216,6 +218,7 @@ export default async function AnalyticsPage({
 }: {
   searchParams?: Promise<{ period?: string }>;
 }) {
+  const locale = await getLocale();
   const { member, business } = await requireMembership();
   const supabase = await createClient();
   const canSeeBilling = canManageBusiness(member.role);
@@ -229,10 +232,10 @@ export default async function AnalyticsPage({
     { data: quoteRows, error: quoteError },
     { data: complaintRows, error: complaintError },
     { data: ratingRows },
-    { data: documentRows, error: documentError },
-    { data: subscriptionRows, error: subscriptionError },
-    { data: billingRevenueRowsData, error: billingRevenueRowsError },
-    { data: invoiceListData, error: invoiceListError },
+    { data: documentRows },
+    { data: subscriptionRows },
+    { data: billingRevenueRowsData },
+    { data: invoiceListData },
   ] = await Promise.all([
     supabase
       .from("customers")
@@ -357,7 +360,10 @@ export default async function AnalyticsPage({
       acc[quote.status] = (acc[quote.status] ?? 0) + 1;
       return acc;
     }, {}),
-  ).map(([label, value]) => ({ label, value }));
+  ).map(([label, value]) => ({
+    label: getQuoteStatusLabel(label as Parameters<typeof getQuoteStatusLabel>[0], locale),
+    value,
+  }));
 
   const complaintSeries = Object.entries(
     periodComplaints.reduce<Record<string, number>>((acc, complaint) => {
@@ -365,7 +371,10 @@ export default async function AnalyticsPage({
       return acc;
     }, {}),
   ).map(([label, value]) => ({
-    label: COMPLAINT_STATUS_LABELS[label as keyof typeof COMPLAINT_STATUS_LABELS] ?? label,
+    label: getComplaintStatusLabel(
+      label as Parameters<typeof getComplaintStatusLabel>[0],
+      locale,
+    ),
     value,
   }));
 
@@ -374,7 +383,10 @@ export default async function AnalyticsPage({
       acc[job.status] = (acc[job.status] ?? 0) + 1;
       return acc;
     }, {}),
-  ).map(([label, value]) => ({ label, value }));
+  ).map(([label, value]) => ({
+    label: getJobStatusLabel(label as Parameters<typeof getJobStatusLabel>[0], locale),
+    value,
+  }));
 
   const quoteTrendSeries = monthSeries(6).map((point) => ({
     label: point.label,
@@ -448,8 +460,12 @@ export default async function AnalyticsPage({
   return (
     <>
       <PageHeader
-        title="Analytics"
-        description="Tenant-scoped operational metrics, trends, and summaries."
+        title={locale === "ar" ? "التحليلات" : "Analytics"}
+        description={
+          locale === "ar"
+            ? "مقاييس واتجاهات وملخصات تشغيلية مرتبطة بالنشاط."
+            : "Tenant-scoped operational metrics, trends, and summaries."
+        }
         action={
           <div className="flex flex-wrap items-center gap-2">
             {PERIOD_OPTIONS.map((option) => (
@@ -475,126 +491,172 @@ export default async function AnalyticsPage({
           customerError ||
           jobError ||
           quoteError ||
-          complaintError ||
-          documentError ||
-          subscriptionError ||
-          billingRevenueRowsError ||
-          invoiceListError
+          complaintError
         ) && (
           <Card className="border-destructive/20 bg-destructive/5">
             <CardContent className="p-4 text-sm text-destructive">
-              One or more analytics queries failed. The page is still showing the data that could be loaded.
+              {locale === "ar"
+                ? "فشلت إحدى استعلامات التحليلات. لا تزال الصفحة تعرض البيانات التي أمكن تحميلها."
+                : "One or more analytics queries failed. The page is still showing the data that could be loaded."}
             </CardContent>
           </Card>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <MetricCard
-            label="Customers"
+            label={locale === "ar" ? "العملاء" : "Customers"}
             value={periodCustomers.length}
             helper={
               currentPeriodLabel === "all time"
-                ? `${newCustomersThisMonth} new overall`
-                : `${newCustomersThisMonth} new in ${currentPeriodLabel}`
+                ? locale === "ar"
+                  ? `${newCustomersThisMonth} جديد إجمالًا`
+                  : `${newCustomersThisMonth} new overall`
+                : locale === "ar"
+                  ? `${newCustomersThisMonth} جديد في ${currentPeriodLabel}`
+                  : `${newCustomersThisMonth} new in ${currentPeriodLabel}`
             }
           />
           <MetricCard
-            label="Active jobs"
+            label={locale === "ar" ? "المهام النشطة" : "Active jobs"}
             value={activeJobs.length}
             helper={
               currentPeriodLabel === "all time"
-                ? `${completedJobs.length} completed overall`
-                : `${completedJobs.length} completed in ${currentPeriodLabel}`
+                ? locale === "ar"
+                  ? `${completedJobs.length} مكتملة إجمالًا`
+                  : `${completedJobs.length} completed overall`
+                : locale === "ar"
+                  ? `${completedJobs.length} مكتملة في ${currentPeriodLabel}`
+                  : `${completedJobs.length} completed in ${currentPeriodLabel}`
             }
           />
-          <MetricCard label="Overdue jobs" value={overdueJobs.length} helper="Due dates in the past" />
           <MetricCard
-            label="Quotations"
+            label={locale === "ar" ? "المهام المتأخرة" : "Overdue jobs"}
+            value={overdueJobs.length}
+            helper={locale === "ar" ? "تواريخ الاستحقاق في الماضي" : "Due dates in the past"}
+          />
+          <MetricCard
+            label={locale === "ar" ? "عروض الأسعار" : "Quotations"}
             value={periodQuotes.length}
             helper={
               currentPeriodLabel === "all time"
-                ? `${pendingQuotes.length} pending overall`
-                : `${pendingQuotes.length} pending in ${currentPeriodLabel}`
+                ? locale === "ar"
+                  ? `${pendingQuotes.length} قيد الانتظار إجمالًا`
+                  : `${pendingQuotes.length} pending overall`
+                : locale === "ar"
+                  ? `${pendingQuotes.length} قيد الانتظار في ${currentPeriodLabel}`
+                  : `${pendingQuotes.length} pending in ${currentPeriodLabel}`
             }
           />
           <MetricCard
-            label="Complaints"
+            label={locale === "ar" ? "الشكاوى" : "Complaints"}
             value={periodComplaints.length}
             helper={
               currentPeriodLabel === "all time"
-                ? `${openComplaints.length} open overall`
-                : `${openComplaints.length} open in ${currentPeriodLabel}`
+                ? locale === "ar"
+                  ? `${openComplaints.length} مفتوحة إجمالًا`
+                  : `${openComplaints.length} open overall`
+                : locale === "ar"
+                  ? `${openComplaints.length} مفتوحة في ${currentPeriodLabel}`
+                  : `${openComplaints.length} open in ${currentPeriodLabel}`
             }
           />
           <MetricCard
-            label="Documents"
+            label={locale === "ar" ? "المستندات" : "Documents"}
             value={periodDocuments.length}
-            helper="Linked records and uploads"
+            helper={locale === "ar" ? "سجلات وملفات مرتبطة" : "Linked records and uploads"}
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <MetricCard label="Pending quotes" value={pendingQuotes.length} helper="Sent or revised" />
           <MetricCard
-            label="Approved quotes"
-            value={approvedQuotes.length}
-            helper={`${approvedRate}% approval rate`}
+            label={locale === "ar" ? "العروض قيد الانتظار" : "Pending quotes"}
+            value={pendingQuotes.length}
+            helper={locale === "ar" ? "مرسلة أو معدّلة" : "Sent or revised"}
           />
-          <MetricCard label="Rejected quotes" value={rejectedQuotes.length} helper="Customer declines" />
-          <MetricCard label="Resolved complaints" value={resolvedComplaints.length} helper="Resolved or closed" />
           <MetricCard
-            label="Plan"
-            value={currentSubscription?.plan_key ?? "Unavailable"}
+            label={locale === "ar" ? "العروض المعتمدة" : "Approved quotes"}
+            value={approvedQuotes.length}
+            helper={
+              locale === "ar"
+                ? `${approvedRate}% معدل الاعتماد`
+                : `${approvedRate}% approval rate`
+            }
+          />
+          <MetricCard
+            label={locale === "ar" ? "العروض المرفوضة" : "Rejected quotes"}
+            value={rejectedQuotes.length}
+            helper={locale === "ar" ? "رفض العميل" : "Customer declines"}
+          />
+          <MetricCard
+            label={locale === "ar" ? "الشكاوى المحلولة" : "Resolved complaints"}
+            value={resolvedComplaints.length}
+            helper={locale === "ar" ? "محلولة أو مغلقة" : "Resolved or closed"}
+          />
+          <MetricCard
+            label={locale === "ar" ? "الخطة" : "Plan"}
+            value={currentSubscription?.plan_key ?? getCommonLabel("unavailable", locale)}
             helper={
               currentSubscription?.status
-                ? `Status: ${currentSubscription.status}`
-                : "Billing data only available to owners"
+                ? locale === "ar"
+                  ? `الحالة: ${currentSubscription.status}`
+                  : `Status: ${currentSubscription.status}`
+                : locale === "ar"
+                  ? "بيانات الفوترة متاحة للمالكين فقط"
+                  : "Billing data only available to owners"
             }
           />
           <MetricCard
-            label="Quote value"
-            value={formatCurrency(totalQuoteValue, periodQuotes[0]?.currency ?? "AED")}
+            label={locale === "ar" ? "قيمة عروض الأسعار" : "Quote value"}
+            value={formatMoney(totalQuoteValue, periodQuotes[0]?.currency ?? "AED", locale)}
             helper={
               currentPeriodLabel === "all time"
-                ? "Total value overall"
-                : `Total value in ${currentPeriodLabel}`
+                ? locale === "ar"
+                  ? "إجمالي القيمة"
+                  : "Total value overall"
+                : locale === "ar"
+                  ? `إجمالي القيمة في ${currentPeriodLabel}`
+                  : `Total value in ${currentPeriodLabel}`
             }
           />
           <MetricCard
-            label="Paid revenue"
+            label={locale === "ar" ? "الإيراد المدفوع" : "Paid revenue"}
             value={
               revenueSyncReady
-                ? formatMoney(revenueSummary.total_paid_revenue ?? 0, revenueCurrency)
+                ? formatMoney(revenueSummary.total_paid_revenue ?? 0, revenueCurrency, locale)
                 : "—"
             }
             helper={
               revenueSyncReady
-                ? `Paid invoices in ${currentPeriodLabel}`
-                : "Revenue will populate after Stripe invoices sync"
+                ? locale === "ar"
+                  ? `الفواتير المدفوعة في ${currentPeriodLabel}`
+                  : `Paid invoices in ${currentPeriodLabel}`
+                : locale === "ar"
+                  ? "ستظهر الإيرادات بعد مزامنة فواتير Stripe"
+                  : "Revenue will populate after Stripe invoices sync"
             }
           />
           <MetricCard
-            label="Open invoice amount"
+            label={locale === "ar" ? "إجمالي الفواتير المفتوحة" : "Open invoice amount"}
             value={
               revenueSyncReady
-                ? formatMoney(revenueSummary.open_invoice_amount ?? 0, revenueCurrency)
+                ? formatMoney(revenueSummary.open_invoice_amount ?? 0, revenueCurrency, locale)
                 : "—"
             }
-            helper={revenueSyncReady ? "Outstanding balance" : "Awaiting invoice sync"}
+            helper={revenueSyncReady ? (locale === "ar" ? "الرصيد المستحق" : "Outstanding balance") : (locale === "ar" ? "بانتظار مزامنة الفواتير" : "Awaiting invoice sync")}
           />
           <MetricCard
-            label="Open invoices"
+            label={locale === "ar" ? "الفواتير المفتوحة" : "Open invoices"}
             value={revenueSyncReady ? revenueSummary.open_invoices_count ?? 0 : "—"}
-            helper={revenueSyncReady ? "Awaiting payment or review" : "Awaiting invoice sync"}
+            helper={revenueSyncReady ? (locale === "ar" ? "بانتظار الدفع أو المراجعة" : "Awaiting payment or review") : (locale === "ar" ? "بانتظار مزامنة الفواتير" : "Awaiting invoice sync")}
           />
           <MetricCard
-            label="Average invoice"
+            label={locale === "ar" ? "متوسط الفاتورة" : "Average invoice"}
             value={
               revenueSyncReady
-                ? formatMoney(revenueSummary.average_invoice_value ?? 0, revenueCurrency)
+                ? formatMoney(revenueSummary.average_invoice_value ?? 0, revenueCurrency, locale)
                 : "—"
             }
-            helper={revenueSyncReady ? "Paid invoices only" : "Awaiting invoice sync"}
+            helper={revenueSyncReady ? (locale === "ar" ? "الفواتير المدفوعة فقط" : "Paid invoices only") : (locale === "ar" ? "بانتظار مزامنة الفواتير" : "Awaiting invoice sync")}
           />
           <MetricCard
             label={ratingT("summary.title")}
@@ -613,15 +675,22 @@ export default async function AnalyticsPage({
 
         <div className="grid gap-4 xl:grid-cols-2">
           <DetailSummaryCard
-            title="Recent jobs"
-            description="The latest work orders and their current state."
+            title={locale === "ar" ? "المهام الأخيرة" : "Recent jobs"}
+            description={
+              locale === "ar"
+                ? "آخر أوامر العمل وحالتها الحالية."
+                : "The latest work orders and their current state."
+            }
             rows={
               recentJobs.length === 0
                 ? [
                     {
-                      label: "Jobs",
-                      value: "No jobs yet",
-                      note: "Jobs will appear once work orders are created.",
+                      label: locale === "ar" ? "المهام" : "Jobs",
+                      value: locale === "ar" ? "لا توجد مهام بعد" : "No jobs yet",
+                      note:
+                        locale === "ar"
+                          ? "ستظهر المهام بمجرد إنشاء أوامر العمل."
+                          : "Jobs will appear once work orders are created.",
                     },
                   ]
                 : recentJobs.map((job) => ({
@@ -642,8 +711,12 @@ export default async function AnalyticsPage({
           />
 
           <StatusBars
-            title="Quote performance"
-            description="Status distribution for quotations on this business."
+            title={locale === "ar" ? "أداء عروض الأسعار" : "Quote performance"}
+            description={
+              locale === "ar"
+                ? "توزيع الحالات لعروض الأسعار الخاصة بهذا النشاط."
+                : "Status distribution for quotations on this business."
+            }
             rows={quoteSeries.map((row) => ({
               label: row.label,
               value: row.value,
@@ -655,8 +728,12 @@ export default async function AnalyticsPage({
 
         <div className="grid gap-4 xl:grid-cols-2">
           <StatusBars
-            title="Complaint workload"
-            description="Current complaint status mix across the business."
+            title={locale === "ar" ? "عبء الشكاوى" : "Complaint workload"}
+            description={
+              locale === "ar"
+                ? "مزيج حالات الشكاوى الحالية عبر النشاط."
+                : "Current complaint status mix across the business."
+            }
             rows={complaintSeries.map((row) => ({
               label: row.label,
               value: row.value,
@@ -666,8 +743,12 @@ export default async function AnalyticsPage({
           />
 
           <StatusBars
-            title="Job status"
-            description="Active, completed, and delayed work orders."
+            title={locale === "ar" ? "حالة المهام" : "Job status"}
+            description={
+              locale === "ar"
+                ? "أوامر العمل النشطة والمكتملة والمتأخرة."
+                : "Active, completed, and delayed work orders."
+            }
             rows={jobSeries.map((row) => ({
               label: row.label,
               value: row.value,
@@ -677,26 +758,42 @@ export default async function AnalyticsPage({
 
         <div className="grid gap-4 xl:grid-cols-2">
           <StatusBars
-            title="Customer trend"
-            description={`Monthly customer additions over ${currentPeriodLabel}.`}
+            title={locale === "ar" ? "اتجاه العملاء" : "Customer trend"}
+            description={
+              locale === "ar"
+                ? `إضافات العملاء الشهرية خلال ${currentPeriodLabel}.`
+                : `Monthly customer additions over ${currentPeriodLabel}.`
+            }
             rows={customerSeries.map((point) => ({ label: point.label, value: point.value }))}
           />
           <StatusBars
-            title="Quote trend"
-            description={`Monthly quote creation over ${currentPeriodLabel}.`}
+            title={locale === "ar" ? "اتجاه عروض الأسعار" : "Quote trend"}
+            description={
+              locale === "ar"
+                ? `إنشاء عروض الأسعار الشهرية خلال ${currentPeriodLabel}.`
+                : `Monthly quote creation over ${currentPeriodLabel}.`
+            }
             rows={quoteTrendSeries}
           />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
           <StatusBars
-            title="Job trend"
-            description={`Monthly job creation over ${currentPeriodLabel}.`}
+            title={locale === "ar" ? "اتجاه المهام" : "Job trend"}
+            description={
+              locale === "ar"
+                ? `إنشاء المهام الشهري خلال ${currentPeriodLabel}.`
+                : `Monthly job creation over ${currentPeriodLabel}.`
+            }
             rows={jobTrendSeries}
           />
           <StatusBars
-            title="Complaint trend"
-            description={`Monthly complaint creation over ${currentPeriodLabel}.`}
+            title={locale === "ar" ? "اتجاه الشكاوى" : "Complaint trend"}
+            description={
+              locale === "ar"
+                ? `إنشاء الشكاوى الشهري خلال ${currentPeriodLabel}.`
+                : `Monthly complaint creation over ${currentPeriodLabel}.`
+            }
             rows={complaintTrendSeries}
           />
         </div>
@@ -705,16 +802,22 @@ export default async function AnalyticsPage({
           hasInvoiceRows ? (
             <div className="grid gap-4 xl:grid-cols-2">
               <StatusBars
-                title="Revenue trend"
-                description={`Invoice revenue over ${currentPeriodLabel}.`}
+                title={locale === "ar" ? "اتجاه الإيراد" : "Revenue trend"}
+                description={
+                  locale === "ar"
+                    ? `إيراد الفواتير خلال ${currentPeriodLabel}.`
+                    : `Invoice revenue over ${currentPeriodLabel}.`
+                }
                 rows={revenueTrendSeries}
               />
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent paid invoices</CardTitle>
+                  <CardTitle>{locale === "ar" ? "آخر الفواتير المدفوعة" : "Recent paid invoices"}</CardTitle>
                   <CardDescription>
-                    The latest synced invoices that have been paid successfully.
+                    {locale === "ar"
+                      ? "أحدث الفواتير المتزامنة التي تم دفعها بنجاح."
+                      : "The latest synced invoices that have been paid successfully."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
@@ -731,12 +834,12 @@ export default async function AnalyticsPage({
                       renderItem={(invoice) => (
                         <MobileDataCard
                           title={invoice.invoice_number ?? invoice.stripe_invoice_id ?? invoice.id}
-                          subtitle={invoice.subscription_plan_key ?? "Invoice"}
+                      subtitle={invoice.subscription_plan_key ?? (locale === "ar" ? "فاتورة" : "Invoice")}
                           meta={
                             <div className="flex flex-wrap gap-2">
-                              <Badge variant="outline">Paid</Badge>
-                              <span>{formatMoney(invoice.total_amount, invoice.currency)}</span>
-                              <span>{new Date(invoice.paid_at ?? invoice.created_at).toLocaleDateString()}</span>
+                          <Badge variant="outline">{locale === "ar" ? "مدفوعة" : "Paid"}</Badge>
+                            <span dir="ltr">{formatMoney(invoice.total_amount, invoice.currency, locale)}</span>
+                            <span>{new Date(invoice.paid_at ?? invoice.created_at).toLocaleDateString()}</span>
                             </div>
                           }
                         />
@@ -747,20 +850,26 @@ export default async function AnalyticsPage({
               </Card>
             </div>
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue analytics</CardTitle>
-                <CardDescription>
-                  Revenue will populate after Stripe invoices sync into Revora.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <EmptyState
-                  title="No invoice sync yet"
-                  description="Stripe is connected, but no invoice rows have arrived yet. Once webhook events land, revenue trends will appear here."
-                />
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{locale === "ar" ? "تحليلات الإيراد" : "Revenue analytics"}</CardTitle>
+                  <CardDescription>
+                    {locale === "ar"
+                      ? "ستظهر الإيرادات بعد مزامنة فواتير Stripe في Revora."
+                      : "Revenue will populate after Stripe invoices sync into Revora."}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <EmptyState
+                    title={locale === "ar" ? "لا توجد مزامنة فواتير بعد" : "No invoice sync yet"}
+                    description={
+                      locale === "ar"
+                        ? "تم الاتصال بـ Stripe، لكن لم تصل أي صفوف فواتير بعد. عند وصول أحداث webhook ستظهر اتجاهات الإيراد هنا."
+                        : "Stripe is connected, but no invoice rows have arrived yet. Once webhook events land, revenue trends will appear here."
+                    }
+                  />
+                </CardContent>
+              </Card>
           )
         ) : null}
       </div>

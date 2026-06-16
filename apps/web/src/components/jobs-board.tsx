@@ -26,7 +26,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/formatters";
+import { getJobStatusLabel } from "@/lib/jobs";
 import type { JobStatus } from "@/lib/database.types";
+import { useLocale } from "next-intl";
 
 export type JobBoardRow = {
   id: string;
@@ -62,6 +64,7 @@ const STATUS_LABELS: Record<JobStatus, string> = {
 
 export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
   const t = useTranslations("dashboardJobs");
+  const locale = useLocale();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<JobStatus | "all">("all");
 
@@ -90,10 +93,12 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Object.entries(STATUS_LABELS).map(([key, label]) => (
+        {Object.keys(STATUS_LABELS).map((key) => (
           <Card key={key}>
             <CardContent className="flex items-center justify-between p-4">
-              <div className="text-sm text-muted-foreground">{label}</div>
+              <div className="text-sm text-muted-foreground">
+                {getJobStatusLabel(key as JobStatus, locale)}
+              </div>
               <div className="text-2xl font-semibold tabular-nums">
                 {counts[key as JobStatus]}
               </div>
@@ -115,9 +120,9 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("filters.allStatuses")}</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([key, label]) => (
+            {Object.keys(STATUS_LABELS).map((key) => (
               <SelectItem key={key} value={key}>
-                {label}
+                {getJobStatusLabel(key as JobStatus, locale)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -161,7 +166,7 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
                 meta={
                   <div className="flex flex-wrap gap-2">
                     <Badge variant={STATUS_VARIANT[row.status]}>
-                      {STATUS_LABELS[row.status]}
+                      {getJobStatusLabel(row.status, locale)}
                     </Badge>
                     <span>{row.branch_name ?? t("fallback.noBranch")}</span>
                     <span>
@@ -208,7 +213,7 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
                     </TableCell>
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[row.status]}>
-                        {STATUS_LABELS[row.status]}
+                        {getJobStatusLabel(row.status, locale)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">

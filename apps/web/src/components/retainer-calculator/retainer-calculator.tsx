@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, Eye, FileOutput, Plus, RotateCcw, Save, Scale, Sparkles, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { PageHeader } from "@/components/page-header";
@@ -61,6 +61,7 @@ import {
   type FormState,
 } from "@/lib/actions/retainer-scenarios";
 import { cn } from "@/lib/utils";
+import { getCommonLabel, getRetainerInsightLabel } from "@/lib/display-labels";
 
 type CustomerOption = {
   id: string;
@@ -468,19 +469,19 @@ function ScenarioSummaryCard({
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-muted-foreground">{t("results.finalPrice")}</dt>
-            <dd className="font-medium tabular-nums">{formatCurrency(result.finalMonthlyRetainer, result.currency)}</dd>
+            <dd className="font-medium tabular-nums" dir="ltr">{formatCurrency(result.finalMonthlyRetainer, result.currency)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("results.grossMargin")}</dt>
-            <dd className="font-medium tabular-nums">{formatPercent(result.grossMargin)}</dd>
+            <dd className="font-medium tabular-nums" dir="ltr">{formatPercent(result.grossMargin)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("results.totalValue")}</dt>
-            <dd className="font-medium tabular-nums">{formatCurrency(result.totalContractValue, result.currency)}</dd>
+            <dd className="font-medium tabular-nums" dir="ltr">{formatCurrency(result.totalContractValue, result.currency)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("results.perVehicle")}</dt>
-            <dd className="font-medium tabular-nums">{formatCurrency(result.pricePerVehicle, result.currency)}</dd>
+            <dd className="font-medium tabular-nums" dir="ltr">{formatCurrency(result.pricePerVehicle, result.currency)}</dd>
           </div>
         </dl>
         <div className="flex flex-wrap gap-2">
@@ -525,7 +526,7 @@ function ScenarioTiers({
             <CardDescription>{t("tiers.heading")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="text-2xl font-semibold tabular-nums">
+            <div className="text-2xl font-semibold tabular-nums" dir="ltr">
               {formatCurrency(tier.result.finalMonthlyRetainer, currency)}
             </div>
             <div className={cn("rounded-lg border p-3 text-sm", recommendationToneClass(tier.tone))}>
@@ -558,7 +559,7 @@ function ResultsDashboard({
         <Card key={label}>
           <CardHeader>
             <CardDescription>{label}</CardDescription>
-            <CardTitle className="text-xl tabular-nums">{value}</CardTitle>
+            <CardTitle className="text-xl tabular-nums" dir="ltr">{value}</CardTitle>
           </CardHeader>
         </Card>
       ))}
@@ -573,6 +574,7 @@ function PrintScenarioSummary({
   scenario: RetainerScenarioRecord;
   t: Translate;
 }) {
+  const locale = useLocale();
   const labels = retainerLabelMaps(t);
   const result = scenario.calculatedResults;
   return (
@@ -588,19 +590,19 @@ function PrintScenarioSummary({
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt>{t("results.finalPrice")}</dt>
-              <dd className="tabular-nums">{formatCurrency(result.finalMonthlyRetainer, result.currency)}</dd>
+              <dd className="tabular-nums" dir="ltr">{formatCurrency(result.finalMonthlyRetainer, result.currency)}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>{t("results.grossMargin")}</dt>
-              <dd className="tabular-nums">{formatPercent(result.grossMargin)}</dd>
+              <dd className="tabular-nums" dir="ltr">{formatPercent(result.grossMargin)}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>{t("results.totalValue")}</dt>
-              <dd className="tabular-nums">{formatCurrency(result.totalContractValue, result.currency)}</dd>
+              <dd className="tabular-nums" dir="ltr">{formatCurrency(result.totalContractValue, result.currency)}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>{t("results.perVehicle")}</dt>
-              <dd className="tabular-nums">{formatCurrency(result.pricePerVehicle, result.currency)}</dd>
+              <dd className="tabular-nums" dir="ltr">{formatCurrency(result.pricePerVehicle, result.currency)}</dd>
             </div>
           </dl>
           <div className="space-y-2">
@@ -608,7 +610,7 @@ function PrintScenarioSummary({
             <div className="space-y-2">
               {result.warnings.map((warning) => (
                 <div key={warning.code} className={cn("rounded-lg border p-3 text-sm", warningToneClass(warning.severity))}>
-                  {warning.code}
+                  {getRetainerInsightLabel(warning.code, locale)}
                 </div>
               ))}
             </div>
@@ -686,6 +688,7 @@ export function RetainerCalculator({
   isPrint,
 }: RetainerCalculatorProps) {
   const t = useTranslations("retainerCalculator");
+  const locale = useLocale();
   const labels = retainerLabelMaps(t);
   const router = useRouter();
   const [draft, setDraft] = useState<RetainerDraft>(() => {
@@ -950,7 +953,7 @@ export function RetainerCalculator({
                     >
                       <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__none__">—</SelectItem>
+                        <SelectItem value="__none__">{getCommonLabel("none", locale)}</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.fullName} · {customer.detail}
@@ -1269,12 +1272,12 @@ export function RetainerCalculator({
                 <div className="space-y-2">
                   {result.warnings.map((warning) => (
                     <div key={warning.code} className={cn("rounded-lg border p-3 text-sm", warningToneClass(warning.severity))}>
-                      {warning.code}
+                      {getRetainerInsightLabel(warning.code, locale)}
                     </div>
                   ))}
                   {result.recommendations.map((recommendation) => (
                     <div key={recommendation.code} className={cn("rounded-lg border p-3 text-sm", recommendationToneClass(recommendation.tone))}>
-                      {recommendation.code}
+                      {getRetainerInsightLabel(recommendation.code, locale)}
                     </div>
                   ))}
                 </div>
