@@ -38,6 +38,7 @@ import {
 import { formatCurrency } from "@/lib/money";
 import { canManageBusiness } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { summarizeBillingInvoices } from "@/lib/billing-summary";
 import type { Subscription, SubscriptionItem } from "@/lib/database.types";
 
 type SubscriptionView = Subscription & {
@@ -155,7 +156,7 @@ export default async function BillingPage() {
   const [
     { data: planRows, error: planError },
     { data: invoiceResult, error: invoiceError },
-    { data: revenueSummaryData, error: revenueError },
+    { data: billingInvoiceRowsData, error: billingInvoiceRowsError },
     { data: paymentEventRows, error: paymentEventError },
   ] = await Promise.all([
     supabase.rpc("list_active_billing_plans"),
@@ -164,10 +165,13 @@ export default async function BillingPage() {
       p_limit: 25,
       p_offset: 0,
     }),
-    supabase.rpc("get_business_revenue_summary", {
-      p_business_id: business.id,
-      p_period: "90d",
-    }),
+    supabase
+      .from("billing_invoices")
+      .select(
+        "currency, status, total_amount, amount_due, due_date, paid_at, created_at",
+      )
+      .eq("business_id", business.id)
+      .order("created_at", { ascending: false }),
     supabase
       .from("billing_payment_events")
       .select(
@@ -185,7 +189,20 @@ export default async function BillingPage() {
       rows: [],
       total_count: 0,
     };
-  const revenueSummary = (revenueSummaryData ?? null) as unknown as BillingRevenueSummary | null;
+  const billingRevenueRows =
+    (billingInvoiceRowsData ?? []) as Array<
+      Pick<
+        BillingInvoiceSummaryRow,
+        | "currency"
+        | "status"
+        | "total_amount"
+        | "amount_due"
+        | "due_date"
+        | "paid_at"
+        | "created_at"
+      >
+    >;
+  const revenueSummary = summarizeBillingInvoices(billingRevenueRows, "90d") as BillingRevenueSummary;
 
   const currentPlan = plans.find((plan) => plan.slug.toLowerCase() === currentPlanSlug) ?? null;
   const currentInterval = currentPlanInterval(current, currentPlan);
@@ -195,7 +212,7 @@ export default async function BillingPage() {
   const entitlementRecord = asRecord(current?.entitlements);
   const hasInvoiceRows = invoiceList.rows.length > 0;
   const hasPaymentEvents = paymentEvents.length > 0;
-  const revenueErrorState = planError ?? invoiceError ?? revenueError ?? null;
+  const revenueErrorState = planError ?? invoiceError ?? billingInvoiceRowsError ?? null;
   const paymentEventErrorState = paymentEventError ?? null;
   const billingSyncState = business.stripe_customer_id
     ? hasInvoiceRows

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { UserRoundPen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useRouter } from "@/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,15 +41,18 @@ export function ComplaintAssignmentModal({
   complaintId,
   currentAssigneeId,
   assignees,
+  redirectTo,
 }: {
   action: Action;
   complaintId: string;
   currentAssigneeId: string | null;
   assignees: ComplaintAssigneeOption[];
+  redirectTo?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction] = useActionState(action, initial);
   const t = useTranslations("complaints.assignment");
+  const router = useRouter();
   const lastMessage = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -56,12 +60,13 @@ export function ComplaintAssignmentModal({
       lastMessage.current = state.message;
       toast.success(state.message);
       setOpen(false);
+      if (redirectTo) router.replace(redirectTo);
     }
     if (state.error && state.error !== lastMessage.current) {
       lastMessage.current = state.error;
       toast.error(state.error);
     }
-  }, [state.error, state.message]);
+  }, [redirectTo, router, state.error, state.message]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

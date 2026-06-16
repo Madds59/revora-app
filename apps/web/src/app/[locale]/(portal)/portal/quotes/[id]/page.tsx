@@ -237,6 +237,7 @@ export default async function PortalQuoteDetailPage({
                     customerId={quote.customer_id}
                     version={quote.current_version}
                     language={quote.language}
+                    redirectTo="/portal/quotes"
                   />
                 </div>
                 <div className="rounded-lg border border-dashed p-4">
@@ -247,6 +248,7 @@ export default async function PortalQuoteDetailPage({
                     quotationId={quote.id}
                     businessId={quote.business_id}
                     customerId={quote.customer_id}
+                    redirectTo="/portal/quotes"
                   />
                 </div>
               </div>
@@ -262,6 +264,7 @@ export default async function PortalQuoteDetailPage({
         <BusinessRatingForm
           businessId={quote.business_id}
           customerId={quote.customer_id}
+          redirectTo="/portal/quotes"
         />
       </div>
     </>

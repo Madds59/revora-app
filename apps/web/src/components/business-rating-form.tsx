@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useRouter } from "@/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,22 +18,26 @@ const initial: FormState = {};
 export function BusinessRatingForm({
   businessId,
   customerId,
+  redirectTo,
 }: {
   businessId: string;
   customerId: string;
+  redirectTo?: string;
 }) {
   const t = useTranslations("ratings");
   const [state, formAction] = useActionState(saveBusinessRating, initial);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (state.message) {
       toast.success(state.message);
       formRef.current?.reset();
+      if (redirectTo) router.replace(redirectTo);
       return;
     }
     if (state.error) toast.error(state.error);
-  }, [state.error, state.message]);
+  }, [redirectTo, router, state.error, state.message]);
 
   return (
     <Card>
