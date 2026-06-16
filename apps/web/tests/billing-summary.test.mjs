@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { summarizeBillingInvoices } from "../src/lib/billing-summary.js";
+import {
+  summarizeBillingInvoices,
+  summarizeBillingRevenueTrend,
+} from "../src/lib/billing-summary.js";
 
 const realNow = Date.now;
 
@@ -80,6 +83,56 @@ test("summarizeBillingInvoices respects the requested period", () => {
   assert.equal(summary.total_paid_revenue, 4000);
   assert.equal(summary.paid_invoices_count, 1);
   assert.equal(summary.currency, "AED");
+});
+
+test("summarizeBillingRevenueTrend buckets paid invoices by period and uses the latest currency", () => {
+  Date.now = () => new Date("2026-06-16T12:00:00.000Z").getTime();
+
+  const trend = summarizeBillingRevenueTrend(
+    [
+      {
+        currency: "AED",
+        status: "paid",
+        total_amount: 1000,
+        amount_due: 0,
+        due_date: "2026-06-14T00:00:00.000Z",
+        paid_at: "2026-06-14T00:00:00.000Z",
+        created_at: "2026-06-14T00:00:00.000Z",
+      },
+      {
+        currency: "SAR",
+        status: "paid",
+        total_amount: 4000,
+        amount_due: 0,
+        due_date: "2026-06-15T00:00:00.000Z",
+        paid_at: "2026-06-15T00:00:00.000Z",
+        created_at: "2026-06-15T00:00:00.000Z",
+      },
+      {
+        currency: "USD",
+        status: "open",
+        total_amount: 2500,
+        amount_due: 2500,
+        due_date: "2026-06-20T00:00:00.000Z",
+        paid_at: null,
+        created_at: "2026-06-16T00:00:00.000Z",
+      },
+    ],
+    "7d",
+  );
+
+  assert.equal(trend.length, 2);
+  assert.equal(trend[0].currency, "USD");
+  assert.equal(trend[0].revenue, 1000);
+  assert.equal(trend[1].currency, "USD");
+  assert.equal(trend[1].revenue, 4000);
+  assert.equal(trend[0].invoice_count, 1);
+  assert.equal(trend[1].invoice_count, 1);
+});
+
+test("summarizeBillingRevenueTrend handles empty invoices safely", () => {
+  const trend = summarizeBillingRevenueTrend([], "90d");
+  assert.deepEqual(trend, []);
 });
 
 test.after(() => {

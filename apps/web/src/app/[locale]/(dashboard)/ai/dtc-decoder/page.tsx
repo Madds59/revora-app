@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
+import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
 import { DtcDecoderForm } from "./dtc-decoder-form";
 
@@ -44,11 +45,7 @@ export default async function DtcDecoderPage({
   const vehicles =
     (data ?? []).map((vehicle) => ({
       id: vehicle.id,
-      label:
-        [vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
-        vehicle.plate_number ||
-        vehicle.vin ||
-        t("dtc.vehicleFallback"),
+      label: formatVehicleLabel(vehicle, t("dtc.vehicleFallback"), t("unknownVehicle")),
       detail: [vehicle.customer?.full_name, vehicle.year].filter(Boolean).join(" · "),
     })) ?? [];
 
