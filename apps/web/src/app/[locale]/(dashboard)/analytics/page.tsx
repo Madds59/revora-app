@@ -30,7 +30,7 @@ import type {
   Quotation,
   Subscription,
 } from "@/lib/database.types";
-import { ACTIVE_JOB_STATUSES } from "@/lib/jobs";
+import { ACTIVE_JOB_STATUSES, JOB_STATUS_VARIANT, formatJobTitle } from "@/lib/jobs";
 import { COMPLAINT_STATUS_VARIANT, getComplaintStatusLabel } from "@/lib/complaints";
 import { getJobStatusLabel } from "@/lib/jobs";
 import { summarizeRatings } from "@/lib/ratings";
@@ -38,8 +38,11 @@ import {
   QUOTE_STATUS_VARIANT,
   getQuoteStatusLabel,
 } from "@/app/[locale]/(dashboard)/quotations/status";
-import { getCommonLabel } from "@/lib/display-labels";
-import { formatCurrency as formatLocalizedCurrency } from "@/lib/formatters";
+import { getBillingPlanLabel, getCommonLabel } from "@/lib/display-labels";
+import {
+  formatCurrency as formatLocalizedCurrency,
+  formatDate,
+} from "@/lib/formatters";
 
 type SubscriptionRow = Pick<
   Subscription,
@@ -74,8 +77,15 @@ const PERIOD_OPTIONS: Array<{ label: string; value: DateRange }> = [
   { label: "All", value: "all" },
 ];
 
-function monthLabel(date: Date): string {
-  return new Intl.DateTimeFormat("en", { month: "short" }).format(date);
+function localeTag(locale: "en" | "ar"): string {
+  return locale === "ar" ? "ar-AE" : "en-AE";
+}
+
+function monthLabel(date: Date, locale: "en" | "ar"): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    month: "short",
+    numberingSystem: "latn",
+  }).format(date);
 }
 
 function startOfMonth(date: Date) {
@@ -85,21 +95,21 @@ function startOfMonth(date: Date) {
   return copy;
 }
 
-function monthSeries(months: number) {
+function monthSeries(months: number, locale: "en" | "ar") {
   const base = startOfMonth(new Date());
   return Array.from({ length: months }, (_, index) => {
     const date = new Date(base);
     date.setMonth(base.getMonth() - (months - index - 1));
     return {
       key: `${date.getFullYear()}-${date.getMonth()}`,
-      label: monthLabel(date),
+      label: monthLabel(date, locale),
       date,
       value: 0,
     };
   });
 }
 
-function daySeries(days: number) {
+function daySeries(days: number, locale: "en" | "ar") {
   const base = new Date();
   base.setHours(0, 0, 0, 0);
   return Array.from({ length: days }, (_, index) => {
@@ -107,7 +117,10 @@ function daySeries(days: number) {
     date.setDate(base.getDate() - (days - index - 1));
     return {
       key: date.toISOString().slice(0, 10),
-      label: new Intl.DateTimeFormat("en", { weekday: "short" }).format(date),
+      label: new Intl.DateTimeFormat(localeTag(locale), {
+        weekday: "short",
+        numberingSystem: "latn",
+      }).format(date),
       date,
       value: 0,
     };
@@ -125,17 +138,42 @@ function parsePeriod(value: string | string[] | undefined): DateRange {
   return "30d";
 }
 
-function periodText(period: DateRange) {
+function periodText(period: DateRange, locale: "en" | "ar") {
   switch (period) {
     case "7d":
-      return "the last 7 days";
+      return locale === "ar" ? "آخر 7 أيام" : "the last 7 days";
     case "30d":
-      return "the last 30 days";
+      return locale === "ar" ? "آخر 30 يومًا" : "the last 30 days";
     case "90d":
-      return "the last 90 days";
+      return locale === "ar" ? "آخر 90 يومًا" : "the last 90 days";
     default:
-      return "all time";
+      return locale === "ar" ? "كل الوقت" : "all time";
   }
+}
+
+function subscriptionStatusLabel(status: string | null | undefined, locale: "en" | "ar") {
+  const labels =
+    locale === "ar"
+      ? {
+          active: "نشط",
+          trialing: "فترة تجريبية",
+          canceled: "ملغي",
+          past_due: "متأخر",
+          unpaid: "غير مدفوع",
+          paused: "متوقف",
+          incomplete: "غير مكتمل",
+        }
+      : {
+          active: "Active",
+          trialing: "Trialing",
+          canceled: "Canceled",
+          past_due: "Past due",
+          unpaid: "Unpaid",
+          paused: "Paused",
+          incomplete: "Incomplete",
+        };
+  if (!status) return getCommonLabel("unknown", locale);
+  return labels[status as keyof typeof labels] ?? status;
 }
 
 function formatMoney(value: number, currency: string, locale: "en" | "ar") {
@@ -154,7 +192,7 @@ function MetricCard({
 }: {
   helper: string;
   label: string;
-  value: string | number;
+  value: React.ReactNode;
 }) {
   return (
     <Card>
@@ -173,9 +211,16 @@ function StatusBars({
   title,
   description,
   rows,
+  locale,
 }: {
   description: string;
-  rows: { label: string; value: number; variant?: "default" | "secondary" | "outline" | "destructive" }[];
+  rows: {
+    label: string;
+    status?: string;
+    value: number;
+    variant?: "default" | "secondary" | "outline" | "destructive";
+  }[];
+  locale: "en" | "ar";
   title: string;
 }) {
   const max = Math.max(1, ...rows.map((row) => row.value));
@@ -189,8 +234,12 @@ function StatusBars({
       <CardContent className="flex flex-col gap-3">
         {rows.length === 0 ? (
           <EmptyState
-            title="No data yet"
-            description="This section will populate once the business starts generating activity."
+            title={locale === "ar" ? "لا توجد بيانات بعد" : "No data yet"}
+            description={
+              locale === "ar"
+                ? "سيتم ملء هذا القسم بمجرد أن يبدأ النشاط في توليد البيانات."
+                : "This section will populate once the business starts generating activity."
+            }
           />
         ) : (
           rows.map((row) => (
@@ -350,7 +399,7 @@ export default async function AnalyticsPage({
   );
 
   const currentSubscription = subscriptions[0] ?? null;
-  const customerSeries = monthSeries(6).map((point) => ({
+  const customerSeries = monthSeries(6, locale).map((point) => ({
     ...point,
     value: periodCustomers.filter((customer) => toMonthKey(customer.created_at) === point.key).length,
   }));
@@ -361,6 +410,7 @@ export default async function AnalyticsPage({
       return acc;
     }, {}),
   ).map(([label, value]) => ({
+    status: label,
     label: getQuoteStatusLabel(label as Parameters<typeof getQuoteStatusLabel>[0], locale),
     value,
   }));
@@ -371,6 +421,7 @@ export default async function AnalyticsPage({
       return acc;
     }, {}),
   ).map(([label, value]) => ({
+    status: label,
     label: getComplaintStatusLabel(
       label as Parameters<typeof getComplaintStatusLabel>[0],
       locale,
@@ -384,19 +435,20 @@ export default async function AnalyticsPage({
       return acc;
     }, {}),
   ).map(([label, value]) => ({
+    status: label,
     label: getJobStatusLabel(label as Parameters<typeof getJobStatusLabel>[0], locale),
     value,
   }));
 
-  const quoteTrendSeries = monthSeries(6).map((point) => ({
+  const quoteTrendSeries = monthSeries(6, locale).map((point) => ({
     label: point.label,
     value: periodQuotes.filter((quote) => toMonthKey(quote.created_at) === point.key).length,
   }));
-  const jobTrendSeries = monthSeries(6).map((point) => ({
+  const jobTrendSeries = monthSeries(6, locale).map((point) => ({
     label: point.label,
     value: periodJobs.filter((job) => toMonthKey(job.created_at) === point.key).length,
   }));
-  const complaintTrendSeries = monthSeries(6).map((point) => ({
+  const complaintTrendSeries = monthSeries(6, locale).map((point) => ({
     label: point.label,
     value: periodComplaints.filter(
       (complaint) => toMonthKey(complaint.created_at) === point.key,
@@ -410,7 +462,8 @@ export default async function AnalyticsPage({
   const totalQuoteValue = periodQuotes.reduce((sum, quote) => sum + quote.total, 0);
   const approvedRate =
     periodQuotes.length > 0 ? Math.round((approvedQuotes.length / periodQuotes.length) * 100) : 0;
-  const currentPeriodLabel = periodText(period);
+  const currentPeriodLabel = periodText(period, locale);
+  const isAllTime = period === "all";
   const billingRevenueRows =
     (billingRevenueRowsData ?? []) as Array<
       Pick<
@@ -440,14 +493,14 @@ export default async function AnalyticsPage({
   const revenueSyncReady = hasInvoiceRows;
   const revenueTrendSeries =
     period === "7d"
-      ? daySeries(7).map((point) => ({
+      ? daySeries(7, locale).map((point) => ({
           label: point.label,
           value:
             revenueTrendRows.find(
               (row) => new Date(row.bucket_start).toISOString().slice(0, 10) === point.key,
             )?.revenue ?? 0,
         }))
-      : monthSeries(6).map((point) => ({
+      : monthSeries(6, locale).map((point) => ({
           label: point.label,
           value:
             revenueTrendRows.find(
@@ -479,7 +532,7 @@ export default async function AnalyticsPage({
                   }),
                 )}
               >
-                {option.label}
+                {option.value === "all" ? (locale === "ar" ? "الكل" : "All") : option.label}
               </Link>
             ))}
           </div>
@@ -507,7 +560,7 @@ export default async function AnalyticsPage({
             label={locale === "ar" ? "العملاء" : "Customers"}
             value={periodCustomers.length}
             helper={
-              currentPeriodLabel === "all time"
+              isAllTime
                 ? locale === "ar"
                   ? `${newCustomersThisMonth} جديد إجمالًا`
                   : `${newCustomersThisMonth} new overall`
@@ -520,7 +573,7 @@ export default async function AnalyticsPage({
             label={locale === "ar" ? "المهام النشطة" : "Active jobs"}
             value={activeJobs.length}
             helper={
-              currentPeriodLabel === "all time"
+              isAllTime
                 ? locale === "ar"
                   ? `${completedJobs.length} مكتملة إجمالًا`
                   : `${completedJobs.length} completed overall`
@@ -538,7 +591,7 @@ export default async function AnalyticsPage({
             label={locale === "ar" ? "عروض الأسعار" : "Quotations"}
             value={periodQuotes.length}
             helper={
-              currentPeriodLabel === "all time"
+              isAllTime
                 ? locale === "ar"
                   ? `${pendingQuotes.length} قيد الانتظار إجمالًا`
                   : `${pendingQuotes.length} pending overall`
@@ -551,7 +604,7 @@ export default async function AnalyticsPage({
             label={locale === "ar" ? "الشكاوى" : "Complaints"}
             value={periodComplaints.length}
             helper={
-              currentPeriodLabel === "all time"
+              isAllTime
                 ? locale === "ar"
                   ? `${openComplaints.length} مفتوحة إجمالًا`
                   : `${openComplaints.length} open overall`
@@ -594,12 +647,16 @@ export default async function AnalyticsPage({
           />
           <MetricCard
             label={locale === "ar" ? "الخطة" : "Plan"}
-            value={currentSubscription?.plan_key ?? getCommonLabel("unavailable", locale)}
+            value={
+              currentSubscription?.plan_key
+                ? getBillingPlanLabel(currentSubscription.plan_key, locale)
+                : getCommonLabel("unavailable", locale)
+            }
             helper={
               currentSubscription?.status
                 ? locale === "ar"
-                  ? `الحالة: ${currentSubscription.status}`
-                  : `Status: ${currentSubscription.status}`
+                  ? `الحالة: ${subscriptionStatusLabel(currentSubscription.status, locale)}`
+                  : `Status: ${subscriptionStatusLabel(currentSubscription.status, locale)}`
                 : locale === "ar"
                   ? "بيانات الفوترة متاحة للمالكين فقط"
                   : "Billing data only available to owners"
@@ -609,7 +666,7 @@ export default async function AnalyticsPage({
             label={locale === "ar" ? "قيمة عروض الأسعار" : "Quote value"}
             value={formatMoney(totalQuoteValue, periodQuotes[0]?.currency ?? "AED", locale)}
             helper={
-              currentPeriodLabel === "all time"
+              isAllTime
                 ? locale === "ar"
                   ? "إجمالي القيمة"
                   : "Total value overall"
@@ -661,9 +718,11 @@ export default async function AnalyticsPage({
           <MetricCard
             label={ratingT("summary.title")}
             value={
-              ratingSummary.count > 0
-                ? `${ratingSummary.roundedAverage.toFixed(1)} / 5`
-                : "—"
+              ratingSummary.count > 0 ? (
+                <span dir="ltr">{ratingSummary.roundedAverage.toFixed(1)} / 5</span>
+              ) : (
+                "—"
+              )
             }
             helper={
               ratingSummary.count > 0
@@ -694,18 +753,18 @@ export default async function AnalyticsPage({
                     },
                   ]
                 : recentJobs.map((job) => ({
-                    label: job.title,
+                    label: formatJobTitle(job.title, locale),
                     value: (
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">{job.status}</Badge>
+                        <Badge variant="outline">{getJobStatusLabel(job.status, locale)}</Badge>
                         <span className="text-muted-foreground">
                           {job.expected_completion_at
-                            ? `Due ${new Date(job.expected_completion_at).toLocaleDateString()}`
-                            : "No due date"}
+                            ? `${getCommonLabel("due", locale)} ${formatDate(job.expected_completion_at, undefined, locale)}`
+                            : getCommonLabel("noDueDate", locale)}
                         </span>
                       </div>
                     ),
-                    note: `Updated ${new Date(job.updated_at).toLocaleDateString()}`,
+                    note: `${getCommonLabel("updated", locale)} ${formatDate(job.updated_at, undefined, locale)}`,
                   }))
             }
           />
@@ -717,11 +776,13 @@ export default async function AnalyticsPage({
                 ? "توزيع الحالات لعروض الأسعار الخاصة بهذا النشاط."
                 : "Status distribution for quotations on this business."
             }
+            locale={locale}
             rows={quoteSeries.map((row) => ({
               label: row.label,
+              status: row.status,
               value: row.value,
               variant:
-                QUOTE_STATUS_VARIANT[row.label as keyof typeof QUOTE_STATUS_VARIANT] ?? "outline",
+                QUOTE_STATUS_VARIANT[row.status as keyof typeof QUOTE_STATUS_VARIANT] ?? "outline",
             }))}
           />
         </div>
@@ -734,11 +795,13 @@ export default async function AnalyticsPage({
                 ? "مزيج حالات الشكاوى الحالية عبر النشاط."
                 : "Current complaint status mix across the business."
             }
+            locale={locale}
             rows={complaintSeries.map((row) => ({
               label: row.label,
+              status: row.status,
               value: row.value,
               variant:
-                COMPLAINT_STATUS_VARIANT[row.label as keyof typeof COMPLAINT_STATUS_VARIANT] ?? "outline",
+                COMPLAINT_STATUS_VARIANT[row.status as keyof typeof COMPLAINT_STATUS_VARIANT] ?? "outline",
             }))}
           />
 
@@ -749,9 +812,12 @@ export default async function AnalyticsPage({
                 ? "أوامر العمل النشطة والمكتملة والمتأخرة."
                 : "Active, completed, and delayed work orders."
             }
+            locale={locale}
             rows={jobSeries.map((row) => ({
               label: row.label,
+              status: row.status,
               value: row.value,
+              variant: JOB_STATUS_VARIANT[row.status as keyof typeof JOB_STATUS_VARIANT] ?? "outline",
             }))}
           />
         </div>
@@ -764,6 +830,7 @@ export default async function AnalyticsPage({
                 ? `إضافات العملاء الشهرية خلال ${currentPeriodLabel}.`
                 : `Monthly customer additions over ${currentPeriodLabel}.`
             }
+            locale={locale}
             rows={customerSeries.map((point) => ({ label: point.label, value: point.value }))}
           />
           <StatusBars
@@ -773,6 +840,7 @@ export default async function AnalyticsPage({
                 ? `إنشاء عروض الأسعار الشهرية خلال ${currentPeriodLabel}.`
                 : `Monthly quote creation over ${currentPeriodLabel}.`
             }
+            locale={locale}
             rows={quoteTrendSeries}
           />
         </div>
@@ -785,6 +853,7 @@ export default async function AnalyticsPage({
                 ? `إنشاء المهام الشهري خلال ${currentPeriodLabel}.`
                 : `Monthly job creation over ${currentPeriodLabel}.`
             }
+            locale={locale}
             rows={jobTrendSeries}
           />
           <StatusBars
@@ -794,6 +863,7 @@ export default async function AnalyticsPage({
                 ? `إنشاء الشكاوى الشهري خلال ${currentPeriodLabel}.`
                 : `Monthly complaint creation over ${currentPeriodLabel}.`
             }
+            locale={locale}
             rows={complaintTrendSeries}
           />
         </div>
@@ -808,6 +878,7 @@ export default async function AnalyticsPage({
                     ? `إيراد الفواتير خلال ${currentPeriodLabel}.`
                     : `Invoice revenue over ${currentPeriodLabel}.`
                 }
+                locale={locale}
                 rows={revenueTrendSeries}
               />
 
@@ -823,8 +894,12 @@ export default async function AnalyticsPage({
                 <CardContent className="flex flex-col gap-4">
                   {paidInvoices.length === 0 ? (
                     <EmptyState
-                      title="No paid invoices yet"
-                      description="Invoices exist, but none have been marked paid yet."
+                      title={locale === "ar" ? "لا توجد فواتير مدفوعة بعد" : "No paid invoices yet"}
+                      description={
+                        locale === "ar"
+                          ? "توجد فواتير، لكن لم تُعلَم أيٌّ منها كمدفوعة بعد."
+                          : "Invoices exist, but none have been marked paid yet."
+                      }
                     />
                   ) : (
                     <MobileDataList
@@ -836,10 +911,10 @@ export default async function AnalyticsPage({
                           title={invoice.invoice_number ?? invoice.stripe_invoice_id ?? invoice.id}
                       subtitle={invoice.subscription_plan_key ?? (locale === "ar" ? "فاتورة" : "Invoice")}
                           meta={
-                            <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">{locale === "ar" ? "مدفوعة" : "Paid"}</Badge>
                             <span dir="ltr">{formatMoney(invoice.total_amount, invoice.currency, locale)}</span>
-                            <span>{new Date(invoice.paid_at ?? invoice.created_at).toLocaleDateString()}</span>
+                            <span>{formatDate(invoice.paid_at ?? invoice.created_at, undefined, locale)}</span>
                             </div>
                           }
                         />

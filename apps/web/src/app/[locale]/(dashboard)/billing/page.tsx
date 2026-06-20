@@ -41,6 +41,9 @@ import { createClient } from "@/lib/supabase/server";
 import { summarizeBillingInvoices } from "@/lib/billing-summary";
 import {
   getBillingInvoiceStatusLabel,
+  getBillingLimitUnitLabel,
+  getBillingPlanLabel,
+  getBillingFeatureLabel,
   getCommonLabel,
 } from "@/lib/display-labels";
 import { formatCurrency as formatLocalizedCurrency } from "@/lib/formatters";
@@ -78,7 +81,9 @@ function formatPrice(amount: number | null, currency: string, locale: "en" | "ar
 function featureValue(feature: BillingPlanCatalogRow["features"][number], locale: "en" | "ar") {
   if (!feature.included) return getCommonLabel("notIncluded", locale);
   if (feature.limit_value == null) return getCommonLabel("included", locale);
-  return `${formatNumber(feature.limit_value, undefined, locale)}${feature.limit_unit ? ` ${feature.limit_unit}` : ""}`;
+  return `${formatNumber(feature.limit_value, undefined, locale)}${
+    feature.limit_unit ? ` ${getBillingLimitUnitLabel(feature.limit_unit, locale)}` : ""
+  }`;
 }
 
 function invoiceStatusLabel(status: string, locale: "en" | "ar") {
@@ -126,6 +131,20 @@ function currentPlanInterval(
     return locale === "ar" ? "سنوي" : "Yearly";
   }
   return getCommonLabel("unknown", locale);
+}
+
+function billingPlanLabel(plan: BillingPlanCatalogRow | null | undefined, locale: "en" | "ar") {
+  if (!plan) return getCommonLabel("unavailable", locale);
+  return getBillingPlanLabel(plan.slug ?? plan.name, locale);
+}
+
+function billingFeatureLabel(value: string, locale: "en" | "ar") {
+  return getBillingFeatureLabel(value, locale) ?? value;
+}
+
+function invoiceSubtitle(value: string | null | undefined, locale: "en" | "ar") {
+  if (!value) return locale === "ar" ? "فاتورة" : "Invoice";
+  return getBillingPlanLabel(value, locale);
 }
 
 export default async function BillingPage() {
@@ -342,7 +361,7 @@ export default async function BillingPage() {
             title={locale === "ar" ? "الاشتراك الحالي" : "Current subscription"}
             description={locale === "ar" ? "حالة الخطة، ونافذة التجديد، وإمكانية الوصول للفوترة." : "Plan state, renewal window, and billing access."}
             rows={[
-              { label: locale === "ar" ? "الخطة" : "Plan", value: currentPlan?.name ?? current.plan_key },
+              { label: locale === "ar" ? "الخطة" : "Plan", value: billingPlanLabel(currentPlan, locale) },
               { label: locale === "ar" ? "الحالة" : "Status", value: subscriptionStatusLabel(current.status, locale) },
               { label: locale === "ar" ? "الدورية" : "Billing interval", value: currentInterval },
               {
@@ -495,14 +514,13 @@ export default async function BillingPage() {
                   getKey={(plan) => plan.id}
                   renderItem={(plan) => (
                     <MobileDataCard
-                      title={plan.name}
-                      subtitle={plan.slug}
+                      title={billingPlanLabel(plan, locale)}
+                      subtitle={plan.description ?? (locale === "ar" ? "لا يوجد وصف" : "No description")}
                       meta={
                         <div className="flex flex-wrap gap-2">
                           {plan.slug.toLowerCase() === currentPlanSlug && (
                             <Badge variant="default">{locale === "ar" ? "الحالية" : "Current"}</Badge>
                           )}
-                          <span>{plan.description ?? (locale === "ar" ? "لا يوجد وصف" : "No description")}</span>
                         </div>
                       }
                     >
@@ -516,7 +534,7 @@ export default async function BillingPage() {
                         <div className="grid gap-1">
                           {plan.features.slice(0, 4).map((feature) => (
                             <div key={feature.id} className="flex items-center justify-between gap-2">
-                              <span>{feature.feature_name}</span>
+                              <span>{billingFeatureLabel(feature.feature_key ?? feature.feature_name, locale)}</span>
                               <span className="font-medium text-foreground">
                                 {featureValue(feature, locale)}
                               </span>
@@ -536,10 +554,7 @@ export default async function BillingPage() {
                         {plans.map((plan) => (
                           <TableHead key={plan.id} className="align-top">
                             <div className="flex flex-col gap-1">
-                              <span className="font-medium">{plan.name}</span>
-                              <span className="text-muted-foreground text-xs">
-                                {plan.slug.toUpperCase()}
-                              </span>
+                              <span className="font-medium">{billingPlanLabel(plan, locale)}</span>
                               <span className="text-muted-foreground text-xs">
                                 {formatPrice(plan.monthly_amount, plan.currency, locale)}
                               </span>
@@ -555,12 +570,9 @@ export default async function BillingPage() {
                     </TableHeader>
                     <TableBody>
                       {planFeatureKeys.map((featureKey) => {
-                        const featureName =
-                          plans[0]?.features.find((feature) => feature.feature_key === featureKey)
-                            ?.feature_name ?? featureKey;
                         return (
                           <TableRow key={featureKey}>
-                            <TableCell className="font-medium">{featureName}</TableCell>
+                            <TableCell className="font-medium">{billingFeatureLabel(featureKey, locale)}</TableCell>
                             {plans.map((plan) => {
                               const feature = plan.features.find(
                                 (item) => item.feature_key === featureKey,
@@ -584,9 +596,11 @@ export default async function BillingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Invoice history</CardTitle>
+            <CardTitle>{locale === "ar" ? "سجل الفواتير" : "Invoice history"}</CardTitle>
             <CardDescription>
-              Real invoices will appear here once the billing sync has data.
+              {locale === "ar"
+                ? "ستظهر الفواتير الحقيقية هنا بمجرد أن تحتوي مزامنة الفوترة على بيانات."
+                : "Real invoices will appear here once the billing sync has data."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
@@ -617,14 +631,14 @@ export default async function BillingPage() {
               />
             ) : (
               <>
-              <MobileDataList
+                <MobileDataList
                   items={invoiceList.rows}
                   empty={null}
                   getKey={(invoice) => invoice.id}
                   renderItem={(invoice) => (
                     <MobileDataCard
                       title={invoice.invoice_number ?? invoice.stripe_invoice_id ?? invoice.id}
-                      subtitle={invoice.subscription_plan_key ?? (locale === "ar" ? "فاتورة" : "Invoice")}
+                      subtitle={invoiceSubtitle(invoice.subscription_plan_key, locale)}
                       meta={
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">{invoiceStatusLabel(invoice.status, locale)}</Badge>
@@ -674,15 +688,15 @@ export default async function BillingPage() {
                     <TableBody>
                     {invoiceList.rows.map((invoice) => (
                         <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">
-                            {invoice.invoice_number ?? invoice.stripe_invoice_id ?? invoice.id}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{invoiceStatusLabel(invoice.status, locale)}</Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatMoney(invoice.total_amount, invoice.currency, locale)}
-                          </TableCell>
+                        <TableCell className="font-medium">
+                          {invoice.invoice_number ?? invoice.stripe_invoice_id ?? invoice.id}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{invoiceStatusLabel(invoice.status, locale)}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatMoney(invoice.total_amount, invoice.currency, locale)}
+                        </TableCell>
                           <TableCell className="text-muted-foreground">
                             {invoice.period_start && invoice.period_end
                               ? `${formatDate(invoice.period_start, undefined, locale)} → ${formatDate(invoice.period_end, undefined, locale)}`
@@ -827,9 +841,11 @@ export default async function BillingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Subscription line items</CardTitle>
+            <CardTitle>{locale === "ar" ? "بنود الاشتراك" : "Subscription line items"}</CardTitle>
             <CardDescription>
-              The products and quantities attached to the current subscription.
+              {locale === "ar"
+                ? "المنتجات والكميات المرتبطة بالاشتراك الحالي."
+                : "The products and quantities attached to the current subscription."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -841,9 +857,14 @@ export default async function BillingPage() {
                   getKey={(item) => item.id}
                   renderItem={(item) => (
                     <MobileDataCard
-                      title={item.product_key}
+                      title={getBillingPlanLabel(item.product_key, locale)}
                       subtitle={item.stripe_price_id}
-                      meta={<span>Quantity {item.quantity}</span>}
+                      meta={
+                        <span>
+                          {locale === "ar" ? "الكمية" : "Quantity"}{" "}
+                          <span dir="ltr">{item.quantity}</span>
+                        </span>
+                      }
                     />
                   )}
                 />
@@ -852,15 +873,17 @@ export default async function BillingPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Stripe price</TableHead>
-                        <TableHead className="text-end">Qty</TableHead>
+                        <TableHead>{locale === "ar" ? "البند" : "Item"}</TableHead>
+                        <TableHead>{locale === "ar" ? "سعر Stripe" : "Stripe price"}</TableHead>
+                        <TableHead className="text-end">{locale === "ar" ? "الكمية" : "Qty"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {current.items.map((item: SubscriptionItem) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.product_key}</TableCell>
+                          <TableCell className="font-medium">
+                            {getBillingPlanLabel(item.product_key, locale)}
+                          </TableCell>
                           <TableCell className="text-muted-foreground">
                             {item.stripe_price_id}
                           </TableCell>
@@ -873,8 +896,12 @@ export default async function BillingPage() {
               </>
             ) : (
               <EmptyState
-                title="No line items"
-                description="The active subscription does not currently expose any line items."
+                title={locale === "ar" ? "لا توجد بنود" : "No line items"}
+                description={
+                  locale === "ar"
+                    ? "الاشتراك الحالي لا يعرض أي بنود في الوقت الحالي."
+                    : "The active subscription does not currently expose any line items."
+                }
               />
             )}
           </CardContent>

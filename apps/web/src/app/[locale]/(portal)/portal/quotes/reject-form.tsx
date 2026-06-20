@@ -3,7 +3,6 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useRouter } from "@/i18n/navigation";
 
 import { rejectQuote, type FormState } from "../actions";
 import { SubmitButton } from "@/components/submit-button";
@@ -16,29 +15,21 @@ export function RejectForm({
   quotationId,
   businessId,
   customerId,
-  redirectTo,
 }: {
   quotationId: string;
   businessId: string;
   customerId: string;
-  redirectTo?: string;
 }) {
   const [state, action] = useActionState(rejectQuote, initial);
   const t = useTranslations("forms.quote");
-  const router = useRouter();
   const last = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (state.message && state.message !== last.current) {
-      last.current = state.message;
-      toast.success(state.message);
-      if (redirectTo) router.replace(redirectTo);
-    }
     if (state.error && state.error !== last.current) {
       last.current = state.error;
       toast.error(state.error);
     }
-  }, [redirectTo, router, state]);
+  }, [state.error]);
 
   return (
     <form action={action} className="flex flex-col gap-4">

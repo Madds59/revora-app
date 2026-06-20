@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { getUser, requireCustomerPortal } from "@/lib/auth";
 import type { ComplaintSeverity } from "@/lib/database.types";
+import { normalizeLocale, switchLocalePath } from "@/lib/locale-path";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { businessRatingInputSchema } from "@/lib/ratings";
@@ -190,7 +191,6 @@ export async function approveQuote(
 ): Promise<FormState> {
   const { accounts } = await requireCustomerPortal();
   const user = await getUser();
-  const t = await getTranslations("portalQuotes.success");
 
   const quotationId = str(formData, "quotation_id");
   const businessId = str(formData, "business_id");
@@ -231,7 +231,8 @@ export async function approveQuote(
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
-  return { message: t("approved") };
+  const locale = normalizeLocale(await getLocale());
+  redirect(switchLocalePath("/portal/quotes?quote_status=approved", locale));
 }
 
 export async function rejectQuote(
@@ -239,7 +240,6 @@ export async function rejectQuote(
   formData: FormData,
 ): Promise<FormState> {
   const { accounts } = await requireCustomerPortal();
-  const t = await getTranslations("portalQuotes.success");
 
   const quotationId = str(formData, "quotation_id");
   const businessId = str(formData, "business_id");
@@ -266,5 +266,6 @@ export async function rejectQuote(
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
-  return { message: t("declined") };
+  const locale = normalizeLocale(await getLocale());
+  redirect(switchLocalePath("/portal/quotes?quote_status=declined", locale));
 }
