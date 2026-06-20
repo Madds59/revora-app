@@ -10,6 +10,7 @@ import {
   FileText,
   Wrench,
   MessageSquareWarning,
+  MessageSquare,
   Files,
   Settings,
   CreditCard,
@@ -17,6 +18,7 @@ import {
   Bell,
   CarFront,
   ScanSearch,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +37,8 @@ type NavItem = {
     | "analytics"
     | "notifications"
     | "settings"
+    | "feedback"
+    | "implementation"
     | "retainerCalculator"
     | "membershipBundles"
     | "vehicleIntelligence";
@@ -55,6 +59,8 @@ const NAV: NavItem[] = [
   { labelKey: "analytics", href: "/analytics", icon: BarChart3 },
   { labelKey: "notifications", href: "/notifications", icon: Bell },
   { labelKey: "settings", href: "/settings", icon: Settings, aliases: ["/settings/business"] },
+  { labelKey: "feedback", href: "/feedback", icon: MessageSquare },
+  { labelKey: "implementation", href: "/implementation", icon: ClipboardList },
   { labelKey: "retainerCalculator", href: "/tools/retainer-calculator", icon: Calculator },
   { labelKey: "membershipBundles", href: "/tools/membership-bundles", icon: Layers },
   { labelKey: "vehicleIntelligence", href: "/ai", icon: ScanSearch, aliases: ["/ai/vin-decoder", "/ai/dtc-decoder", "/ai/vehicle-diagnosis"] },

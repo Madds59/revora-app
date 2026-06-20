@@ -32,6 +32,11 @@ test("switchLocalePath handles dashboard nav paths", () => {
   assert.equal(switchLocalePath("/jobs", "en"), "/en/jobs");
   assert.equal(switchLocalePath("/vehicles", "ar"), "/ar/vehicles");
   assert.equal(switchLocalePath("/admin/notifications", "en"), "/en/admin/notifications");
+  assert.equal(switchLocalePath("/feedback", "ar"), "/ar/feedback");
+  assert.equal(
+    switchLocalePath("/implementation/import-templates", "en"),
+    "/en/implementation/import-templates",
+  );
 });
 
 test("switchLocalePath handles portal nav paths", () => {
