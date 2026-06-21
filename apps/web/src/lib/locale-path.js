@@ -1,12 +1,23 @@
 /**
+ * Normalize a locale value to the supported application locales.
+ *
+ * @param {string | null | undefined} locale
+ * @returns {"en" | "ar"}
+ */
+export function normalizeLocale(locale) {
+  return locale === "ar" ? "ar" : "en";
+}
+
+/**
  * Replace or prefix the locale segment in a path.
  *
  * @param {string} pathname
- * @param {"en" | "ar"} nextLocale
+ * @param {"en" | "ar" | string | null | undefined} nextLocale
  * @returns {string}
  */
 export function switchLocalePath(pathname, nextLocale) {
   const raw = String(pathname ?? "");
+  const locale = normalizeLocale(nextLocale);
   const hashIndex = raw.indexOf("#");
   const searchIndex = raw.indexOf("?");
   const cutIndex =
@@ -26,6 +37,6 @@ export function switchLocalePath(pathname, nextLocale) {
   }
 
   const normalizedPath = segments.length > 0 ? `/${segments.join("/")}` : "/";
-  const nextPath = normalizedPath === "/" ? `/${nextLocale}` : `/${nextLocale}${normalizedPath}`;
+  const nextPath = normalizedPath === "/" ? `/${locale}` : `/${locale}${normalizedPath}`;
   return `${nextPath}${suffix}`;
 }
