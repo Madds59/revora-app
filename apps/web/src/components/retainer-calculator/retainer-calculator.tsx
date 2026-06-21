@@ -61,7 +61,7 @@ import {
   type FormState,
 } from "@/lib/actions/retainer-scenarios";
 import { cn } from "@/lib/utils";
-import { getCommonLabel, getRetainerInsightLabel } from "@/lib/display-labels";
+import { getRetainerInsightLabel } from "@/lib/display-labels";
 
 type CustomerOption = {
   id: string;
@@ -178,8 +178,11 @@ function createDefaultDraft(t?: Translate): RetainerDraft {
   };
 }
 
-function retainerLabelMaps(t: Translate) {
+function retainerLabelMaps(t: Translate, locale: "en" | "ar") {
   return {
+    common: {
+      none: locale === "ar" ? "بدون" : "None",
+    },
     customerTypes: {
       individual: t("customerTypes.individual"),
       fleet: t("customerTypes.fleet"),
@@ -249,6 +252,22 @@ function draftFromScenario(scenario: RetainerScenarioRecord): RetainerDraft {
 
 function formatPercent(value: number) {
   return `${formatNumber(value * 100, { maximumFractionDigits: 1 })}%`;
+}
+
+function MoneyValue({ value }: { value: string }) {
+  return (
+    <span dir="ltr" className="tabular-nums whitespace-nowrap">
+      {value}
+    </span>
+  );
+}
+
+function PercentValue({ value }: { value: string }) {
+  return (
+    <span dir="ltr" className="tabular-nums whitespace-nowrap">
+      {value}
+    </span>
+  );
 }
 
 function warningToneClass(severity: RetainerWarning["severity"]) {
@@ -447,7 +466,7 @@ function ScenarioSummaryCard({
   onPrint: (scenarioId: string) => void;
   t: Translate;
 }) {
-  const labels = retainerLabelMaps(t);
+  const labels = retainerLabelMaps(t, useLocale());
   const result = scenario.calculatedResults;
   return (
     <Card className={cn("border-border/70", selected && "ring-primary/40 ring-1")}>
@@ -469,19 +488,27 @@ function ScenarioSummaryCard({
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-muted-foreground">{t("results.finalPrice")}</dt>
-            <dd className="font-medium tabular-nums" dir="ltr">{formatCurrency(result.finalMonthlyRetainer, result.currency)}</dd>
+            <dd className="font-medium">
+              <MoneyValue value={formatCurrency(result.finalMonthlyRetainer, result.currency)} />
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("results.grossMargin")}</dt>
-            <dd className="font-medium tabular-nums" dir="ltr">{formatPercent(result.grossMargin)}</dd>
+            <dd className="font-medium">
+              <PercentValue value={formatPercent(result.grossMargin)} />
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("results.totalValue")}</dt>
-            <dd className="font-medium tabular-nums" dir="ltr">{formatCurrency(result.totalContractValue, result.currency)}</dd>
+            <dd className="font-medium">
+              <MoneyValue value={formatCurrency(result.totalContractValue, result.currency)} />
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("results.perVehicle")}</dt>
-            <dd className="font-medium tabular-nums" dir="ltr">{formatCurrency(result.pricePerVehicle, result.currency)}</dd>
+            <dd className="font-medium">
+              <MoneyValue value={formatCurrency(result.pricePerVehicle, result.currency)} />
+            </dd>
           </div>
         </dl>
         <div className="flex flex-wrap gap-2">
@@ -518,19 +545,20 @@ function ScenarioTiers({
   t: Translate;
 }) {
   return (
-    <div className="grid gap-3 xl:grid-cols-3">
+    <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
       {tiers.map((tier) => (
-        <Card key={tier.title}>
-          <CardHeader>
+        <Card key={tier.title} className="min-w-0">
+          <CardHeader className="min-w-0">
             <CardTitle>{tier.title}</CardTitle>
             <CardDescription>{t("tiers.heading")}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-2xl font-semibold tabular-nums" dir="ltr">
-              {formatCurrency(tier.result.finalMonthlyRetainer, currency)}
+          <CardContent className="space-y-3 min-w-0">
+            <div className="text-2xl font-semibold">
+              <MoneyValue value={formatCurrency(tier.result.finalMonthlyRetainer, currency)} />
             </div>
-            <div className={cn("rounded-lg border p-3 text-sm", recommendationToneClass(tier.tone))}>
-              {formatPercent(tier.result.grossMargin)} margin · {formatCurrency(tier.result.totalContractValue, currency)}
+            <div className={cn("min-w-0 rounded-lg border p-3 text-sm break-words", recommendationToneClass(tier.tone))}>
+              <PercentValue value={formatPercent(tier.result.grossMargin)} /> margin ·{" "}
+              <MoneyValue value={formatCurrency(tier.result.totalContractValue, currency)} />
             </div>
           </CardContent>
         </Card>
@@ -559,7 +587,9 @@ function ResultsDashboard({
         <Card key={label}>
           <CardHeader>
             <CardDescription>{label}</CardDescription>
-            <CardTitle className="text-xl tabular-nums" dir="ltr">{value}</CardTitle>
+            <CardTitle className="text-xl">
+              <MoneyValue value={value} />
+            </CardTitle>
           </CardHeader>
         </Card>
       ))}
@@ -575,7 +605,7 @@ function PrintScenarioSummary({
   t: Translate;
 }) {
   const locale = useLocale();
-  const labels = retainerLabelMaps(t);
+  const labels = retainerLabelMaps(t, locale);
   const result = scenario.calculatedResults;
   return (
     <div className="space-y-6 p-6 print:p-0">
@@ -590,19 +620,27 @@ function PrintScenarioSummary({
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt>{t("results.finalPrice")}</dt>
-              <dd className="tabular-nums" dir="ltr">{formatCurrency(result.finalMonthlyRetainer, result.currency)}</dd>
+              <dd>
+                <MoneyValue value={formatCurrency(result.finalMonthlyRetainer, result.currency)} />
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>{t("results.grossMargin")}</dt>
-              <dd className="tabular-nums" dir="ltr">{formatPercent(result.grossMargin)}</dd>
+              <dd>
+                <PercentValue value={formatPercent(result.grossMargin)} />
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>{t("results.totalValue")}</dt>
-              <dd className="tabular-nums" dir="ltr">{formatCurrency(result.totalContractValue, result.currency)}</dd>
+              <dd>
+                <MoneyValue value={formatCurrency(result.totalContractValue, result.currency)} />
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>{t("results.perVehicle")}</dt>
-              <dd className="tabular-nums" dir="ltr">{formatCurrency(result.pricePerVehicle, result.currency)}</dd>
+              <dd>
+                <MoneyValue value={formatCurrency(result.pricePerVehicle, result.currency)} />
+              </dd>
             </div>
           </dl>
           <div className="space-y-2">
@@ -655,8 +693,17 @@ function ScenarioComparePanel({
                 <CardTitle className="text-sm">{scenario.title}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
-                <div className="tabular-nums">{formatCurrency(scenario.calculatedResults.finalMonthlyRetainer, scenario.calculatedResults.currency)}</div>
-                <div className="tabular-nums">{formatPercent(scenario.calculatedResults.grossMargin)}</div>
+                <div>
+                  <MoneyValue
+                    value={formatCurrency(
+                      scenario.calculatedResults.finalMonthlyRetainer,
+                      scenario.calculatedResults.currency,
+                    )}
+                  />
+                </div>
+                <div>
+                  <PercentValue value={formatPercent(scenario.calculatedResults.grossMargin)} />
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -665,14 +712,19 @@ function ScenarioComparePanel({
         <dl className="grid gap-3 sm:grid-cols-2">
           <div>
             <dt className="text-muted-foreground text-sm">{t("comparison.monthlySpread")}</dt>
-            <dd className="text-lg font-semibold tabular-nums">
-              {formatCurrency(comparison.totalMonthlySpread, scenarios[0]?.calculatedResults.currency ?? "AED")}
+            <dd className="text-lg font-semibold">
+              <MoneyValue
+                value={formatCurrency(
+                  comparison.totalMonthlySpread,
+                  scenarios[0]?.calculatedResults.currency ?? "AED",
+                )}
+              />
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground text-sm">{t("comparison.marginSpread")}</dt>
-            <dd className="text-lg font-semibold tabular-nums">
-              {formatPercent(comparison.marginSpread)}
+            <dd className="text-lg font-semibold">
+              <PercentValue value={formatPercent(comparison.marginSpread)} />
             </dd>
           </div>
         </dl>
@@ -689,7 +741,7 @@ export function RetainerCalculator({
 }: RetainerCalculatorProps) {
   const t = useTranslations("retainerCalculator");
   const locale = useLocale();
-  const labels = retainerLabelMaps(t);
+  const labels = retainerLabelMaps(t, locale);
   const router = useRouter();
   const [draft, setDraft] = useState<RetainerDraft>(() => {
     if (printScenario) return draftFromScenario(printScenario);
@@ -849,7 +901,7 @@ export function RetainerCalculator({
         }
       />
 
-      <div className="grid gap-6 p-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.9fr)]">
+      <div className="grid gap-6 p-6 xl:grid-cols-1 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card className="print:hidden">
             <CardHeader>
@@ -951,9 +1003,9 @@ export function RetainerCalculator({
                         setDraft((prev) => ({ ...prev, customerId: nextCustomerId }));
                       }}
                     >
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">{getCommonLabel("none", locale)}</SelectItem>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="__none__">{labels.common.none}</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.fullName} · {customer.detail}
@@ -1257,11 +1309,15 @@ export function RetainerCalculator({
         </div>
 
         <div className="space-y-6">
-          <Card className="sticky top-4 print:static">
+          <Card className="sticky top-4 min-w-0 print:static">
             <CardHeader>
               <CardTitle>{t("results.heading")}</CardTitle>
               <CardDescription>
-                {result.ok ? formatCurrency(result.finalMonthlyRetainer, result.currency) : result.error ?? "—"}
+                {result.ok ? (
+                  <MoneyValue value={formatCurrency(result.finalMonthlyRetainer, result.currency)} />
+                ) : (
+                  result.error ?? "—"
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

@@ -258,6 +258,9 @@ const COMMON_LABELS = {
     included: "Included",
     notIncluded: "Not included",
     configuredInStripe: "Configured in Stripe",
+    updated: "Updated",
+    due: "Due",
+    noDueDate: "No due date",
   },
   ar: {
     none: "—",
@@ -268,6 +271,72 @@ const COMMON_LABELS = {
     included: "مشمول",
     notIncluded: "غير مشمول",
     configuredInStripe: "مُعد في Stripe",
+    updated: "تم التحديث",
+    due: "مستحق",
+    noDueDate: "لا يوجد موعد",
+  },
+} as const;
+
+const BILLING_PLAN_LABELS = {
+  en: {
+    starter: "Starter",
+    professional: "Professional",
+    business: "Business",
+    enterprise: "Enterprise",
+  },
+  ar: {
+    starter: "البداية",
+    professional: "الاحترافية",
+    business: "الأعمال",
+    enterprise: "المؤسسات",
+  },
+} as const;
+
+const BILLING_FEATURE_LABELS = {
+  en: {
+    customer_management: "Customer management",
+    jobs: "Jobs",
+    quotations: "Quotations",
+    documents: "Documents",
+    analytics: "Analytics",
+    notifications: "Notifications",
+    billing: "Billing",
+    team_members: "Team members",
+    branches: "Branches",
+    ai_assistant: "AI assistant",
+    priority_support: "Priority support",
+  },
+  ar: {
+    customer_management: "إدارة العملاء",
+    jobs: "المهام",
+    quotations: "عروض الأسعار",
+    documents: "المستندات",
+    analytics: "التحليلات",
+    notifications: "الإشعارات",
+    billing: "الفوترة",
+    team_members: "أعضاء الفريق",
+    branches: "الفروع",
+    ai_assistant: "مساعد الذكاء الاصطناعي",
+    priority_support: "دعم أولوية",
+  },
+} as const;
+
+const BILLING_LIMIT_UNIT_LABELS = {
+  en: {
+    customers: "customers",
+    jobs: "jobs",
+    messages: "messages",
+    members: "members",
+    branches: "branches",
+    credits: "credits",
+  },
+  ar: {
+    customers: "عميل",
+    jobs: "مهمة",
+    messages: "رسالة",
+    members: "عضو",
+    branches: "فرع",
+    credits: "رصيد",
   },
 } as const;
 
@@ -457,4 +526,23 @@ export function getRetainerInsightLabel(value: string, locale: AppLocale = "en")
 
 export function getUnknownVehicleLabel(locale: AppLocale = "en"): string {
   return locale === "ar" ? "مركبة غير معروفة" : "Unknown vehicle";
+}
+
+function normalizeLookup(value: string): string {
+  return value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+export function getBillingPlanLabel(value: string, locale: AppLocale = "en"): string {
+  const key = normalizeLookup(value);
+  return BILLING_PLAN_LABELS[locale][key as keyof typeof BILLING_PLAN_LABELS.en] ?? value;
+}
+
+export function getBillingFeatureLabel(value: string, locale: AppLocale = "en"): string {
+  const key = normalizeLookup(value);
+  return BILLING_FEATURE_LABELS[locale][key as keyof typeof BILLING_FEATURE_LABELS.en] ?? value;
+}
+
+export function getBillingLimitUnitLabel(value: string, locale: AppLocale = "en"): string {
+  const key = normalizeLookup(value);
+  return BILLING_LIMIT_UNIT_LABELS[locale][key as keyof typeof BILLING_LIMIT_UNIT_LABELS.en] ?? value;
 }

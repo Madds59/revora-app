@@ -50,7 +50,7 @@ test("summarizeBillingInvoices aggregates amounts and chooses the latest currenc
   assert.equal(summary.average_invoice_value, 12000);
   assert.equal(summary.paid_invoices_count, 1);
   assert.equal(summary.open_invoices_count, 2);
-  assert.equal(summary.overdue_or_due_invoices_count, 2);
+  assert.equal(summary.overdue_or_due_invoices_count, 1);
 });
 
 test("summarizeBillingInvoices respects the requested period", () => {

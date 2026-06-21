@@ -15,6 +15,7 @@ import { ComplaintMessageForm, type ComplaintParentOption } from "@/components/c
 import type { ComplaintMessage } from "@/lib/database.types";
 import { buildComplaintThread, type ThreadNode } from "@/lib/complaint-thread";
 import { formatDateTime } from "@/lib/formatters";
+import { getRoleLabel } from "@/lib/display-labels";
 
 type ComplaintMessageAction = (
   prev: { error?: string; message?: string },
@@ -45,7 +46,7 @@ function ThreadList({ entries }: { entries: ThreadNode[] }) {
         >
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">
-              {message.sender_name ?? message.sender_role}
+              {message.sender_name ?? getRoleLabel(message.sender_role as Parameters<typeof getRoleLabel>[0], locale)}
             </span>
             <span className="uppercase tracking-wide">
               {message.sender_role === "customer"

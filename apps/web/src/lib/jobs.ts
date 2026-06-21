@@ -36,3 +36,10 @@ export const ACTIVE_JOB_STATUSES: JobStatus[] = [
 export function getJobStatusLabel(status: JobStatus, locale: AppLocale = "en"): string {
   return getDisplayJobStatusLabel(status, locale);
 }
+
+export function formatJobTitle(title: string, locale: AppLocale = "en"): string {
+  if (locale !== "ar") return title;
+  const match = title.match(/^WORK FOR\s+(.+)$/i);
+  if (!match) return title;
+  return `مهمة لعرض السعر ${match[1]}`;
+}

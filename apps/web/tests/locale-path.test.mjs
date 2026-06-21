@@ -28,6 +28,17 @@ test("switchLocalePath prefixes non-localized paths", () => {
   assert.equal(switchLocalePath("/", "ar"), "/ar");
 });
 
+test("switchLocalePath normalizes quote redirects with duplicate locale segments", () => {
+  assert.equal(
+    switchLocalePath("/ar/ar/portal/quotes", "en"),
+    "/en/portal/quotes",
+  );
+  assert.equal(
+    switchLocalePath("/en/en/portal/quotes?quote_status=approved", "ar"),
+    "/ar/portal/quotes?quote_status=approved",
+  );
+});
+
 test("switchLocalePath handles dashboard nav paths", () => {
   assert.equal(switchLocalePath("/jobs", "en"), "/en/jobs");
   assert.equal(switchLocalePath("/vehicles", "ar"), "/ar/vehicles");
