@@ -29,6 +29,7 @@ import {
   COMPLAINT_SEVERITY_VARIANT,
   COMPLAINT_STATUS_VARIANT,
 } from "@/lib/complaints";
+import { formatDateTime } from "@/lib/formatters";
 
 import { loadComplaintEvidence } from "@/lib/evidence";
 import { recordComplaintEvidence } from "@/lib/evidence-actions";
@@ -58,11 +59,6 @@ type StaffOption = {
 
 type CustomerLookup = Pick<Customer, "id" | "full_name" | "email" | "phone">;
 type ProfileLookup = Pick<Profile, "id" | "full_name">;
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleString();
-}
 
 function ComplaintMeta({
   label,
@@ -194,7 +190,7 @@ export default async function ComplaintDetailPage({
         }
         action={
           <Link href="/complaints" className={buttonVariants({ variant: "outline" })}>
-            Back to complaints
+            {locale === "ar" ? "العودة إلى الشكاوى" : "Back to complaints"}
           </Link>
         }
       />
@@ -202,9 +198,11 @@ export default async function ComplaintDetailPage({
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Complaint summary</CardTitle>
+            <CardTitle>{locale === "ar" ? "ملخص الشكوى" : "Complaint summary"}</CardTitle>
             <CardDescription>
-              Operational status, ownership, and the core complaint record.
+              {locale === "ar"
+                ? "الحالة التشغيلية، الملكية، وسجل الشكوى الأساسي."
+                : "Operational status, ownership, and the core complaint record."}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -231,19 +229,19 @@ export default async function ComplaintDetailPage({
                 <ComplaintMeta label={locale === "ar" ? "العميل" : "Customer"} value={typedComplaint.customer_name ?? "—"} />
                 <ComplaintMeta label={locale === "ar" ? "البريد الإلكتروني للعميل" : "Customer email"} value={typedComplaint.customer_email ?? "—"} />
                 <ComplaintMeta label={locale === "ar" ? "هاتف العميل" : "Customer phone"} value={typedComplaint.customer_phone ?? "—"} />
-                <ComplaintMeta label={locale === "ar" ? "تاريخ الإنشاء" : "Created"} value={formatDate(typedComplaint.created_at)} />
-                <ComplaintMeta label={locale === "ar" ? "تم الحل" : "Resolved"} value={formatDate(typedComplaint.resolved_at)} />
-                <ComplaintMeta label={locale === "ar" ? "تم التصعيد" : "Escalated"} value={formatDate(typedComplaint.escalated_at)} />
+                <ComplaintMeta label={locale === "ar" ? "تاريخ الإنشاء" : "Created"} value={formatDateTime(typedComplaint.created_at, undefined, locale)} />
+                <ComplaintMeta label={locale === "ar" ? "تم الحل" : "Resolved"} value={formatDateTime(typedComplaint.resolved_at, undefined, locale)} />
+                <ComplaintMeta label={locale === "ar" ? "تم التصعيد" : "Escalated"} value={formatDateTime(typedComplaint.escalated_at, undefined, locale)} />
               </dl>
             </div>
 
             <div className="flex flex-col gap-4 rounded-lg border p-4">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Assignment
+                  {locale === "ar" ? "التكليف" : "Assignment"}
                 </p>
                 <p className="text-sm">
-                  {typedComplaint.assignee_name ?? "Unassigned"}
+                  {typedComplaint.assignee_name ?? (locale === "ar" ? "غير مُكلَّف" : "Unassigned")}
                 </p>
                 <ComplaintAssignmentModal
                   action={updateComplaint}
@@ -268,8 +266,12 @@ export default async function ComplaintDetailPage({
         {typedComplaint.resolution_summary && (
           <Card>
             <CardHeader>
-              <CardTitle>Resolution summary</CardTitle>
-              <CardDescription>Recorded closeout notes for this complaint.</CardDescription>
+              <CardTitle>{locale === "ar" ? "ملخّص الحل" : "Resolution summary"}</CardTitle>
+              <CardDescription>
+                {locale === "ar"
+                  ? "ملاحظات الإغلاق المسجّلة لهذه الشكوى."
+                  : "Recorded closeout notes for this complaint."}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap text-sm leading-6">
@@ -281,9 +283,11 @@ export default async function ComplaintDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Evidence</CardTitle>
+            <CardTitle>{locale === "ar" ? "الأدلة" : "Evidence"}</CardTitle>
             <CardDescription>
-              Customer-submitted and staff-added photos and files.
+              {locale === "ar"
+                ? "الصور والملفات المرسلة من العميل أو المضافة من الفريق."
+                : "Customer-submitted and staff-added photos and files."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -292,19 +296,23 @@ export default async function ComplaintDetailPage({
               bucket={PRIVATE_BUCKET}
               businessId={typedComplaint.business_id}
               entity="complaint-evidence"
-              label="Add evidence"
+              label={locale === "ar" ? "إضافة دليل" : "Add evidence"}
               onUpload={recordComplaintEvidence.bind(null, typedComplaint.id)}
             />
           </CardContent>
         </Card>
 
         <ComplaintMessagingPanel
-          title="Threaded messages"
-          description="Staff replies, customer replies, and internal notes in one thread."
+          title={locale === "ar" ? "الرسائل المتسلسلة" : "Threaded messages"}
+          description={
+            locale === "ar"
+              ? "ردود الفريق والعميل والملاحظات الداخلية في محادثة واحدة."
+              : "Staff replies, customer replies, and internal notes in one thread."
+          }
           entries={typedMessages}
           complaintId={typedComplaint.id}
           businessId={typedComplaint.business_id}
-          replyLabel="Post staff reply"
+          replyLabel={locale === "ar" ? "نشر رد من الفريق" : "Post staff reply"}
           onReply={addComplaintMessage}
           allowInternalOnly
         />

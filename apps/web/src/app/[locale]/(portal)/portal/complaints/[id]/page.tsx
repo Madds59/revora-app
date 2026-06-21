@@ -16,15 +16,18 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Complaint, ComplaintMessage, Profile } from "@/lib/database.types";
 import {
-  COMPLAINT_SEVERITY_LABELS,
   COMPLAINT_SEVERITY_VARIANT,
-  COMPLAINT_STATUS_LABELS,
   COMPLAINT_STATUS_VARIANT,
+  getComplaintSeverityLabel,
+  getComplaintStatusLabel,
 } from "@/lib/complaints";
 import { buildComplaintThread } from "@/lib/complaint-thread";
 import { loadComplaintEvidence } from "@/lib/evidence";
 import { recordComplaintEvidence } from "@/lib/evidence-actions";
 import { PRIVATE_BUCKET } from "@/lib/storage";
+import { formatDateTime } from "@/lib/formatters";
+import { getRoleLabel } from "@/lib/display-labels";
+import { getLocale } from "next-intl/server";
 
 import { ComplaintMessageForm } from "@/components/complaint-message-form";
 import { EvidenceGallery } from "@/components/evidence-gallery";
@@ -40,6 +43,7 @@ export default async function PortalComplaintDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const locale = await getLocale();
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
 
@@ -88,7 +92,10 @@ export default async function PortalComplaintDetailPage({
   const threaded = buildComplaintThread(typedMessages);
   const parentOptions = threaded.map((message) => ({
     id: message.id,
-    label: `${message.sender_role} · ${message.body.slice(0, 40)}`,
+    label: `${
+      message.sender_name ??
+      getRoleLabel(message.sender_role as Parameters<typeof getRoleLabel>[0], locale)
+    } · ${message.body.slice(0, 40)}`,
   }));
 
   const latestMessage = threaded[threaded.length - 1];
@@ -98,50 +105,54 @@ export default async function PortalComplaintDetailPage({
     <>
       <PageHeader
         title={typedComplaint.subject}
-        description={typedComplaint.business_name ?? "Complaint detail"}
+        description={typedComplaint.business_name ?? (locale === "ar" ? "تفاصيل الشكوى" : "Complaint detail")}
         action={
           <Link
             href="/portal/complaints"
             className={buttonVariants({ variant: "outline" })}
           >
-            Back to complaints
+            {locale === "ar" ? "العودة إلى الشكاوى" : "Back to complaints"}
           </Link>
         }
       />
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Current status</CardTitle>
+            <CardTitle>{locale === "ar" ? "الحالة الحالية" : "Current status"}</CardTitle>
             <CardDescription>
-              Tracking your complaint and the business response.
+              {locale === "ar"
+                ? "نتابع شكواك ورد النشاط عليها."
+                : "Tracking your complaint and the business response."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <Badge variant={COMPLAINT_STATUS_VARIANT[typedComplaint.status]}>
-                {COMPLAINT_STATUS_LABELS[typedComplaint.status]}
+                {getComplaintStatusLabel(typedComplaint.status, locale)}
               </Badge>
               <Badge variant={COMPLAINT_SEVERITY_VARIANT[typedComplaint.severity]}>
-                {COMPLAINT_SEVERITY_LABELS[typedComplaint.severity]}
+                {getComplaintSeverityLabel(typedComplaint.severity, locale)}
               </Badge>
             </div>
             <dl className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border p-4">
                 <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-                  Submitted
+                  {locale === "ar" ? "تم الإرسال" : "Submitted"}
                 </dt>
                 <dd className="mt-1 text-sm">
-                  {new Date(typedComplaint.created_at).toLocaleString()}
+                  {formatDateTime(typedComplaint.created_at, undefined, locale)}
                 </dd>
               </div>
               <div className="rounded-lg border p-4">
                 <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-                  Latest public activity
+                  {locale === "ar" ? "آخر نشاط عام" : "Latest public activity"}
                 </dt>
                 <dd className="mt-1 text-sm">
                   {latestMessage
-                    ? new Date(latestMessage.created_at).toLocaleString()
-                    : "No public updates yet"}
+                    ? formatDateTime(latestMessage.created_at, undefined, locale)
+                    : locale === "ar"
+                      ? "لا توجد تحديثات عامة بعد"
+                      : "No public updates yet"}
                 </dd>
               </div>
             </dl>
@@ -149,7 +160,7 @@ export default async function PortalComplaintDetailPage({
             {typedComplaint.resolution_summary && (
               <div className="rounded-lg border p-4">
                 <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Resolution summary
+                  {locale === "ar" ? "ملخص الحل" : "Resolution summary"}
                 </div>
                 <p className="mt-2 text-sm">{typedComplaint.resolution_summary}</p>
               </div>
@@ -159,9 +170,11 @@ export default async function PortalComplaintDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Evidence</CardTitle>
+            <CardTitle>{locale === "ar" ? "الأدلة" : "Evidence"}</CardTitle>
             <CardDescription>
-              Photos or files that support your complaint.
+              {locale === "ar"
+                ? "الصور أو الملفات التي تدعم شكواك."
+                : "Photos or files that support your complaint."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -170,7 +183,7 @@ export default async function PortalComplaintDetailPage({
               bucket={PRIVATE_BUCKET}
               businessId={typedComplaint.business_id}
               entity="complaint-evidence"
-              label="Upload evidence"
+              label={locale === "ar" ? "رفع دليل" : "Upload evidence"}
               onUpload={recordComplaintEvidence.bind(null, typedComplaint.id)}
             />
           </CardContent>
@@ -178,16 +191,19 @@ export default async function PortalComplaintDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Threaded messages</CardTitle>
+            <CardTitle>{locale === "ar" ? "الرسائل المتسلسلة" : "Threaded messages"}</CardTitle>
             <CardDescription>
-              Your replies and business responses appear here.
+              {locale === "ar"
+                ? "ستظهر ردودك وردود النشاط هنا."
+                : "Your replies and business responses appear here."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {threaded.length === 0 ? (
               <div className="text-muted-foreground rounded-lg border border-dashed p-6 text-sm">
-                No public messages yet. Once the business replies, the thread
-                will appear here.
+                {locale === "ar"
+                  ? "لا توجد رسائل عامة بعد. ستظهر المحادثة هنا بمجرد أن يرد النشاط."
+                  : "No public messages yet. Once the business replies, the thread will appear here."}
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -198,8 +214,11 @@ export default async function PortalComplaintDetailPage({
                     style={{ marginInlineStart: `${message.depth * 16}px` }}
                   >
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>{message.sender_role}</span>
-                      <span>{new Date(message.created_at).toLocaleString()}</span>
+                      <span>
+                        {message.sender_name ??
+                          getRoleLabel(message.sender_role as Parameters<typeof getRoleLabel>[0], locale)}
+                      </span>
+                      <span>{formatDateTime(message.created_at, undefined, locale)}</span>
                     </div>
                     <p className="mt-2 text-sm">{message.body}</p>
                   </div>
@@ -213,7 +232,7 @@ export default async function PortalComplaintDetailPage({
               action={addComplaintReply}
               complaintId={typedComplaint.id}
               businessId={typedComplaint.business_id}
-              submitLabel="Send reply"
+              submitLabel={locale === "ar" ? "إرسال رد" : "Send reply"}
               parentOptions={parentOptions}
             />
           </CardContent>

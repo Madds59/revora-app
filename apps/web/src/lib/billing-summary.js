@@ -24,7 +24,7 @@ function getPeriodStart(period) {
 function summarizeBillingInvoices(rows, period = "90d") {
   const invoices = Array.isArray(rows) ? rows : [];
   const periodStart = getPeriodStart(period);
-  const periodEnd = new Date();
+  const periodEnd = new Date(Date.now());
 
   const latestInvoice = invoices.reduce((latest, invoice) => {
     if (!latest) return invoice ?? null;
@@ -86,7 +86,7 @@ function getTrendBucketStart(date, period) {
 function summarizeBillingRevenueTrend(rows, period = "90d") {
   const invoices = Array.isArray(rows) ? rows : [];
   const periodStart = getPeriodStart(period);
-  const periodEnd = new Date();
+  const periodEnd = new Date(Date.now());
   const latestInvoice = invoices.reduce((latest, invoice) => {
     if (!latest) return invoice ?? null;
     const latestDate = toDate(latest.created_at);

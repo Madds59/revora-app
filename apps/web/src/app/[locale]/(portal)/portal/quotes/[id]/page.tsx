@@ -115,7 +115,7 @@ export default async function PortalQuoteDetailPage({
           <CardContent className="flex flex-col gap-6">
             {items.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                This quote has no line items yet.
+                {locale === "ar" ? "لا توجد بنود في عرض السعر بعد." : "This quote has no line items yet."}
               </p>
             ) : (
               <div className="rounded-lg border">
@@ -238,7 +238,6 @@ export default async function PortalQuoteDetailPage({
                     customerId={quote.customer_id}
                     version={quote.current_version}
                     language={quote.language}
-                    redirectTo={`/${locale}/portal/quotes`}
                   />
                 </div>
                 <div className="rounded-lg border border-dashed p-4">
@@ -249,7 +248,6 @@ export default async function PortalQuoteDetailPage({
                     quotationId={quote.id}
                     businessId={quote.business_id}
                     customerId={quote.customer_id}
-                    redirectTo={`/${locale}/portal/quotes`}
                   />
                 </div>
               </div>
@@ -266,7 +264,7 @@ export default async function PortalQuoteDetailPage({
         <BusinessRatingForm
           businessId={quote.business_id}
           customerId={quote.customer_id}
-          redirectTo={`/${locale}/portal/quotes`}
+          redirectTo="/portal/quotes"
         />
       </div>
     </>
