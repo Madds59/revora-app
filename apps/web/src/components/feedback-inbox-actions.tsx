@@ -62,7 +62,11 @@ export function FeedbackInboxActions({
           <Label htmlFor={`feedback-status-${feedbackReportId}`}>{t("status")}</Label>
           <Select name="status" defaultValue={currentStatus} disabled={disabled}>
             <SelectTrigger id={`feedback-status-${feedbackReportId}`} className="w-full">
-              <SelectValue placeholder={t("status")} />
+              <SelectValue placeholder={t("status")}>
+                {(value) =>
+                  value ? getFeedbackStatusLabel(value as string, locale) : null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {FEEDBACK_STATUSES.map((status) => (
@@ -77,7 +81,11 @@ export function FeedbackInboxActions({
           <Label htmlFor={`feedback-priority-${feedbackReportId}`}>{t("priority")}</Label>
           <Select name="priority" defaultValue={currentPriority} disabled={disabled}>
             <SelectTrigger id={`feedback-priority-${feedbackReportId}`} className="w-full">
-              <SelectValue placeholder={t("priority")} />
+              <SelectValue placeholder={t("priority")}>
+                {(value) =>
+                  value ? getFeedbackPriorityLabel(value as string, locale) : null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {FEEDBACK_PRIORITIES.map((priority) => (

@@ -105,7 +105,12 @@ export function FeedbackSubmissionForm({
             }}
           >
             <SelectTrigger id="feedback_account" className="w-full">
-              <SelectValue placeholder={accountLabel ?? t("account")} />
+              <SelectValue placeholder={accountLabel ?? t("account")}>
+                {(value) =>
+                  accounts.find((account) => accountValue(account) === value)?.label ??
+                  null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {accounts.map((account) => (
@@ -130,7 +135,11 @@ export function FeedbackSubmissionForm({
           <Label htmlFor="category">{t("category")}</Label>
           <Select name="category" defaultValue="feedback">
             <SelectTrigger id="category" className="w-full">
-              <SelectValue placeholder={t("category")} />
+              <SelectValue placeholder={t("category")}>
+                {(value) =>
+                  value ? getFeedbackCategoryLabel(value as string, locale) : null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {categoryOptions.map((category) => (
@@ -146,7 +155,11 @@ export function FeedbackSubmissionForm({
           <Label htmlFor="severity">{t("severity")}</Label>
           <Select name="severity" defaultValue="normal">
             <SelectTrigger id="severity" className="w-full">
-              <SelectValue placeholder={t("severity")} />
+              <SelectValue placeholder={t("severity")}>
+                {(value) =>
+                  value ? getFeedbackSeverityLabel(value as string, locale) : null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {severityOptions.map((severity) => (

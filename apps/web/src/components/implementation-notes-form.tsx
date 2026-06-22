@@ -57,7 +57,11 @@ export function ImplementationNotesForm({
         <Label htmlFor="implementation-stage">{t("stage")}</Label>
         <Select name="stage" defaultValue={currentStage} disabled={disabled}>
           <SelectTrigger id="implementation-stage" className="w-full">
-            <SelectValue placeholder={t("stage")} />
+            <SelectValue placeholder={t("stage")}>
+              {(value) =>
+                value ? getImplementationStageLabel(value as string, locale) : null
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {IMPLEMENTATION_STAGES.map((stage) => (
