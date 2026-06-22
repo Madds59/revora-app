@@ -325,6 +325,7 @@ const BILLING_LIMIT_UNIT_LABELS = {
   en: {
     customers: "customers",
     jobs: "jobs",
+    quotes: "quotes",
     messages: "messages",
     members: "members",
     branches: "branches",
@@ -333,6 +334,7 @@ const BILLING_LIMIT_UNIT_LABELS = {
   ar: {
     customers: "عميل",
     jobs: "مهمة",
+    quotes: "عرض سعر",
     messages: "رسالة",
     members: "عضو",
     branches: "فرع",
