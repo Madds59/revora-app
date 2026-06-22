@@ -233,7 +233,9 @@ export default async function FeedbackPage({
             </div>
 
             {error ? (
-              <p className="text-destructive text-sm">{t("inbox.error")}</p>
+              <p className="text-destructive text-sm">
+                {t("inbox.error")} [DIAG {JSON.stringify({ code: error.code, message: error.message, details: error.details, hint: error.hint })}]
+              </p>
             ) : reports.length === 0 ? (
               <EmptyState
                 title={t("inbox.empty.title")}
