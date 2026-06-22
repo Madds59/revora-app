@@ -270,6 +270,15 @@ function PercentValue({ value }: { value: string }) {
   );
 }
 
+// base-ui's <SelectValue /> renders the raw selected value unless given a
+// function child, so map the value back to its option label for the trigger.
+function selectedOptionLabel(
+  options: ReadonlyArray<{ value: string; label: React.ReactNode }>,
+  value: unknown,
+): React.ReactNode {
+  return options.find((option) => option.value === value)?.label ?? null;
+}
+
 function warningToneClass(severity: RetainerWarning["severity"]) {
   if (severity === "critical") return "border-destructive/30 bg-destructive/10 text-destructive";
   if (severity === "warning") return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
@@ -952,7 +961,7 @@ export function RetainerCalculator({
                   <div className="grid gap-2">
                     <Label>{t("context.customerType")}</Label>
                     <Select value={draft.customerType} onValueChange={(value) => setDraft((prev) => ({ ...prev, customerType: value as RetainerScenarioInput["customerType"] }))}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(customerTypeOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>
                         {customerTypeOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                       </SelectContent>
@@ -961,7 +970,7 @@ export function RetainerCalculator({
                   <div className="grid gap-2">
                     <Label>{t("context.serviceCategory")}</Label>
                     <Select value={draft.serviceCategory} onValueChange={(value) => setDraft((prev) => ({ ...prev, serviceCategory: value as RetainerScenarioInput["serviceCategory"] }))}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(presetOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>
                         {presetOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                       </SelectContent>
@@ -970,14 +979,14 @@ export function RetainerCalculator({
                   <div className="grid gap-2">
                     <Label>{t("context.currency")}</Label>
                     <Select value={draft.input.currency} onValueChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, currency: value as Currency } }))}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(currencyOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>{currencyOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label>{t("context.billingCycle")}</Label>
                     <Select value={draft.input.billingCycle} onValueChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, billingCycle: value as BillingCycle } }))}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(billingCycleOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>{billingCycleOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
@@ -987,7 +996,7 @@ export function RetainerCalculator({
                   <div className="grid gap-2">
                     <Label>{t("context.sla")}</Label>
                     <Select value={draft.input.slaLevel} onValueChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, slaLevel: value as SlaLevel } }))}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(slaOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>{slaOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
@@ -1003,7 +1012,11 @@ export function RetainerCalculator({
                         setDraft((prev) => ({ ...prev, customerId: nextCustomerId }));
                       }}
                     >
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-full"><SelectValue>{(value) => {
+                      if (!value || value === "__none__") return labels.common.none;
+                      const customer = customers.find((item) => item.id === value);
+                      return customer ? `${customer.fullName} · ${customer.detail}` : null;
+                    }}</SelectValue></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="__none__">{labels.common.none}</SelectItem>
                         {customers.map((customer) => (
@@ -1212,7 +1225,7 @@ export function RetainerCalculator({
                         }))
                       }
                       >
-                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(roundingOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>
                         {roundingOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
