@@ -85,7 +85,13 @@ export function ComplaintManagementForm({
           <Label htmlFor="status">{t("status")}</Label>
           <Select name="status" defaultValue={currentStatus}>
             <SelectTrigger id="status" className="w-full">
-              <SelectValue placeholder={t("status")} />
+              <SelectValue placeholder={t("status")}>
+                {(value) =>
+                  value
+                    ? getComplaintStatusLabel(value as ComplaintStatus, locale)
+                    : null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((status) => (
@@ -101,7 +107,13 @@ export function ComplaintManagementForm({
           <Label htmlFor="severity">{t("severity")}</Label>
           <Select name="severity" defaultValue={currentSeverity}>
             <SelectTrigger id="severity" className="w-full">
-              <SelectValue placeholder={t("severity")} />
+              <SelectValue placeholder={t("severity")}>
+                {(value) =>
+                  value
+                    ? getComplaintSeverityLabel(value as ComplaintSeverity, locale)
+                    : null
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {COMPLAINT_SEVERITIES.map((severity) => (
