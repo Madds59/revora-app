@@ -65,6 +65,8 @@ git diff -- . ':!pnpm-lock.yaml' | grep -Ei "OPENAI_API_KEY=|VIN_API_KEY=|SUPABA
 
 Any match must be treated as a stop condition until reviewed. Do not paste keys into chat, docs, screenshots, or commits.
 
+Docs-only branches may match this scan because the scanner command itself is documented. Classify those as benign documentation examples only when the matched text is the literal grep pattern and no actual token, key, connection string, `.env` value, JWT, or secret value is present.
+
 ## Collision Scan
 
 Before staging, compare the branch against `origin/main`:
@@ -118,6 +120,8 @@ Browser QA should verify:
 ## Authenticated QA Requirements
 
 Authenticated QA requires operator-owned credentials. Agents must not create, request, print, store, or handle passwords.
+
+Do not claim authenticated QA from route smoke, curl checks, static inspection, or unauthenticated browser checks. Authenticated QA requires a real logged-in browser session for the relevant owner/staff/customer role.
 
 Required sessions:
 

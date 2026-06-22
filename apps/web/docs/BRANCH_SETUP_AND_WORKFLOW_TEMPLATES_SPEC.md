@@ -270,3 +270,13 @@ Checklist examples:
 - Attach inspection report.
 - Confirm SLA priority.
 - Send release summary.
+
+## Future Implementation Phases
+
+1. Document branch setup requirements and template defaults.
+2. Build a read-only template picker for operators.
+3. Add branch setup wizard without schema changes where existing tables are sufficient.
+4. Add migration-backed branch transfer history only after approval.
+5. Add per-vertical workflow templates with owner confirmation before applying defaults.
+6. Add audit events and browser QA for manager/staff assignment changes.
+7. Add import alignment so bulk customer/vehicle imports can target branches safely.
