@@ -36,7 +36,6 @@ type FeedbackRow = {
   priority: string;
   created_at: string;
   resolved_at: string | null;
-  business: { name: string } | null;
 };
 
 export default async function PortalFeedbackPage() {
@@ -52,7 +51,7 @@ export default async function PortalFeedbackPage() {
     ? await supabase
         .from("feedback_reports")
         .select(
-          "id, business_id, customer_id, submitted_by, submitted_by_email, submitted_by_name, submitted_role, source, locale, category, severity, title, description, page_url, status, priority, created_at, resolved_at, business:businesses(name)",
+          "id, business_id, customer_id, submitted_by, submitted_by_email, submitted_by_name, submitted_role, source, locale, category, severity, title, description, page_url, status, priority, created_at, resolved_at",
         )
         .in("business_id", businessIds)
         .or(`submitted_by.eq.${user?.id ?? ""},customer_id.in.(${customerIds.join(",")})`)
@@ -66,6 +65,9 @@ export default async function PortalFeedbackPage() {
     customerId: account.id,
     label: `${account.full_name} · ${account.business?.name ?? t("fallback.workshop")}`,
   }));
+  const businessNames = new Map(
+    accounts.map((account) => [account.business_id, account.business?.name ?? null]),
+  );
 
   return (
     <>
@@ -111,7 +113,8 @@ export default async function PortalFeedbackPage() {
             ) : (
               <div className="flex flex-col gap-4">
                 {reports.map((report) => {
-                  const workshopName = report.business?.name ?? t("fallback.workshop");
+                  const workshopName =
+                    businessNames.get(report.business_id) ?? t("fallback.workshop");
                   return (
                     <div key={report.id} className="rounded-lg border p-4">
                       <div className="flex flex-wrap gap-2">

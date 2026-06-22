@@ -46,7 +46,6 @@ type FeedbackRow = {
   priority: string;
   created_at: string;
   resolved_at: string | null;
-  customer: { full_name: string | null; email: string | null } | null;
 };
 
 function asString(value: string | string[] | undefined): string {
@@ -87,7 +86,7 @@ export default async function FeedbackPage({
   let queryBuilder = supabase
     .from("feedback_reports")
     .select(
-      "id, business_id, customer_id, submitted_by, submitted_by_email, submitted_by_name, submitted_role, source, locale, category, severity, title, description, page_url, status, priority, created_at, resolved_at, customer:customers(full_name, email)",
+      "id, business_id, customer_id, submitted_by, submitted_by_email, submitted_by_name, submitted_role, source, locale, category, severity, title, description, page_url, status, priority, created_at, resolved_at",
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false })
@@ -245,7 +244,6 @@ export default async function FeedbackPage({
                 {reports.map((report) => {
                   const submittedBy =
                     report.submitted_by_name ??
-                    report.customer?.full_name ??
                     report.submitted_by_email ??
                     t("inbox.unknownSubmittedBy");
 
