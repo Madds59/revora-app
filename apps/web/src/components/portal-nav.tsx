@@ -17,7 +17,16 @@ import {
 import { cn } from "@/lib/utils";
 
 type NavItem = {
-  labelKey: "home" | "vehicles" | "quotes" | "jobs" | "complaints" | "documents" | "settings" | "memberships";
+  labelKey:
+    | "home"
+    | "vehicles"
+    | "quotes"
+    | "jobs"
+    | "complaints"
+    | "documents"
+    | "settings"
+    | "memberships"
+    | "feedbackSupport";
   href: string;
   icon: LucideIcon;
 };
@@ -30,6 +39,7 @@ const NAV: NavItem[] = [
   { labelKey: "jobs", href: "/portal/jobs", icon: Wrench },
   { labelKey: "complaints", href: "/portal/complaints", icon: MessageSquare },
   { labelKey: "documents", href: "/portal/documents", icon: Files },
+  { labelKey: "feedbackSupport", href: "/portal/feedback", icon: MessageSquare },
   { labelKey: "settings", href: "/portal/settings", icon: Settings },
 ];
 

@@ -22,11 +22,14 @@ conflict). One feature = one branch = one PR = green before the next.
 - **Claude owns and you must not edit:** `src/lib/retainer/**`,
   `src/components/retainer-calculator/**`, anything named `membership_bundles` /
   `bundles`, and **migration `0026`** (reserved for F3).
-- **Migration numbers (sequential, no reuse):** F3 = `0026` (Claude). You claim
-  the next free numbers in your order: **F4 = `0027`**, **F5 prefs/queue =
-  `0028`**, and so on. **Always `git fetch origin && check the latest migration
-  on `origin/main` before creating one**; if Claude or a prior PR already took a
-  number, take the next. Never edit an applied/merged migration.
+- **Migration numbers (sequential, no reuse):** F3 = `0026` (Claude), **F4 =
+  `0027`**. **`0028` is intentionally skipped — a reserved historical slot** (it
+  was originally penciled in for F5 but never created). **`0029` =
+  `0029_launch_ops_foundation.sql` (Launch Ops Foundation).** **F5 prefs/queue
+  must therefore use `0030` or the next free number** if it needs schema.
+  **Always `git fetch origin && check the latest migration on `origin/main`
+  before creating one**; if Claude or a prior PR already took a number, take the
+  next. Never edit an applied/merged migration.
 - **Branch per feature off the latest `origin/main`.** Before opening each PR:
   `git fetch origin && git rebase origin/main`, re-run validation, then PR.
   Merge features sequentially; never merge two unrebased features together.
