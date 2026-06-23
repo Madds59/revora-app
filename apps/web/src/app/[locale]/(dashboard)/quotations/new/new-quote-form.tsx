@@ -43,7 +43,9 @@ export function NewQuoteForm({ customers }: { customers: CustomerOption[] }) {
           required
         >
           <SelectTrigger id="customer_id" className="w-full">
-            <SelectValue placeholder={t("selectCustomer")} />
+            <SelectValue placeholder={t("selectCustomer")}>
+              {(value) => customers.find((c) => c.id === value)?.full_name ?? null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {customers.map((c) => (
@@ -60,7 +62,9 @@ export function NewQuoteForm({ customers }: { customers: CustomerOption[] }) {
           <Label htmlFor="vehicle_id">{t("vehicleOptional")}</Label>
           <Select name="vehicle_id">
             <SelectTrigger id="vehicle_id" className="w-full">
-              <SelectValue placeholder={t("noVehicle")} />
+              <SelectValue placeholder={t("noVehicle")}>
+                {(value) => vehicles.find((v) => v.id === value)?.label ?? null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {vehicles.map((v) => (

@@ -49,7 +49,13 @@ export function VehicleDiagnosisForm({
             onValueChange={(value) => setVehicleId(value && value !== "__none__" ? value : "")}
           >
             <SelectTrigger id="vehicle_id">
-              <SelectValue placeholder={t("diagnosis.vehiclePlaceholder")} />
+              <SelectValue placeholder={t("diagnosis.vehiclePlaceholder")}>
+                {(value) =>
+                  !value || value === "__none__"
+                    ? t("diagnosis.vehicleNone")
+                    : (vehicles.find((vehicle) => vehicle.id === value)?.label ?? null)
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">{t("diagnosis.vehicleNone")}</SelectItem>
@@ -99,7 +105,19 @@ export function VehicleDiagnosisForm({
             <Label htmlFor="severity_input">{t("diagnosis.severityLabel")}</Label>
             <Select name="severity_input" defaultValue="">
               <SelectTrigger id="severity_input">
-                <SelectValue placeholder={t("diagnosis.severityPlaceholder")} />
+                <SelectValue placeholder={t("diagnosis.severityPlaceholder")}>
+                  {(value) =>
+                    value === "low"
+                      ? t("diagnosis.severity.low")
+                      : value === "medium"
+                        ? t("diagnosis.severity.medium")
+                        : value === "high"
+                          ? t("diagnosis.severity.high")
+                          : value === "critical"
+                            ? t("diagnosis.severity.critical")
+                            : t("diagnosis.severityPlaceholder")
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">{t("diagnosis.severityPlaceholder")}</SelectItem>

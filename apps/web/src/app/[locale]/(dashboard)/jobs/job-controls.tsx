@@ -67,7 +67,7 @@ export function JobStatusForm({
           onValueChange={(v) => setStatus((v as JobStatus) ?? current)}
         >
           <SelectTrigger id="job-status" className="w-48">
-            <SelectValue />
+            <SelectValue>{(value) => (value ? getJobStatusLabel(value, locale) : null)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {STATUSES.map((s) => (

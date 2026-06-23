@@ -45,7 +45,13 @@ export function PortalHealthCheckForm({
             onValueChange={(value) => setVehicleId(value && value !== "__none__" ? value : "")}
           >
             <SelectTrigger id="vehicle_id">
-              <SelectValue placeholder={t("portal.vehiclePlaceholder")} />
+              <SelectValue placeholder={t("portal.vehiclePlaceholder")}>
+                {(value) =>
+                  !value || value === "__none__"
+                    ? t("portal.vehicleNone")
+                    : (vehicles.find((vehicle) => vehicle.id === value)?.label ?? null)
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">{t("portal.vehicleNone")}</SelectItem>
@@ -89,7 +95,19 @@ export function PortalHealthCheckForm({
           <Label htmlFor="severity_input">{t("portal.severityLabel")}</Label>
           <Select name="severity_input" defaultValue="">
             <SelectTrigger id="severity_input">
-              <SelectValue placeholder={t("portal.severityPlaceholder")} />
+              <SelectValue placeholder={t("portal.severityPlaceholder")}>
+                {(value) =>
+                  value === "low"
+                    ? t("portal.severity.low")
+                    : value === "medium"
+                      ? t("portal.severity.medium")
+                      : value === "high"
+                        ? t("portal.severity.high")
+                        : value === "critical"
+                          ? t("portal.severity.critical")
+                          : t("portal.severityPlaceholder")
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">{t("portal.severityPlaceholder")}</SelectItem>
