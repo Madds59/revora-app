@@ -77,7 +77,11 @@ export function FilterToolbar({
               onValueChange={(value) => onStatusValueChange(value ?? "all")}
             >
               <SelectTrigger id="filter-status" className="w-full">
-                <SelectValue placeholder={t("status")} />
+                <SelectValue placeholder={t("status")}>
+                  {(value) =>
+                    statusOptions.find((option) => option.value === value)?.label ?? null
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
@@ -100,7 +104,11 @@ export function FilterToolbar({
               onValueChange={(value) => onDateValueChange(value ?? "all")}
             >
               <SelectTrigger id="filter-date" className="w-full">
-                <SelectValue placeholder={t("dateRange")} />
+                <SelectValue placeholder={t("dateRange")}>
+                  {(value) =>
+                    dateOptions.find((option) => option.value === value)?.label ?? null
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {dateOptions.map((option) => (

@@ -83,7 +83,9 @@ export function VehicleForm({
             defaultValue={selectedCustomerId ?? vehicle?.customer_id ?? ""}
           >
             <SelectTrigger id="customer_id" className="w-full">
-              <SelectValue placeholder={t("selectCustomer")} />
+              <SelectValue placeholder={t("selectCustomer")}>
+                {(value) => customers.find((customer) => customer.id === value)?.label ?? null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {customers.map((customer) => (

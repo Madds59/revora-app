@@ -90,7 +90,13 @@ function FilterSection({
           </div>
           <Select value={makeValue} onValueChange={(value) => onMakeValueChange(value ?? "all")}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={t("filters.allMakes")} />
+              <SelectValue placeholder={t("filters.allMakes")}>
+                {(value) =>
+                  !value || value === "all"
+                    ? t("filters.allMakes")
+                    : (makeOptions.find((option) => option.value === value)?.label ?? value)
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("filters.allMakes")}</SelectItem>
@@ -112,7 +118,13 @@ function FilterSection({
             onValueChange={(value) => onCustomerValueChange(value ?? "all")}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={t("filters.allCustomers")} />
+              <SelectValue placeholder={t("filters.allCustomers")}>
+                {(value) =>
+                  !value || value === "all"
+                    ? t("filters.allCustomers")
+                    : (customerOptions.find((option) => option.value === value)?.label ?? null)
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("filters.allCustomers")}</SelectItem>
