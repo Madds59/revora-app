@@ -17,6 +17,7 @@ Every release branch must pass these gates before merge:
 - No secrets appear in diffs, logs, docs, or screenshots.
 - No runtime collision with active branches owned by another agent.
 - No migration collision with already assigned migration numbers.
+- For migration-backed releases, the PostgREST schema cache has been reloaded after applying the migration and authenticated reads/writes verified — see [DB Migration Release SOP](./DB_MIGRATION_RELEASE_SOP.md) → "PostgREST Schema Cache Reload". HTTP smoke alone cannot detect `PGRST205`.
 - Authenticated QA is complete or explicitly marked blocked.
 - Browser QA is complete for user-facing UI changes.
 - Unsigned Stripe webhook request rejects without middleware redirect.
