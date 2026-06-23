@@ -4,6 +4,8 @@
 
 This checklist covers authenticated production and preview QA for Revora. It is intended for operator-led QA where credentials are handled only by the user or authorized tester, never by an agent.
 
+For migration-backed features, this authenticated QA is **required and not optional**: HTTP smoke/curl redirects unauthenticated requests before they reach the migrated tables, so it cannot detect `PGRST205`, RLS failures, or broken reads/writes. Confirm the PostgREST schema cache was reloaded after the migration first — see [DB Migration Release SOP](./DB_MIGRATION_RELEASE_SOP.md) → "PostgREST Schema Cache Reload".
+
 ## Required Sessions
 
 - Owner or staff session with access to a test business.
