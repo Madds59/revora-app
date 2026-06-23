@@ -48,7 +48,13 @@ export function VinDecoderForm({
             onValueChange={(value) => setVehicleId(value && value !== "__none__" ? value : "")}
           >
             <SelectTrigger id="vehicle_id">
-              <SelectValue placeholder={t("vin.vehiclePlaceholder")} />
+              <SelectValue placeholder={t("vin.vehiclePlaceholder")}>
+                {(value) =>
+                  !value || value === "__none__"
+                    ? t("vin.vehicleNone")
+                    : (vehicles.find((vehicle) => vehicle.id === value)?.label ?? null)
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">{t("vin.vehicleNone")}</SelectItem>

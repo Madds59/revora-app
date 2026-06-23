@@ -62,7 +62,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
             onValueChange={(v) => setKind((v as ItemKind) ?? "service")}
           >
             <SelectTrigger id="kind" className="w-full">
-              <SelectValue />
+              <SelectValue>{(value) => (value ? KIND_LABELS[value as ItemKind] : null)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {ITEM_KINDS.map((k) => (
@@ -132,7 +132,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
             <Label htmlFor="product_category">{t("category")}</Label>
             <Select name="product_category" defaultValue="genuine">
               <SelectTrigger id="product_category" className="w-full">
-                <SelectValue />
+                <SelectValue className="capitalize">{(value) => value ?? null}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {PRODUCT_CATEGORIES.map((c) => (

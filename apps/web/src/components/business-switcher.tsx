@@ -92,7 +92,9 @@ export function BusinessSwitcher({
           onValueChange={(value) => setSelectedBusinessId(value ?? "")}
         >
           <SelectTrigger id="business_id" className="w-full">
-            <SelectValue placeholder={t("selectBusiness")} />
+            <SelectValue placeholder={t("selectBusiness")}>
+              {(value) => options.find((option) => option.id === value)?.label ?? null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (

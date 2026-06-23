@@ -93,7 +93,14 @@ export function ComplaintAssignmentModal({
             <Label htmlFor="assigned_to">{t("assignedTo")}</Label>
             <Select name="assigned_to" defaultValue={currentAssigneeId ?? ""}>
               <SelectTrigger id="assigned_to" className="w-full">
-                <SelectValue placeholder={t("unassigned")} />
+                <SelectValue placeholder={t("unassigned")}>
+                  {(value) =>
+                    value
+                      ? (assignees.find((assignee) => assignee.id === value)?.label ??
+                        t("unassigned"))
+                      : t("unassigned")
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">{t("unassigned")}</SelectItem>

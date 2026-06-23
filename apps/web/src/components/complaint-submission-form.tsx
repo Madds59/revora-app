@@ -76,7 +76,11 @@ export function ComplaintSubmissionForm({
           required
         >
           <SelectTrigger id="customer_id" className="w-full">
-            <SelectValue placeholder={t("selectAccount")} />
+            <SelectValue placeholder={t("selectAccount")}>
+              {(value) =>
+                accounts.find((account) => account.customer_id === value)?.label ?? null
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {accounts.map((account) => (
@@ -98,7 +102,9 @@ export function ComplaintSubmissionForm({
         <Label htmlFor="severity">{t("severity")}</Label>
         <Select name="severity" defaultValue="medium">
           <SelectTrigger id="severity" className="w-full">
-            <SelectValue placeholder={t("severity")} />
+            <SelectValue placeholder={t("severity")}>
+              {(value) => (value ? getComplaintSeverityLabel(value, locale) : null)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {COMPLAINT_SEVERITIES.map((severity) => (

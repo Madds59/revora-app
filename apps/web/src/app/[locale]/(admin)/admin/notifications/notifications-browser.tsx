@@ -206,7 +206,9 @@ export function AdminNotificationsBrowser({
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Notification type" />
+                <SelectValue placeholder="Notification type">
+                  {(value) => TYPE_OPTIONS.find((option) => option.value === value)?.label ?? null}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {TYPE_OPTIONS.map((option) => (

@@ -66,7 +66,7 @@ function InviteForm() {
           <Label htmlFor="invite-role">{t("role")}</Label>
           <Select name="role" defaultValue="employee">
             <SelectTrigger id="invite-role" className="w-40">
-              <SelectValue />
+              <SelectValue>{(value) => (value ? getRoleLabel(value, locale) : null)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="manager">{getRoleLabel("manager", locale)}</SelectItem>

@@ -83,7 +83,15 @@ export function CustomerForm({
           defaultValue={customer?.preferred_language ?? "en"}
         >
           <SelectTrigger id="preferred_language" className="w-full">
-            <SelectValue />
+            <SelectValue>
+              {(value) =>
+                value === "ar"
+                  ? t("languageArabic")
+                  : value === "en"
+                    ? t("languageEnglish")
+                    : null
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="en">{t("languageEnglish")}</SelectItem>

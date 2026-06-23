@@ -41,7 +41,13 @@ export function DtcDecoderForm({
             onValueChange={(value) => setVehicleId(value && value !== "__none__" ? value : "")}
           >
             <SelectTrigger id="vehicle_id">
-              <SelectValue placeholder={t("dtc.vehiclePlaceholder")} />
+              <SelectValue placeholder={t("dtc.vehiclePlaceholder")}>
+                {(value) =>
+                  !value || value === "__none__"
+                    ? t("dtc.vehicleNone")
+                    : (vehicles.find((vehicle) => vehicle.id === value)?.label ?? null)
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">{t("dtc.vehicleNone")}</SelectItem>

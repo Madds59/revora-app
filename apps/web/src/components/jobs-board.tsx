@@ -116,7 +116,13 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
         />
         <Select value={status} onValueChange={(value) => setStatus(value as JobStatus | "all")}>
           <SelectTrigger className="md:w-56">
-            <SelectValue placeholder={t("filters.status")} />
+            <SelectValue placeholder={t("filters.status")}>
+              {(value) =>
+                !value || value === "all"
+                  ? t("filters.allStatuses")
+                  : getJobStatusLabel(value, locale)
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("filters.allStatuses")}</SelectItem>
