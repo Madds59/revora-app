@@ -738,6 +738,47 @@ export type Database = {
           },
         ]
       }
+      business_implementation_progress: {
+        Row: {
+          assigned_owner: string | null
+          business_id: string
+          checklist: Json
+          created_at: string
+          id: string
+          notes: string | null
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_owner?: string | null
+          business_id: string
+          checklist?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_owner?: string | null
+          business_id?: string
+          checklist?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_implementation_progress_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_invitations: {
         Row: {
           accepted_at: string | null
@@ -1343,6 +1384,96 @@ export type Database = {
             columns: ["quotation_id"]
             isOneToOne: false
             referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_reports: {
+        Row: {
+          browser_info: string | null
+          business_id: string
+          category: string
+          created_at: string
+          customer_id: string | null
+          description: string
+          id: string
+          locale: string
+          metadata: Json
+          page_url: string | null
+          priority: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+          status: string
+          submitted_by: string | null
+          submitted_by_email: string | null
+          submitted_by_name: string | null
+          submitted_role: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          browser_info?: string | null
+          business_id: string
+          category: string
+          created_at?: string
+          customer_id?: string | null
+          description: string
+          id?: string
+          locale?: string
+          metadata?: Json
+          page_url?: string | null
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          submitted_by_email?: string | null
+          submitted_by_name?: string | null
+          submitted_role?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          browser_info?: string | null
+          business_id?: string
+          category?: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string
+          id?: string
+          locale?: string
+          metadata?: Json
+          page_url?: string | null
+          priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          submitted_by_email?: string | null
+          submitted_by_name?: string | null
+          submitted_role?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_reports_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_reports_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]

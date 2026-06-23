@@ -285,6 +285,9 @@
     "analytics": "Analytics",
     "notifications": "Notifications",
     "settings": "Settings",
+    "feedback": "Feedback",
+    "implementation": "Implementation Center",
+    "feedbackSupport": "Feedback / Support",
     "vehicleIntelligence": "Vehicle Intelligence",
     "retainerCalculator": "Retainer calculator",
     "membershipBundles": "Membership bundles",
@@ -1378,5 +1381,151 @@
       "quotes": "Quotes",
       "complaints": "Complaints"
     }
+  },
+  "feedback": {
+    "title": "Feedback and support",
+    "description": "Collect feedback, feature requests, onboarding help, and problem reports.",
+    "actions": {
+      "templates": "Import templates"
+    },
+    "form": {
+      "title": "Submit feedback",
+      "description": "Share feedback, a suggestion, or a support request with your workshop team.",
+      "account": "Account",
+      "category": "Category",
+      "severity": "Severity",
+      "titlePlaceholder": "Short summary",
+      "submit": "Submit feedback",
+      "invalid": "Please complete the required feedback fields.",
+      "notEligible": "You do not have access to submit feedback for this account.",
+      "noAccountTitle": "No linked customer account",
+      "noAccountDescription": "Your portal account is not linked to a customer record yet.",
+      "error": "Something went wrong while saving feedback.",
+      "saved": "Feedback submitted."
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search feedback",
+      "category": "Category",
+      "status": "Status",
+      "severity": "Severity",
+      "priority": "Priority",
+      "all": "All",
+      "apply": "Apply filters",
+      "reset": "Reset filters"
+    },
+    "inbox": {
+      "title": "Feedback inbox",
+      "description": "Review feedback reports for this business.",
+      "empty": {
+        "title": "No feedback yet",
+        "description": "Feedback, suggestions, and support requests will appear here once people submit them."
+      },
+      "unknownSubmittedBy": "Unknown sender",
+      "submittedBy": "Submitted by",
+      "status": "Status",
+      "priority": "Priority",
+      "createdAt": "Created at",
+      "sourcePage": "Source page",
+      "resolvedAt": "Resolved at",
+      "notResolved": "Not resolved yet",
+      "update": "Update feedback",
+      "updated": "Feedback updated.",
+      "invalidUpdate": "Please choose a valid status and priority.",
+      "forbiddenUpdate": "You do not have permission to update feedback.",
+      "readOnly": "Read-only view for team members.",
+      "error": "We could not load the feedback inbox right now."
+    },
+    "submissions": {
+      "title": "Your submissions",
+      "description": "Track the feedback you sent from the customer portal.",
+      "empty": {
+        "title": "No submissions yet",
+        "description": "Feedback you submit from the portal will appear here."
+      },
+      "workshop": "Workshop",
+      "createdAt": "Created at",
+      "sourcePage": "Source page",
+      "resolvedAt": "Resolved at",
+      "notResolved": "Not resolved yet",
+      "error": "We could not load your submissions right now."
+    },
+    "fallback": {
+      "workshop": "Workshop"
+    }
+  },
+  "implementation": {
+    "title": "Implementation Center",
+    "description": "Track readiness, launch tasks, and onboarding progress.",
+    "actions": {
+      "templates": "Download templates"
+    },
+    "stage": {
+      "title": "Implementation stage",
+      "description": "Track the current onboarding stage for this business.",
+      "completeCount": "{count} checklist items complete",
+      "readOnly": "Read-only view for team members."
+    },
+    "checklist": {
+      "title": "Launch checklist",
+      "description": "Recommended launch actions for a smooth rollout.",
+      "done": "Done",
+      "next": "Next",
+      "open": "Open"
+    },
+    "readiness": {
+      "title": "Migration readiness",
+      "description": "Counts help show how much of the existing business has been prepared.",
+      "ready": "Ready",
+      "pending": "Pending"
+    },
+    "notes": {
+      "title": "Implementation notes",
+      "description": "Keep launch context and rollout notes in one place.",
+      "empty": "No notes yet."
+    },
+    "futureImport": {
+      "title": "Bulk import foundation",
+      "description": "Prepare data now so later imports can be staged cleanly.",
+      "body": "Bulk import processing is coming next. For now, download templates and prepare your data.",
+      "action": "Open import templates"
+    },
+    "form": {
+      "stage": "Stage",
+      "notes": "Notes",
+      "notesPlaceholder": "Implementation notes, rollout context, or launch blockers",
+      "invalid": "Please select a valid implementation stage.",
+      "forbiddenUpdate": "You do not have permission to update implementation progress.",
+      "error": "Something went wrong while saving implementation progress.",
+      "save": "Save progress",
+      "saved": "Implementation progress saved."
+    }
+  },
+  "importTemplates": {
+    "title": "Import templates",
+    "description": "Download CSV templates to prepare branches, team, customers, vehicles, and services.",
+    "actions": {
+      "back": "Back to implementation"
+    },
+    "guidance": {
+      "title": "Preparation guidance",
+      "description": "These templates prepare your data for a future import flow.",
+      "tips": [
+        "Use one row per record.",
+        "Avoid duplicate phone numbers.",
+        "Use international phone format.",
+        "VIN is optional but recommended.",
+        "Plate number is recommended.",
+        "branch_name must match the branches template.",
+        "customer_email or customer_phone links vehicles to customers."
+      ]
+    },
+    "headers": {
+      "title": "CSV headers"
+    },
+    "tips": {
+      "title": "Download tips"
+    },
+    "download": "Download CSV"
   }
 }
