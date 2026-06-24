@@ -1842,10 +1842,19 @@ export type Database = {
           failed_at: string | null
           failure_reason: string | null
           id: string
+          attempt_count: number
+          dedupe_key: string | null
+          last_attempt_at: string | null
+          locale: string
+          locked_until: string | null
           payload: Json
           provider_message_id: string | null
           read_at: string | null
           read_by: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          recipient_user_id: string | null
           scheduled_for: string | null
           sent_at: string | null
           status: string
@@ -1859,10 +1868,19 @@ export type Database = {
           failed_at?: string | null
           failure_reason?: string | null
           id?: string
+          attempt_count?: number
+          dedupe_key?: string | null
+          last_attempt_at?: string | null
+          locale?: string
+          locked_until?: string | null
           payload?: Json
           provider_message_id?: string | null
           read_at?: string | null
           read_by?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
           status?: string
@@ -1876,10 +1894,19 @@ export type Database = {
           failed_at?: string | null
           failure_reason?: string | null
           id?: string
+          attempt_count?: number
+          dedupe_key?: string | null
+          last_attempt_at?: string | null
+          locale?: string
+          locked_until?: string | null
           payload?: Json
           provider_message_id?: string | null
           read_at?: string | null
           read_by?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_user_id?: string | null
           scheduled_for?: string | null
           sent_at?: string | null
           status?: string
@@ -1905,6 +1932,192 @@ export type Database = {
             columns: ["read_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_notification_settings: {
+        Row: {
+          allowed_templates: Json
+          business_id: string
+          created_at: string
+          created_by: string | null
+          email_enabled: boolean
+          id: string
+          live_send_enabled: boolean
+          quiet_hours: Json
+          sms_enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed_templates?: Json
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          email_enabled?: boolean
+          id?: string
+          live_send_enabled?: boolean
+          quiet_hours?: Json
+          sms_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed_templates?: Json
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          email_enabled?: boolean
+          id?: string
+          live_send_enabled?: boolean
+          quiet_hours?: Json
+          sms_enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_notification_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_notification_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_notification_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          business_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          customer_id: string | null
+          enabled: boolean
+          id: string
+          locale: string
+          opted_out_at: string | null
+          template_key: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          business_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          customer_id?: string | null
+          enabled?: boolean
+          id?: string
+          locale?: string
+          opted_out_at?: string | null
+          template_key?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          customer_id?: string | null
+          enabled?: boolean
+          id?: string
+          locale?: string
+          opted_out_at?: string | null
+          template_key?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_delivery_attempts: {
+        Row: {
+          attempted_at: string
+          business_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          failure_reason: string | null
+          id: string
+          notification_event_id: string
+          provider: string
+          provider_message_id: string | null
+          status: string
+        }
+        Insert: {
+          attempted_at?: string
+          business_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          failure_reason?: string | null
+          id?: string
+          notification_event_id: string
+          provider: string
+          provider_message_id?: string | null
+          status: string
+        }
+        Update: {
+          attempted_at?: string
+          business_id?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          failure_reason?: string | null
+          id?: string
+          notification_event_id?: string
+          provider?: string
+          provider_message_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_delivery_attempts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_delivery_attempts_notification_event_id_fkey"
+            columns: ["notification_event_id"]
+            isOneToOne: false
+            referencedRelation: "notification_events"
             referencedColumns: ["id"]
           },
         ]
@@ -3196,6 +3409,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      claim_queued_notification_events: {
+        Args: { p_limit?: number; p_lock_seconds?: number }
+        Returns: {
+          attempt_count: number
+          business_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          customer_id: string | null
+          dedupe_key: string | null
+          id: string
+          locale: string
+          payload: Json
+          recipient_email: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          status: string
+          template_key: string
+        }[]
+      }
       get_business_revenue_summary: {
         Args: { p_business_id: string; p_period?: string }
         Returns: Json
@@ -3634,6 +3865,24 @@ export type MembershipBundleUpdate = AppTables["membership_bundles"]["Update"];
 export type NotificationEvent = AppTables["notification_events"]["Row"];
 export type NotificationEventInsert = AppTables["notification_events"]["Insert"];
 export type NotificationEventUpdate = AppTables["notification_events"]["Update"];
+export type NotificationChannel = AppEnums["notification_channel"];
+export type BusinessNotificationSettings =
+  AppTables["business_notification_settings"]["Row"];
+export type BusinessNotificationSettingsInsert =
+  AppTables["business_notification_settings"]["Insert"];
+export type BusinessNotificationSettingsUpdate =
+  AppTables["business_notification_settings"]["Update"];
+export type NotificationPreference = AppTables["notification_preferences"]["Row"];
+export type NotificationPreferenceInsert =
+  AppTables["notification_preferences"]["Insert"];
+export type NotificationPreferenceUpdate =
+  AppTables["notification_preferences"]["Update"];
+export type NotificationDeliveryAttempt =
+  AppTables["notification_delivery_attempts"]["Row"];
+export type NotificationDeliveryAttemptInsert =
+  AppTables["notification_delivery_attempts"]["Insert"];
+export type NotificationDeliveryAttemptUpdate =
+  AppTables["notification_delivery_attempts"]["Update"];
 
 export type Profile = AppTables["profiles"]["Row"];
 export type ProfileInsert = AppTables["profiles"]["Insert"];

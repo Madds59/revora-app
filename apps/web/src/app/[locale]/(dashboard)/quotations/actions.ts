@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getUser, requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
 import { computeLine, computeTotals } from "@/lib/money";
+import { enqueueQuoteSentNotification } from "@/lib/notifications/service";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ItemKind,
@@ -207,6 +208,8 @@ export async function sendQuote(
     .eq("id", id)
     .eq("status", "draft");
   if (error) return { error: error.message };
+
+  await enqueueQuoteSentNotification(id);
 
   revalidatePath(`/quotations/${id}`);
   revalidatePath("/quotations");

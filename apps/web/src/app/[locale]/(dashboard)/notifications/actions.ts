@@ -2,13 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireMembership } from "@/lib/auth";
+import { getUser, requireMembership } from "@/lib/auth";
+import { canManageSettings } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 export type NotificationActionState = { error?: string; message?: string };
 
 function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
+}
+
+function checked(formData: FormData, key: string): boolean {
+  return formData.get(key) === "on";
 }
 
 export async function markBusinessNotificationRead(
@@ -48,4 +53,32 @@ export async function markAllBusinessNotificationsRead(
   return {
     message: `${data ?? 0} notification${data === 1 ? "" : "s"} marked as read.`,
   };
+}
+
+export async function updateBusinessNotificationSettings(
+  _prev: NotificationActionState,
+  formData: FormData,
+): Promise<NotificationActionState> {
+  const { member, business } = await requireMembership();
+  if (!canManageSettings(member.role)) {
+    return { error: "You don't have permission to manage notification settings." };
+  }
+
+  const user = await getUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from("business_notification_settings").upsert(
+    {
+      business_id: business.id,
+      email_enabled: checked(formData, "email_enabled"),
+      live_send_enabled: checked(formData, "live_send_enabled"),
+      sms_enabled: checked(formData, "sms_enabled"),
+      updated_at: new Date().toISOString(),
+      updated_by: user?.id ?? null,
+    },
+    { onConflict: "business_id" },
+  );
+  if (error) return { error: error.message };
+
+  revalidatePath("/notifications");
+  return { message: "Notification settings updated." };
 }

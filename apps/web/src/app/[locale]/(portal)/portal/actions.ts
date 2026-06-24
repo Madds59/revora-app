@@ -8,6 +8,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { getUser, requireCustomerPortal } from "@/lib/auth";
 import type { ComplaintSeverity } from "@/lib/database.types";
 import { normalizeLocale, switchLocalePath } from "@/lib/locale-path";
+import { enqueueQuoteDecisionNotification } from "@/lib/notifications/service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { businessRatingInputSchema } from "@/lib/ratings";
@@ -228,6 +229,11 @@ export async function approveQuote(
   });
   if (error) return { error: error.message };
 
+  await enqueueQuoteDecisionNotification({
+    decision: "approved",
+    quotationId,
+  });
+
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
   revalidatePath(`/portal/quotes/${quotationId}`);
@@ -262,6 +268,11 @@ export async function rejectQuote(
     rejection_note: rejectionNote,
   });
   if (error) return { error: error.message };
+
+  await enqueueQuoteDecisionNotification({
+    decision: "rejected",
+    quotationId,
+  });
 
   revalidatePath("/portal");
   revalidatePath("/portal/quotes");
