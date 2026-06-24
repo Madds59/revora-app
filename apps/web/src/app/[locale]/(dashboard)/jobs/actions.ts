@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getUser, requireMembership } from "@/lib/auth";
+import { enqueueJobStatusNotification } from "@/lib/notifications/service";
 import { canManageJobs } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { JobStatus } from "@/lib/database.types";
@@ -49,6 +50,11 @@ export async function updateJobStatus(
     })
     .eq("id", id);
   if (error) return { error: error.message };
+
+  await enqueueJobStatusNotification({
+    jobId: id,
+    statusLabel: status.replaceAll("_", " "),
+  });
 
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");
@@ -97,6 +103,13 @@ export async function postJobUpdate(
           status === "completed" ? new Date().toISOString() : null,
       })
       .eq("id", jobId);
+
+    if (visibleToCustomer) {
+      await enqueueJobStatusNotification({
+        jobId,
+        statusLabel: status.replaceAll("_", " "),
+      });
+    }
   }
 
   revalidatePath(`/jobs/${jobId}`);

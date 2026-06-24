@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getUser, requireMembership } from "@/lib/auth";
+import { enqueueComplaintStatusNotification } from "@/lib/notifications/service";
 import { canManageComplaints } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -83,6 +84,13 @@ export async function updateComplaint(
     .update(updates as never)
     .eq("id", complaintId);
   if (error) return { error: error.message };
+
+  if (status && status !== currentComplaint.status) {
+    await enqueueComplaintStatusNotification({
+      complaintId,
+      statusLabel: status.replaceAll("_", " "),
+    });
+  }
 
   revalidatePath("/complaints");
   revalidatePath(`/complaints/${complaintId}`);
