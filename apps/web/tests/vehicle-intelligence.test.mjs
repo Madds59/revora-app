@@ -21,6 +21,14 @@ import { validateDiagnosticJson } from "../src/lib/vehicle-intelligence/schemas.
 import { decodeVin } from "../src/lib/vehicle-intelligence/vin.js";
 import { callOpenAiJson } from "../src/lib/vehicle-intelligence/openai.js";
 import { formatVehicleLabel } from "../src/lib/vehicle-intelligence/labels.js";
+import {
+  buildGroundedVehicleSearchSummary,
+  containsUuid,
+  deriveVehicleSearchHints,
+  isRecordInDateRange,
+  matchesSearchText,
+  parseVehicleSearchInput,
+} from "../src/lib/vehicle-intelligence/search.js";
 
 test("VIN normalization accepts a valid VIN", () => {
   const result = validateVin("jtebu5jr9j5a12345");
@@ -250,4 +258,96 @@ test("vehicle labels fall back without exposing raw UUIDs", () => {
     ),
     "Unknown vehicle",
   );
+});
+
+test("vehicle intelligence search input validation clamps unsafe filters", () => {
+  const result = parseVehicleSearchInput({
+    dateRange: "bad",
+    locale: "fr",
+    query: "  Find recent P0300 cases  ",
+    safety: "critical",
+    type: "dtc",
+  });
+  assert.equal(result.success, false);
+
+  const valid = parseVehicleSearchInput({
+    dateRange: "7d",
+    locale: "ar",
+    query: "  Find recent P0300 cases  ",
+    safety: "critical",
+    type: "dtc",
+  });
+  assert.equal(valid.success, true);
+  assert.equal(valid.data.query, "Find recent P0300 cases");
+});
+
+test("vehicle intelligence search derives operational hints", () => {
+  const dtc = deriveVehicleSearchHints("Find recent P0300 cases");
+  assert.equal(dtc.type, "dtc");
+  assert.equal(dtc.dateRange, "7d");
+
+  const maintenance = deriveVehicleSearchHints("Which cars need maintenance this month?");
+  assert.equal(maintenance.type, "maintenance");
+  assert.equal(maintenance.dateRange, "this_month");
+
+  const safety = deriveVehicleSearchHints("Summarize safety-critical reports this week");
+  assert.equal(safety.safety, "stop_driving");
+});
+
+test("vehicle intelligence search matching ignores operational stop words", () => {
+  assert.equal(
+    matchesSearchText(["Toyota Land Cruiser", "overheating at idle", "Ahmed"], "Show vehicles with overheating symptoms"),
+    true,
+  );
+  assert.equal(matchesSearchText(["P0300 random misfire"], "Find recent P0300 cases"), true);
+});
+
+test("vehicle intelligence date ranges support current and future service windows", () => {
+  const now = new Date("2026-06-23T12:00:00Z");
+  assert.equal(isRecordInDateRange("2026-06-10", "this_month", now), true);
+  assert.equal(isRecordInDateRange("2026-07-10", "this_month", now), false);
+  assert.equal(isRecordInDateRange("2026-07-05", "next_30d", now), true);
+});
+
+test("grounded vehicle search summary refuses unsupported unsafe repair instructions", () => {
+  const result = buildGroundedVehicleSearchSummary({
+    query: "How do I bypass the brake warning and drive anyway?",
+    results: [
+      {
+        sourceMarker: "diagnostic-1",
+        stopDrivingWarning: true,
+        safetyLevel: "critical",
+        title: "Brake warning diagnostic",
+        type: "diagnostics",
+      },
+    ],
+  });
+  assert.equal(result.safetyWarning, true);
+  assert.match(result.text, /will not provide instructions/i);
+});
+
+test("grounded vehicle search summary reports insufficient data without hallucinated specs", () => {
+  const result = buildGroundedVehicleSearchSummary({
+    query: "What engine does this VIN have?",
+    results: [],
+  });
+  assert.equal(result.dataInsufficient, true);
+  assert.match(result.text, /not enough internal record data/i);
+  assert.doesNotMatch(result.text, /V6|V8|turbo/i);
+});
+
+test("grounded vehicle search summary does not expose raw UUIDs", () => {
+  const result = buildGroundedVehicleSearchSummary({
+    query: "Find record",
+    results: [
+      {
+        sourceMarker: "vehicle-1",
+        stopDrivingWarning: false,
+        safetyLevel: null,
+        title: "3ccb6f7c-8bf2-49f7-a65e-e2f4139a23c0",
+        type: "vehicles",
+      },
+    ],
+  });
+  assert.equal(containsUuid(result.text), false);
 });
