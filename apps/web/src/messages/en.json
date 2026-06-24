@@ -449,6 +449,8 @@
     "vehicleIntelligenceDtcDescription": "Interpret diagnostic trouble codes with safety checks.",
     "vehicleIntelligenceDiagnosisTitle": "Vehicle diagnosis",
     "vehicleIntelligenceDiagnosisDescription": "Structured diagnostic triage with workshop review support.",
+    "vehicleIntelligenceSearchTitle": "Vehicle Intelligence search",
+    "vehicleIntelligenceSearchDescription": "Search internal vehicle, diagnostic, DTC, maintenance, and quote-draft records.",
     "retainerCalculatorTitle": "Retainer calculator",
     "retainerCalculatorDescription": "Model monthly retainers, compare scenario tiers, and convert approved scenarios into quotations.",
     "portalVehiclesTitle": "Portal vehicles",
@@ -462,6 +464,11 @@
     "dashboard": {
       "title": "Vehicle Intelligence",
       "description": "VIN decoding, diagnostics, and maintenance planning for workshop staff.",
+      "search": {
+        "title": "AI search",
+        "description": "Ask operational questions across internal vehicle intelligence records.",
+        "action": "Search records"
+      },
       "diagnosis": {
         "title": "Vehicle diagnosis",
         "description": "Run a structured symptom analysis, capture the safety result, and prepare the workshop review.",
@@ -476,6 +483,61 @@
         "title": "DTC decoder",
         "description": "Interpret diagnostic trouble codes with verified mappings and safety triage.",
         "action": "Open DTC decoder"
+      }
+    },
+    "search": {
+      "title": "Vehicle Intelligence search",
+      "description": "Search tenant-scoped vehicle intelligence records with grounded safety-aware summaries.",
+      "formTitle": "Search internal records",
+      "formDescription": "Results come only from this business's vehicles, reports, DTCs, maintenance plans, and generated quote drafts.",
+      "queryLabel": "Search query",
+      "placeholder": "Search by vehicle, VIN, plate, customer, DTC, symptom, safety, or maintenance need",
+      "submit": "Search",
+      "noAccess": "You need workshop access to search Vehicle Intelligence records.",
+      "summaryTitle": "Grounded summary",
+      "summaryDescription": "This summary uses retrieved Revora records only. It does not invent specifications or provide unsafe repair instructions.",
+      "resultsCount": "{count} result(s)",
+      "scopeNote": "Scoped to the active business",
+      "emptyTitle": "No matching internal records",
+      "emptyDescription": "Try a different customer, plate, DTC, symptom, or date range. Revora will not fill gaps with external assumptions.",
+      "startTitle": "Start with a question",
+      "startDescription": "Search for vehicles, symptoms, DTCs, safety-critical reports, maintenance plans, or quote drafts.",
+      "stopDriving": "Stop driving",
+      "filters": {
+        "type": "Result type",
+        "date": "Date range",
+        "safetyLabel": "Safety",
+        "types": {
+          "all": "All records",
+          "vehicles": "Vehicles",
+          "symptoms": "Symptoms",
+          "dtc": "DTC codes",
+          "diagnostics": "Diagnostics",
+          "maintenance": "Maintenance",
+          "quotes": "Quote drafts"
+        },
+        "dateRanges": {
+          "all": "Any time",
+          "7d": "Last 7 days",
+          "30d": "Last 30 days",
+          "this_month": "This month",
+          "next_30d": "Next 30 days"
+        },
+        "safety": {
+          "all": "Any safety level",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "critical": "Critical",
+          "stop_driving": "Stop-driving warnings"
+        }
+      },
+      "suggestions": {
+        "overheating": "Show vehicles with overheating symptoms",
+        "p0300": "Find recent P0300 cases",
+        "maintenance": "Which cars need maintenance this month?",
+        "safety": "Summarize safety-critical reports this week",
+        "customer": "Find reports for customer Ahmed"
       }
     },
     "vin": {

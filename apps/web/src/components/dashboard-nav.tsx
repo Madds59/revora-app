@@ -63,7 +63,7 @@ const NAV: NavItem[] = [
   { labelKey: "implementation", href: "/implementation", icon: ClipboardList },
   { labelKey: "retainerCalculator", href: "/tools/retainer-calculator", icon: Calculator },
   { labelKey: "membershipBundles", href: "/tools/membership-bundles", icon: Layers },
-  { labelKey: "vehicleIntelligence", href: "/ai", icon: ScanSearch, aliases: ["/ai/vin-decoder", "/ai/dtc-decoder", "/ai/vehicle-diagnosis"] },
+  { labelKey: "vehicleIntelligence", href: "/ai", icon: ScanSearch, aliases: ["/ai/search", "/ai/vin-decoder", "/ai/dtc-decoder", "/ai/vehicle-diagnosis"] },
 ];
 
 export function DashboardNav({

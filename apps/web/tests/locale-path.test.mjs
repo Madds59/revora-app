@@ -41,6 +41,7 @@ test("switchLocalePath normalizes quote redirects with duplicate locale segments
 
 test("switchLocalePath handles dashboard nav paths", () => {
   assert.equal(switchLocalePath("/jobs", "en"), "/en/jobs");
+  assert.equal(switchLocalePath("/ai/search?q=P0300", "ar"), "/ar/ai/search?q=P0300");
   assert.equal(switchLocalePath("/vehicles", "ar"), "/ar/vehicles");
   assert.equal(switchLocalePath("/admin/notifications", "en"), "/en/admin/notifications");
   assert.equal(switchLocalePath("/feedback", "ar"), "/ar/feedback");

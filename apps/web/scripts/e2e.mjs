@@ -283,6 +283,7 @@ if (appBase) {
     { route: "/vehicles", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/vehicles/new", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/ai", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/ai/search", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/ai/vin-decoder", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/ai/dtc-decoder", expected: ["OK", "unauthorized as expected", "expected redirect"] },
     { route: "/ai/vehicle-diagnosis", expected: ["OK", "unauthorized as expected", "expected redirect"] },
