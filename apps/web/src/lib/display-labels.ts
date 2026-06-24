@@ -122,6 +122,10 @@ const NOTIFICATION_STATUS_LABELS = {
     sent: "Sent",
     delivered: "Delivered",
     failed: "Failed",
+    skipped_disabled: "Skipped - disabled",
+    skipped_missing_recipient: "Skipped - missing recipient",
+    skipped_no_provider: "Skipped - no provider",
+    skipped_suppressed: "Skipped - suppressed",
   },
   ar: {
     unread: "غير مقروء",
@@ -130,6 +134,10 @@ const NOTIFICATION_STATUS_LABELS = {
     sent: "مرسلة",
     delivered: "تم التسليم",
     failed: "فاشلة",
+    skipped_disabled: "تم التخطي - معطل",
+    skipped_missing_recipient: "تم التخطي - لا يوجد مستلم",
+    skipped_no_provider: "تم التخطي - لا يوجد مزود",
+    skipped_suppressed: "تم التخطي - محجوب",
   },
 } as const;
 
@@ -137,20 +145,30 @@ const NOTIFICATION_TEMPLATE_LABELS = {
   en: {
     quote_approved: "Quote approved",
     quote_rejected: "Quote rejected",
+    quote_sent: "Quote sent",
     complaint_replied: "Complaint replied",
     complaint_submitted: "Complaint submitted",
+    complaint_status_changed: "Complaint status changed",
     feedback_submitted: "Feedback submitted",
+    job_completed: "Job completed",
+    job_status_changed: "Job status changed",
     job_updated: "Job updated",
     billing_event: "Billing event",
+    vehicle_safety_critical: "Vehicle safety warning",
   },
   ar: {
     quote_approved: "تم اعتماد عرض السعر",
     quote_rejected: "تم رفض عرض السعر",
+    quote_sent: "تم إرسال عرض السعر",
     complaint_replied: "تمت الرد على الشكوى",
     complaint_submitted: "تم إرسال شكوى",
+    complaint_status_changed: "تم تغيير حالة الشكوى",
     feedback_submitted: "تم إرسال الملاحظات",
+    job_completed: "اكتملت المهمة",
+    job_status_changed: "تم تغيير حالة المهمة",
     job_updated: "تم تحديث المهمة",
     billing_event: "حدث فوترة",
+    vehicle_safety_critical: "تحذير سلامة للمركبة",
   },
 } as const;
 
@@ -421,10 +439,14 @@ export function getBillingInvoiceStatusLabel(
 }
 
 export function getNotificationStatusLabel(
-  status: keyof typeof NOTIFICATION_STATUS_LABELS.en,
+  status: string,
   locale: AppLocale = "en",
 ): string {
-  return NOTIFICATION_STATUS_LABELS[locale][status] ?? COMMON_LABELS[locale].unknown;
+  return (
+    NOTIFICATION_STATUS_LABELS[locale][
+      status as keyof typeof NOTIFICATION_STATUS_LABELS.en
+    ] ?? COMMON_LABELS[locale].unknown
+  );
 }
 
 export function getNotificationTemplateLabel(templateKey: string, locale: AppLocale = "en"): string {

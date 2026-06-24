@@ -28,6 +28,10 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
   sent: "default",
   delivered: "default",
   failed: "destructive",
+  skipped_disabled: "outline",
+  skipped_missing_recipient: "outline",
+  skipped_no_provider: "outline",
+  skipped_suppressed: "outline",
 };
 
 function withinDateRange(value: string, range: string) {
@@ -96,6 +100,7 @@ export function NotificationsPanel({
   const failedCount = notifications.filter((notification) => notification.status === "failed").length;
   const queuedCount = notifications.filter((notification) => notification.status === "queued").length;
   const sentCount = notifications.filter((notification) => ["sent", "delivered"].includes(notification.status)).length;
+  const skippedCount = notifications.filter((notification) => notification.status.startsWith("skipped_")).length;
   const channelLabel = (channel: string) => {
     if (channel === "push") return locale === "ar" ? "إشعار فوري" : "Push";
     if (channel === "email") return locale === "ar" ? "بريد إلكتروني" : "Email";
@@ -127,8 +132,8 @@ export function NotificationsPanel({
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>{locale === "ar" ? "فاشلة" : "Failed"}</CardDescription>
-            <CardTitle className="text-3xl tabular-nums">{failedCount}</CardTitle>
+            <CardDescription>{locale === "ar" ? "فاشلة / متخطاة" : "Failed / skipped"}</CardDescription>
+            <CardTitle className="text-3xl tabular-nums">{failedCount + skippedCount}</CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -158,6 +163,12 @@ export function NotificationsPanel({
             const unread = !notification.read_at;
             const payload = notification.payload as Record<string, unknown> | null;
             const complaintId = typeof payload?.complaint_id === "string" ? payload.complaint_id : null;
+            const recipient =
+              notification.recipient_email ??
+              notification.recipient_phone ??
+              notification.recipient_name ??
+              notification.customer?.email ??
+              getCommonLabel("none", locale);
             return (
               <Card key={notification.id}>
                 <CardContent className="flex flex-col gap-4 p-4">
@@ -166,10 +177,7 @@ export function NotificationsPanel({
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-medium">{label}</h3>
                         <Badge variant={STATUS_VARIANT[notification.status] ?? "outline"}>
-                          {getNotificationStatusLabel(
-                            notification.status as Parameters<typeof getNotificationStatusLabel>[0],
-                            locale,
-                          )}
+                          {getNotificationStatusLabel(notification.status, locale)}
                         </Badge>
                         <Badge variant={unread ? "default" : "outline"}>
                           {unread ? getNotificationStatusLabel("unread", locale) : getNotificationStatusLabel("read", locale)}
@@ -205,6 +213,12 @@ export function NotificationsPanel({
                     </div>
                     <div className="space-y-1">
                       <dt className="text-muted-foreground text-xs uppercase tracking-wide">
+                        {locale === "ar" ? "المستلم" : "Recipient"}
+                      </dt>
+                      <dd className="text-sm">{recipient}</dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-muted-foreground text-xs uppercase tracking-wide">
                         {locale === "ar" ? "مجدول" : "Scheduled"}
                       </dt>
                       <dd className="text-sm">{formatDateTime(notification.scheduled_for, undefined, locale)}</dd>
@@ -218,8 +232,13 @@ export function NotificationsPanel({
                           ? formatDateTime(notification.sent_at, undefined, locale)
                           : notification.failed_at
                             ? formatDateTime(notification.failed_at, undefined, locale)
+                            : notification.last_attempt_at
+                              ? formatDateTime(notification.last_attempt_at, undefined, locale)
                             : getCommonLabel("none", locale)}
                       </dd>
+                      <div className="text-muted-foreground text-xs">
+                        {locale === "ar" ? "المحاولات" : "Attempts"}: {notification.attempt_count}
+                      </div>
                     </div>
                   </dl>
 
