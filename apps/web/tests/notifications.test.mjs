@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -9,6 +10,11 @@ import {
   renderNotificationTemplate,
   redactNotificationText,
 } from "../src/lib/notifications/templates.js";
+
+const migration0030 = readFileSync(
+  new URL("../../../supabase/migrations/0030_notifications_foundation.sql", import.meta.url),
+  "utf8",
+);
 
 test("notification templates render localized email and SMS bodies", () => {
   const email = renderNotificationTemplate({
@@ -99,5 +105,27 @@ test("live notification send requires global and business enablement", () => {
       env: { ...configuredEnv, RESEND_API_KEY: "" },
     }).status,
     "skipped_no_provider",
+  );
+});
+
+test("notifications migration supports dedupe upserts and atomic queue claims", () => {
+  assert.match(
+    migration0030,
+    /create unique index if not exists notification_events_business_dedupe_idx\s+on public\.notification_events \(business_id, dedupe_key\);/,
+  );
+  assert.doesNotMatch(
+    migration0030,
+    /notification_events_business_dedupe_idx[\s\S]*?where dedupe_key is not null;/,
+  );
+  assert.match(migration0030, /claim_queued_notification_events/);
+  assert.match(migration0030, /for update skip locked/);
+  assert.match(migration0030, /status = 'processing'/);
+  assert.match(
+    migration0030,
+    /revoke all on function public\.claim_queued_notification_events\(integer, integer\) from authenticated;/,
+  );
+  assert.match(
+    migration0030,
+    /grant execute on function public\.claim_queued_notification_events\(integer, integer\) to service_role;/,
   );
 });

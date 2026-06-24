@@ -3409,6 +3409,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      claim_queued_notification_events: {
+        Args: { p_limit?: number; p_lock_seconds?: number }
+        Returns: {
+          attempt_count: number
+          business_id: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          customer_id: string | null
+          dedupe_key: string | null
+          id: string
+          locale: string
+          payload: Json
+          recipient_email: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          status: string
+          template_key: string
+        }[]
+      }
       get_business_revenue_summary: {
         Args: { p_business_id: string; p_period?: string }
         Returns: Json

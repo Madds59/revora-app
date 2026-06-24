@@ -15,6 +15,7 @@
 --     'notification_delivery_attempts',
 --     'notification_events'
 --   ) order by tablename, policyname;
+--   select public.claim_queued_notification_events(1);
 --   notify pgrst, 'reload schema';
 --   -- Wait 30-60 seconds, then run authenticated QA for /notifications.
 
@@ -30,16 +31,15 @@ alter table public.notification_events
   add column if not exists last_attempt_at timestamptz;
 
 create unique index if not exists notification_events_business_dedupe_idx
-  on public.notification_events (business_id, dedupe_key)
-  where dedupe_key is not null;
+  on public.notification_events (business_id, dedupe_key);
 
 create index if not exists notification_events_business_channel_status_idx
   on public.notification_events (business_id, channel, status, created_at desc);
 
 create index if not exists notification_events_dispatch_idx
-  on public.notification_events (status, scheduled_for, created_at)
+  on public.notification_events (status, scheduled_for, locked_until, created_at)
   where channel in ('email', 'sms')
-    and status = 'queued';
+    and status in ('queued', 'processing');
 
 create table if not exists public.business_notification_settings (
   id uuid primary key default gen_random_uuid(),
@@ -105,6 +105,69 @@ create index if not exists notification_delivery_attempts_event_idx
 create index if not exists notification_delivery_attempts_business_status_idx
   on public.notification_delivery_attempts (business_id, status, attempted_at desc);
 
+create or replace function public.claim_queued_notification_events(
+  p_limit integer default 20,
+  p_lock_seconds integer default 300
+)
+returns table (
+  id uuid,
+  business_id uuid,
+  customer_id uuid,
+  channel public.notification_channel,
+  template_key text,
+  payload jsonb,
+  status text,
+  recipient_email text,
+  recipient_phone text,
+  recipient_name text,
+  locale text,
+  dedupe_key text,
+  attempt_count integer
+)
+language sql
+volatile
+security definer
+set search_path = public
+as $$
+  with candidates as (
+    select n.id
+    from public.notification_events n
+    where n.channel in ('email', 'sms')
+      and n.status in ('queued', 'processing')
+      and (
+        n.status = 'queued'
+        or n.locked_until is null
+        or n.locked_until <= now()
+      )
+      and (n.scheduled_for is null or n.scheduled_for <= now())
+    order by n.created_at
+    limit greatest(1, least(coalesce(p_limit, 20), 100))
+    for update skip locked
+  )
+  update public.notification_events n
+  set
+    status = 'processing',
+    locked_until = now() + make_interval(
+      secs => greatest(30, least(coalesce(p_lock_seconds, 300), 900))
+    )
+  from candidates
+  where n.id = candidates.id
+  returning
+    n.id,
+    n.business_id,
+    n.customer_id,
+    n.channel,
+    n.template_key,
+    n.payload,
+    n.status,
+    n.recipient_email,
+    n.recipient_phone,
+    n.recipient_name,
+    n.locale,
+    n.dedupe_key,
+    n.attempt_count;
+$$;
+
 alter table public.business_notification_settings enable row level security;
 alter table public.notification_preferences enable row level security;
 alter table public.notification_delivery_attempts enable row level security;
@@ -167,3 +230,7 @@ create policy "notification_delivery_attempts_read_members"
 grant all on table public.business_notification_settings to authenticated, service_role;
 grant all on table public.notification_preferences to authenticated, service_role;
 grant all on table public.notification_delivery_attempts to authenticated, service_role;
+revoke all on function public.claim_queued_notification_events(integer, integer) from public;
+revoke all on function public.claim_queued_notification_events(integer, integer) from anon;
+revoke all on function public.claim_queued_notification_events(integer, integer) from authenticated;
+grant execute on function public.claim_queued_notification_events(integer, integer) to service_role;

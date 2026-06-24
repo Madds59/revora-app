@@ -118,6 +118,7 @@ const NOTIFICATION_STATUS_LABELS = {
   en: {
     unread: "Unread",
     read: "Read",
+    processing: "Processing",
     queued: "Queued",
     sent: "Sent",
     delivered: "Delivered",
@@ -130,6 +131,7 @@ const NOTIFICATION_STATUS_LABELS = {
   ar: {
     unread: "غير مقروء",
     read: "مقروء",
+    processing: "قيد المعالجة",
     queued: "في الانتظار",
     sent: "مرسلة",
     delivered: "تم التسليم",

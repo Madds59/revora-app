@@ -391,28 +391,24 @@ async function dispatchEvent(
       failed_at: status === "failed" ? now : null,
       failure_reason: failureReason,
       last_attempt_at: now,
+      locked_until: null,
       provider_message_id: providerMessageId,
       sent_at: status === "sent" ? now : null,
       status,
     })
-    .eq("id", event.id);
+    .eq("id", event.id)
+    .eq("status", "processing");
 
   return status;
 }
 
 export async function processQueuedNotifications(limit = 20): Promise<DispatchResult> {
   const admin = createAdminClient();
-  const now = new Date().toISOString();
   const { data, error } = await admin
-    .from("notification_events")
-    .select(
-      "id, business_id, customer_id, channel, template_key, payload, status, recipient_email, recipient_phone, recipient_name, locale, dedupe_key, attempt_count",
-    )
-    .in("channel", ["email", "sms"])
-    .eq("status", "queued")
-    .or(`scheduled_for.is.null,scheduled_for.lte.${now}`)
-    .order("created_at", { ascending: true })
-    .limit(limit);
+    .rpc("claim_queued_notification_events", {
+      p_limit: limit,
+      p_lock_seconds: 300,
+    });
 
   if (error) {
     return { attempted: 0, failed: 1, sent: 0, skipped: 0 };

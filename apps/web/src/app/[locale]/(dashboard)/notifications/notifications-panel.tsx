@@ -24,6 +24,7 @@ export type DashboardNotificationRow = NotificationEvent & {
 };
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  processing: "secondary",
   queued: "secondary",
   sent: "default",
   delivered: "default",
@@ -33,6 +34,13 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
   skipped_no_provider: "outline",
   skipped_suppressed: "outline",
 };
+
+const UUID_PATTERN =
+  /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi;
+
+function formatTechnicalPayload(payload: unknown) {
+  return JSON.stringify(payload, null, 2).replace(UUID_PATTERN, "record");
+}
 
 function withinDateRange(value: string, range: string) {
   if (range === "all") return true;
@@ -64,6 +72,7 @@ export function NotificationsPanel({
     { label: getNotificationStatusLabel("unread", locale), value: "unread" },
     { label: getNotificationStatusLabel("read", locale), value: "read" },
     { label: getNotificationStatusLabel("queued", locale), value: "queued" },
+    { label: getNotificationStatusLabel("processing", locale), value: "processing" },
     { label: getNotificationStatusLabel("sent", locale), value: "sent" },
     { label: getNotificationStatusLabel("failed", locale), value: "failed" },
   ];
@@ -261,7 +270,7 @@ export function NotificationsPanel({
                       {locale === "ar" ? "تفاصيل تقنية" : "Technical details"}
                     </summary>
                     <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words">
-                      {JSON.stringify(notification.payload, null, 2)}
+                      {formatTechnicalPayload(notification.payload)}
                     </pre>
                   </details>
                 </CardContent>
