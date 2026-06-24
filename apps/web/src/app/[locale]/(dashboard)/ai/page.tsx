@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { BrainCircuit, ScanSearch, Wrench } from "lucide-react";
+import { BrainCircuit, Search, ScanSearch, Wrench } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import {
@@ -26,8 +26,15 @@ export default async function VehicleIntelligenceHomePage() {
   return (
     <>
       <PageHeader title={t("dashboard.title")} description={t("dashboard.description")} />
-      <div className="grid gap-4 p-6 xl:grid-cols-3">
+      <div className="grid gap-4 p-6 xl:grid-cols-4">
         {[
+          {
+            href: "/ai/search",
+            icon: Search,
+            title: t("dashboard.search.title"),
+            description: t("dashboard.search.description"),
+            label: t("dashboard.search.action"),
+          },
           {
             href: "/ai/vehicle-diagnosis",
             icon: BrainCircuit,
@@ -76,4 +83,3 @@ export default async function VehicleIntelligenceHomePage() {
     </>
   );
 }
-
