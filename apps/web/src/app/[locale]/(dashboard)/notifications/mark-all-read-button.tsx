@@ -8,7 +8,13 @@ import { markAllBusinessNotificationsRead, type NotificationActionState } from "
 
 const initial: NotificationActionState = {};
 
-export function MarkAllReadButton({ businessId }: { businessId: string }) {
+export function MarkAllReadButton({
+  businessId,
+  label = "Mark all read",
+}: {
+  businessId: string;
+  label?: string;
+}) {
   const [state, action] = useActionState(markAllBusinessNotificationsRead, initial);
   const last = useRef<string | undefined>(undefined);
 
@@ -27,7 +33,7 @@ export function MarkAllReadButton({ businessId }: { businessId: string }) {
     <form action={action}>
       <input type="hidden" name="business_id" value={businessId} />
       <SubmitButton variant="outline" size="sm">
-        Mark all read
+        {label}
       </SubmitButton>
     </form>
   );

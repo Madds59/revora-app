@@ -157,7 +157,12 @@ export function NotificationsPanel({
         dateValue={dateRange}
         onDateValueChange={setDateRange}
         dateOptions={dateOptions}
-        action={<MarkAllReadButton businessId={businessId} />}
+        action={
+          <MarkAllReadButton
+            businessId={businessId}
+            label={locale === "ar" ? "تحديد الكل كمقروء" : "Mark all read"}
+          />
+        }
       />
 
       {filtered.length === 0 ? (
@@ -199,6 +204,8 @@ export function NotificationsPanel({
                     <NotificationReadButton
                       notificationId={notification.id}
                       readAt={notification.read_at}
+                      label={locale === "ar" ? "تحديد كمقروء" : "Mark read"}
+                      readLabel={locale === "ar" ? "مقروء" : "Read"}
                     />
                   </div>
 
