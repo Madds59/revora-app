@@ -19,11 +19,13 @@ export function NotificationReadButton({
   readAt,
   action = markBusinessNotificationRead,
   label = "Mark read",
+  readLabel = "Read",
 }: {
   action?: Action;
   label?: string;
   notificationId: string;
   readAt: string | null;
+  readLabel?: string;
 }) {
   const [state, formAction] = useActionState(action, initial);
   const last = useRef<string | undefined>(undefined);
@@ -43,7 +45,7 @@ export function NotificationReadButton({
     return (
       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         <Check className="size-3" />
-        Read
+        {readLabel}
       </span>
     );
   }
