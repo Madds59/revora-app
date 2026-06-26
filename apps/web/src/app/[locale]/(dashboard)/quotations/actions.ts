@@ -72,7 +72,8 @@ export async function createQuote(
     target_currency: "AED",
   });
   if (error || !data) {
-    return { error: error?.message ?? "Could not create the quotation." };
+    if (error) console.error("createQuote failed", error);
+    return { error: "Could not create the quotation." };
   }
 
   redirect(`/quotations/${data}`);
@@ -125,7 +126,10 @@ export async function addItem(
       expected_lifespan: optional(formData, "expected_lifespan"),
     },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("addItem failed", error);
+    return { error: "Could not add item. Please try again." };
+  }
 
   await recomputeTotals(supabase, quotationId);
   revalidatePath(`/quotations/${quotationId}`);
@@ -149,7 +153,10 @@ export async function removeItem(
     .from("quotation_items")
     .delete()
     .eq("id", itemId);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("removeItem failed", error);
+    return { error: "Could not remove item. Please try again." };
+  }
 
   await recomputeTotals(supabase, quotationId);
   revalidatePath(`/quotations/${quotationId}`);
@@ -177,7 +184,10 @@ export async function updateQuoteDetails(
       internal_notes: optional(formData, "internal_notes"),
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateQuoteDetails failed", error);
+    return { error: "Could not update quotation. Please try again." };
+  }
 
   revalidatePath(`/quotations/${id}`);
   return { message: "Quotation updated." };
@@ -207,7 +217,10 @@ export async function sendQuote(
     })
     .eq("id", id)
     .eq("status", "draft");
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("sendQuote failed", error);
+    return { error: "Could not send quotation. Please try again." };
+  }
 
   await enqueueQuoteSentNotification(id);
 
@@ -254,7 +267,10 @@ export async function approveQuote(
     user_agent: headerList.get("user-agent"),
     device_data: { signed_name: signature, customer_note: customerNote },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("approveQuote failed", error);
+    return { error: "Could not record approval. Please try again." };
+  }
 
   revalidatePath(`/quotations/${quotationId}`);
   return { message: "Quotation approved. Thank you." };

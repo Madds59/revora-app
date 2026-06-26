@@ -38,7 +38,10 @@ export async function updateBusiness(
       default_language: str(formData, "default_language") || "en",
     })
     .eq("id", business.id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateBusiness failed", error);
+    return { error: "Could not update business profile. Please try again." };
+  }
 
   revalidatePath("/settings/business");
   revalidatePath("/", "layout");
@@ -63,7 +66,10 @@ export async function addBranch(
     phone: optional(formData, "phone"),
     email: optional(formData, "email"),
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("addBranch failed", error);
+    return { error: "Could not add branch. Please try again." };
+  }
 
   revalidatePath("/settings/business");
   return { message: "Branch added." };
@@ -92,7 +98,10 @@ export async function addService(
     description: optional(formData, "description"),
     default_price: price,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("addService failed", error);
+    return { error: "Could not add service. Please try again." };
+  }
 
   revalidatePath("/settings/business");
   return { message: "Service added." };

@@ -28,7 +28,10 @@ export async function markBusinessNotificationRead(
   const { error } = await supabase.rpc("mark_business_notification_read", {
     target_notification_id: notificationId,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("markBusinessNotificationRead failed", error);
+    return { error: "Could not mark notification as read." };
+  }
 
   revalidatePath("/notifications");
   revalidatePath("/", "layout");
@@ -46,7 +49,10 @@ export async function markAllBusinessNotificationsRead(
   const { data, error } = await supabase.rpc("mark_business_notifications_read", {
     target_business_id: targetBusinessId,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("markAllBusinessNotificationsRead failed", error);
+    return { error: "Could not mark notifications as read." };
+  }
 
   revalidatePath("/notifications");
   revalidatePath("/", "layout");
@@ -77,7 +83,10 @@ export async function updateBusinessNotificationSettings(
     },
     { onConflict: "business_id" },
   );
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateBusinessNotificationSettings failed", error);
+    return { error: "Could not update notification settings." };
+  }
 
   revalidatePath("/notifications");
   return { message: "Notification settings updated." };

@@ -93,7 +93,10 @@ export async function createComplaint(
     })
     .select("id")
     .single();
-  if (error || !data) return { error: error?.message ?? "Could not submit complaint." };
+  if (error || !data) {
+    if (error) console.error("createComplaint failed", error);
+    return { error: "Could not submit complaint." };
+  }
 
   const notificationError = await recordComplaintNotification({
     businessId: account.business_id,
@@ -178,7 +181,10 @@ export async function addComplaintReply(
     body,
     internal_only: false,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("addComplaintReply failed", error);
+    return { error: "Could not post your reply. Please try again." };
+  }
 
   revalidatePath("/portal");
   revalidatePath("/portal/complaints");
@@ -227,7 +233,10 @@ export async function approveQuote(
       customer_note: customerNote,
     },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("approveQuote failed", error);
+    return { error: "Could not record your approval. Please try again." };
+  }
 
   await enqueueQuoteDecisionNotification({
     decision: "approved",
@@ -267,7 +276,10 @@ export async function rejectQuote(
     target_customer_id: customerId,
     rejection_note: rejectionNote,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("rejectQuote failed", error);
+    return { error: "Could not record your decision. Please try again." };
+  }
 
   await enqueueQuoteDecisionNotification({
     decision: "rejected",

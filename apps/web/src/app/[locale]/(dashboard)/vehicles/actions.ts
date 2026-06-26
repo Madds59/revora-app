@@ -77,7 +77,10 @@ export async function createVehicle(
     .select("id")
     .single();
 
-  if (error || !data) return { error: error?.message ?? "Could not create vehicle." };
+  if (error || !data) {
+    if (error) console.error("createVehicle failed", error);
+    return { error: "Could not create vehicle." };
+  }
 
   revalidatePath("/vehicles");
   revalidatePath(`/customers/${confirmedCustomerId}`);
@@ -131,7 +134,10 @@ export async function updateVehicle(
     .eq("id", id)
     .eq("business_id", business.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateVehicle failed", error);
+    return { error: "Could not update vehicle. Please try again." };
+  }
 
   revalidatePath(`/vehicles/${id}`);
   revalidatePath("/vehicles");

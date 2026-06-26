@@ -30,12 +30,8 @@ export async function openBillingPortal(): Promise<BillingActionState> {
       returnUrl: `${proto}://${host}/billing`,
     });
   } catch (error) {
-    return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unable to open the billing portal right now.",
-    };
+    console.error("openBillingPortal failed", error);
+    return { error: "Unable to open the billing portal right now." };
   }
 
   redirect(session.url);

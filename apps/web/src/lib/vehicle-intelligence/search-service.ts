@@ -376,15 +376,16 @@ export async function searchVehicleIntelligence(input: {
     maintenanceResponse.error ||
     quoteDraftResponse.error
   ) {
+    console.error("searchVehicleIntelligence failed", {
+      vehicles: vehiclesResponse.error,
+      symptoms: symptomsResponse.error,
+      diagnostics: diagnosticsResponse.error,
+      dtc: dtcResponse.error,
+      maintenance: maintenanceResponse.error,
+      quoteDraft: quoteDraftResponse.error,
+    });
     return {
-      error:
-        vehiclesResponse.error?.message ??
-        symptomsResponse.error?.message ??
-        diagnosticsResponse.error?.message ??
-        dtcResponse.error?.message ??
-        maintenanceResponse.error?.message ??
-        quoteDraftResponse.error?.message ??
-        "Search failed.",
+      error: "Search failed.",
       filters: {
         dateRange: effectiveDateRange,
         query,

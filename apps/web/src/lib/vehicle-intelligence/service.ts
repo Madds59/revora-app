@@ -311,7 +311,10 @@ export async function loadVehicleBusinessContext(vehicleId: string) {
     .eq("id", vehicleId)
     .maybeSingle();
 
-  if (error) return { error: error.message, data: null as VehicleBusinessContext | null };
+  if (error) {
+    console.error("loadVehicleBusinessContext failed", error);
+    return { error: "Could not load vehicle.", data: null as VehicleBusinessContext | null };
+  }
   if (!data) return { error: null, data: null as VehicleBusinessContext | null };
 
   const vehicle = data as unknown as VehicleRow & {
@@ -336,7 +339,10 @@ export async function getVehiclePortalSnapshot(vehicleId: string) {
     target_vehicle_id: vehicleId,
   });
 
-  if (error) return { error: error.message, data: null as VehiclePortalSnapshot | null };
+  if (error) {
+    console.error("getVehiclePortalSnapshot failed", error);
+    return { error: "Could not load vehicle.", data: null as VehiclePortalSnapshot | null };
+  }
   if (!data || data.length === 0) return { error: null, data: null as VehiclePortalSnapshot | null };
 
   const row = data[0] as {
@@ -492,7 +498,8 @@ export async function saveSymptomReport(write: VehicleSymptomReportWrite) {
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Could not save symptom report.", data: null as { id: string; created_at: string } | null };
+    if (error) console.error("saveSymptomReport failed", error);
+    return { error: "Could not save symptom report.", data: null as { id: string; created_at: string } | null };
   }
 
   return { error: null, data };
@@ -540,7 +547,8 @@ export async function saveDiagnosticResult({
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Could not save diagnostic result.", data: null as { id: string; created_at: string } | null };
+    if (error) console.error("saveDiagnosticResult failed", error);
+    return { error: "Could not save diagnostic result.", data: null as { id: string; created_at: string } | null };
   }
 
   return { error: null, data };
@@ -573,7 +581,8 @@ export async function saveMaintenancePlan({
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Could not save maintenance plan.", data: null as { id: string; created_at: string } | null };
+    if (error) console.error("saveMaintenancePlan failed", error);
+    return { error: "Could not save maintenance plan.", data: null as { id: string; created_at: string } | null };
   }
 
   return { error: null, data };
@@ -612,7 +621,8 @@ export async function saveDtcCodes({
     })),
   );
 
-  return { error: error?.message ?? null };
+  if (error) console.error("saveDtcCodes failed", error);
+  return { error: error ? "Could not save DTC codes." : null };
 }
 
 export async function enrichVehicleMetadataWithVin({
@@ -635,7 +645,8 @@ export async function enrichVehicleMetadataWithVin({
     })
     .eq("id", vehicleId);
 
-  return { error: error?.message ?? null };
+  if (error) console.error("enrichVehicleMetadataWithVin failed", error);
+  return { error: error ? "Could not update vehicle metadata." : null };
 }
 
 export async function createQuoteDraftFromDiagnosis({
@@ -661,7 +672,8 @@ export async function createQuoteDraftFromDiagnosis({
   });
 
   if (error || !data) {
-    return { error: error?.message ?? "Could not create the quotation draft.", data: null as string | null };
+    if (error) console.error("createQuoteDraftFromDiagnosis failed", error);
+    return { error: "Could not create the quotation draft.", data: null as string | null };
   }
 
   return { error: null, data };

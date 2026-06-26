@@ -37,7 +37,8 @@ export async function inviteTeammate(
     // Unique partial index → a pending invite for this email already exists.
     if (error.code === "23505")
       return { error: "There's already a pending invite for that email." };
-    return { error: error.message };
+    console.error("inviteTeammate failed", error);
+    return { error: "Could not send the invitation. Please try again." };
   }
 
   revalidatePath("/settings/business");
@@ -61,7 +62,10 @@ export async function revokeInvitation(
     .update({ status: "revoked" })
     .eq("id", id)
     .eq("status", "pending");
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("revokeInvitation failed", error);
+    return { error: "Could not revoke invitation. Please try again." };
+  }
 
   revalidatePath("/settings/business");
   return { message: "Invitation revoked." };
