@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import test from "node:test";
@@ -57,6 +57,67 @@ test("APPSEC-07: fixed action/service files no longer leak raw error.message to 
       contents,
       RAW_DB_ERROR_LEAK,
       `${relativePath} appears to return a raw database error message again`,
+    );
+  }
+});
+
+// --- APPSEC-07b: the same raw-error pattern, but in the read-path — page
+// components rendering a Supabase query's `error.message` (or a similarly
+// named `*Error.message` / `*ErrorState.message`) directly in JSX, e.g.
+// `<p>{error.message}</p>` or `<p>{jobError.message}</p>`. Unlike the
+// APPSEC-07 test above (a closed list of already-fixed files), this scans
+// every `page.tsx` under `app/` so a *new* page introducing the same mistake
+// also fails — the APPSEC-07 fix taught us a directory-scoped first pass
+// misses files, so this guard is pattern-based and tree-wide instead.
+//
+// Documented exceptions (not scanned here, tracked elsewhere):
+//   - `app/[locale]/(auth)/**` — Supabase Auth SDK error messages are
+//     designed to be user-facing (e.g. "Invalid login credentials"); see
+//     APPSEC-08. These live in `*-client.tsx` components, not `page.tsx`,
+//     and are excluded by path below for clarity even though the pattern
+//     wouldn't currently match them.
+//   - `components/file-upload.tsx` — Supabase Storage SDK error message
+//     (e.g. file-too-large), same SDK-designed-message category; not a
+//     `page.tsx` file, so it is outside this scan's glob by construction.
+const PAGE_FILE_EXCEPTIONS = ["app/[locale]/(auth)/"];
+
+function findPageFiles(rootRelativeToWebSrc) {
+  const root = path.join(webSrc, rootRelativeToWebSrc);
+  return readdirSync(root, { recursive: true })
+    .filter((entry) => entry.endsWith("page.tsx"))
+    .map((entry) => path.posix.join(rootRelativeToWebSrc, entry.split(path.sep).join("/")))
+    .filter((relativePath) => !PAGE_FILE_EXCEPTIONS.some((ex) => relativePath.includes(ex)));
+}
+
+// Matches a JSX expression rendering an error-like identifier's `.message`,
+// e.g. `{error.message}`, `{jobError.message}`, `{revenueErrorState.message}`.
+const JSX_ERROR_MESSAGE_LEAK = /\{[A-Za-z_$]*[Ee]rror[A-Za-z_$]*\??\.message\}/;
+// Matches String(error)/JSON.stringify(error)-style stringification of an
+// error-like identifier for display.
+const STRINGIFIED_ERROR_LEAK = /(?:String|JSON\.stringify)\([A-Za-z_$]*[Ee]rror[A-Za-z_$]*\)/;
+// Matches a template literal interpolating a whole error-like identifier.
+const TEMPLATE_ERROR_LEAK = /\$\{[A-Za-z_$]*[Ee]rror[A-Za-z_$]*\}/;
+
+test("APPSEC-07b: no page.tsx renders a raw query error to the user", () => {
+  const pageFiles = findPageFiles("app");
+  assert.ok(pageFiles.length > 30, "expected to find a substantial number of page.tsx files to scan");
+
+  for (const relativePath of pageFiles) {
+    const contents = read(relativePath);
+    assert.doesNotMatch(
+      contents,
+      JSX_ERROR_MESSAGE_LEAK,
+      `${relativePath} appears to render a raw error.message in JSX`,
+    );
+    assert.doesNotMatch(
+      contents,
+      STRINGIFIED_ERROR_LEAK,
+      `${relativePath} appears to stringify a raw error object for display`,
+    );
+    assert.doesNotMatch(
+      contents,
+      TEMPLATE_ERROR_LEAK,
+      `${relativePath} appears to interpolate a raw error object in a template literal`,
     );
   }
 });

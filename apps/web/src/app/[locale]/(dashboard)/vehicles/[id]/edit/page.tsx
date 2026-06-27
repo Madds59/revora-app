@@ -43,6 +43,7 @@ export default async function EditVehiclePage({
   if (vehicleError) {
     throw vehicleError;
   }
+  if (error) console.error("EditVehiclePage failed to load customers", error);
   if (!vehicleRow) notFound();
   const vehicle = vehicleRow as unknown as {
     id: string;
@@ -62,6 +63,7 @@ export default async function EditVehiclePage({
   }));
 
   const t = await getTranslations("dashboardVehicles.edit");
+  const tError = await getTranslations("error");
 
   return (
     <>
@@ -76,7 +78,7 @@ export default async function EditVehiclePage({
       />
       <div className="p-6">
         {error ? (
-          <div className="text-destructive text-sm">{error.message}</div>
+          <div className="text-destructive text-sm">{tError("description")}</div>
         ) : customers.length === 0 ? (
           <EmptyState
             title={t("emptyTitle")}

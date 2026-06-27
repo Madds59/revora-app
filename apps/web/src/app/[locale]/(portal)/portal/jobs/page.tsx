@@ -23,6 +23,7 @@ type JobRow = Pick<
 
 export default async function PortalJobsPage() {
   const t = await getTranslations("portalJobs");
+  const tError = await getTranslations("error");
   const locale = await getLocale();
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
@@ -54,6 +55,7 @@ export default async function PortalJobsPage() {
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
+  if (error) console.error("PortalJobsPage failed to load", error);
 
   const jobs = (data ?? []) as unknown as JobRow[];
   const activeJobs = jobs.filter((job) =>
@@ -94,7 +96,7 @@ export default async function PortalJobsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-destructive text-sm">{error.message}</p>
+              <p className="text-destructive text-sm">{tError("description")}</p>
             ) : jobs.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

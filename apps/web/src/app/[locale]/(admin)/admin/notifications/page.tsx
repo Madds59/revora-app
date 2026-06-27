@@ -56,6 +56,7 @@ export default async function AdminNotificationsPage({
   }>;
 }) {
   const t = await getTranslations("adminNotifications");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -77,6 +78,7 @@ export default async function AdminNotificationsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
+  if (error) console.error("AdminNotificationsPage failed to load", error);
   const result = (data ?? null) as unknown as PaginatedListResult<AdminNotificationFilteredRow> | null;
   const notifications = result?.rows ?? [];
   const totalCount = result?.total_count ?? notifications.length;
@@ -132,7 +134,7 @@ export default async function AdminNotificationsPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">{tError("description")}</p>
             ) : notifications.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

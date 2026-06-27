@@ -28,6 +28,7 @@ type Row = Pick<
 
 export default async function QuotationsPage() {
   const t = await getTranslations("dashboardQuotations");
+  const tError = await getTranslations("error");
   const locale = await getLocale();
   const { member, business } = await requireMembership();
   const canManage = canManageQuotes(member.role);
@@ -40,6 +41,7 @@ export default async function QuotationsPage() {
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
+  if (error) console.error("QuotationsPage failed to load", error);
   const quotes = (data ?? []) as unknown as Row[];
 
   return (
@@ -57,7 +59,7 @@ export default async function QuotationsPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{error.message}</p>
+          <p className="text-destructive text-sm">{tError("description")}</p>
         ) : quotes.length === 0 ? (
           <EmptyState
             title={t("empty.title")}

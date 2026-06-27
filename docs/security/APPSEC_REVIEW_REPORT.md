@@ -29,18 +29,20 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 12 | Notification safety | PASS | APPSEC-12 |
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
-| 15 | Error handling / DB error leakage | **FAIL → action/mutation layer fixed in this pass**; read-path page components are a related, larger, lower-urgency gap tracked as a new finding, not fixed here | APPSEC-07 / APPSEC-07b |
+| 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
 | 16 | Input validation | WARNING | APPSEC-09 |
 | 17 | URL/ID tampering | PASS (one defense-in-depth note) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
 Additional findings surfaced during review, not in the original 18: APPSEC-08
 (account enumeration, P3), APPSEC-10 (invitation expiry, P3), APPSEC-07b
-(read-path query-error rendering, P2 — discovered while fixing APPSEC-07).
+(read-path query-error rendering, P2 — discovered while fixing APPSEC-07,
+**fixed in a follow-up pass on the same branch**).
 
-No P0 findings. One P1 (APPSEC-07, fixed in this pass for the action/mutation
-layer). Five P2/P3 findings tracked for future work, including APPSEC-07b. Full
-severity definitions: [REVORA_SECURITY_PROGRAM.md](REVORA_SECURITY_PROGRAM.md) §4.
+No P0 findings. Two P1/P2 findings fixed across the two passes on this branch
+(APPSEC-07, APPSEC-07b). Four P2/P3 findings remain open for future work
+(APPSEC-08, APPSEC-09, APPSEC-10, APPSEC-11). Full severity definitions:
+[REVORA_SECURITY_PROGRAM.md](REVORA_SECURITY_PROGRAM.md) §4.
 
 ---
 
@@ -344,45 +346,81 @@ exercises some of these modules' adjacent logic, plus the manual QA notes in
 
 ---
 
-## APPSEC-07b — Read-Path Query Errors Rendered Directly in Page Components (new finding, not fixed in this pass)
+## APPSEC-07b — Read-Path Query Errors Rendered Directly in Page Components
 
 **Severity:** P2 (lower urgency than APPSEC-07: these are `SELECT`-query failure
 paths, which are rare in normal operation — typically only hit on a transient
 DB/network issue or an unexpected RLS denial — versus the mutation-layer paths in
 APPSEC-07, which are actively reachable by any user submitting a form) | **Status:**
-WARNING | **Code changed:** No
+FAIL → **fixed in a follow-up pass on this branch** | **Code changed:** Yes
 
-**Affected files (found via the same full-tree grep that expanded APPSEC-07; a
-distinct, larger pattern from the action/mutation layer, intentionally not bundled
-into this pass's fix):** roughly 23 page components, ~26 call sites, rendering a
-Supabase query's `error.message` (or a similarly-named `*Error.message`) directly
-in JSX, typically as `<p className="text-destructive">{error.message}</p>`:
+**Affected files (exact count, verified by direct grep rather than estimated):
+20 page components, 25 call sites** rendering a Supabase query's `error.message`
+(or a similarly-named `*Error.message`/`*ErrorState.message`) directly in JSX —
 `(portal)/portal/quotes/page.tsx`, `(portal)/portal/documents/page.tsx`,
 `(portal)/portal/jobs/page.tsx`, `(dashboard)/customers/page.tsx`,
 `(dashboard)/vehicles/new/page.tsx`, `(dashboard)/vehicles/[id]/edit/page.tsx`,
-`(dashboard)/vehicles/[id]/page.tsx` (4 sites: job/quote/complaint/document
-errors), `(dashboard)/quotations/page.tsx`, `(dashboard)/documents/page.tsx`,
-`(dashboard)/jobs/page.tsx`, `(dashboard)/notifications/page.tsx` (2 sites),
-`(dashboard)/billing/page.tsx` (2 sites), and eight pages under `(admin)/admin/**`
-(`audit-logs`, `admins`, `tenants`, `subscriptions`, `users`, the admin home page,
-`notifications`, `billing`).
+`(dashboard)/vehicles/[id]/page.tsx` (4 sites: `jobError`/`quoteError`/
+`complaintError`/`documentError`), `(dashboard)/quotations/page.tsx`,
+`(dashboard)/documents/page.tsx`, `(dashboard)/jobs/page.tsx`,
+`(dashboard)/notifications/page.tsx` (2 sites: `settingsError`/`error`),
+`(dashboard)/billing/page.tsx` (2 sites: `revenueErrorState`/
+`paymentEventErrorState`), and `(admin)/admin/{page,admins,tenants,audit-logs,
+subscriptions,users,notifications,billing}/page.tsx` (8 files).
 
-**Why this wasn't fixed in this pass:** it is a distinct category from APPSEC-07
-(page-level read-error display vs. action-level mutation-error display), large
-enough (~23 files) that fixing it now would have turned a "small, obvious fix" into
-a broad sweep across nearly every list/detail page in the app, increasing the
-chance of an incidental mistake in a security-focused PR that should stay
-conservative. It is lower urgency because these paths fire on query *failure*
-(outage/bug/RLS-denial), not on every-day user-triggered mutations.
+**Note on the original estimate:** the original finding said "~23 page
+components, ~26 call sites," derived from the same grep that expanded APPSEC-07.
+The actual fix pass re-ran the search exhaustively (case-insensitive, covering
+`*Error.message` and `*ErrorState.message` variable-naming shapes, confirmed with
+a zero-match final sweep) and found the precise count above. The earlier estimate
+was directionally correct but not exact — a reminder that "approximately N" from a
+first pass should be re-verified before being treated as a closed scope.
 
-**Recommended fix:** Same pattern as APPSEC-07 — `console.error` the real error
-server-side (these are Server Components, so `console.error` is safe and
-server-only) and render a generic, already-localized-where-possible fallback
-string instead of `error.message`. Propose as a dedicated, separate follow-up
-change (see recommended next prompt in the final report) rather than expanding
-this pass further.
+**What was found:** Same root cause as APPSEC-07 (a handled `{ data, error }`
+result from a Supabase query, with `error.message` rendered straight into JSX)
+but in the read path (page-level `SELECT` queries) rather than the mutation path
+(server actions). Two sites that looked like candidates were confirmed **not**
+leaks on inspection: `vehicles/[id]/edit/page.tsx` and `vehicles/[id]/page.tsx`
+both also have a `vehicleError` that is `throw`n rather than rendered, which
+routes to that route segment's `error.tsx` boundary — already safe, since those
+boundaries render hardcoded generic copy, never `error.message`.
 
-**Validation required (once fixed in a follow-up):** Same as APPSEC-07.
+**Risk:** Same as APPSEC-07 — information disclosure (schema/internals) on a
+query failure, not a cross-tenant data leak. Slightly lower likelihood than
+APPSEC-07 since these are read failures rather than write failures.
+
+**Recommended fix (applied):** For pages that already use the `next-intl`
+message catalog (`getTranslations`), reused the existing, already-bilingual
+`error` namespace (`title`/`description` keys, the same one `app/[locale]/error.tsx`
+uses for thrown-exception boundaries) via a second `getTranslations("error")`
+call — zero new translation keys added. For the two pages that don't use the
+catalog at all and instead inline bilingual ternaries
+(`(dashboard)/notifications/page.tsx`, `(dashboard)/billing/page.tsx`), matched
+that file's own existing `locale === "ar" ? "..." : "..."` convention instead of
+introducing the catalog pattern where it wasn't already present. For the one
+section that has no localization at all today (`(dashboard)/vehicles/[id]/page.tsx`'s
+"Service history"/"Related quotes"/"Related complaints"/"Related documents"
+cards, which use plain English strings throughout, unlike the rest of the app),
+used a plain English safe string matching its immediate sibling `EmptyState`
+copy — adding Arabic there would have been scope creep into an unrelated,
+pre-existing i18n gap, not part of this fix. Every site also gained a
+`console.error("<PageName> failed to load ...", error)` call for server-side
+observability, since none of these pages logged the error at all before (it was
+only ever shown to the user).
+
+**Validation performed:** `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test`
+(including the new APPSEC-07b regression test, see
+[SECURITY_QA_TEST_PLAN.md](SECURITY_QA_TEST_PLAN.md)), and
+`APP_URL=https://revora-app.vercel.app pnpm smoke:routes` all passed. The
+regression test was verified to actually catch the bug (a leak was temporarily
+reintroduced into one file, confirmed the test failed with a clear message, then
+reverted) before being relied upon.
+
+**Residual risk:** None known for the 20 files fixed. The new tree-wide
+`APPSEC-07b` regression test (pattern-based, not a closed file list) guards
+against the same mistake in any future `page.tsx`, including ones that don't
+exist yet — this closes the "directory-scoped first pass misses files" gap that
+affected the original APPSEC-07 estimate.
 
 ---
 

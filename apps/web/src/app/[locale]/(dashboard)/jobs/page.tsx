@@ -24,6 +24,7 @@ type BranchLookup = Pick<Branch, "id" | "name">;
 
 export default async function JobsPage() {
   const t = await getTranslations("dashboardJobsPage");
+  const tError = await getTranslations("error");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -43,6 +44,7 @@ export default async function JobsPage() {
         .is("deleted_at", null),
       supabase.from("branches").select("id, name").eq("business_id", business.id),
     ]);
+  if (error) console.error("JobsPage failed to load", error);
 
   const jobs = (jobRows ?? []) as JobLookup[];
   const customerMap = new Map(
@@ -75,7 +77,7 @@ export default async function JobsPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-sm text-destructive">{error.message}</p>
+          <p className="text-sm text-destructive">{tError("description")}</p>
         ) : rows.length === 0 ? (
           <EmptyState
             title={t("empty.title")}

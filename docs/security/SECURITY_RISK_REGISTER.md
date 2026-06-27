@@ -14,8 +14,6 @@ assessed during the security/privacy assurance pass on branch
 
 | ID | Severity | Title | Area | Status | Owner |
 |---|---|---|---|---|---|
-| APPSEC-07 | P1 | Raw PostgREST/DB error messages returned to end users across the action/mutation layer (server actions and service functions) — grew from an initial 14-file sub-agent finding to 22 files once a full-tree grep was run during the fix | AppSec / Error handling | **Fixed in this pass** (generic message + server-side log) for every action/mutation-layer call site found | AppSec Reviewer |
-| APPSEC-07b | P2 | Same raw-error pattern, but in the read-path: ~23 page components render a Supabase query's `error.message` directly in JSX | AppSec / Error handling | Open — discovered while fixing APPSEC-07, intentionally not bundled into this pass (distinct, larger pattern; lower urgency since SELECT failures are rarer than mutation failures); recommend as a dedicated follow-up (see [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) APPSEC-07b) | AppSec Reviewer |
 | APPSEC-08 | P3 | `signUp` Supabase Auth SDK error can reveal an email is already registered (account enumeration) | AppSec / Auth UX | Open — documented only, no behavior change made (product/UX decision, not a raw-DB-error bug) | AppSec Reviewer |
 | APPSEC-09 | P2 | Most dashboard/portal server actions parse `FormData` manually with no schema (zod) validation; RLS is the only backstop | AppSec / Input validation | Open — future hardening | AppSec Reviewer |
 | APPSEC-10 | P3 | Team invitations (`business_invitations`) never expire; claimable indefinitely by anyone who later signs up with the invited email | AppSec / Account safety | Open — low exploitability (requires control of the invited mailbox); recommend adding `expires_at` in a future migration | AppSec Reviewer |
@@ -57,7 +55,8 @@ came back clean. Listed here so future audits know they were tested, not assumed
 
 | ID | Title | Resolution |
 |---|---|---|
-| — | — | None yet — register created in this pass. |
+| APPSEC-07 | Raw PostgREST/DB error messages returned to end users across the action/mutation layer | Fixed (generic message + server-side `console.error`) across 22 files (grew from an initial 14-file estimate to 22 once a full-tree grep was run during the fix). See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) APPSEC-07. |
+| APPSEC-07b | Same raw-error pattern in the read-path: page components rendering a Supabase query's `error.message` directly in JSX | Fixed in a follow-up pass on the same branch — 20 files / 25 sites (exact count; the original "~23 files" was an estimate). Guarded by a new tree-wide pattern-based regression test (`security-regressions.test.mjs`), not just a closed file list, so future pages are covered too. See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) APPSEC-07b. |
 
 ## Review Cadence
 

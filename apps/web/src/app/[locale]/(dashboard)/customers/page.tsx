@@ -20,6 +20,7 @@ import { getTranslations } from "next-intl/server";
 
 export default async function CustomersPage() {
   const t = await getTranslations("dashboardCustomers");
+  const tError = await getTranslations("error");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -29,6 +30,7 @@ export default async function CustomersPage() {
     .eq("business_id", business.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
+  if (error) console.error("CustomersPage failed to load", error);
 
   return (
     <>
@@ -43,7 +45,7 @@ export default async function CustomersPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{error.message}</p>
+          <p className="text-destructive text-sm">{tError("description")}</p>
         ) : !customers || customers.length === 0 ? (
           <EmptyState
             title={t("empty.title")}
