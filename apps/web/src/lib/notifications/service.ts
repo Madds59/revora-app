@@ -237,13 +237,14 @@ export async function queueCustomerNotification(
         ignoreDuplicates: true,
         onConflict: "business_id,dedupe_key",
       });
-    if (error) return { error: error.message, inserted: 0 };
+    if (error) {
+      console.error("queueCustomerNotification failed", error);
+      return { error: "Notification queue failed.", inserted: 0 };
+    }
     return { inserted: rows.length };
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Notification queue failed.",
-      inserted: 0,
-    };
+    console.error("queueCustomerNotification threw", error);
+    return { error: "Notification queue failed.", inserted: 0 };
   }
 }
 

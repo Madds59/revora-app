@@ -22,7 +22,10 @@ export async function setSuperAdmin(
     target_email: email,
     make_admin: makeAdmin,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("setSuperAdmin failed", error);
+    return { error: "Could not update super admin status. Please try again." };
+  }
 
   revalidatePath("/admin/admins");
   revalidatePath("/admin");
@@ -46,7 +49,10 @@ export async function markNotificationRead(
   const { error } = await supabase.rpc("admin_mark_notification_read", {
     notification_id: notificationId,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("markNotificationRead (admin) failed", error);
+    return { error: "Could not mark notification as read." };
+  }
 
   revalidatePath("/admin/notifications");
   revalidatePath("/admin");

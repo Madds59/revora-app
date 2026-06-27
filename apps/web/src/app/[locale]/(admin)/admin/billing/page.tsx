@@ -35,6 +35,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 
 export default async function AdminBillingPage() {
   const t = await getTranslations("adminBilling");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
 
@@ -42,6 +43,7 @@ export default async function AdminBillingPage() {
     supabase.rpc("admin_platform_metrics"),
     supabase.rpc("admin_list_subscriptions"),
   ]);
+  if (error) console.error("AdminBillingPage failed to load", error);
 
   const metrics = metricsData as unknown as PlatformMetrics | null;
   const subscriptions = (subRows ?? []) as unknown as AdminSubscriptionRow[];
@@ -102,7 +104,7 @@ export default async function AdminBillingPage() {
             </div>
 
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">{tError("description")}</p>
             ) : subscriptions.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

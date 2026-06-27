@@ -59,6 +59,7 @@ export default async function AdminSubscriptionsPage({
   }>;
 }) {
   const t = await getTranslations("adminSubscriptions");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -82,6 +83,7 @@ export default async function AdminSubscriptionsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
+  if (error) console.error("AdminSubscriptionsPage failed to load", error);
   const result = (data ?? null) as unknown as PaginatedListResult<AdminSubscriptionFilteredRow> | null;
   const subscriptions = result?.rows ?? [];
   const totalCount = result?.total_count ?? subscriptions.length;
@@ -134,7 +136,7 @@ export default async function AdminSubscriptionsPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">{tError("description")}</p>
             ) : subscriptions.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

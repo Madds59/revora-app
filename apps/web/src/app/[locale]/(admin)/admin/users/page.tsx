@@ -53,6 +53,7 @@ export default async function AdminUsersPage({
   }>;
 }) {
   const t = await getTranslations("adminUsers");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -77,6 +78,7 @@ export default async function AdminUsersPage({
     }),
     supabase.rpc("admin_platform_metrics"),
   ]);
+  if (error) console.error("AdminUsersPage failed to load", error);
 
   const result = (userRows ?? null) as unknown as PaginatedListResult<AdminUserFilteredRow> | null;
   const users = result?.rows ?? [];
@@ -133,7 +135,7 @@ export default async function AdminUsersPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">{tError("description")}</p>
             ) : users.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

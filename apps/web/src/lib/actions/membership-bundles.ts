@@ -138,7 +138,10 @@ export async function listMembershipBundles() {
     .eq("business_id", access.business.id)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
-  if (error) return { error: error.message, result: [] as MembershipBundleRecord[] };
+  if (error) {
+    console.error("listMembershipBundles failed", error);
+    return { error: "Could not load bundles.", result: [] as MembershipBundleRecord[] };
+  }
   return { result: (data as BundleRow[]).map(toBundleRecord) };
 }
 
@@ -158,7 +161,10 @@ export async function listPublishedBundles(businessId: string) {
     .eq("business_id", businessId)
     .eq("is_published", true)
     .order("sort_order", { ascending: true });
-  if (error) return { error: error.message, result: [] as MembershipBundleRecord[] };
+  if (error) {
+    console.error("listPublishedBundles failed", error);
+    return { error: "Could not load bundles.", result: [] as MembershipBundleRecord[] };
+  }
   return { result: (data as BundleRow[]).map(toBundleRecord) };
 }
 
@@ -180,7 +186,10 @@ export async function createMembershipBundle(
     .insert({ ...draftToPayload(parsed.data, access.business.id), created_by: access.user?.id ?? null })
     .select("*")
     .single();
-  if (error || !data) return { error: error?.message ?? "Could not create the bundle." };
+  if (error || !data) {
+    if (error) console.error("createMembershipBundle failed", error);
+    return { error: "Could not create the bundle." };
+  }
 
   revalidatePath("/tools/membership-bundles");
   return { message: "Bundle created.", result: toBundleRecord(data as BundleRow) };
@@ -206,7 +215,10 @@ export async function updateMembershipBundle(
     .eq("id", id)
     .select("*")
     .single();
-  if (error || !data) return { error: error?.message ?? "Could not update the bundle." };
+  if (error || !data) {
+    if (error) console.error("updateMembershipBundle failed", error);
+    return { error: "Could not update the bundle." };
+  }
 
   revalidatePath("/tools/membership-bundles");
   return { message: "Bundle updated.", result: toBundleRecord(data as BundleRow) };
@@ -227,7 +239,10 @@ export async function deleteMembershipBundle(
     .delete()
     .eq("business_id", access.business.id)
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("deleteMembershipBundle failed", error);
+    return { error: "Could not delete the bundle." };
+  }
 
   revalidatePath("/tools/membership-bundles");
   return { message: "Bundle deleted." };
@@ -249,7 +264,10 @@ export async function setMembershipBundlePublished(
     .update({ is_published: publish })
     .eq("business_id", access.business.id)
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("setMembershipBundlePublished failed", error);
+    return { error: "Could not update the bundle." };
+  }
 
   revalidatePath("/tools/membership-bundles");
   return { message: publish ? "Bundle published." : "Bundle unpublished." };
@@ -274,7 +292,10 @@ export async function reorderMembershipBundles(
       .update({ sort_order: index })
       .eq("business_id", access.business.id)
       .eq("id", order.data[index]);
-    if (error) return { error: error.message };
+    if (error) {
+      console.error("reorderMembershipBundles failed", error);
+      return { error: "Could not save the new order." };
+    }
   }
 
   revalidatePath("/tools/membership-bundles");
@@ -336,7 +357,10 @@ export async function generateBundlesFromScenario(
     created_by: access.user?.id ?? null,
   }));
   const { data, error } = await supabase.from("membership_bundles").insert(rows).select("*");
-  if (error || !data) return { error: error?.message ?? "Could not generate bundles." };
+  if (error || !data) {
+    if (error) console.error("generateBundlesFromScenario failed", error);
+    return { error: "Could not generate bundles." };
+  }
 
   await trackRetainerEvent("membership_bundles_generated", {
     business_id: access.business.id,
@@ -374,7 +398,10 @@ export async function createQuoteFromBundle(
     target_created_by: access.user?.id ?? undefined,
     target_currency: bundle.currency,
   });
-  if (quoteError || !quoteId) return { error: quoteError?.message ?? "Could not create the quotation." };
+  if (quoteError || !quoteId) {
+    if (quoteError) console.error("createQuoteFromBundle (create draft) failed", quoteError);
+    return { error: "Could not create the quotation." };
+  }
 
   const months = bundle.billingCycle === "annual" ? 12 : bundle.billingCycle === "quarterly" ? 3 : 1;
   const { error: itemError } = await supabase.from("quotation_items").insert({
@@ -389,7 +416,10 @@ export async function createQuoteFromBundle(
     tax_rate: 0,
     total: bundle.price * months,
   });
-  if (itemError) return { error: itemError.message };
+  if (itemError) {
+    console.error("createQuoteFromBundle (insert item) failed", itemError);
+    return { error: "Could not create the quotation." };
+  }
 
   const { data: items } = await supabase
     .from("quotation_items")
@@ -407,7 +437,10 @@ export async function createQuoteFromBundle(
       customer_notes: `Membership bundle: ${bundle.name} (${bundle.billingCycle}).`,
     })
     .eq("id", quoteId);
-  if (updateError) return { error: updateError.message };
+  if (updateError) {
+    console.error("createQuoteFromBundle (update totals) failed", updateError);
+    return { error: "Could not create the quotation." };
+  }
 
   const { data: quoteRow } = await supabase
     .from("quotations")

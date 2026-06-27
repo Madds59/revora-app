@@ -38,7 +38,10 @@ export async function saveOnboardingIntent(
     }),
   ]);
 
-  if (profileError) return { error: profileError.message };
+  if (profileError) {
+    console.error("saveOnboardingIntent failed", profileError);
+    return { error: "Could not save your account type. Please try again." };
+  }
   if (authError) return { error: authError.message };
 
   revalidatePath("/", "layout");
@@ -84,7 +87,10 @@ export async function createBusiness(
     business_name: name,
     owner_full_name: fullName || metadataName || undefined,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("createBusiness failed", error);
+    return { error: "Could not create your business. Please try again." };
+  }
 
   await Promise.all([
     supabase

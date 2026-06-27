@@ -181,6 +181,7 @@ export default async function BillingPage() {
     .select("*")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
+  if (error) console.error("BillingPage failed to load subscriptions", error);
 
   const subscriptions = (subRows ?? []) as Subscription[];
   const subscriptionIds = subscriptions.map((subscription) => subscription.id);
@@ -234,6 +235,10 @@ export default async function BillingPage() {
       .order("occurred_at", { ascending: false })
       .limit(10),
   ]);
+  if (planError) console.error("BillingPage failed to load plans", planError);
+  if (invoiceError) console.error("BillingPage failed to load invoice summary", invoiceError);
+  if (billingInvoiceRowsError) console.error("BillingPage failed to load invoice rows", billingInvoiceRowsError);
+  if (paymentEventError) console.error("BillingPage failed to load payment events", paymentEventError);
 
   const plans = (planRows ?? []) as unknown as BillingPlanCatalogRow[];
   const paymentEvents = (paymentEventRows ?? []) as unknown as BillingPaymentEvent[];
@@ -606,7 +611,9 @@ export default async function BillingPage() {
           <CardContent className="flex flex-col gap-6">
             {revenueErrorState ? (
               <p className="text-sm text-destructive">
-                {revenueErrorState.message}
+                {locale === "ar"
+                  ? "تعذر تحميل هذه البيانات حالياً."
+                  : "We could not load this data right now."}
               </p>
             ) : !hasInvoiceRows ? (
               <EmptyState
@@ -756,7 +763,9 @@ export default async function BillingPage() {
           <CardContent className="flex flex-col gap-6">
             {paymentEventErrorState ? (
               <p className="text-sm text-destructive">
-                {paymentEventErrorState.message}
+                {locale === "ar"
+                  ? "تعذر تحميل هذه البيانات حالياً."
+                  : "We could not load this data right now."}
               </p>
             ) : !hasPaymentEvents ? (
               <EmptyState

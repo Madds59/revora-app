@@ -37,6 +37,7 @@ export default async function PortalQuotesPage({
   searchParams?: Promise<{ quote_status?: string }>;
 }) {
   const t = await getTranslations("portalQuotes");
+  const tError = await getTranslations("error");
   const locale = await getLocale();
   const params = searchParams ? await searchParams : undefined;
   const { accounts } = await requireCustomerPortal();
@@ -50,6 +51,7 @@ export default async function PortalQuotesPage({
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
+  if (error) console.error("PortalQuotesPage failed to load", error);
   const quotes = (data ?? []) as unknown as Row[];
   const quoteStatus =
     params && typeof params === "object" && "quote_status" in params
@@ -78,7 +80,7 @@ export default async function PortalQuotesPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-destructive text-sm">{error.message}</p>
+              <p className="text-destructive text-sm">{tError("description")}</p>
             ) : quotes.length === 0 ? (
               <div className="text-muted-foreground rounded-lg border border-dashed p-10 text-center text-sm">
                 {t("empty")}

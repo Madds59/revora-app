@@ -51,8 +51,10 @@ export async function uploadDocument(
     })
     .select("id")
     .single();
-  if (mediaError || !media)
-    return { error: mediaError?.message ?? "Could not record the file." };
+  if (mediaError || !media) {
+    if (mediaError) console.error("uploadDocument (media_assets) failed", mediaError);
+    return { error: "Could not record the file." };
+  }
 
   const { error: docError } = await supabase.from("documents").insert({
     business_id: business.id,
@@ -65,7 +67,10 @@ export async function uploadDocument(
     job_id: context.jobId ?? null,
     created_by: user?.id ?? null,
   });
-  if (docError) return { error: docError.message };
+  if (docError) {
+    console.error("uploadDocument (documents) failed", docError);
+    return { error: "Could not record the file." };
+  }
 
   for (const path of context.revalidate ?? ["/documents"]) {
     revalidatePath(path);

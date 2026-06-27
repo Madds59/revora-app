@@ -49,7 +49,10 @@ export async function updateJobStatus(
       completed_at: status === "completed" ? new Date().toISOString() : null,
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateJobStatus failed", error);
+    return { error: "Could not update job status. Please try again." };
+  }
 
   await enqueueJobStatusNotification({
     jobId: id,
@@ -91,7 +94,10 @@ export async function postJobUpdate(
     visible_to_customer: visibleToCustomer,
     created_by: user?.id ?? null,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("postJobUpdate failed", error);
+    return { error: "Could not post update. Please try again." };
+  }
 
   // Optionally advance the job status alongside the update.
   if (status) {
@@ -137,7 +143,10 @@ export async function addJobTask(
     title,
     description: optional(formData, "description"),
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("addJobTask failed", error);
+    return { error: "Could not add task. Please try again." };
+  }
 
   revalidatePath(`/jobs/${jobId}`);
   return { message: "Task added." };
@@ -164,7 +173,10 @@ export async function toggleJobTask(
       completed_at: completed ? new Date().toISOString() : null,
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("toggleJobTask failed", error);
+    return { error: "Could not update task. Please try again." };
+  }
 
   revalidatePath(`/jobs/${jobId}`);
   return { message: completed ? "Task completed." : "Task reopened." };

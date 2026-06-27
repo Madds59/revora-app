@@ -529,7 +529,10 @@ export async function uploadVehicleMediaAction(
     .select("id")
     .single();
 
-  if (error || !data) return { error: error?.message ?? "Could not record media upload." };
+  if (error || !data) {
+    if (error) console.error("recordVehicleMediaUpload failed", error);
+    return { error: "Could not record media upload." };
+  }
 
   revalidatePath(`/vehicles/${vehicleId}`);
   revalidatePath("/vehicles");

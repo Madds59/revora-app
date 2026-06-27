@@ -24,6 +24,7 @@ type DocumentRow = Pick<Document, "id" | "title" | "document_type" | "created_at
 
 export default async function PortalDocumentsPage() {
   const t = await getTranslations("portalDocuments");
+  const tError = await getTranslations("error");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
@@ -54,6 +55,7 @@ export default async function PortalDocumentsPage() {
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
+  if (error) console.error("PortalDocumentsPage failed to load", error);
 
   const rows = await Promise.all(
     ((data ?? []) as unknown as Omit<DocumentRow, "url">[]).map(async (row) => {
@@ -76,7 +78,7 @@ export default async function PortalDocumentsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-destructive text-sm">{error.message}</p>
+              <p className="text-destructive text-sm">{tError("description")}</p>
             ) : rows.length === 0 ? (
               <EmptyState
                 title={t("empty.noDocumentsTitle")}

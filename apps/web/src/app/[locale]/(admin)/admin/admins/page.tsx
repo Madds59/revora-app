@@ -24,6 +24,7 @@ export default async function AdminsPage() {
   const me = await requireSuperAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_list_super_admins");
+  if (error) console.error("AdminsPage failed to load", error);
   const admins = (data ?? []) as unknown as AdminSuperAdminRow[];
 
   return (
@@ -42,7 +43,7 @@ export default async function AdminsPage() {
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-destructive text-sm">{error.message}</p>
+              <p className="text-destructive text-sm">We could not load this data right now.</p>
             ) : (
               <div className="rounded-lg border">
                 <Table>

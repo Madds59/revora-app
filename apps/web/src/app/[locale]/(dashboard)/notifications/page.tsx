@@ -40,6 +40,8 @@ export default async function NotificationsPage() {
         .eq("business_id", business.id)
         .maybeSingle(),
     ]);
+  if (error) console.error("NotificationsPage failed to load notifications", error);
+  if (settingsError) console.error("NotificationsPage failed to load settings", settingsError);
 
   const notifications = (data ?? []) as unknown as NotificationRow[];
   const settings = (settingsData ?? null) as NotificationSettingsRow;
@@ -73,7 +75,11 @@ export default async function NotificationsPage() {
           </CardHeader>
           <CardContent>
             {settingsError ? (
-              <p className="text-sm text-destructive">{settingsError.message}</p>
+              <p className="text-sm text-destructive">
+                {locale === "ar"
+                  ? "تعذر تحميل هذه البيانات حالياً."
+                  : "We could not load this data right now."}
+              </p>
             ) : (
               <NotificationSettingsForm
                 canManage={canManageSettings(member.role)}
@@ -116,7 +122,11 @@ export default async function NotificationsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">
+                {locale === "ar"
+                  ? "تعذر تحميل هذه البيانات حالياً."
+                  : "We could not load this data right now."}
+              </p>
             ) : notifications.length === 0 ? (
               <EmptyState
                 title={locale === "ar" ? "لا توجد إشعارات لهذا النشاط بعد" : "No tenant notifications yet"}

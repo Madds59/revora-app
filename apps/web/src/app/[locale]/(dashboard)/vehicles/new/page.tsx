@@ -23,6 +23,7 @@ export default async function NewVehiclePage() {
     .eq("business_id", business.id)
     .is("deleted_at", null)
     .order("full_name", { ascending: true });
+  if (error) console.error("NewVehiclePage failed to load", error);
 
   const customers: VehicleCustomerOption[] = (customerRows ?? []).map((customer) => ({
     id: customer.id,
@@ -31,6 +32,7 @@ export default async function NewVehiclePage() {
   }));
 
   const t = await getTranslations("dashboardVehicles.new");
+  const tError = await getTranslations("error");
 
   return (
     <>
@@ -45,7 +47,7 @@ export default async function NewVehiclePage() {
       />
       <div className="p-6">
         {error ? (
-          <div className="text-destructive text-sm">{error.message}</div>
+          <div className="text-destructive text-sm">{tError("description")}</div>
         ) : customers.length === 0 ? (
           <EmptyState
             title={t("emptyTitle")}

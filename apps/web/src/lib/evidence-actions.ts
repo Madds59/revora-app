@@ -30,7 +30,10 @@ export async function recordComplaintEvidence(
     p_mime_type: mimeType,
     p_size_bytes: sizeBytes,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("recordComplaintEvidence failed", error);
+    return { error: "Could not record the uploaded evidence." };
+  }
 
   revalidatePath(`/portal/complaints/${complaintId}`);
   revalidatePath(`/complaints/${complaintId}`);

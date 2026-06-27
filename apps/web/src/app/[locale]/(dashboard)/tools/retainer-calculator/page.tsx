@@ -118,11 +118,15 @@ export default async function RetainerCalculatorPage({
   ]);
 
   if (customersResult.error || scenariosResult.error) {
+    console.error("retainer-calculator page load failed", {
+      customers: customersResult.error,
+      scenarios: scenariosResult.error,
+    });
     return (
       <div className="p-6">
         <ErrorState
           title={t("errorTitle")}
-          description={customersResult.error?.message ?? scenariosResult.error?.message ?? t("errorDescription")}
+          description={t("errorDescription")}
           backHref="/"
           backLabel={t("backHome")}
         />

@@ -13,9 +13,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminOverviewPage() {
   const t = await getTranslations("adminOverview");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_platform_metrics");
+  if (error) console.error("AdminOverviewPage failed to load", error);
   const m = data as unknown as PlatformMetrics | null;
 
   const stats: { label: string; value: number | string }[] = [
@@ -37,7 +39,7 @@ export default async function AdminOverviewPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{error.message}</p>
+          <p className="text-destructive text-sm">{tError("description")}</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((s) => (

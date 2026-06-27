@@ -44,7 +44,10 @@ export async function createCustomer(
     })
     .select("id")
     .single();
-  if (error || !data) return { error: error?.message ?? "Could not create customer." };
+  if (error || !data) {
+    if (error) console.error("createCustomer failed", error);
+    return { error: "Could not create customer." };
+  }
 
   revalidatePath("/customers");
   redirect(`/customers/${data.id}`);
@@ -73,7 +76,10 @@ export async function updateCustomer(
       preferred_language: str(formData, "preferred_language") || "en",
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateCustomer failed", error);
+    return { error: "Could not update customer." };
+  }
 
   revalidatePath(`/customers/${id}`);
   return { message: "Customer updated." };

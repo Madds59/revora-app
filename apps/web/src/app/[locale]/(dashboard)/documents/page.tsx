@@ -49,6 +49,7 @@ type DocumentView = DocumentRow & { url: string | null };
 
 export default async function DocumentsPage() {
   const t = await getTranslations("dashboardDocuments");
+  const tError = await getTranslations("error");
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -59,6 +60,7 @@ export default async function DocumentsPage() {
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
+  if (error) console.error("DocumentsPage failed to load", error);
 
   const rawRows = (data ?? []) as unknown as DocumentRow[];
   const rows: DocumentView[] = await Promise.all(
@@ -100,7 +102,7 @@ export default async function DocumentsPage() {
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">{tError("description")}</p>
             ) : rows.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

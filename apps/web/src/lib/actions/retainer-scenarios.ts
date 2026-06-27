@@ -185,7 +185,10 @@ async function persistScenario(
       .update(payload)
       .eq("business_id", businessId)
       .eq("id", input.id);
-    if (error) return { error: error.message } as const;
+    if (error) {
+      console.error("persistScenario (update) failed", error);
+      return { error: "Could not save scenario." } as const;
+    }
     return { scenarioId: input.id, calculated } as const;
   }
 
@@ -194,7 +197,10 @@ async function persistScenario(
     .insert(payload)
     .select("id")
     .single();
-  if (error || !data) return { error: error?.message ?? "Could not save scenario." } as const;
+  if (error || !data) {
+    if (error) console.error("persistScenario (insert) failed", error);
+    return { error: "Could not save scenario." } as const;
+  }
   return { scenarioId: data.id, calculated } as const;
 }
 
@@ -321,7 +327,10 @@ export async function deleteRetainerScenario(
     .delete()
     .eq("business_id", access.business.id)
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("deleteRetainerScenario failed", error);
+    return { error: "Could not delete scenario." };
+  }
 
   revalidatePath("/tools/retainer-calculator");
   return { message: "Scenario deleted." };
@@ -393,7 +402,10 @@ export async function compareRetainerScenarios(
     .select("*")
     .eq("business_id", access.business.id)
     .in("id", parsed.data.ids);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("compareRetainerScenarios failed", error);
+    return { error: "Could not load scenarios to compare." };
+  }
 
   const scenarios = (data ?? []).map((row) => toRecord(row as ScenarioRow));
   if (scenarios.length < 2) {
@@ -458,7 +470,8 @@ export async function convertScenarioToQuote(
   });
 
   if (quoteError || !quoteId) {
-    return { error: quoteError?.message ?? "Could not create the quotation." };
+    if (quoteError) console.error("convertScenarioToQuote (create draft) failed", quoteError);
+    return { error: "Could not create the quotation." };
   }
 
   const quoteLine = buildRetainerQuoteLine(scenario, access.business.id, quoteId);
@@ -466,7 +479,8 @@ export async function convertScenarioToQuote(
 
   const { error: itemError } = await supabase.from("quotation_items").insert(quoteLine);
   if (itemError) {
-    return { error: itemError.message };
+    console.error("convertScenarioToQuote (insert item) failed", itemError);
+    return { error: "Could not create the quotation." };
   }
 
   const { data: items } = await supabase
@@ -486,7 +500,8 @@ export async function convertScenarioToQuote(
     })
     .eq("id", quoteId);
   if (quoteUpdateError) {
-    return { error: quoteUpdateError.message };
+    console.error("convertScenarioToQuote (update totals) failed", quoteUpdateError);
+    return { error: "Could not create the quotation." };
   }
 
   const { error: scenarioUpdateError } = await supabase
@@ -499,7 +514,8 @@ export async function convertScenarioToQuote(
     .eq("business_id", access.business.id)
     .eq("id", scenario.id);
   if (scenarioUpdateError) {
-    return { error: scenarioUpdateError.message };
+    console.error("convertScenarioToQuote (update scenario) failed", scenarioUpdateError);
+    return { error: "Could not create the quotation." };
   }
 
   const { data: quoteRow } = await supabase

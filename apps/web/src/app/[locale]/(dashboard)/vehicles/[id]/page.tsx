@@ -219,6 +219,10 @@ export default async function VehicleDetailPage({
       .eq("vehicle_id", vehicle.id)
       .order("created_at", { ascending: false }),
   ]);
+  if (jobError) console.error("VehicleDetailPage failed to load jobs", jobError);
+  if (quoteError) console.error("VehicleDetailPage failed to load quotes", quoteError);
+  if (complaintError) console.error("VehicleDetailPage failed to load complaints", complaintError);
+  if (documentError) console.error("VehicleDetailPage failed to load documents", documentError);
 
   const jobs = (jobRows ?? []) as unknown as VehicleJobRow[];
   const quotes = (quoteRows ?? []) as unknown as VehicleQuoteRow[];
@@ -331,7 +335,7 @@ export default async function VehicleDetailPage({
             </CardHeader>
             <CardContent>
               {jobError ? (
-                <p className="text-sm text-destructive">{jobError.message}</p>
+                <p className="text-sm text-destructive">We could not load the service history right now.</p>
               ) : jobs.length === 0 ? (
                 <EmptyState
                   title="No jobs yet"
@@ -401,7 +405,7 @@ export default async function VehicleDetailPage({
             </CardHeader>
             <CardContent>
               {quoteError ? (
-                <p className="text-sm text-destructive">{quoteError.message}</p>
+                <p className="text-sm text-destructive">We could not load related quotes right now.</p>
               ) : quotes.length === 0 ? (
                 <EmptyState
                   title="No quotes yet"
@@ -576,7 +580,7 @@ export default async function VehicleDetailPage({
             </CardHeader>
             <CardContent>
               {complaintError ? (
-                <p className="text-sm text-destructive">{complaintError.message}</p>
+                <p className="text-sm text-destructive">We could not load related complaints right now.</p>
               ) : complaints.length === 0 ? (
                 <EmptyState
                   title="No complaints yet"
@@ -614,7 +618,7 @@ export default async function VehicleDetailPage({
             </CardHeader>
             <CardContent>
               {documentError ? (
-                <p className="text-sm text-destructive">{documentError.message}</p>
+                <p className="text-sm text-destructive">We could not load related documents right now.</p>
               ) : relatedDocuments.length === 0 ? (
                 <EmptyState
                   title="No documents yet"

@@ -56,6 +56,7 @@ export default async function AdminAuditLogsPage({
   }>;
 }) {
   const t = await getTranslations("adminAuditLogs");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -77,6 +78,7 @@ export default async function AdminAuditLogsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
+  if (error) console.error("AdminAuditLogsPage failed to load", error);
   const result = (data ?? null) as unknown as PaginatedListResult<AdminAuditLogFilteredRow> | null;
   const logs = result?.rows ?? [];
   const totalCount = result?.total_count ?? logs.length;
@@ -96,7 +98,7 @@ export default async function AdminAuditLogsPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-sm text-destructive">{error.message}</p>
+              <p className="text-sm text-destructive">{tError("description")}</p>
             ) : logs.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

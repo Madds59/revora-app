@@ -45,7 +45,10 @@ export async function updateComplaint(
     .select("status, resolved_at, escalated_at")
     .eq("id", complaintId)
     .maybeSingle();
-  if (currentError) return { error: currentError.message };
+  if (currentError) {
+    console.error("updateComplaint lookup failed", currentError);
+    return { error: "Could not load complaint. Please try again." };
+  }
   if (!currentComplaint) return { error: "Complaint not found." };
 
   const updates: {
@@ -83,7 +86,10 @@ export async function updateComplaint(
     .from("complaints")
     .update(updates as never)
     .eq("id", complaintId);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("updateComplaint failed", error);
+    return { error: "Could not update complaint. Please try again." };
+  }
 
   if (status && status !== currentComplaint.status) {
     await enqueueComplaintStatusNotification({
@@ -124,7 +130,10 @@ export async function addComplaintMessage(
     body,
     internal_only: isChecked(formData, "internal_only"),
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("addComplaintMessage failed", error);
+    return { error: "Could not post reply. Please try again." };
+  }
 
   revalidatePath("/complaints");
   revalidatePath(`/complaints/${complaintId}`);

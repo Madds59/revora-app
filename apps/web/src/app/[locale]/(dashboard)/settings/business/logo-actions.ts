@@ -31,7 +31,10 @@ export async function uploadBusinessLogo(
     .from("businesses")
     .update({ branding })
     .eq("id", business.id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("uploadBusinessLogo failed", error);
+    return { error: "Could not update the logo. Please try again." };
+  }
 
   revalidatePath("/settings/business");
   revalidatePath("/", "layout");

@@ -50,6 +50,7 @@ export default async function AdminTenantsPage({
   }>;
 }) {
   const t = await getTranslations("adminTenants");
+  const tError = await getTranslations("error");
   await requireSuperAdmin();
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -71,6 +72,7 @@ export default async function AdminTenantsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
+  if (error) console.error("AdminTenantsPage failed to load", error);
 
   const result = (data ?? null) as unknown as PaginatedListResult<AdminBusinessFilteredRow> | null;
   const businesses = result?.rows ?? [];
@@ -91,7 +93,7 @@ export default async function AdminTenantsPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-destructive text-sm">{error.message}</p>
+              <p className="text-destructive text-sm">{tError("description")}</p>
             ) : businesses.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}
