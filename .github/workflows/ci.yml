@@ -1,0 +1,166 @@
+name: CI
+
+# Core validation for Revora. Runs the same checks used in release work
+# (lint / build / typecheck / test + whitespace + secret scan) plus an optional,
+# read-only production route smoke. Requires NO GitHub secrets and makes no
+# production-mutating calls. See docs/security/CI_VALIDATION_WORKFLOW.md.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: CI only needs to read the repo.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Placeholder (NON-SECRET) values so `next build` / imports of lib/env.ts pass
+  # their required() checks. The build/tests do not connect to Supabase; these are
+  # inline dummies, never GitHub secrets, never real keys, never production.
+  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-not-a-real-key
+  # Keep notification side effects impossible even if any code path is exercised.
+  NOTIFICATIONS_DISPATCH_ENABLED: "false"
+  NOTIFICATIONS_LIVE_SEND_ENABLED: "false"
+
+jobs:
+  validate:
+    name: Validate (lint / build / typecheck / test / scans)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout (full history for diff-based checks)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Compute diff base
+        id: range
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          elif [ "${{ github.event_name }}" = "push" ] \
+            && [ -n "${{ github.event.before }}" ] \
+            && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            BASE="${{ github.event.before }}"
+          else
+            BASE="$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)"
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "diff base: $BASE"
+
+      - name: Whitespace / conflict-marker check
+        working-directory: ${{ github.workspace }}
+        run: git diff --check "${{ steps.range.outputs.base }}" HEAD
+
+      - name: Secret scan (added lines; excludes lockfile / workflows / docs)
+        working-directory: ${{ github.workspace }}
+        run: |
+          BASE="${{ steps.range.outputs.base }}"
+          # Scan only ADDED lines. Exclude:
+          #   - the pnpm lockfile (integrity hashes, no secrets),
+          #   - .github/** (this workflow legitimately contains the pattern strings),
+          #   - docs/** (the security docs intentionally mention secret VARIABLE
+          #     NAMES as prose; matching those would be a false positive).
+          # Patterns target actual key-like VALUES / secret prefixes, not bare names.
+          ADDED="$(git diff "$BASE" HEAD -- . \
+            ':!apps/web/pnpm-lock.yaml' ':!.github/**' ':!docs/**' \
+            | grep -E '^\+' | grep -vE '^\+\+\+' || true)"
+          PATTERN='OPENAI_API_KEY=|VIN_API_KEY=|SUPABASE_SERVICE_ROLE_KEY=|sb_secret_|STRIPE_SECRET_KEY=|STRIPE_WEBHOOK_SECRET=|whsec_|sk_live_|sk_test_|eyJ'
+          COUNT="$(printf '%s' "$ADDED" | grep -Eic "$PATTERN" || true)"
+          if [ "${COUNT:-0}" -gt 0 ]; then
+            echo "::error::Detected ${COUNT} potential secret-like added line(s). Content is NOT printed. Review locally: git diff | grep -Ei '<secret patterns>'"
+            exit 1
+          fi
+          echo "secret scan clean (no key-like values in added lines)"
+
+  smoke:
+    name: Production route smoke (read-only)
+    # Prod-dependent and read-only: run on main pushes and manual dispatch, not on
+    # every PR (so PR validation does not depend on production uptime).
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Route smoke (read-only GETs + unsigned-webhook rejection)
+        env:
+          # Public production URL — NOT a secret. The smoke makes read-only GETs
+          # and one POST that the Stripe webhook must REJECT (no signature) — no
+          # mutation, no secrets, no email/SMS.
+          APP_URL: https://revora-app.vercel.app
+        run: |
+          set +e
+          pnpm smoke:routes
+          code=$?
+          set -e
+          echo "smoke exit code: $code"
+          # e2e.mjs exit codes: 0 = all good, 1 = real failure, 2 = env-blocked.
+          # In CI there is no local Supabase, so the local-DB portion is
+          # expected-blocked (exit 2). Fail only on real route failures (exit 1).
+          if [ "$code" -eq 1 ]; then
+            echo "::error::Production route smoke reported real failures"
+            exit 1
+          fi
+          if [ "$code" -eq 2 ]; then
+            echo "::notice::Local-DB smoke unavailable in CI (expected); production route smoke passed"
+          fi
+          exit 0
