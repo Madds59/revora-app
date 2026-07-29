@@ -6,17 +6,13 @@ import { getUser, requireMembership } from "@/lib/auth";
 import { enqueueComplaintStatusNotification } from "@/lib/notifications/service";
 import { canManageComplaints } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage } from "@/lib/validation/common";
+import {
+  addComplaintMessageSchema,
+  updateComplaintSchema,
+} from "@/lib/validation/complaints";
 
 export type FormState = { error?: string; message?: string };
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? "").trim();
-}
-
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value === "" ? null : value;
-}
 
 function isChecked(formData: FormData, key: string): boolean {
   return formData.get(key) === "on";
@@ -31,13 +27,16 @@ export async function updateComplaint(
     return { error: "You don't have permission to manage complaints." };
   }
 
-  const complaintId = str(formData, "complaint_id");
-  if (!complaintId) return { error: "Missing complaint id." };
-
-  const status = str(formData, "status");
-  const severity = str(formData, "severity");
-  const assignedTo = optional(formData, "assigned_to");
-  const resolutionSummary = optional(formData, "resolution_summary");
+  const parsed = updateComplaintSchema.safeParse({
+    complaintId: formData.get("complaint_id"),
+    status: formData.get("status"),
+    severity: formData.get("severity"),
+    assignedTo: formData.get("assigned_to"),
+    resolutionSummary: formData.get("resolution_summary"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const { complaintId, status, severity, assignedTo, resolutionSummary } =
+    parsed.data;
 
   const supabase = await createClient();
   const { data: currentComplaint, error: currentError } = await supabase
@@ -77,9 +76,11 @@ export async function updateComplaint(
     }
   }
   if (severity) updates.severity = severity;
-  if (formData.has("assigned_to")) updates.assigned_to = assignedTo;
+  // Preserve "only touch fields that were submitted" semantics; a submitted-but-
+  // blank assignee/summary clears it (validated value is undefined -> null).
+  if (formData.has("assigned_to")) updates.assigned_to = assignedTo ?? null;
   if (formData.has("resolution_summary")) {
-    updates.resolution_summary = resolutionSummary;
+    updates.resolution_summary = resolutionSummary ?? null;
   }
 
   const { error } = await supabase
@@ -108,23 +109,27 @@ export async function addComplaintMessage(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   if (!canManageComplaints(member.role)) {
     return { error: "You don't have permission to reply to complaints." };
   }
 
-  const user = await getUser();
-  const complaintId = str(formData, "complaint_id");
-  const businessId = str(formData, "business_id");
-  const body = str(formData, "body");
-  if (!complaintId || !businessId) return { error: "Missing complaint id." };
-  if (!body) return { error: "Message body is required." };
+  const parsed = addComplaintMessageSchema.safeParse({
+    complaintId: formData.get("complaint_id"),
+    body: formData.get("body"),
+    parentMessageId: formData.get("parent_message_id"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const { complaintId, body, parentMessageId } = parsed.data;
 
+  const user = await getUser();
   const supabase = await createClient();
+  // business_id is derived from the authenticated membership/session, never from
+  // client-supplied form data (APPSEC-09). RLS remains the enforcement backstop.
   const { error } = await supabase.from("complaint_messages").insert({
-    business_id: businessId,
+    business_id: business.id,
     complaint_id: complaintId,
-    parent_message_id: optional(formData, "parent_message_id"),
+    parent_message_id: parentMessageId ?? null,
     sender_id: user?.id ?? null,
     sender_role: member.role,
     body,

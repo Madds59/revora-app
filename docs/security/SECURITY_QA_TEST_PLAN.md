@@ -55,6 +55,16 @@ for asserting on migration SQL text:
    `0009_platform_admins.sql` (the `is_super_admin()` guard and the
    self-removal block in `admin_set_super_admin()`).
 
+`apps/web/tests/input-validation.test.mjs` (added with APPSEC-09 Phase 1) — 17
+offline unit + regression tests for the `lib/validation` Zod layer covering
+quotations/jobs/complaints: malformed UUIDs, blank-after-trim required strings,
+**Arabic content acceptance**, NaN/Infinity/negative number rejection, unknown
+enum rejection, safe-message extraction (no raw Zod), per-domain valid/invalid
+payloads, and security regressions (client `business_id` is dropped by the schema
+and the complaints action derives `business_id` from the session; all three
+actions call `safeParse` + `firstValidationMessage`). See
+[INPUT_VALIDATION_STANDARD.md](INPUT_VALIDATION_STANDARD.md).
+
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
 

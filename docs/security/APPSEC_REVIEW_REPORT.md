@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phase 1 fixed** (quotations/jobs/complaints); Phase 2+ pending | APPSEC-09 |
 | 17 | URL/ID tampering | PASS (one defense-in-depth note) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -452,9 +452,28 @@ fix").
 
 ## APPSEC-09 — Selective Input Validation
 
-**Severity:** P2 | **Status:** WARNING | **Code changed:** No
+**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phase 1 complete**
+(quotations, jobs, complaints) | **Code changed:** Yes (Phase 1, on branch
+`security/appsec-09-input-validation-phase-1`)
 
-**Affected files:** Most files under `app/[locale]/(dashboard)/**/actions.ts` and
+**Phase 1 fix (this pass):** A `lib/validation/` Zod layer (`common.js` +
+`quotations.js`/`jobs.js`/`complaints.js`) now validates every external input to
+the quotation, job, and complaint dashboard server actions via `safeParse` at the
+boundary, before any Supabase mutation: UUIDs for identifiers, strict enum
+allowlists (from the Postgres enums), explicit number parsing that rejects
+NaN/Infinity/negatives and honors `numeric(12,2)`/`numeric(5,2)` precision,
+parseable dates (passed through unchanged), and trimmed strings that preserve
+Arabic/Unicode. Failures return curated user-safe messages (never raw Zod issues
+or DB/SDK errors — `firstValidationMessage`). Additional hardening:
+`addComplaintMessage` now derives `business_id` from the session/membership
+instead of trusting the client-supplied value (RLS remains the backstop). 17 unit
++ regression tests added (`tests/input-validation.test.mjs`). Full standard:
+[INPUT_VALIDATION_STANDARD.md](INPUT_VALIDATION_STANDARD.md). **Not fully closed:**
+portal customer actions and other dashboard/admin/onboarding boundaries remain for
+Phase 2+.
+
+**Original finding — affected files:** Most files under
+`app/[locale]/(dashboard)/**/actions.ts` and
 `app/[locale]/(portal)/portal/actions.ts`.
 
 **What was found:** Zod schemas exist and are used for the retainer-calculator and
