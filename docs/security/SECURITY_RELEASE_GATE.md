@@ -8,14 +8,20 @@ notifications, or platform admin (see
 
 ## Always (every release)
 
+- [ ] **CI `validate` job green** on the PR (GitHub Actions `.github/workflows/ci.yml`
+      — runs the checks below automatically; see
+      [CI_VALIDATION_WORKFLOW.md](CI_VALIDATION_WORKFLOW.md)). CI is the enforced
+      gate; the local commands below are the same checks for pre-push confidence.
 - [ ] `pnpm lint` clean (from `apps/web`)
 - [ ] `pnpm typecheck` clean
 - [ ] `pnpm build` succeeds
 - [ ] `pnpm test` green
 - [ ] `git diff --check` clean (no whitespace conflict markers) from repo root
-- [ ] Secret-pattern grep returns no hits (see command in root `AGENTS.md` / this
-      program's validation commands)
+- [ ] Secret-pattern grep returns no hits (CI runs a diff-scoped version; see command
+      in root `AGENTS.md` / this program's validation commands)
 - [ ] No `.env*` file is part of the diff
+- [ ] **CI `smoke` job green** on the `main` push (read-only prod route smoke), or the
+      local `APP_URL=… pnpm smoke:routes` run reviewed
 - [ ] Diff reviewed by a human, not merged on green CI alone
 
 ## If the diff touches auth / session / middleware
