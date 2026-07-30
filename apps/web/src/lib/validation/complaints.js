@@ -44,3 +44,43 @@ export const addComplaintMessageSchema = z.object({
   body: requiredText("Message", 20000),
   parentMessageId: optionalUuid("message"),
 });
+
+/** Severity with the form's existing default: blank -> "medium", else allowlist. */
+const severityWithDefault = z.preprocess(
+  (v) =>
+    v === undefined || v === null || String(v).trim() === "" ? "medium" : v,
+  z
+    .any()
+    .refine(
+      (v) => COMPLAINT_SEVERITIES.includes(v),
+      "Please choose a valid severity.",
+    ),
+);
+
+/**
+ * Portal createComplaint (APPSEC-09 Phase 2). customerId/businessId here are
+ * ACCOUNT SELECTORS only — a portal user can be linked to several customer
+ * accounts, so the form posts which one the complaint is for. The action must
+ * resolve them against the session's own linked accounts and mutate with the
+ * session-derived row values; these client fields are never the source of truth.
+ */
+export const portalCreateComplaintSchema = z.object({
+  customerId: uuid("account"),
+  businessId: uuid("business"),
+  subject: requiredText("Subject", 500),
+  description: requiredText("Description", 20000),
+  severity: severityWithDefault,
+});
+
+/**
+ * Portal addComplaintReply (APPSEC-09 Phase 2). The complaint's tenant identity
+ * is re-derived server-side from the complaint row after an explicit ownership
+ * check; the client businessId is validated only as a shape check and is never
+ * written to the database.
+ */
+export const portalComplaintReplySchema = z.object({
+  complaintId: uuid("complaint"),
+  businessId: uuid("business"),
+  body: requiredText("Message", 20000),
+  parentMessageId: optionalUuid("message"),
+});

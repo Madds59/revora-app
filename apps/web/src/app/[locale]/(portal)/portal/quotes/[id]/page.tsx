@@ -47,7 +47,7 @@ export default async function PortalQuoteDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireCustomerPortal();
+  const { accounts } = await requireCustomerPortal();
   const locale = await getLocale();
   const supabase = await createClient();
 
@@ -58,6 +58,18 @@ export default async function PortalQuoteDetailPage({
     .maybeSingle();
   if (!data) notFound();
   const quote = data as unknown as QuoteWithBusiness;
+
+  // Explicit code-level ownership check in addition to RLS (APPSEC-11),
+  // matching the portal complaint detail page's pattern.
+  if (
+    !accounts.some(
+      (account) =>
+        account.id === quote.customer_id &&
+        account.business_id === quote.business_id,
+    )
+  ) {
+    notFound();
+  }
 
   const { data: itemRows } = await supabase
     .from("quotation_items")

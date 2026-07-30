@@ -65,6 +65,23 @@ and the complaints action derives `business_id` from the session; all three
 actions call `safeParse` + `firstValidationMessage`). See
 [INPUT_VALIDATION_STANDARD.md](INPUT_VALIDATION_STANDARD.md).
 
+`apps/web/tests/portal-input-validation.test.mjs` (added with APPSEC-09
+Phase 2) — offline unit + regression tests for the customer-portal action
+schemas (`portalCreateComplaintSchema`, `portalComplaintReplySchema`, reused
+`approveQuoteSchema`, `rejectQuoteSchema`): valid English **and Arabic**
+payloads, blank/malformed/enum rejection, severity defaulting, plus static
+security regressions asserting that all four portal actions call `safeParse`,
+mutate only with session-derived identity (never raw client
+`business_id`/`customer_id`), perform explicit ownership + `'sent'`-state
+queries before quote/complaint mutations (APPSEC-11), use non-enumerating
+"not found or unavailable" responses, and that the portal quote detail page
+keeps its explicit ownership check.
+
+**Manual/local QA (not automated):** runtime cross-customer denial — Customer A
+attempting Customer B's `/portal/quotes/[id]`, quote approval/rejection, or
+complaint reply must receive an indistinguishable not-found/unavailable result.
+Run against the local Supabase stack only (see MULTI_TENANT_TEST_MATRIX.md).
+
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
 
