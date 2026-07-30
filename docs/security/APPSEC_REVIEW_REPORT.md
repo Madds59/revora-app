@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–2 fixed** (dashboard quotations/jobs/complaints + portal customer actions); Phase 3+ pending | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–3 fixed** (dashboard quotations/jobs/complaints, portal customer actions, customers/vehicles/business settings); Phase 4+ pending | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -457,11 +457,36 @@ fix").
 
 ## APPSEC-09 — Selective Input Validation
 
-**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1 and 2
-complete** (dashboard quotations/jobs/complaints + portal customer actions) |
-**Code changed:** Yes (Phase 1 on branch
+**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1, 2 and 3
+complete** (dashboard quotations/jobs/complaints, portal customer actions,
+customers/vehicles/business settings) | **Code changed:** Yes (Phase 1 on branch
 `security/appsec-09-input-validation-phase-1`; Phase 2 on branch
-`security/appsec-09-phase-2-portal-actions`)
+`security/appsec-09-phase-2-portal-actions`; Phase 3 on branch
+`security/appsec-09-phase-3-customers-vehicles-settings`)
+
+**Phase 3 fix (customers / vehicles / business settings):** Ten mutation actions
+across `(dashboard)/customers/actions.ts`, `vehicles/actions.ts` and
+`settings/business/{actions,invite-actions,logo-actions}.ts` now `safeParse`
+every external value through new `lib/validation/{customers,vehicles,
+business-settings}.js` schemas before any Supabase or Storage mutation, and
+persist only parsed output with session-derived tenant identity. Three
+defence-in-depth gaps found during the pass were closed: `updateCustomer` and
+`revokeInvitation` previously mutated by id with **no `business_id` filter**
+(RLS-only) and are now explicitly scoped to the session's business with a
+non-enumerating miss response; `uploadBusinessLogo` trusted a **fully
+client-supplied Storage object path** and now requires an `image/*` MIME plus a
+positive size and verifies the path is exactly
+`<authenticated business id>/branding/<safe file>` (traversal, absolute,
+backslash, extra-segment and cross-tenant paths rejected). Deliberate
+boundaries: vehicle validation is structural only — no VIN format rule, no
+decoding, no inferred specifications — and `businesses.country` /
+`default_language` stay free text because the form and columns impose no
+allowlist today. Invitation **payloads** are validated (roles restricted to
+`manager`/`employee`, rejecting `super_admin`/`business_owner`/`customer`), but
+invitation **expiry (APPSEC-10) remains open and unimplemented** — no
+`expires_at`, no enforcement, no migration. Tests:
+`tests/{customer,vehicle}-input-validation.test.mjs` and
+`tests/business-settings-validation.test.mjs`.
 
 **Phase 2 fix (portal):** The customer-portal mutation actions
 (`(portal)/portal/actions.ts`: `createComplaint`, `addComplaintReply`,

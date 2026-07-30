@@ -6,18 +6,18 @@ import { revalidatePath } from "next/cache";
 import { getUser, requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage } from "@/lib/validation/common";
+import {
+  createCustomerSchema,
+  updateCustomerSchema,
+} from "@/lib/validation/customers";
 import { createVehicle } from "../vehicles/actions";
 
 export type FormState = { error?: string; message?: string };
 
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? "").trim();
-}
-
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value === "" ? null : value;
-}
+// Non-enumerating response: a member must not be able to tell "no such
+// customer" apart from "belongs to another business" (APPSEC-09 Phase 3).
+const CUSTOMER_UNAVAILABLE = "Customer not found or unavailable.";
 
 export async function createCustomer(
   _prev: FormState,
@@ -27,19 +27,26 @@ export async function createCustomer(
   if (!canManageCustomers(member.role))
     return { error: "You don't have permission to add customers." };
 
-  const user = await getUser();
-  const fullName = str(formData, "full_name");
-  if (!fullName) return { error: "Customer name is required." };
+  const parsed = createCustomerSchema.safeParse({
+    fullName: formData.get("full_name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    preferredLanguage: formData.get("preferred_language"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
+  const user = await getUser();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("customers")
     .insert({
+      // Tenant + author identity are session-derived, never client input.
       business_id: business.id,
-      full_name: fullName,
-      phone: optional(formData, "phone"),
-      email: optional(formData, "email"),
-      preferred_language: str(formData, "preferred_language") || "en",
+      full_name: v.fullName,
+      phone: v.phone ?? null,
+      email: v.email ?? null,
+      preferred_language: v.preferredLanguage as string,
       created_by: user?.id ?? null,
     })
     .select("id")
@@ -57,31 +64,42 @@ export async function updateCustomer(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   if (!canManageCustomers(member.role))
     return { error: "You don't have permission to edit customers." };
 
-  const id = str(formData, "id");
-  const fullName = str(formData, "full_name");
-  if (!id) return { error: "Missing customer id." };
-  if (!fullName) return { error: "Customer name is required." };
+  const parsed = updateCustomerSchema.safeParse({
+    id: formData.get("id"),
+    fullName: formData.get("full_name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    preferredLanguage: formData.get("preferred_language"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
+  // Explicit tenant scoping in addition to RLS: the update is constrained to
+  // the session's business, so a valid id from another tenant matches nothing.
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("customers")
     .update({
-      full_name: fullName,
-      phone: optional(formData, "phone"),
-      email: optional(formData, "email"),
-      preferred_language: str(formData, "preferred_language") || "en",
+      full_name: v.fullName,
+      phone: v.phone ?? null,
+      email: v.email ?? null,
+      preferred_language: v.preferredLanguage as string,
     })
-    .eq("id", id);
+    .eq("id", v.id)
+    .eq("business_id", business.id)
+    .select("id")
+    .maybeSingle();
   if (error) {
     console.error("updateCustomer failed", error);
     return { error: "Could not update customer." };
   }
+  if (!updated) return { error: CUSTOMER_UNAVAILABLE };
 
-  revalidatePath(`/customers/${id}`);
+  revalidatePath(`/customers/${v.id}`);
   return { message: "Customer updated." };
 }
 

@@ -82,6 +82,30 @@ attempting Customer B's `/portal/quotes/[id]`, quote approval/rejection, or
 complaint reply must receive an indistinguishable not-found/unavailable result.
 Run against the local Supabase stack only (see MULTI_TENANT_TEST_MATRIX.md).
 
+`apps/web/tests/customer-input-validation.test.mjs`,
+`vehicle-input-validation.test.mjs` and `business-settings-validation.test.mjs`
+(added with APPSEC-09 Phase 3) — offline unit + regression tests for the
+customer, vehicle and business-settings schemas: valid English **and Arabic**
+payloads, blank/malformed rejection, optional-email and country-agnostic phone
+handling (international notation preserved verbatim, never coerced to a number),
+customer language allowlist with the `en` default, the pre-existing vehicle-year
+range, VIN kept verbatim with **no decoding or specification enrichment**,
+nullable service price, strict `manager`/`employee` invitation roles (rejecting
+`super_admin`/`business_owner`/`customer`), logo MIME/zero-byte rejection, and
+Storage-path ownership (`<business id>/branding/<file>` only — traversal,
+absolute, backslash, extra-segment and cross-tenant paths rejected). Static
+regressions assert every targeted action calls `safeParse`, mutates with
+session-derived identity, scopes updates by `business_id`, and that **no
+invitation-expiry implementation or migration was introduced (APPSEC-10 stays
+open)**.
+
+**Local-only integration QA performed for Phase 3 (6/6 passed)** against the
+local Supabase stack with two disposable owner accounts in separate businesses:
+cross-business customer update, customer archive, vehicle update, business
+profile update and invitation revocation were all denied, while same-business
+customer and vehicle updates succeeded. Disposable rows were deleted afterwards;
+no hosted Supabase, production users, or external email were involved.
+
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
 

@@ -6,26 +6,16 @@ import { redirect } from "next/navigation";
 import { getUser, requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage } from "@/lib/validation/common";
+import {
+  createVehicleSchema,
+  updateVehicleSchema,
+} from "@/lib/validation/vehicles";
 
 export type FormState = { error?: string; message?: string };
 
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? "").trim();
-}
-
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value === "" ? null : value;
-}
-
-function parseYear(value: string): number | null {
-  if (!value) return null;
-  const year = Number.parseInt(value, 10);
-  if (!Number.isFinite(year)) return null;
-  const currentYear = new Date().getFullYear();
-  if (year < 1900 || year > currentYear + 1) return null;
-  return year;
-}
+// Non-enumerating response for a missing OR cross-tenant vehicle.
+const VEHICLE_UNAVAILABLE = "Vehicle not found or unavailable.";
 
 async function validateCustomer(businessId: string, customerId: string) {
   const supabase = await createClient();
@@ -48,16 +38,22 @@ export async function createVehicle(
     return { error: "You don't have permission to add vehicles." };
   }
 
-  const customerId = str(formData, "customer_id");
-  if (!customerId) return { error: "Customer is required." };
+  const parsed = createVehicleSchema.safeParse({
+    customerId: formData.get("customer_id"),
+    make: formData.get("make"),
+    model: formData.get("model"),
+    year: formData.get("year"),
+    plateNumber: formData.get("plate_number"),
+    vin: formData.get("vin"),
+    color: formData.get("color"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
-  const confirmedCustomerId = await validateCustomer(business.id, customerId);
+  // The customer id is only a selector: it must resolve to a live customer of
+  // the session's business before it can be written.
+  const confirmedCustomerId = await validateCustomer(business.id, v.customerId);
   if (!confirmedCustomerId) return { error: "Selected customer does not belong to this business." };
-
-  const year = parseYear(str(formData, "year"));
-  if (str(formData, "year") && year == null) {
-    return { error: "Year must be a valid year." };
-  }
 
   const user = await getUser();
   const supabase = await createClient();
@@ -66,12 +62,12 @@ export async function createVehicle(
     .insert({
       business_id: business.id,
       customer_id: confirmedCustomerId,
-      make: optional(formData, "make"),
-      model: optional(formData, "model"),
-      year,
-      plate_number: optional(formData, "plate_number"),
-      vin: optional(formData, "vin"),
-      color: optional(formData, "color"),
+      make: v.make ?? null,
+      model: v.model ?? null,
+      year: v.year ?? null,
+      plate_number: v.plateNumber ?? null,
+      vin: v.vin ?? null,
+      color: v.color ?? null,
       metadata: {},
     })
     .select("id")
@@ -99,39 +95,45 @@ export async function updateVehicle(
     return { error: "You don't have permission to edit vehicles." };
   }
 
-  const id = str(formData, "id");
-  if (!id) return { error: "Missing vehicle id." };
+  const parsed = updateVehicleSchema.safeParse({
+    id: formData.get("id"),
+    customerId: formData.get("customer_id"),
+    make: formData.get("make"),
+    model: formData.get("model"),
+    year: formData.get("year"),
+    plateNumber: formData.get("plate_number"),
+    vin: formData.get("vin"),
+    color: formData.get("color"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
   const supabase = await createClient();
   const { data: current } = await supabase
     .from("vehicles")
     .select("id, business_id, customer_id")
-    .eq("id", id)
+    .eq("id", v.id)
     .eq("business_id", business.id)
     .maybeSingle();
 
-  if (!current) return { error: "Vehicle not found." };
+  if (!current) return { error: VEHICLE_UNAVAILABLE };
 
-  const nextCustomerId = str(formData, "customer_id") || current.customer_id;
+  const nextCustomerId = v.customerId ?? current.customer_id;
   const confirmedCustomerId = await validateCustomer(business.id, nextCustomerId);
   if (!confirmedCustomerId) return { error: "Selected customer does not belong to this business." };
-
-  const yearValue = str(formData, "year");
-  const year = yearValue ? parseYear(yearValue) : null;
-  if (yearValue && year == null) return { error: "Year must be a valid year." };
 
   const { error } = await supabase
     .from("vehicles")
     .update({
       customer_id: confirmedCustomerId,
-      make: optional(formData, "make"),
-      model: optional(formData, "model"),
-      year,
-      plate_number: optional(formData, "plate_number"),
-      vin: optional(formData, "vin"),
-      color: optional(formData, "color"),
+      make: v.make ?? null,
+      model: v.model ?? null,
+      year: v.year ?? null,
+      plate_number: v.plateNumber ?? null,
+      vin: v.vin ?? null,
+      color: v.color ?? null,
     })
-    .eq("id", id)
+    .eq("id", v.id)
     .eq("business_id", business.id);
 
   if (error) {
@@ -139,7 +141,7 @@ export async function updateVehicle(
     return { error: "Could not update vehicle. Please try again." };
   }
 
-  revalidatePath(`/vehicles/${id}`);
+  revalidatePath(`/vehicles/${v.id}`);
   revalidatePath("/vehicles");
   revalidatePath(`/customers/${current.customer_id}`);
   if (current.customer_id !== confirmedCustomerId) {

@@ -107,6 +107,47 @@ export const optionalEnumOf = (values, label = "value") =>
       .optional(),
   );
 
+// Pragmatic email shape check (APPSEC-09 Phase 3). Deliberately permissive —
+// it rejects structurally impossible addresses, never claims deliverability, and
+// never lowercases (callers that already normalize case keep doing so).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Optional email; blank -> undefined. Trimmed, case preserved. */
+export const optionalEmail = (label = "email") =>
+  z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .trim()
+      .max(320, `Please enter a valid ${label}.`)
+      .regex(EMAIL_RE, `Please enter a valid ${label}.`)
+      .optional(),
+  );
+
+/**
+ * Optional phone. Country-agnostic by design: international notation (leading
+ * `+`, spaces, dashes, parentheses, dots, slashes) is preserved verbatim and no
+ * single country format is imposed. Only clearly malformed values (no digits,
+ * stray letters/symbols) or overlong values are rejected. Never coerced to a
+ * number — leading zeros and `+` must survive.
+ */
+const PHONE_RE = /^[+()\d][-+()\d\s./]*$/;
+
+export const optionalPhone = (label = "phone number") =>
+  z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .trim()
+      .max(32, `Please enter a valid ${label}.`)
+      .regex(PHONE_RE, `Please enter a valid ${label}.`)
+      .refine(
+        (v) => (v.match(/\d/g) ?? []).length >= 5,
+        `Please enter a valid ${label}.`,
+      )
+      .optional(),
+  );
+
 /**
  * Optional date string. Validates parseability and rejects impossible calendar
  * dates (e.g. 2026-02-30, which Date.parse silently normalizes to March 2),
