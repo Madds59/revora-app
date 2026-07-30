@@ -5,7 +5,8 @@ Owner: AppSec Reviewer. Implements APPSEC-09 (see
 [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md)). This standard defines how
 externally supplied input to server mutations is validated. **Phase 1 covers
 dashboard quotations, jobs, and complaints; Phase 2 covers the customer-portal
-mutation actions**; later phases extend it to the remaining boundaries.
+mutation actions; Phase 3 covers customers, vehicles and business settings**;
+later phases extend it to the remaining boundaries.
 
 ## Architecture
 
@@ -120,30 +121,105 @@ Runtime cross-customer denial is covered by manual/local QA
 ([SECURITY_QA_TEST_PLAN.md](SECURITY_QA_TEST_PLAN.md)); no hosted-Supabase
 integration test is run in CI.
 
-## Remaining boundaries (NOT covered by Phases 1–2)
+## Actions covered (Phase 3 — customers, vehicles, business settings)
+
+| Action | Validated | Identity + ownership |
+|---|---|---|
+| `createCustomer` | name, phone, email, language enum (blank → `en`) | `business_id`/`created_by` session-derived |
+| `updateCustomer` | same + customer id | **added explicit `business_id` scoping** to the update (previously RLS-only) + non-enumerating miss |
+| `createVehicle` | customer selector, make/model/plate/VIN/colour, year | customer must resolve to a live customer of the session business |
+| `updateVehicle` | same + vehicle id (customer selector optional) | vehicle fetched under session business; relink target re-verified |
+| `updateBusiness` | name, legal name, tagline, country, default language | target is `business.id` from the session |
+| `addBranch` | name, phone, email | `business_id` session-derived |
+| `addService` | name, description, default price | `business_id` session-derived |
+| `inviteTeammate` | email (lowercased), role allowlist | `business_id`/`invited_by` session-derived |
+| `revokeInvitation` | invitation id | **added explicit `business_id` scoping** (previously RLS-only) |
+| `uploadBusinessLogo` | object path, file name, MIME, size | **path verified to sit in `<business.id>/branding/…`** |
+
+Phase 3 normalization rules and the evidence behind them:
+
+- **Email** — pragmatic shape check only, never a deliverability claim. Case is
+  preserved for customers/branches (that surface never lowercased); invitation
+  emails are still lowercased because the pending-invite unique index depends on
+  it.
+- **Phone** — country-agnostic. International notation (`+`, spaces, dashes,
+  parentheses, dots, slashes) is preserved verbatim, values are never coerced to
+  numbers (leading zeros survive), and only digit-less/overlong/garbage input is
+  refused. No single country format is imposed.
+- **Language** — `customers.preferred_language` IS allowlisted (`en`/`ar`)
+  because the form is a two-option Select. `businesses.country` /
+  `default_language` are **not** allowlisted: they are free-text inputs over
+  `text not null default` columns with no CHECK constraint, so they are validated
+  as bounded text with the existing defaults (`AE`/`en`) preserved. Imposing a
+  locale/currency allowlist there would reject values the product accepts today.
+- **Vehicles — no invented specifications.** Validation is structural only.
+  make/model/colour/plate stay free text (regional plate formats intact), and
+  **VIN is not format-checked**: `vehicles.vin` is plain `text` with no existing
+  rule, so only a generous length cap applies. The VIN validator in
+  `lib/vehicle-intelligence/vin.js` belongs to the decode feature and is
+  deliberately not imposed here — nothing is decoded, inferred, or enriched.
+- **Year** — mirrors the action's pre-existing `parseYear` rule (1900 … current
+  year + 1) rather than inventing a range; blank still clears the field.
+- **Money** — `services.default_price` stays nullable: blank persists `null`,
+  non-blank must fit `numeric(12,2)` under the same money rule the quotation
+  schemas use.
+- **Invitation roles** — strictly `manager` / `employee`. `super_admin`,
+  `business_owner` and `customer` are refused even though they exist in the
+  `member_role` enum.
+- **Logo/storage** — the browser uploads directly to Storage (constrained by the
+  `revora_public_insert` policy) and hands back a path, so that path is untrusted
+  input. The action now requires an `image/*` MIME and a positive integer size
+  (zero-byte rejected), and verifies the path is exactly
+  `<authenticated business id>/branding/<safe file>` — traversal, absolute paths,
+  backslashes, extra segments and cross-tenant namespaces are all rejected.
+
+Privacy: validation messages never echo submitted personal values, ownership
+misses use non-enumerating "not found or unavailable" text, and unexpected
+failures keep the APPSEC-07 pattern (server-side `console.error`, generic user
+message) without logging contact details or file contents.
+
+Tests: `apps/web/tests/customer-input-validation.test.mjs`,
+`vehicle-input-validation.test.mjs`, `business-settings-validation.test.mjs`
+(behavioral schema tests incl. Arabic content, plus static regressions pinning
+safeParse/session-scoping/ownership patterns and asserting no invitation-expiry
+implementation). Local-only Supabase QA additionally proved cross-business
+customer/vehicle/settings/invitation writes are denied while same-business
+writes succeed ([SECURITY_QA_TEST_PLAN.md](SECURITY_QA_TEST_PLAN.md)).
+
+## Remaining boundaries (NOT covered by Phases 1–3)
 
 These external-input mutation boundaries still use ad-hoc validation and are the
-scope of **Phase 3+**:
+scope of **Phase 4+**:
 
-- `(dashboard)/customers/actions.ts`, `vehicles/actions.ts`,
-  `settings/business/*` (business/branch/service/invite), `notifications/
-  actions.ts`, `(admin)/admin/actions.ts`, `(onboarding)/onboarding/actions.ts`.
+- `(dashboard)/notifications/actions.ts`, `(admin)/admin/actions.ts`,
+  `(onboarding)/onboarding/actions.ts`, and billing surfaces.
+- `lib/evidence-actions.ts` (`recordComplaintEvidence`) accepts a client-supplied
+  Storage object path like the logo action did. It is authorized by the
+  `record_complaint_evidence` SECURITY DEFINER RPC, but the same server-side
+  path-namespace check should be applied — **adjacent finding, deliberately not
+  broadened into this branch.**
+- No maximum upload size is defined anywhere in the product; Phase 3 rejects
+  zero-byte/garbage sizes but does not invent a cap. Recommended as a follow-up.
 - Portal `saveBusinessRating` already validates via Zod
   (`businessRatingInputSchema`) and checks the session account pair — reviewed
   in Phase 2, no change needed.
 - Note: `lib/actions/retainer-scenarios.ts` and `lib/actions/membership-bundles.ts`
   already validate via Zod (`retainerScenarioSaveSchema`, `bundleDraftSchema`).
+- The customer surface has **no** archive/restore/merge/note mutation actions
+  today (soft-delete columns are read-filtered only), so none were added.
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phases 1 and 2
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2 and 3
 complete", not fully closed.**
 
 ## Rollout plan
 
 1. **Phase 1 (merged):** quotations, jobs, complaints (dashboard).
-2. **Phase 2 (this change):** portal customer actions (complaint create/reply,
+2. **Phase 2 (merged):** portal customer actions (complaint create/reply,
    quote approve/reject) + APPSEC-11 quote-detail ownership check.
-3. **Phase 3:** customers/vehicles, settings/business, notifications, admin,
-   onboarding.
+3. **Phase 3 (this change):** customers, vehicles, business settings
+   (profile/branches/services), invitations (payload only — **not** APPSEC-10
+   expiry) and branding/logo storage-path verification.
+4. **Phase 4:** notifications, admin, onboarding, billing.
 4. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.

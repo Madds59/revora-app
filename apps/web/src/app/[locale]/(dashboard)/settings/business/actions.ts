@@ -5,16 +5,14 @@ import { revalidatePath } from "next/cache";
 import { requireMembership } from "@/lib/auth";
 import { canManageBusiness, canManageSettings } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage } from "@/lib/validation/common";
+import {
+  addBranchSchema,
+  addServiceSchema,
+  updateBusinessSchema,
+} from "@/lib/validation/business-settings";
 
 export type FormState = { error?: string; message?: string };
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? "").trim();
-}
-function optional(formData: FormData, key: string): string | null {
-  const value = str(formData, key);
-  return value === "" ? null : value;
-}
 
 export async function updateBusiness(
   _prev: FormState,
@@ -24,19 +22,27 @@ export async function updateBusiness(
   if (!canManageBusiness(member.role))
     return { error: "Only owners can edit business details." };
 
-  const name = str(formData, "name");
-  if (!name) return { error: "Business name is required." };
+  const parsed = updateBusinessSchema.safeParse({
+    name: formData.get("name"),
+    legalName: formData.get("legal_name"),
+    tagline: formData.get("tagline"),
+    country: formData.get("country"),
+    defaultLanguage: formData.get("default_language"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("businesses")
     .update({
-      name,
-      legal_name: optional(formData, "legal_name"),
-      tagline: optional(formData, "tagline"),
-      country: str(formData, "country") || "AE",
-      default_language: str(formData, "default_language") || "en",
+      name: v.name,
+      legal_name: v.legalName ?? null,
+      tagline: v.tagline ?? null,
+      country: v.country,
+      default_language: v.defaultLanguage,
     })
+    // Target business is session-derived, never client-supplied.
     .eq("id", business.id);
   if (error) {
     console.error("updateBusiness failed", error);
@@ -56,15 +62,20 @@ export async function addBranch(
   if (!canManageSettings(member.role))
     return { error: "You don't have permission to manage branches." };
 
-  const name = str(formData, "name");
-  if (!name) return { error: "Branch name is required." };
+  const parsed = addBranchSchema.safeParse({
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase.from("branches").insert({
     business_id: business.id,
-    name,
-    phone: optional(formData, "phone"),
-    email: optional(formData, "email"),
+    name: v.name,
+    phone: v.phone ?? null,
+    email: v.email ?? null,
   });
   if (error) {
     console.error("addBranch failed", error);
@@ -83,20 +94,21 @@ export async function addService(
   if (!canManageSettings(member.role))
     return { error: "You don't have permission to manage services." };
 
-  const name = str(formData, "name");
-  if (!name) return { error: "Service name is required." };
-
-  const priceRaw = str(formData, "default_price");
-  const price = priceRaw ? Number.parseFloat(priceRaw) : null;
-  if (priceRaw && Number.isNaN(price))
-    return { error: "Default price must be a number." };
+  const parsed = addServiceSchema.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description"),
+    defaultPrice: formData.get("default_price"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase.from("services").insert({
     business_id: business.id,
-    name,
-    description: optional(formData, "description"),
-    default_price: price,
+    name: v.name,
+    description: v.description ?? null,
+    // Blank stays blank (null), preserving the column's nullable semantics.
+    default_price: v.defaultPrice ?? null,
   });
   if (error) {
     console.error("addService failed", error);
