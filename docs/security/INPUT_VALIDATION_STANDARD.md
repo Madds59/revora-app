@@ -227,9 +227,17 @@ object names, and malformed business UUIDs.
 `record_complaint_evidence` derives the business from the complaint row, checks
 `is_business_member` OR `is_customer_for_business`, and sets `uploaded_by` from
 `auth.uid()` — its *authorization* is sound and remains the backstop. Its gap is
-that `p_object_path` is trusted verbatim. That is now fully mitigated
-caller-side, so **no migration is required**; tightening the RPC itself would be
-a defence-in-depth follow-up, not a prerequisite.
+that `p_object_path` is trusted verbatim. **The RPC itself was NOT changed** —
+the active application path is fully mitigated caller-side, so **no migration is
+required**; tightening the RPC to validate the path prefix would be a
+defence-in-depth follow-up, not a prerequisite.
+
+One further privileged RPC accepts a signature object path:
+`record_approval_with_signature` (migration 0018). It is **dormant — not invoked
+anywhere in application code** (verified by search), so it presents no reachable
+application path today and was deliberately left untouched: no dormant-code
+cleanup was folded into this phase. If it is ever wired up, it must receive the
+same caller-side path pinning before use.
 
 ### File metadata
 
