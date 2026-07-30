@@ -82,7 +82,7 @@ export default async function JobDetailPage({
   const tasks = (taskRows ?? []) as JobTask[];
   const updates = (updateRows ?? []) as JobUpdate[];
 
-  const attachments = await loadJobAttachments(id);
+  const attachments = await loadJobAttachments(id, "staff");
   const v = job.quotation?.vehicle;
   const vehicleLabel = v
     ? [v.make, v.model].filter(Boolean).join(" ") +
@@ -171,6 +171,7 @@ export default async function JobDetailPage({
                 bucket={PRIVATE_BUCKET}
                 businessId={job.business_id}
                 entity="job-photos"
+                resourceId={job.id}
                 label={locale === "ar" ? "إضافة صورة / ملف" : "Add photo / file"}
                 onUpload={uploadDocument.bind(null, {
                   documentType: "job_photo",

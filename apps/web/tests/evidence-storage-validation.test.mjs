@@ -249,8 +249,8 @@ test("security: evidence actions validate and pin the path before mutating", () 
   assert.match(evidenceAction, /firstValidationMessage\(/);
   assert.match(documentAction, /firstValidationMessage\(/);
   // Path ownership is proven before the RPC / insert.
-  assert.match(evidenceAction, /parseOwnedComplaintEvidencePath\(/);
-  assert.match(documentAction, /parseOwnedDocumentPath\(/);
+  assert.match(evidenceAction, /parseNewResourceBoundPath\(/);
+  assert.match(documentAction, /parseNewResourceBoundPath\(/);
 });
 
 test("security: business scope is server-derived, never client-supplied", () => {
@@ -259,7 +259,7 @@ test("security: business scope is server-derived, never client-supplied", () => 
   assert.match(evidenceAction, /complaint\.business_id/);
   // Documents take theirs from requireMembership().
   assert.match(documentAction, /requireMembership\(\)/);
-  assert.match(documentAction, /parseOwnedDocumentPath\(v\.objectPath, business\.id\)/);
+  assert.match(documentAction, /businessId: business\.id/);
   assert.match(documentAction, /business_id: business\.id/);
 });
 
@@ -267,9 +267,9 @@ test("security: only verified path components reach Storage/DB writes", () => {
   // The raw client string must never be persisted or passed to the RPC.
   assert.doesNotMatch(evidenceAction, /p_object_path:\s*v\.objectPath/);
   assert.doesNotMatch(documentAction, /object_path:\s*v\.objectPath/);
-  assert.match(evidenceAction, /p_object_path:\s*`\$\{ownedPath\.businessId\}/);
+  assert.match(evidenceAction, /p_object_path:\s*buildResourceBoundPath\(ownedPath\)/);
   assert.match(documentAction, /object_path:\s*objectPath/);
-  assert.match(documentAction, /const objectPath = `\$\{ownedPath\.businessId\}/);
+  assert.match(documentAction, /buildResourceBoundPath\(ownedPath\)/);
 });
 
 test("security: linked document resources are ownership-checked before insert", () => {
@@ -303,4 +303,253 @@ test("security: no product-wide upload-size limit was invented", () => {
   // Size is bounded below (positive integer) but deliberately has no maximum.
   assert.match(schemaSrc, /Number\.isInteger\(n\) && n > 0/);
   assert.doesNotMatch(schemaSrc, /MAX_(UPLOAD|FILE)_SIZE|maxSizeBytes/);
+});
+
+// === APPSEC-09 Phase 4A corrective pass ====================================
+// Two risks the first cut did not close:
+//   (a) rows written BEFORE this branch may already hold cross-tenant paths,
+//       and the read path signed whatever was stored with the service role;
+//   (b) the 3-segment grammar bound a path to a business but not to a resource,
+//       so a same-business object could be re-attached to another customer's
+//       complaint and signed for them.
+
+import {
+  authorizeStoredPathForSigning,
+  buildResourceBoundPath,
+  parseNewResourceBoundPath,
+  parseStoredEvidencePath,
+  RESOURCE_BOUND_NAMESPACES,
+} from "../src/lib/validation/evidence.js";
+
+const JOB = "33333333-4444-4555-8666-777788889999";
+const OTHER_RES = "44444444-5555-4666-8777-888899990000";
+const v2 = (biz, ns, res, name = "8f1e-photo.jpg") => `${biz}/${ns}/${res}/${name}`;
+
+// --- v2 write binding -------------------------------------------------------
+
+test("v2 write: path bound to the verified complaint is accepted", () => {
+  const p = parseNewResourceBoundPath(v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, CID), {
+    businessId: BIZ,
+    namespace: COMPLAINT_EVIDENCE_ENTITY,
+    resourceId: CID,
+  });
+  assert.notEqual(p, null);
+  assert.equal(p.version, 2);
+  assert.equal(p.resourceId, CID);
+  assert.equal(buildResourceBoundPath(p), v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, CID));
+});
+
+test("v2 write: same-business path for a DIFFERENT complaint is rejected", () => {
+  // This is the cross-customer reuse case: the object exists in the same
+  // business, but belongs to another complaint.
+  assert.equal(
+    parseNewResourceBoundPath(v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, OTHER_RES), {
+      businessId: BIZ,
+      namespace: COMPLAINT_EVIDENCE_ENTITY,
+      resourceId: CID,
+    }),
+    null,
+  );
+});
+
+test("v2 write: wrong business, wrong namespace and unbound v1 all rejected", () => {
+  const ctx = { businessId: BIZ, namespace: COMPLAINT_EVIDENCE_ENTITY, resourceId: CID };
+  assert.equal(parseNewResourceBoundPath(v2(OTHER_BIZ, COMPLAINT_EVIDENCE_ENTITY, CID), ctx), null);
+  assert.equal(parseNewResourceBoundPath(v2(BIZ, "job-photos", CID), ctx), null);
+  assert.equal(parseNewResourceBoundPath(`${BIZ}-evil/${COMPLAINT_EVIDENCE_ENTITY}/${CID}/x.jpg`, ctx), null);
+  // A legacy 3-segment path is no longer acceptable for a NEW write.
+  assert.equal(parseNewResourceBoundPath(`${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/x.jpg`, ctx), null);
+});
+
+test("v2 write: job photos are bound to the verified job", () => {
+  const ctx = { businessId: BIZ, namespace: "job-photos", resourceId: JOB };
+  assert.notEqual(parseNewResourceBoundPath(v2(BIZ, "job-photos", JOB), ctx), null);
+  assert.equal(parseNewResourceBoundPath(v2(BIZ, "job-photos", OTHER_RES), ctx), null);
+});
+
+test("v2 write: malformed resource segment and traversal rejected", () => {
+  const ctx = { businessId: BIZ, namespace: COMPLAINT_EVIDENCE_ENTITY, resourceId: CID };
+  for (const bad of [
+    `${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/not-a-uuid/x.jpg`,
+    `${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/${CID}/../x.jpg`,
+    `${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/${CID}//x.jpg`,
+    `${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/${CID}/a/x.jpg`,
+    `/${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/${CID}/x.jpg`,
+  ]) {
+    assert.equal(parseNewResourceBoundPath(bad, ctx), null, `${bad} must be rejected`);
+  }
+});
+
+test("v2: a verified resource id is mandatory — none means no authorization", () => {
+  assert.equal(
+    parseStoredEvidencePath(v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, CID), {
+      businessId: BIZ,
+      namespace: COMPLAINT_EVIDENCE_ENTITY,
+    }),
+    null,
+  );
+});
+
+// --- read-time signing authorization ---------------------------------------
+
+const signCtx = (over = {}) => ({
+  businessId: BIZ,
+  namespace: COMPLAINT_EVIDENCE_ENTITY,
+  resourceId: CID,
+  actor: "staff",
+  ...over,
+});
+
+test("signing: valid v2 path is authorized and rebuilt canonically", () => {
+  const d = authorizeStoredPathForSigning(v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, CID), signCtx());
+  assert.equal(d.allowed, true);
+  assert.equal(d.objectPath, v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, CID));
+});
+
+test("signing: cross-tenant stored path denied before the signer (legacy AND v2)", () => {
+  // The legacy row is the pre-patch attack: it is already in the database.
+  const legacyCross = authorizeStoredPathForSigning(
+    `${OTHER_BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/x.jpg`,
+    signCtx(),
+  );
+  assert.equal(legacyCross.allowed, false);
+  assert.equal(legacyCross.code, "path_unverified");
+  assert.equal(legacyCross.objectPath, undefined);
+
+  const v2Cross = authorizeStoredPathForSigning(
+    v2(OTHER_BIZ, COMPLAINT_EVIDENCE_ENTITY, CID),
+    signCtx(),
+  );
+  assert.equal(v2Cross.allowed, false);
+});
+
+test("signing: same-business WRONG-resource v2 path denied", () => {
+  const d = authorizeStoredPathForSigning(
+    v2(BIZ, COMPLAINT_EVIDENCE_ENTITY, OTHER_RES),
+    signCtx(),
+  );
+  assert.equal(d.allowed, false);
+  assert.equal(d.code, "path_unverified");
+});
+
+test("signing: malformed stored paths denied with a stable code", () => {
+  for (const bad of [
+    `${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/${CID}/../../x.jpg`,
+    `${BIZ}\\${COMPLAINT_EVIDENCE_ENTITY}\\x.jpg`,
+    `${BIZ}//${COMPLAINT_EVIDENCE_ENTITY}/x.jpg`,
+    "",
+  ]) {
+    const d = authorizeStoredPathForSigning(bad, signCtx());
+    assert.equal(d.allowed, false, `${bad} must be denied`);
+    assert.equal(d.code, "path_unverified");
+  }
+});
+
+test("signing: wrong namespace denied", () => {
+  assert.equal(
+    authorizeStoredPathForSigning(v2(BIZ, "job-photos", CID), signCtx()).allowed,
+    false,
+  );
+});
+
+// --- legacy compatibility policy --------------------------------------------
+
+test("legacy: unbound path is staff-viewable but FAILS CLOSED for portal customers", () => {
+  const legacy = `${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/8f1e-photo.jpg`;
+  const staff = authorizeStoredPathForSigning(legacy, signCtx({ actor: "staff" }));
+  assert.equal(staff.allowed, true);
+  assert.equal(staff.legacy, true);
+  assert.equal(staff.objectPath, legacy);
+
+  const customer = authorizeStoredPathForSigning(legacy, signCtx({ actor: "customer" }));
+  assert.equal(customer.allowed, false);
+  assert.equal(customer.code, "legacy_unbound_customer");
+});
+
+test("legacy: staff allowance still requires exact business and namespace", () => {
+  const staffCtx = signCtx({ actor: "staff" });
+  assert.equal(
+    authorizeStoredPathForSigning(`${OTHER_BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/x.jpg`, staffCtx).allowed,
+    false,
+  );
+  assert.equal(
+    authorizeStoredPathForSigning(`${BIZ}-evil/${COMPLAINT_EVIDENCE_ENTITY}/x.jpg`, staffCtx).allowed,
+    false,
+  );
+  assert.equal(
+    authorizeStoredPathForSigning(`${BIZ}/documents/x.jpg`, staffCtx).allowed,
+    false,
+  );
+});
+
+test("legacy: the documents namespace is business-scoped by design, not legacy-gated", () => {
+  // Standalone documents have no single owning resource, so a 3-segment path is
+  // their canonical form and customers may still view their own.
+  const d = authorizeStoredPathForSigning(`${BIZ}/documents/8f1e-file.pdf`, {
+    businessId: BIZ,
+    namespace: "documents",
+    actor: "customer",
+  });
+  assert.equal(d.allowed, true);
+  assert.equal(RESOURCE_BOUND_NAMESPACES.documents, undefined);
+  assert.equal(RESOURCE_BOUND_NAMESPACES[COMPLAINT_EVIDENCE_ENTITY], "complaint");
+  assert.equal(RESOURCE_BOUND_NAMESPACES["job-photos"], "job");
+});
+
+// --- static regressions for the corrective pass -----------------------------
+
+const storageSrc = readFileSync(path.resolve(here, "../src/lib/storage.ts"), "utf8");
+const evidenceLib = readFileSync(path.resolve(here, "../src/lib/evidence.ts"), "utf8");
+const documentsLib = readFileSync(path.resolve(here, "../src/lib/documents.ts"), "utf8");
+const portalDocs = readFileSync(
+  path.resolve(here, "../src/app/[locale]/(portal)/portal/documents/page.tsx"),
+  "utf8",
+);
+
+test("security: every service-role read site goes through the signing guard", () => {
+  for (const [name, src] of [
+    ["evidence.ts", evidenceLib],
+    ["documents.ts", documentsLib],
+    ["portal documents page", portalDocs],
+  ]) {
+    assert.match(src, /signOwnedStorageObject\(/, `${name} must use the guard`);
+    // The raw stored path must never be handed straight to the signer.
+    assert.doesNotMatch(
+      src.replace(/\s+/g, " "),
+      /signedUrl\(\s*row\.media/,
+      `${name} must not sign the stored path directly`,
+    );
+  }
+});
+
+test("security: the guard authorizes before signing and logs only a code", () => {
+  assert.match(storageSrc, /authorizeStoredPathForSigning\(/);
+  // Authorization must precede the signedUrl call inside the guard.
+  const guard = storageSrc.slice(storageSrc.indexOf("signOwnedStorageObject"));
+  assert.ok(
+    guard.indexOf("authorizeStoredPathForSigning") < guard.indexOf("return signedUrl("),
+    "authorization must run before signing",
+  );
+  assert.match(storageSrc, /decision\.code/);
+  assert.doesNotMatch(storageSrc, /console\.error\([^)]*objectPath/);
+});
+
+test("security: new writes require resource-bound paths", () => {
+  assert.match(evidenceAction, /parseNewResourceBoundPath\(/);
+  assert.match(evidenceAction, /resourceId: complaint\.id/);
+  assert.match(documentAction, /parseNewResourceBoundPath\(/);
+  assert.match(documentAction, /resourceId: links\.jobId/);
+});
+
+test("security: uploader emits the resource-bound key when a parent is given", () => {
+  const uploader = readFileSync(path.resolve(here, "../src/components/file-upload.tsx"), "utf8");
+  assert.match(uploader, /resourceId\s*\n?\s*\?\s*`\$\{businessId\}\/\$\{entity\}\/\$\{resourceId\}/);
+});
+
+test("security: corrective pass introduced no migration or RLS change", () => {
+  const standard = readFileSync(
+    path.resolve(here, "../../../docs/security/INPUT_VALIDATION_STANDARD.md"),
+    "utf8",
+  );
+  assert.match(standard, /no policy or migration change/i);
 });

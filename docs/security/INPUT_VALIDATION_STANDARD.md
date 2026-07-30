@@ -249,13 +249,67 @@ type), and a declared MIME is never treated as proof of file content — **conte
 is not inspected**. `fileName` is display metadata only, bounded and stripped of
 path separators and control characters; it is never used as the Storage key.
 
+### Corrective pass: read-time authorization and resource binding
+
+The first cut of Phase 4A only protected **new writes**. A pre-merge review found
+two gaps, both since closed:
+
+1. **Legacy stored paths.** Rows written before this branch may already hold a
+   cross-tenant path, and the read path signed whatever was stored — all three
+   service-role signing sites (`lib/evidence.ts`, `lib/documents.ts`, the portal
+   documents page) passed `media.object_path` straight to `signedUrl()`. Row
+   visibility is not path authorization.
+2. **Same-business cross-customer reuse.** The three-segment grammar bound a path
+   to a business but not to a resource, so customer A2 could attach A1's object
+   to A2's own complaint and have it signed for them.
+
+**Read-time guard.** `signOwnedStorageObject()` (`lib/storage.ts`) is now the only
+sanctioned way to sign a stored path. It calls
+`authorizeStoredPathForSigning()` first and signs **only** the canonical path
+rebuilt from verified components. Every authorization input comes from the
+server-verified row (`complaint_evidence.business_id`/`complaint_id`,
+`documents.business_id`/`job_id`), never from the request. Denials return `null`
+so the gallery degrades to "no link", and log a stable code
+(`path_unverified` / `legacy_unbound_customer`) — never the path, filename, or
+provider error. `signedUrl()` itself now carries an explicit warning not to call
+it with a database value.
+
+**Resource-bound (v2) grammar**, used for all new writes into a namespace that
+has exactly one owning resource:
+
+```
+<business-id>/<namespace>/<resource-id>/<object-name>
+```
+
+The Storage policies authorize on `split_part(name, '/', 1)` only, so the extra
+segment needs **no policy or migration change**. `RESOURCE_BOUND_NAMESPACES` maps
+`complaint-evidence → complaint` and `job-photos → job`; the uploader emits the
+four-segment key whenever a `resourceId` is supplied. `recordComplaintEvidence`
+requires the path's resource segment to equal the ownership-verified complaint,
+and `uploadDocument` requires it to equal the ownership-verified job (link
+ownership is now checked *before* the path is bound, because the verified job id
+is what the path must match).
+
+**Legacy compatibility policy.** Existing three-segment objects in a
+resource-bound namespace carry no proof of which resource or customer they belong
+to. They must still pass exact business **and** namespace checks, and then:
+
+- **staff** may view them (staff access is business-wide under the existing
+  model, so business+namespace is exactly the authorization staff already have);
+- **portal customers fail closed** — such objects return no link and require
+  reattachment or administrative remediation.
+
+No stored path was migrated or rewritten.
+
 ### Residual, documented
 
-The existing grammar has **no resource-id segment**, so a path cannot be bound to
-one specific complaint or job. Cross-tenant use is fully blocked, but a caller
-could still reuse one of *their own* business's uploaded objects across their own
-resources. Closing that would require a path-grammar/migration change and is
-recorded as a follow-up rather than silently changing the upload architecture.
+The **standalone documents uploader has no single owning resource** (it binds no
+job/customer/quotation at all), so objects in the `documents` namespace remain
+business-scoped three-segment paths by design — not "legacy". Portal customers
+still see their own because the query is already constrained to their customer
+ids. Binding those would require a server-authorized upload-intent design; it is
+recorded as a follow-up rather than pretending namespace validation is resource
+binding.
 
 **No evidence deletion or replacement action exists** anywhere in the codebase —
 there is no Storage `.remove()` call at all — so there was nothing to harden on

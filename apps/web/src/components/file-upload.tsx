@@ -32,6 +32,7 @@ export function FileUpload({
   bucket,
   businessId,
   entity,
+  resourceId,
   accept = "image/*",
   label,
   onUpload,
@@ -39,6 +40,14 @@ export function FileUpload({
   bucket: string;
   businessId: string;
   entity: string;
+  /**
+   * Parent resource the upload belongs to (complaint id, job id, …). When
+   * present the object key becomes `<business>/<entity>/<resource>/<name>`, so
+   * the server can bind the stored path to that exact resource — without it a
+   * same-business object could be re-attached to another customer's record.
+   * Namespaces with no single owner (standalone documents) omit it.
+   */
+  resourceId?: string;
   accept?: string;
   label?: string;
   onUpload: (formData: FormData) => Promise<UploadResult>;
@@ -54,7 +63,10 @@ export function FileUpload({
     setUploading(true);
     try {
       const supabase = createClient();
-      const objectPath = `${businessId}/${entity}/${crypto.randomUUID()}-${safeName(file.name)}`;
+      const objectName = `${crypto.randomUUID()}-${safeName(file.name)}`;
+      const objectPath = resourceId
+        ? `${businessId}/${entity}/${resourceId}/${objectName}`
+        : `${businessId}/${entity}/${objectName}`;
       const { error } = await supabase.storage.from(bucket).upload(objectPath, file, {
         contentType: file.type || "application/octet-stream",
         upsert: false,

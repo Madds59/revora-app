@@ -48,7 +48,7 @@ export default async function PortalJobDetailPage({
     .eq("job_id", id)
     .order("created_at", { ascending: false });
   const updates = (updateRows ?? []) as JobUpdate[];
-  const attachments = await loadJobAttachments(id);
+  const attachments = await loadJobAttachments(id, "customer");
 
   return (
     <>

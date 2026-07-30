@@ -465,6 +465,29 @@ customers/vehicles/business settings, evidence/attachment Storage paths) |
 `security/appsec-09-phase-2-portal-actions`; Phase 3 on branch
 `security/appsec-09-phase-3-customers-vehicles-settings`)
 
+**Phase 4A corrective pass (read-time signing + resource binding):** the first
+cut protected new writes only. A pre-merge review found, and this branch closes,
+two further gaps. (1) **Legacy stored paths:** all three service-role signing
+sites (`lib/evidence.ts`, `lib/documents.ts`, the portal documents page) passed
+`media.object_path` straight to `signedUrl()`, so a row written *before* this
+branch could still hand a caller a signed URL for another tenant's object — row
+visibility is not path authorization. (2) **Same-business cross-customer reuse:**
+the three-segment grammar bound a path to a business but not a resource, so
+customer A2 could attach A1's object to A2's own complaint. Fixes:
+`signOwnedStorageObject()` now authorizes every stored path
+(`authorizeStoredPathForSigning`) against the row's server-verified business,
+namespace and parent resource *before* the service role signs, signing only the
+canonical rebuilt path and returning `null` with a stable code
+(`path_unverified` / `legacy_unbound_customer`) otherwise; and new writes into
+`complaint-evidence` / `job-photos` require the resource-bound grammar
+`<business>/<namespace>/<resource-id>/<object>`, which needs **no policy or
+migration change** because the Storage policies authorize on the first segment
+only. Legacy unbound objects still require exact business+namespace and are
+**staff-viewable but fail closed for portal customers**. Local QA (8/8) proved
+the RPC still stores a cross-tenant path when called directly while the read
+guard refuses to sign it. Residual: standalone `documents` uploads have no
+single owning resource and remain business-scoped by design.
+
 **Phase 4A fix (evidence / attachment Storage paths):** `recordComplaintEvidence`
 (`lib/evidence-actions.ts`) and `uploadDocument` (`lib/document-actions.ts`) both
 recorded a **client-supplied Storage `object_path`** verbatim. This was not a

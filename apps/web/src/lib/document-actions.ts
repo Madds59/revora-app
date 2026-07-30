@@ -6,9 +6,11 @@ import { getUser, requireMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstValidationMessage } from "@/lib/validation/common";
 import {
+  buildResourceBoundPath,
   documentContextSchema,
   documentUploadSchema,
-  parseOwnedDocumentPath,
+  parseNewResourceBoundPath,
+  parseStoredEvidencePath,
 } from "@/lib/validation/evidence";
 
 export type UploadResult = { error?: string; message?: string };
@@ -74,14 +76,11 @@ export async function uploadDocument(
   if (!parsedContext.success) return { error: TARGET_UNAVAILABLE };
   const links = parsedContext.data;
 
-  // Pin the Storage path to the authenticated business + an allowed namespace.
-  const ownedPath = parseOwnedDocumentPath(v.objectPath, business.id);
-  if (!ownedPath) return { error: TARGET_UNAVAILABLE };
-
   const supabase = await createClient();
 
   // Every supplied link must belong to this business before it is persisted, so
-  // a document cannot be attached to another tenant's record.
+  // a document cannot be attached to another tenant's record. This runs BEFORE
+  // the path is bound, because the verified job id is what the path must match.
   for (const [field, table] of Object.entries(LINK_TABLES)) {
     const id = links[field as keyof typeof links];
     if (!id) continue;
@@ -98,8 +97,25 @@ export async function uploadDocument(
     if (!row) return { error: TARGET_UNAVAILABLE };
   }
 
+  // A job photo has exactly one canonical owner (the job), so it must use the
+  // resource-bound grammar. The standalone documents uploader has no single
+  // owning resource, so those objects stay business-scoped — see
+  // INPUT_VALIDATION_STANDARD.md for that documented residual.
+  const namespace = links.jobId ? "job-photos" : "documents";
+  const ownedPath = links.jobId
+    ? parseNewResourceBoundPath(v.objectPath, {
+        businessId: business.id,
+        namespace,
+        resourceId: links.jobId,
+      })
+    : parseStoredEvidencePath(v.objectPath, { businessId: business.id, namespace });
+  if (!ownedPath) return { error: TARGET_UNAVAILABLE };
+
   const user = await getUser();
-  const objectPath = `${ownedPath.businessId}/${ownedPath.entity}/${ownedPath.objectName}`;
+  const objectPath =
+    ownedPath.version === 2
+      ? buildResourceBoundPath(ownedPath)
+      : `${ownedPath.businessId}/${ownedPath.namespace}/${ownedPath.objectName}`;
 
   const { data: media, error: mediaError } = await supabase
     .from("media_assets")

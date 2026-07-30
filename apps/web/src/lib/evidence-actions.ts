@@ -6,8 +6,10 @@ import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstValidationMessage } from "@/lib/validation/common";
 import {
+  buildResourceBoundPath,
   complaintEvidenceSchema,
-  parseOwnedComplaintEvidencePath,
+  COMPLAINT_EVIDENCE_ENTITY,
+  parseNewResourceBoundPath,
 } from "@/lib/validation/evidence";
 
 export type UploadResult = { error?: string; message?: string };
@@ -65,17 +67,20 @@ export async function recordComplaintEvidence(
   }
   if (!complaint) return { error: TARGET_UNAVAILABLE };
 
-  // Pin the Storage path to the verified business + evidence namespace.
-  const ownedPath = parseOwnedComplaintEvidencePath(
-    v.objectPath,
-    complaint.business_id,
-  );
+  // Pin the path to the verified business, namespace AND complaint. New writes
+  // must use the resource-bound (v2) grammar, so an object belonging to another
+  // complaint — even inside the same business — cannot be attached here.
+  const ownedPath = parseNewResourceBoundPath(v.objectPath, {
+    businessId: complaint.business_id,
+    namespace: COMPLAINT_EVIDENCE_ENTITY,
+    resourceId: complaint.id,
+  });
   if (!ownedPath) return { error: TARGET_UNAVAILABLE };
 
   const { error } = await supabase.rpc("record_complaint_evidence", {
     // Verified components only — never the raw client string.
     p_complaint_id: complaint.id,
-    p_object_path: `${ownedPath.businessId}/${ownedPath.entity}/${ownedPath.objectName}`,
+    p_object_path: buildResourceBoundPath(ownedPath),
     p_file_name: v.fileName,
     p_mime_type: v.mimeType,
     p_size_bytes: v.sizeBytes,

@@ -177,7 +177,7 @@ export default async function ComplaintDetailPage({
     })
     .filter(Boolean) as StaffOption[];
 
-  const evidence = await loadComplaintEvidence(typedComplaint.id);
+  const evidence = await loadComplaintEvidence(typedComplaint.id, "staff");
 
   return (
     <>
@@ -296,6 +296,7 @@ export default async function ComplaintDetailPage({
               bucket={PRIVATE_BUCKET}
               businessId={typedComplaint.business_id}
               entity="complaint-evidence"
+              resourceId={typedComplaint.id}
               label={locale === "ar" ? "إضافة دليل" : "Add evidence"}
               onUpload={recordComplaintEvidence.bind(null, typedComplaint.id)}
             />
