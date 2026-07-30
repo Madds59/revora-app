@@ -5,8 +5,9 @@ Owner: AppSec Reviewer. Implements APPSEC-09 (see
 [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md)). This standard defines how
 externally supplied input to server mutations is validated. **Phase 1 covers
 dashboard quotations, jobs, and complaints; Phase 2 covers the customer-portal
-mutation actions; Phase 3 covers customers, vehicles and business settings**;
-later phases extend it to the remaining boundaries.
+mutation actions; Phase 3 covers customers, vehicles and business settings;
+Phase 4A covers evidence/attachment Storage-path trust boundaries**; later
+phases extend it to the remaining boundaries.
 
 ## Architecture
 
@@ -186,20 +187,161 @@ implementation). Local-only Supabase QA additionally proved cross-business
 customer/vehicle/settings/invitation writes are denied while same-business
 writes succeed ([SECURITY_QA_TEST_PLAN.md](SECURITY_QA_TEST_PLAN.md)).
 
-## Remaining boundaries (NOT covered by Phases 1–3)
+## Actions covered (Phase 4A — evidence / attachment Storage paths)
+
+### Why this phase mattered more than defence-in-depth
+
+Private files are read back through `lib/storage.ts` `signedUrl()`, which signs
+with the **service role and therefore bypasses Storage RLS**. Recording a
+client-supplied `object_path` that points at another tenant's namespace would
+have produced a *working signed URL for that tenant's private file*. Local QA
+confirmed the gap empirically: calling `record_complaint_evidence` directly with
+a cross-tenant path stored the row without complaint, because the RPC validates
+*who may attach to the complaint* but never validates the path itself.
+
+### Path grammar (from migration 0016 + `components/file-upload.tsx`)
+
+```
+<business_id>/<entity>/<uuid>-<safe-name>      exactly three segments
+```
+
+Namespaces in use: `complaint-evidence`, `job-photos`, `documents` (private
+bucket) and `branding` (public bucket, hardened in Phase 3).
+
+`parseOwnedStoragePath()` in `lib/validation/evidence.js` returns the **verified
+components** `{ businessId, entity, objectName }` rather than a boolean, and the
+actions rebuild the stored path from those components so the raw client string is
+never persisted. It compares the tenant segment by **exact equality** (never
+`startsWith`/`includes`, so `<business-id>-evil/…` fails) and rejects wrong
+namespaces, traversal, absolute paths, trailing/leading slashes, double slashes,
+empty/extra/missing segments, backslashes, control characters and NUL, unsafe
+object names, and malformed business UUIDs.
+
+| Action | Validated | Identity + ownership |
+|---|---|---|
+| `recordComplaintEvidence` (`lib/evidence-actions.ts`) | complaint id, object path, file name, MIME, size, description | session required; the complaint is re-read under the caller's own RLS (`complaints_access` covers staff **and** the linked customer) and its `business_id` pins the path before the SECURITY DEFINER RPC is called |
+| `uploadDocument` (`lib/document-actions.ts`) | object path, file name, MIME, size, document type, title, link ids | `business_id` from `requireMembership()`; path pinned to that business and the `job-photos`/`documents` namespaces; **every supplied link (customer/quotation/complaint/job) is ownership-checked** before insert |
+
+### SECURITY DEFINER review
+
+`record_complaint_evidence` derives the business from the complaint row, checks
+`is_business_member` OR `is_customer_for_business`, and sets `uploaded_by` from
+`auth.uid()` — its *authorization* is sound and remains the backstop. Its gap is
+that `p_object_path` is trusted verbatim. **The RPC itself was NOT changed** —
+the active application path is fully mitigated caller-side, so **no migration is
+required**; tightening the RPC to validate the path prefix would be a
+defence-in-depth follow-up, not a prerequisite.
+
+One further privileged RPC accepts a signature object path:
+`record_approval_with_signature` (migration 0018). It is **dormant — not invoked
+anywhere in application code** (verified by search), so it presents no reachable
+application path today and was deliberately left untouched: no dormant-code
+cleanup was folded into this phase. If it is ever wired up, it must receive the
+same caller-side path pinning before use.
+
+### File metadata
+
+`sizeBytes` must be a positive integer (zero-byte and malformed sizes rejected);
+**no maximum is imposed — Revora still has no product-wide upload-size policy and
+this phase deliberately did not invent one.** `mimeType` is shape-checked only:
+no evidence MIME allowlist exists today (the documents uploader accepts any
+type), and a declared MIME is never treated as proof of file content — **content
+is not inspected**. `fileName` is display metadata only, bounded and stripped of
+path separators and control characters; it is never used as the Storage key.
+
+### Corrective pass: read-time authorization and resource binding
+
+The first cut of Phase 4A only protected **new writes**. A pre-merge review found
+two gaps, both since closed:
+
+1. **Legacy stored paths.** Rows written before this branch may already hold a
+   cross-tenant path, and the read path signed whatever was stored — all three
+   service-role signing sites (`lib/evidence.ts`, `lib/documents.ts`, the portal
+   documents page) passed `media.object_path` straight to `signedUrl()`. Row
+   visibility is not path authorization.
+2. **Same-business cross-customer reuse.** The three-segment grammar bound a path
+   to a business but not to a resource, so customer A2 could attach A1's object
+   to A2's own complaint and have it signed for them.
+
+**Read-time guard.** `signOwnedStorageObject()` (`lib/storage.ts`) is now the only
+sanctioned way to sign a stored path. It calls
+`authorizeStoredPathForSigning()` first and signs **only** the canonical path
+rebuilt from verified components. Every authorization input comes from the
+server-verified row (`complaint_evidence.business_id`/`complaint_id`,
+`documents.business_id`/`job_id`), never from the request. Denials return `null`
+so the gallery degrades to "no link", and log a stable code
+(`path_unverified` / `legacy_unbound_customer`) — never the path, filename, or
+provider error. `signedUrl()` itself now carries an explicit warning not to call
+it with a database value.
+
+**Resource-bound (v2) grammar**, used for all new writes into a namespace that
+has exactly one owning resource:
+
+```
+<business-id>/<namespace>/<resource-id>/<object-name>
+```
+
+The Storage policies authorize on `split_part(name, '/', 1)` only, so the extra
+segment needs **no policy or migration change**. `RESOURCE_BOUND_NAMESPACES` maps
+`complaint-evidence → complaint` and `job-photos → job`; the uploader emits the
+four-segment key whenever a `resourceId` is supplied. `recordComplaintEvidence`
+requires the path's resource segment to equal the ownership-verified complaint,
+and `uploadDocument` requires it to equal the ownership-verified job (link
+ownership is now checked *before* the path is bound, because the verified job id
+is what the path must match).
+
+**Legacy compatibility policy.** Existing three-segment objects in a
+resource-bound namespace carry no proof of which resource or customer they belong
+to. They must still pass exact business **and** namespace checks, and then:
+
+- **staff** may view them (staff access is business-wide under the existing
+  model, so business+namespace is exactly the authorization staff already have);
+- **portal customers fail closed** — such objects return no link and require
+  reattachment or administrative remediation.
+
+No stored path was migrated or rewritten.
+
+### Residual, documented
+
+The **standalone documents uploader has no single owning resource** (it binds no
+job/customer/quotation at all), so objects in the `documents` namespace remain
+business-scoped three-segment paths by design — not "legacy".
+
+Because business + namespace would otherwise mean "any object in this tenant's
+document namespace", a portal customer is **not** given such a path on those
+grounds alone. The guard requires the caller to pass `ownershipProven: true`,
+which the portal documents page derives by checking the row's `customer_id`
+against the session's own customer accounts. Without that explicit proof the
+guard **fails closed** (`unbound_customer_unproven`) and the signer is never
+invoked; the guard never infers ownership, and proof never rescues an otherwise
+invalid path. Staff are unaffected: business + namespace is exactly the
+business-wide access they already hold.
+
+Fully binding these objects would require a server-authorized upload-intent
+design, which is recorded as follow-up work rather than pretending namespace
+validation is resource binding.
+
+**No evidence deletion or replacement action exists** anywhere in the codebase —
+there is no Storage `.remove()` call at all — so there was nothing to harden on
+that path. A regression test asserts none was introduced.
+
+## Remaining boundaries (NOT covered by Phases 1–4A)
 
 These external-input mutation boundaries still use ad-hoc validation and are the
-scope of **Phase 4+**:
+scope of **Phase 4B+**:
 
 - `(dashboard)/notifications/actions.ts`, `(admin)/admin/actions.ts`,
   `(onboarding)/onboarding/actions.ts`, and billing surfaces.
-- `lib/evidence-actions.ts` (`recordComplaintEvidence`) accepts a client-supplied
-  Storage object path like the logo action did. It is authorized by the
-  `record_complaint_evidence` SECURITY DEFINER RPC, but the same server-side
-  path-namespace check should be applied — **adjacent finding, deliberately not
-  broadened into this branch.**
-- No maximum upload size is defined anywhere in the product; Phase 3 rejects
-  zero-byte/garbage sizes but does not invent a cap. Recommended as a follow-up.
+- `lib/vehicle-intelligence/actions.ts` `uploadVehicleMediaAction` is a **third
+  instance of the same client-supplied-path pattern**, and additionally trusts a
+  client `storage_bucket`, `customer_id` and `vehicle_id` with no ownership
+  check. Severity is lower than the evidence paths because
+  `vehicle_media_uploads.storage_path` is only rendered as text and never signed
+  into a URL. **Adjacent finding — deliberately not fixed here** (it is a vehicle
+  action file, outside this branch's scope); recommended for Phase 4B.
+- No maximum upload size is defined anywhere in the product; Phases 3 and 4A
+  reject zero-byte/garbage sizes but do not invent a cap. Upload-size governance
+  remains an open product-security decision.
 - Portal `saveBusinessRating` already validates via Zod
   (`businessRatingInputSchema`) and checks the session account pair — reviewed
   in Phase 2, no change needed.
@@ -208,7 +350,7 @@ scope of **Phase 4+**:
 - The customer surface has **no** archive/restore/merge/note mutation actions
   today (soft-delete columns are read-filtered only), so none were added.
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2 and 3
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3 and 4A
 complete", not fully closed.**
 
 ## Rollout plan
@@ -216,10 +358,13 @@ complete", not fully closed.**
 1. **Phase 1 (merged):** quotations, jobs, complaints (dashboard).
 2. **Phase 2 (merged):** portal customer actions (complaint create/reply,
    quote approve/reject) + APPSEC-11 quote-detail ownership check.
-3. **Phase 3 (this change):** customers, vehicles, business settings
+3. **Phase 3 (merged):** customers, vehicles, business settings
    (profile/branches/services), invitations (payload only — **not** APPSEC-10
    expiry) and branding/logo storage-path verification.
-4. **Phase 4:** notifications, admin, onboarding, billing.
+4. **Phase 4A (this change):** evidence/attachment Storage-path ownership
+   (`recordComplaintEvidence`, `uploadDocument`).
+5. **Phase 4B:** notifications, admin, onboarding, billing, and the
+   `uploadVehicleMediaAction` storage-path/ownership finding above.
 4. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.

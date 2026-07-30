@@ -99,7 +99,7 @@ export default async function PortalComplaintDetailPage({
   }));
 
   const latestMessage = threaded[threaded.length - 1];
-  const evidence = await loadComplaintEvidence(id);
+  const evidence = await loadComplaintEvidence(id, "customer");
 
   return (
     <>
@@ -183,6 +183,7 @@ export default async function PortalComplaintDetailPage({
               bucket={PRIVATE_BUCKET}
               businessId={typedComplaint.business_id}
               entity="complaint-evidence"
+              resourceId={typedComplaint.id}
               label={locale === "ar" ? "رفع دليل" : "Upload evidence"}
               onUpload={recordComplaintEvidence.bind(null, typedComplaint.id)}
             />

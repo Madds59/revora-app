@@ -68,6 +68,11 @@ export default async function DocumentsPage() {
       if (!row.media || row.media.visibility !== "private") {
         return { ...row, url: null };
       }
+      // APPSEC-09 Phase 4A: this signs with the RLS-scoped client, NOT the
+      // service role, so `revora_private_read_members` still authorizes the
+      // leading business segment — a cross-tenant stored path fails here and
+      // degrades to no link. If this is ever switched to an admin client it
+      // must go through `signOwnedStorageObject()` like the other read paths.
       const { data: signed, error: signError } = await supabase.storage
         .from(row.media.bucket)
         .createSignedUrl(row.media.object_path, 60 * 10);

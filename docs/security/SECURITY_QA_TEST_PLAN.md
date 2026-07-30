@@ -99,6 +99,44 @@ session-derived identity, scopes updates by `business_id`, and that **no
 invitation-expiry implementation or migration was introduced (APPSEC-10 stays
 open)**.
 
+`apps/web/tests/evidence-storage-validation.test.mjs` (added with APPSEC-09
+Phase 4A) — 23 offline tests for evidence/attachment Storage-path ownership:
+valid complaint payloads, Arabic descriptions, malformed ids, positive-integer
+sizes (zero-byte rejected, **no maximum invented**), shape-only MIME checks (no
+invented allowlist), filename-as-display-metadata rules, and exhaustive path
+rejection — cross-tenant namespaces, `<business-id>-evil` prefix collisions,
+traversal, absolute/trailing/double-slash paths, empty/extra/missing segments,
+backslashes, control characters and NUL, unsafe object names, and
+non-interchangeable namespaces. Static regressions assert both actions call
+`safeParse`, derive business scope server-side, persist only verified path
+components, ownership-check document links, use non-enumerating errors, never
+log raw provider messages, and that no Storage `.remove()` path was introduced.
+
+**Local-only corrective QA performed for Phase 4A (8/8 passed)** — a second
+local run covering the two gaps found in pre-merge review, using one business
+with two portal customers plus a second business. It proved: a new owned
+resource-bound path is accepted on write; cross-tenant and same-business
+*other-customer* paths are rejected on write; a **pre-patch style malicious row**
+(stored by invoking the SECURITY DEFINER RPC directly with a cross-tenant path,
+which still succeeds because the RPC is unchanged) is **denied at sign time**
+with code `path_unverified`; a same-business wrong-resource stored path is
+likewise denied; the legitimate own-resource path is authorized; unbound legacy
+paths are staff-viewable but fail closed for portal customers
+(`legacy_unbound_customer`); and the RPC's own 42501 backstop still denies a
+non-owner attach. No signed URL was printed and the signer was never invoked for
+a denied path.
+
+**Local-only integration QA performed for Phase 4A (7/7 passed)** against the
+local Supabase stack with two disposable businesses. This QA is notable because
+it **confirmed the finding empirically before proving the fix**: invoking the
+`record_complaint_evidence` SECURITY DEFINER RPC directly with a cross-tenant
+object path stored the row successfully (the RPC checks who may attach, not the
+path), while the new caller-side validator rejects that same path and the
+prefix-collision variant, accepts the business's own path, still permits a
+legitimate own-business attach end-to-end, and confirms the RPC's authorization
+backstop denies a cross-business attach (42501) with cross-business complaint
+lookups returning no row. Disposable rows were deleted afterwards.
+
 **Local-only integration QA performed for Phase 3 (6/6 passed)** against the
 local Supabase stack with two disposable owner accounts in separate businesses.
 These cases exercise the **RLS backstop directly at the table level** (they are

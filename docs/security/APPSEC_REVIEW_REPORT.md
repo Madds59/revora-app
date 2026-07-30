@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–3 fixed** (dashboard quotations/jobs/complaints, portal customer actions, customers/vehicles/business settings); Phase 4+ pending | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–3 + 4A fixed** (dashboard quotations/jobs/complaints, portal customer actions, customers/vehicles/business settings, evidence/attachment Storage paths); Phase 4B pending | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -457,12 +457,62 @@ fix").
 
 ## APPSEC-09 — Selective Input Validation
 
-**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1, 2 and 3
-complete** (dashboard quotations/jobs/complaints, portal customer actions,
-customers/vehicles/business settings) | **Code changed:** Yes (Phase 1 on branch
+**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1, 2, 3 and
+4A complete** (dashboard quotations/jobs/complaints, portal customer actions,
+customers/vehicles/business settings, evidence/attachment Storage paths) |
+**Code changed:** Yes (Phase 1 on branch
 `security/appsec-09-input-validation-phase-1`; Phase 2 on branch
 `security/appsec-09-phase-2-portal-actions`; Phase 3 on branch
 `security/appsec-09-phase-3-customers-vehicles-settings`)
+
+**Phase 4A corrective pass (read-time signing + resource binding):** the first
+cut protected new writes only. A pre-merge review found, and this branch closes,
+two further gaps. (1) **Legacy stored paths:** all three service-role signing
+sites (`lib/evidence.ts`, `lib/documents.ts`, the portal documents page) passed
+`media.object_path` straight to `signedUrl()`, so a row written *before* this
+branch could still hand a caller a signed URL for another tenant's object — row
+visibility is not path authorization. (2) **Same-business cross-customer reuse:**
+the three-segment grammar bound a path to a business but not a resource, so
+customer A2 could attach A1's object to A2's own complaint. Fixes:
+`signOwnedStorageObject()` now authorizes every stored path
+(`authorizeStoredPathForSigning`) against the row's server-verified business,
+namespace and parent resource *before* the service role signs, signing only the
+canonical rebuilt path and returning `null` with a stable code
+(`path_unverified` / `legacy_unbound_customer`) otherwise; and new writes into
+`complaint-evidence` / `job-photos` require the resource-bound grammar
+`<business>/<namespace>/<resource-id>/<object>`, which needs **no policy or
+migration change** because the Storage policies authorize on the first segment
+only. Legacy unbound objects still require exact business+namespace and are
+**staff-viewable but fail closed for portal customers**. Local QA (8/8) proved
+the RPC still stores a cross-tenant path when called directly while the read
+guard refuses to sign it. Residual: standalone `documents` uploads have no
+single owning resource and remain business-scoped by design.
+
+**Phase 4A fix (evidence / attachment Storage paths):** `recordComplaintEvidence`
+(`lib/evidence-actions.ts`) and `uploadDocument` (`lib/document-actions.ts`) both
+recorded a **client-supplied Storage `object_path`** verbatim. This was not a
+theoretical gap: private files are read back via `lib/storage.ts` `signedUrl()`,
+which signs with the **service role and bypasses Storage RLS**, so a path
+recorded against another tenant's namespace would have been returned as a working
+signed URL for that tenant's private file. Local QA confirmed the underlying
+weakness empirically — invoking the `record_complaint_evidence` SECURITY DEFINER
+RPC directly with a cross-tenant path stored the row successfully, because the
+RPC validates *who may attach to the complaint* but never validates the path.
+Both actions now `safeParse` all input and pin the path through
+`parseOwnedStoragePath()` (`lib/validation/evidence.js`), which returns verified
+`{businessId, entity, objectName}` components — compared by **exact segment
+equality**, rejecting cross-tenant namespaces, `<business-id>-evil` prefix
+collisions, traversal, absolute/trailing/double-slash paths, empty/extra/missing
+segments, backslashes, control characters and NUL, and unsafe object names. The
+stored path is rebuilt from the verified components, so the raw client string is
+never persisted. Complaint evidence derives its business from the complaint row
+re-read under the caller's own RLS (preserving both staff and portal-customer
+access); documents derive it from `requireMembership()` and additionally
+**ownership-check every linked customer/quotation/complaint/job** before insert.
+Ownership failures return an identical non-enumerating "Evidence target not found
+or unavailable." No migration was required — the RPC's authorization is sound and
+remains the backstop. No upload-size cap was invented, and no evidence deletion
+path exists to harden. Tests: `tests/evidence-storage-validation.test.mjs`.
 
 **Phase 3 fix (customers / vehicles / business settings):** Ten mutation actions
 across `(dashboard)/customers/actions.ts`, `vehicles/actions.ts` and

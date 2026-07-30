@@ -9,11 +9,14 @@ import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { signedUrl } from "@/lib/storage";
+import { signOwnedStorageObject } from "@/lib/storage";
 import { formatDate } from "@/lib/formatters";
 import type { Document } from "@/lib/database.types";
 
 type DocumentRow = Pick<Document, "id" | "title" | "document_type" | "created_at"> & {
+  business_id: string;
+  job_id: string | null;
+  customer_id: string | null;
   complaint: { subject: string } | null;
   customer: { full_name: string } | null;
   job: { title: string } | null;
@@ -51,17 +54,31 @@ export default async function PortalDocumentsPage() {
   const { data, error } = await supabase
     .from("documents")
     .select(
-      "id, title, document_type, created_at, customer:customers(full_name), quotation:quotations(quote_number), complaint:complaints(subject), job:jobs(title), media:media_assets(bucket, object_path, file_name, mime_type, visibility)",
+      "id, title, document_type, created_at, business_id, job_id, customer_id, customer:customers(full_name), quotation:quotations(quote_number), complaint:complaints(subject), job:jobs(title), media:media_assets(bucket, object_path, file_name, mime_type, visibility)",
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
   if (error) console.error("PortalDocumentsPage failed to load", error);
 
+  // Signing uses the service role, so each stored path is re-proved against the
+  // document row's own business (and job, for the resource-bound job-photos
+  // namespace) first. Unbound legacy job-photo paths fail closed for customers.
   const rows = await Promise.all(
     ((data ?? []) as unknown as Omit<DocumentRow, "url">[]).map(async (row) => {
-      const url = row.media?.visibility === "private" && row.media?.object_path
-        ? await signedUrl(row.media.object_path)
-        : null;
+      const url =
+        row.media?.visibility === "private" && row.media?.object_path
+          ? await signOwnedStorageObject(row.media.object_path, {
+              businessId: row.business_id,
+              namespace: row.job_id ? "job-photos" : "documents",
+              resourceId: row.job_id,
+              actor: "customer",
+              // Standalone documents carry no resource segment, so the guard
+              // additionally requires proof that this row belongs to one of the
+              // session's own customer accounts.
+              ownershipProven:
+                !!row.customer_id && customerIds.includes(row.customer_id),
+            })
+          : null;
       return { ...row, url } satisfies DocumentRow;
     }),
   );
