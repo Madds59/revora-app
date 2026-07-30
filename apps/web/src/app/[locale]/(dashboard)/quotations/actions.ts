@@ -9,27 +9,21 @@ import { canManageQuotes } from "@/lib/permissions";
 import { computeLine, computeTotals } from "@/lib/money";
 import { enqueueQuoteSentNotification } from "@/lib/notifications/service";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage } from "@/lib/validation/common";
+import {
+  addItemSchema,
+  approveQuoteSchema,
+  createQuoteSchema,
+  removeItemSchema,
+  sendQuoteSchema,
+  updateQuoteDetailsSchema,
+} from "@/lib/validation/quotations";
 import type {
-  ItemKind,
   ProductCategory,
   QuotationItem,
 } from "@/lib/database.types";
 
 export type FormState = { error?: string; message?: string };
-
-function str(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? "").trim();
-}
-function optional(formData: FormData, key: string): string | undefined {
-  const value = str(formData, key);
-  return value === "" ? undefined : value;
-}
-function num(formData: FormData, key: string, fallback = 0): number {
-  const raw = str(formData, key);
-  if (raw === "") return fallback;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : fallback;
-}
 
 /** Recompute and persist quotation totals from its line items. */
 async function recomputeTotals(
@@ -58,8 +52,12 @@ export async function createQuote(
   if (!canManageQuotes(member.role))
     return { error: "You don't have permission to create quotations." };
 
-  const customerId = str(formData, "customer_id");
-  if (!customerId) return { error: "Select a customer." };
+  const parsed = createQuoteSchema.safeParse({
+    customerId: formData.get("customer_id"),
+    vehicleId: formData.get("vehicle_id"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const { customerId, vehicleId } = parsed.data;
 
   const user = await getUser();
   const supabase = await createClient();
@@ -67,7 +65,7 @@ export async function createQuote(
   const { data, error } = await supabase.rpc("create_quotation_draft", {
     target_business_id: business.id,
     target_customer_id: customerId,
-    target_vehicle_id: optional(formData, "vehicle_id"),
+    target_vehicle_id: vehicleId ?? undefined,
     target_created_by: user?.id ?? undefined,
     target_currency: "AED",
   });
@@ -87,43 +85,56 @@ export async function addItem(
   if (!canManageQuotes(member.role))
     return { error: "You don't have permission to edit this quotation." };
 
-  const quotationId = str(formData, "quotation_id");
-  const name = str(formData, "name");
-  if (!quotationId) return { error: "Missing quotation id." };
-  if (!name) return { error: "Item name is required." };
+  const parsed = addItemSchema.safeParse({
+    quotationId: formData.get("quotation_id"),
+    name: formData.get("name"),
+    kind: formData.get("kind"),
+    productCategory: formData.get("product_category"),
+    quantity: formData.get("quantity"),
+    unitPrice: formData.get("unit_price"),
+    discountAmount: formData.get("discount_amount"),
+    taxRate: formData.get("tax_rate"),
+    description: formData.get("description"),
+    brand: formData.get("brand"),
+    warranty: formData.get("warranty"),
+    origin: formData.get("origin"),
+    supplier: formData.get("supplier"),
+    expectedLifespan: formData.get("expected_lifespan"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
-  const kind = str(formData, "kind") as ItemKind;
-  const quantity = num(formData, "quantity", 1);
-  const unitPrice = num(formData, "unit_price", 0);
-  const discount = num(formData, "discount_amount", 0);
-  const taxRate = num(formData, "tax_rate", 0);
-  const { total } = computeLine(quantity, unitPrice, discount, taxRate);
+  const { total } = computeLine(
+    v.quantity,
+    v.unitPrice,
+    v.discountAmount,
+    v.taxRate,
+  );
 
-  const productCategory = optional(
-    formData,
-    "product_category",
-  ) as ProductCategory | null;
+  const productCategory =
+    v.kind === "product" || v.kind === "part"
+      ? ((v.productCategory ?? null) as ProductCategory | null)
+      : null;
 
   const supabase = await createClient();
   const { error } = await supabase.from("quotation_items").insert({
     business_id: business.id,
-    quotation_id: quotationId,
-    kind,
-    product_category:
-      kind === "product" || kind === "part" ? productCategory : null,
-    name,
-    description: optional(formData, "description"),
-    quantity,
-    unit_price: unitPrice,
-    discount_amount: discount,
-    tax_rate: taxRate,
+    quotation_id: v.quotationId,
+    kind: v.kind,
+    product_category: productCategory,
+    name: v.name,
+    description: v.description ?? null,
+    quantity: v.quantity,
+    unit_price: v.unitPrice,
+    discount_amount: v.discountAmount,
+    tax_rate: v.taxRate,
     total,
     transparency: {
-      brand: optional(formData, "brand"),
-      warranty: optional(formData, "warranty"),
-      origin: optional(formData, "origin"),
-      supplier: optional(formData, "supplier"),
-      expected_lifespan: optional(formData, "expected_lifespan"),
+      brand: v.brand,
+      warranty: v.warranty,
+      origin: v.origin,
+      supplier: v.supplier,
+      expected_lifespan: v.expectedLifespan,
     },
   });
   if (error) {
@@ -131,8 +142,8 @@ export async function addItem(
     return { error: "Could not add item. Please try again." };
   }
 
-  await recomputeTotals(supabase, quotationId);
-  revalidatePath(`/quotations/${quotationId}`);
+  await recomputeTotals(supabase, v.quotationId);
+  revalidatePath(`/quotations/${v.quotationId}`);
   return { message: "Item added." };
 }
 
@@ -144,9 +155,12 @@ export async function removeItem(
   if (!canManageQuotes(member.role))
     return { error: "You don't have permission to edit this quotation." };
 
-  const itemId = str(formData, "item_id");
-  const quotationId = str(formData, "quotation_id");
-  if (!itemId || !quotationId) return { error: "Missing item id." };
+  const parsed = removeItemSchema.safeParse({
+    itemId: formData.get("item_id"),
+    quotationId: formData.get("quotation_id"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const { itemId, quotationId } = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -171,25 +185,32 @@ export async function updateQuoteDetails(
   if (!canManageQuotes(member.role))
     return { error: "You don't have permission to edit this quotation." };
 
-  const id = str(formData, "id");
-  if (!id) return { error: "Missing quotation id." };
+  const parsed = updateQuoteDetailsSchema.safeParse({
+    id: formData.get("id"),
+    expectedCompletionDate: formData.get("expected_completion_date"),
+    warrantyTerms: formData.get("warranty_terms"),
+    customerNotes: formData.get("customer_notes"),
+    internalNotes: formData.get("internal_notes"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("quotations")
     .update({
-      expected_completion_date: optional(formData, "expected_completion_date"),
-      warranty_terms: optional(formData, "warranty_terms"),
-      customer_notes: optional(formData, "customer_notes"),
-      internal_notes: optional(formData, "internal_notes"),
+      expected_completion_date: v.expectedCompletionDate ?? null,
+      warranty_terms: v.warrantyTerms ?? null,
+      customer_notes: v.customerNotes ?? null,
+      internal_notes: v.internalNotes ?? null,
     })
-    .eq("id", id);
+    .eq("id", v.id);
   if (error) {
     console.error("updateQuoteDetails failed", error);
     return { error: "Could not update quotation. Please try again." };
   }
 
-  revalidatePath(`/quotations/${id}`);
+  revalidatePath(`/quotations/${v.id}`);
   return { message: "Quotation updated." };
 }
 
@@ -201,8 +222,9 @@ export async function sendQuote(
   if (!canManageQuotes(member.role))
     return { error: "You don't have permission to send this quotation." };
 
-  const id = str(formData, "id");
-  if (!id) return { error: "Missing quotation id." };
+  const parsed = sendQuoteSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const { id } = parsed.data;
 
   const now = new Date();
   const expires = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
@@ -241,37 +263,38 @@ export async function approveQuote(
   const user = await getUser();
   if (!user) return { error: "You must be signed in to approve." };
 
-  const quotationId = str(formData, "quotation_id");
-  const businessId = str(formData, "business_id");
-  const customerId = str(formData, "customer_id");
-  const version = num(formData, "quotation_version", 1);
-  const language = str(formData, "language") || "en";
-  const customerNote = optional(formData, "customer_note");
-  if (!quotationId || !businessId || !customerId)
-    return { error: "Missing quotation details." };
+  const parsed = approveQuoteSchema.safeParse({
+    quotationId: formData.get("quotation_id"),
+    businessId: formData.get("business_id"),
+    customerId: formData.get("customer_id"),
+    quotationVersion: formData.get("quotation_version"),
+    language: formData.get("language"),
+    signature: formData.get("signature"),
+    customerNote: formData.get("customer_note"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
+
   if (formData.get("acknowledge") !== "on")
     return { error: "Please acknowledge the parts, pricing, and terms." };
-
-  const signature = str(formData, "signature");
-  if (!signature) return { error: "Please type your full name to sign." };
 
   const headerList = await headers();
   const supabase = await createClient();
   const { error } = await supabase.from("approvals").insert({
-    business_id: businessId,
-    quotation_id: quotationId,
-    customer_id: customerId,
-    quotation_version: version,
-    language,
-    acknowledgement_text: `I, ${signature}, acknowledge the parts, pricing, and terms of this quotation.`,
+    business_id: v.businessId,
+    quotation_id: v.quotationId,
+    customer_id: v.customerId,
+    quotation_version: v.quotationVersion,
+    language: v.language,
+    acknowledgement_text: `I, ${v.signature}, acknowledge the parts, pricing, and terms of this quotation.`,
     user_agent: headerList.get("user-agent"),
-    device_data: { signed_name: signature, customer_note: customerNote },
+    device_data: { signed_name: v.signature, customer_note: v.customerNote },
   });
   if (error) {
     console.error("approveQuote failed", error);
     return { error: "Could not record approval. Please try again." };
   }
 
-  revalidatePath(`/quotations/${quotationId}`);
+  revalidatePath(`/quotations/${v.quotationId}`);
   return { message: "Quotation approved. Thank you." };
 }
