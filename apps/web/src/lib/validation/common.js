@@ -108,16 +108,33 @@ export const optionalEnumOf = (values, label = "value") =>
   );
 
 /**
- * Optional date string. Validates parseability and rejects impossible dates,
+ * Optional date string. Validates parseability and rejects impossible calendar
+ * dates (e.g. 2026-02-30, which Date.parse silently normalizes to March 2),
  * but passes the trimmed original string through unchanged (no reformatting) so
  * existing timezone/storage behavior is preserved.
  */
+const isValidDateString = (v) => {
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
+  if (iso) {
+    const [, y, mo, d] = iso.map(Number);
+    const roundtrip = new Date(Date.UTC(y, mo - 1, d));
+    if (
+      roundtrip.getUTCFullYear() !== y ||
+      roundtrip.getUTCMonth() !== mo - 1 ||
+      roundtrip.getUTCDate() !== d
+    ) {
+      return false;
+    }
+  }
+  return !Number.isNaN(Date.parse(v));
+};
+
 export const optionalDateString = z.preprocess(
   blankToUndefined,
   z
     .string()
     .trim()
-    .refine((v) => !Number.isNaN(Date.parse(v)), "Please enter a valid date.")
+    .refine(isValidDateString, "Please enter a valid date.")
     .optional(),
 );
 

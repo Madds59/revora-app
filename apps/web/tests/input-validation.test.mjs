@@ -121,6 +121,23 @@ test("quotations: invalid date rejected, valid date passed through unchanged", (
   assert.equal(good.data.expectedCompletionDate, "2026-08-01");
 });
 
+test("quotations: impossible calendar dates rejected (not normalized)", () => {
+  // Date.parse would silently normalize these (e.g. Feb 30 -> Mar 2); the
+  // schema must reject them instead of storing a shifted date.
+  for (const bad of ["2026-02-30", "2026-04-31", "2025-02-29", "2026-13-01", "2026-00-10"]) {
+    assert.equal(
+      ok(updateQuoteDetailsSchema.safeParse({ id: UID, expectedCompletionDate: bad })),
+      false,
+      `${bad} should be rejected`,
+    );
+  }
+  // Real leap day stays valid.
+  assert.equal(
+    ok(updateQuoteDetailsSchema.safeParse({ id: UID, expectedCompletionDate: "2028-02-29" })),
+    true,
+  );
+});
+
 test("quotations: approveQuote requires valid ids + signature", () => {
   assert.equal(
     ok(approveQuoteSchema.safeParse({ quotationId: UID, businessId: UID, customerId: UID, signature: "Aisha" })),
