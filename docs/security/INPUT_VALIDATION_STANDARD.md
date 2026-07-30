@@ -4,8 +4,8 @@ Owner: AppSec Reviewer. Implements APPSEC-09 (see
 [SECURITY_RISK_REGISTER.md](SECURITY_RISK_REGISTER.md) /
 [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md)). This standard defines how
 externally supplied input to server mutations is validated. **Phase 1 covers
-quotations, jobs, and complaints**; later phases extend it to the remaining
-mutation boundaries.
+dashboard quotations, jobs, and complaints; Phase 2 covers the customer-portal
+mutation actions**; later phases extend it to the remaining boundaries.
 
 ## Architecture
 
@@ -94,29 +94,56 @@ security regressions (client `business_id` is dropped by the schema and the
 complaints action uses `business_id: business.id`; all three actions call
 `safeParse` + `firstValidationMessage`).
 
-## Remaining boundaries (NOT covered by Phase 1)
+## Actions covered (Phase 2 — customer portal)
 
-These external-input mutation boundaries in the same/adjacent domains still use
-ad-hoc validation and are the scope of **Phase 2+**:
+| Action | Validated | Identity + ownership |
+|---|---|---|
+| `createComplaint` | account selector ids (uuids), subject, description, severity enum (blank → `medium`) | mutation uses the **session-resolved account row** (`requireCustomerPortal()` accounts); client ids only select among the user's own linked accounts |
+| `addComplaintReply` | complaintId, businessId (shape only), body, parentMessageId | **explicit ownership query**: complaint fetched and matched against session accounts before insert; insert identity comes from the verified complaint row |
+| `approveQuote` | reuses Phase 1 `approveQuoteSchema` (ids, version, language, signature, note) | **explicit ownership + state query**: quotation must belong to the session account, be `status = 'sent'`, and match `current_version`; approval row identity comes from the verified quotation row |
+| `rejectQuote` | new `rejectQuoteSchema` (ids, optional rejection note) | same ownership + `'sent'`-state query; RPC receives session-derived ids only |
 
-- `app/[locale]/(portal)/portal/actions.ts` — customer-facing `createComplaint`,
-  `addComplaintReply`, `approveQuote`, `rejectQuote` (higher-risk, customer
-  input; recommend prioritizing in Phase 2).
+Portal identity policy: client `customer_id`/`business_id` are **account
+selectors, never identity sources** — every mutation writes values from the
+session-derived account row or the ownership-verified target row. Ownership
+failures return a **non-enumerating** "not found or unavailable" message (a
+customer cannot distinguish another tenant's resource from a nonexistent one).
+RLS (`complaint_messages_customer_insert`, `approvals_customer_insert`,
+`customer_reject_quote` SECURITY DEFINER) remains the mandatory backstop. The
+portal quote detail page also carries the complaint-page-style explicit
+ownership check (closes APPSEC-11).
+
+Tests: `apps/web/tests/portal-input-validation.test.mjs` (behavioral schema
+tests for all four payloads incl. Arabic content, plus static regression
+assertions that the safeParse/ownership/non-enumeration patterns stay present).
+Runtime cross-customer denial is covered by manual/local QA
+([SECURITY_QA_TEST_PLAN.md](SECURITY_QA_TEST_PLAN.md)); no hosted-Supabase
+integration test is run in CI.
+
+## Remaining boundaries (NOT covered by Phases 1–2)
+
+These external-input mutation boundaries still use ad-hoc validation and are the
+scope of **Phase 3+**:
+
 - `(dashboard)/customers/actions.ts`, `vehicles/actions.ts`,
   `settings/business/*` (business/branch/service/invite), `notifications/
   actions.ts`, `(admin)/admin/actions.ts`, `(onboarding)/onboarding/actions.ts`.
+- Portal `saveBusinessRating` already validates via Zod
+  (`businessRatingInputSchema`) and checks the session account pair — reviewed
+  in Phase 2, no change needed.
 - Note: `lib/actions/retainer-scenarios.ts` and `lib/actions/membership-bundles.ts`
   already validate via Zod (`retainerScenarioSaveSchema`, `bundleDraftSchema`).
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phase 1 complete", not
-fully closed.**
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1 and 2
+complete", not fully closed.**
 
 ## Rollout plan
 
-1. **Phase 1 (this change):** quotations, jobs, complaints (dashboard).
-2. **Phase 2:** portal customer actions (complaint create/reply, quote
-   approve/reject) + customers/vehicles.
-3. **Phase 3:** settings/business, notifications, admin, onboarding.
+1. **Phase 1 (merged):** quotations, jobs, complaints (dashboard).
+2. **Phase 2 (this change):** portal customer actions (complaint create/reply,
+   quote approve/reject) + APPSEC-11 quote-detail ownership check.
+3. **Phase 3:** customers/vehicles, settings/business, notifications, admin,
+   onboarding.
 4. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.

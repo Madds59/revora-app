@@ -104,3 +104,16 @@ export const approveQuoteSchema = z.object({
   signature: requiredText("Signature", 200),
   customerNote: optionalText(2000),
 });
+
+/**
+ * Portal rejectQuote (APPSEC-09 Phase 2). businessId/customerId are account
+ * selectors validated for shape; the action must resolve them against the
+ * session's linked accounts and pass only session-derived identifiers to the
+ * `customer_reject_quote` RPC (which re-checks ownership under SECURITY DEFINER).
+ */
+export const rejectQuoteSchema = z.object({
+  quotationId: uuid("quotation"),
+  businessId: uuid("business"),
+  customerId: uuid("customer"),
+  rejectionNote: optionalText(2000),
+});

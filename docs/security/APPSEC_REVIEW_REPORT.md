@@ -30,8 +30,8 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phase 1 fixed** (quotations/jobs/complaints); Phase 2+ pending | APPSEC-09 |
-| 17 | URL/ID tampering | PASS (one defense-in-depth note) | APPSEC-06 / APPSEC-11 |
+| 16 | Input validation | WARNING → **Phases 1–2 fixed** (dashboard quotations/jobs/complaints + portal customer actions); Phase 3+ pending | APPSEC-09 |
+| 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
 Additional findings surfaced during review, not in the original 18: APPSEC-08
@@ -212,8 +212,8 @@ internal tooling or another party's operational data.
 
 ## APPSEC-06 / APPSEC-11 — URL/ID Tampering on Dynamic Routes
 
-**Severity:** P3 (defense-in-depth gap only) | **Status:** PASS with one WARNING |
-**Code changed:** No
+**Severity:** P3 (defense-in-depth gap only) | **Status:** PASS with one WARNING
+→ **Fixed (APPSEC-09 Phase 2)** | **Code changed:** Yes (Phase 2 branch)
 
 **Affected files:** `app/[locale]/(dashboard)/quotations/[id]/page.tsx`,
 `.../jobs/[id]/page.tsx`, `.../customers/[id]/page.tsx`, `.../complaints/[id]/page.tsx`,
@@ -239,10 +239,15 @@ application-level check would remove the only remaining guard.
 **Exploit scenario:** Only realizable if combined with a second, separate bug (use
 of a service-role/RLS-bypassing client on this page) — not exploitable today.
 
-**Recommended fix:** Add the same explicit ownership check used on the portal
-complaint detail page to the portal quote detail page, for consistency. Not done in
-this pass (it touches page logic beyond the "tiny, obvious" bar for Phase 9 —
-recommended as a small, well-scoped follow-up).
+**Fix applied (APPSEC-09 Phase 2):** The portal quote detail page now performs
+the same explicit ownership check as the complaint page — after the RLS-scoped
+fetch it verifies `accounts.some((a) => a.id === quote.customer_id &&
+a.business_id === quote.business_id)` and calls `notFound()` otherwise. In
+addition, the portal mutation paths (`approveQuote`, `rejectQuote`,
+`addComplaintReply`) each query the target row and verify session ownership
+*before* mutating, with a non-enumerating "not found or unavailable" response,
+and quote decisions are gated on `status === 'sent'`. Static regression tests in
+`tests/portal-input-validation.test.mjs` assert the pattern remains present.
 
 **Validation required:** Manual QA case in
 [MULTI_TENANT_TEST_MATRIX.md](MULTI_TENANT_TEST_MATRIX.md): Customer A attempts to
@@ -452,9 +457,29 @@ fix").
 
 ## APPSEC-09 — Selective Input Validation
 
-**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phase 1 complete**
-(quotations, jobs, complaints) | **Code changed:** Yes (Phase 1, on branch
-`security/appsec-09-input-validation-phase-1`)
+**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1 and 2
+complete** (dashboard quotations/jobs/complaints + portal customer actions) |
+**Code changed:** Yes (Phase 1 on branch
+`security/appsec-09-input-validation-phase-1`; Phase 2 on branch
+`security/appsec-09-phase-2-portal-actions`)
+
+**Phase 2 fix (portal):** The customer-portal mutation actions
+(`(portal)/portal/actions.ts`: `createComplaint`, `addComplaintReply`,
+`approveQuote`, `rejectQuote`) now validate every client value via `safeParse`
+(`portalCreateComplaintSchema`/`portalComplaintReplySchema` in
+`lib/validation/complaints.js`; reused `approveQuoteSchema` + new
+`rejectQuoteSchema` in `lib/validation/quotations.js`) before any mutation.
+Client `customer_id`/`business_id` act only as *selectors* among the session's
+own linked accounts (`requireCustomerPortal()` → `customers.app_user_id =
+auth.uid()`): every mutation writes session-derived row values, never raw client
+ids. `addComplaintReply`, `approveQuote`, and `rejectQuote` perform an
+**explicit ownership query before mutating** (complaint/quotation fetched and
+compared against the session's accounts), quote decisions are gated on
+`status === 'sent'`, approval is gated on the current quotation version, and
+ownership failures return a non-enumerating "not found or unavailable" response.
+RLS (`complaint_messages_customer_insert`, `approvals_customer_insert`, the
+`customer_reject_quote` SECURITY DEFINER RPC) remains the enforcement backstop.
+Tests: `tests/portal-input-validation.test.mjs`.
 
 **Phase 1 fix (this pass):** A `lib/validation/` Zod layer (`common.js` +
 `quotations.js`/`jobs.js`/`complaints.js`) now validates every external input to
