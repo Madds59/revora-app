@@ -16,6 +16,7 @@ import type { Document } from "@/lib/database.types";
 type DocumentRow = Pick<Document, "id" | "title" | "document_type" | "created_at"> & {
   business_id: string;
   job_id: string | null;
+  customer_id: string | null;
   complaint: { subject: string } | null;
   customer: { full_name: string } | null;
   job: { title: string } | null;
@@ -53,7 +54,7 @@ export default async function PortalDocumentsPage() {
   const { data, error } = await supabase
     .from("documents")
     .select(
-      "id, title, document_type, created_at, business_id, job_id, customer:customers(full_name), quotation:quotations(quote_number), complaint:complaints(subject), job:jobs(title), media:media_assets(bucket, object_path, file_name, mime_type, visibility)",
+      "id, title, document_type, created_at, business_id, job_id, customer_id, customer:customers(full_name), quotation:quotations(quote_number), complaint:complaints(subject), job:jobs(title), media:media_assets(bucket, object_path, file_name, mime_type, visibility)",
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
@@ -71,6 +72,11 @@ export default async function PortalDocumentsPage() {
               namespace: row.job_id ? "job-photos" : "documents",
               resourceId: row.job_id,
               actor: "customer",
+              // Standalone documents carry no resource segment, so the guard
+              // additionally requires proof that this row belongs to one of the
+              // session's own customer accounts.
+              ownershipProven:
+                !!row.customer_id && customerIds.includes(row.customer_id),
             })
           : null;
       return { ...row, url } satisfies DocumentRow;

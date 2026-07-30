@@ -195,6 +195,7 @@ export function authorizeStoredPathForSigning(objectPath, {
   namespace,
   resourceId,
   actor,
+  ownershipProven = false,
 }) {
   const parsed = parseStoredEvidencePath(objectPath, { businessId, namespace, resourceId });
   if (!parsed) return { allowed: false, code: "path_unverified" };
@@ -206,6 +207,16 @@ export function authorizeStoredPathForSigning(objectPath, {
       objectPath: `${parsed.businessId}/${parsed.namespace}/${parsed.objectName}`,
       legacy: true,
     };
+  }
+
+  // A path with no resource segment proves only its business. Business +
+  // namespace is the authorization staff already hold, but for a portal
+  // customer it would mean "any object in this tenant's namespace", so the
+  // caller must ALSO have independently proven the owning row belongs to this
+  // customer (e.g. `documents.customer_id` is one of the session's accounts).
+  // Fail closed when that proof was not supplied — the guard never infers it.
+  if (parsed.version === 1 && actor !== "staff" && ownershipProven !== true) {
+    return { allowed: false, code: "unbound_customer_unproven" };
   }
 
   const rebuilt =

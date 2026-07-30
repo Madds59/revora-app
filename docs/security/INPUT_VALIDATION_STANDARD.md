@@ -305,11 +305,21 @@ No stored path was migrated or rewritten.
 
 The **standalone documents uploader has no single owning resource** (it binds no
 job/customer/quotation at all), so objects in the `documents` namespace remain
-business-scoped three-segment paths by design — not "legacy". Portal customers
-still see their own because the query is already constrained to their customer
-ids. Binding those would require a server-authorized upload-intent design; it is
-recorded as a follow-up rather than pretending namespace validation is resource
-binding.
+business-scoped three-segment paths by design — not "legacy".
+
+Because business + namespace would otherwise mean "any object in this tenant's
+document namespace", a portal customer is **not** given such a path on those
+grounds alone. The guard requires the caller to pass `ownershipProven: true`,
+which the portal documents page derives by checking the row's `customer_id`
+against the session's own customer accounts. Without that explicit proof the
+guard **fails closed** (`unbound_customer_unproven`) and the signer is never
+invoked; the guard never infers ownership, and proof never rescues an otherwise
+invalid path. Staff are unaffected: business + namespace is exactly the
+business-wide access they already hold.
+
+Fully binding these objects would require a server-authorized upload-intent
+design, which is recorded as follow-up work rather than pretending namespace
+validation is resource binding.
 
 **No evidence deletion or replacement action exists** anywhere in the codebase —
 there is no Storage `.remove()` call at all — so there was nothing to harden on

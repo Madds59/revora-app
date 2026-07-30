@@ -66,6 +66,13 @@ export async function signOwnedStorageObject(
     namespace: string;
     resourceId?: string | null;
     actor: "staff" | "customer";
+    /**
+     * Set only when the caller has independently proven the owning row belongs
+     * to this customer (e.g. `documents.customer_id` is one of the session's
+     * accounts). Required before a portal customer may be given a path that
+     * carries no resource segment; the guard never infers ownership.
+     */
+    ownershipProven?: boolean;
   },
   expiresInSeconds = 3600,
 ): Promise<string | null> {
@@ -74,6 +81,7 @@ export async function signOwnedStorageObject(
     namespace: context.namespace,
     resourceId: context.resourceId ?? undefined,
     actor: context.actor,
+    ownershipProven: context.ownershipProven === true,
   });
   if (!decision.allowed || typeof decision.objectPath !== "string") {
     // Stable code only — never the path, filename, or provider detail.

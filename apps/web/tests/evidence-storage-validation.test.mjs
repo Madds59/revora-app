@@ -484,11 +484,13 @@ test("legacy: staff allowance still requires exact business and namespace", () =
 
 test("legacy: the documents namespace is business-scoped by design, not legacy-gated", () => {
   // Standalone documents have no single owning resource, so a 3-segment path is
-  // their canonical form and customers may still view their own.
+  // their canonical form — but a customer still needs independently proven
+  // ownership of the row (see the fail-closed tests below).
   const d = authorizeStoredPathForSigning(`${BIZ}/documents/8f1e-file.pdf`, {
     businessId: BIZ,
     namespace: "documents",
     actor: "customer",
+    ownershipProven: true,
   });
   assert.equal(d.allowed, true);
   assert.equal(RESOURCE_BOUND_NAMESPACES.documents, undefined);
@@ -552,4 +554,88 @@ test("security: corrective pass introduced no migration or RLS change", () => {
     "utf8",
   );
   assert.match(standard, /no policy or migration change/i);
+});
+
+// --- standalone-document ownership proof (release-critical residual) --------
+
+test("standalone documents: portal customer FAILS CLOSED without ownership proof", () => {
+  const unbound = `${BIZ}/documents/8f1e-file.pdf`;
+  const noProof = authorizeStoredPathForSigning(unbound, {
+    businessId: BIZ, namespace: "documents", actor: "customer",
+  });
+  assert.equal(noProof.allowed, false);
+  assert.equal(noProof.code, "unbound_customer_unproven");
+  assert.equal(noProof.objectPath, undefined);
+
+  // Explicitly passing false must not be treated as proof either.
+  assert.equal(
+    authorizeStoredPathForSigning(unbound, {
+      businessId: BIZ, namespace: "documents", actor: "customer", ownershipProven: false,
+    }).allowed,
+    false,
+  );
+  // Only a truthy-but-not-true value must also fail (no coercion).
+  assert.equal(
+    authorizeStoredPathForSigning(unbound, {
+      businessId: BIZ, namespace: "documents", actor: "customer", ownershipProven: "yes",
+    }).allowed,
+    false,
+  );
+});
+
+test("standalone documents: proven-ownership customer is allowed; staff unchanged", () => {
+  const unbound = `${BIZ}/documents/8f1e-file.pdf`;
+  const proven = authorizeStoredPathForSigning(unbound, {
+    businessId: BIZ, namespace: "documents", actor: "customer", ownershipProven: true,
+  });
+  assert.equal(proven.allowed, true);
+  assert.equal(proven.objectPath, unbound);
+
+  // Staff keep business-wide access without needing per-row proof.
+  assert.equal(
+    authorizeStoredPathForSigning(unbound, {
+      businessId: BIZ, namespace: "documents", actor: "staff",
+    }).allowed,
+    true,
+  );
+});
+
+test("standalone documents: ownership proof never rescues a bad path", () => {
+  const proven = { ownershipProven: true, actor: "customer" };
+  // Cross-tenant, wrong namespace and traversal still fail with proof supplied.
+  assert.equal(
+    authorizeStoredPathForSigning(`${OTHER_BIZ}/documents/x.pdf`, {
+      businessId: BIZ, namespace: "documents", ...proven,
+    }).allowed,
+    false,
+  );
+  assert.equal(
+    authorizeStoredPathForSigning(`${BIZ}-evil/documents/x.pdf`, {
+      businessId: BIZ, namespace: "documents", ...proven,
+    }).allowed,
+    false,
+  );
+  assert.equal(
+    authorizeStoredPathForSigning(`${BIZ}/documents/../x.pdf`, {
+      businessId: BIZ, namespace: "documents", ...proven,
+    }).allowed,
+    false,
+  );
+  // And proof does NOT unlock an unbound resource-bound namespace for customers.
+  assert.equal(
+    authorizeStoredPathForSigning(`${BIZ}/${COMPLAINT_EVIDENCE_ENTITY}/x.jpg`, {
+      businessId: BIZ, namespace: COMPLAINT_EVIDENCE_ENTITY, resourceId: CID, ...proven,
+    }).code,
+    "legacy_unbound_customer",
+  );
+});
+
+test("security: the portal documents page supplies ownership proof from session accounts", () => {
+  const portalDocsPage = readFileSync(
+    path.resolve(here, "../src/app/[locale]/(portal)/portal/documents/page.tsx"),
+    "utf8",
+  );
+  assert.match(portalDocsPage, /ownershipProven:\s*\n?\s*!!row\.customer_id && customerIds\.includes\(row\.customer_id\)/);
+  // The proof must come from the session-derived account ids.
+  assert.match(portalDocsPage, /const customerIds = accounts\.map\(/);
 });
