@@ -100,11 +100,25 @@ invitation-expiry implementation or migration was introduced (APPSEC-10 stays
 open)**.
 
 **Local-only integration QA performed for Phase 3 (6/6 passed)** against the
-local Supabase stack with two disposable owner accounts in separate businesses:
-cross-business customer update, customer archive, vehicle update, business
-profile update and invitation revocation were all denied, while same-business
-customer and vehicle updates succeeded. Disposable rows were deleted afterwards;
-no hosted Supabase, production users, or external email were involved.
+local Supabase stack with two disposable owner accounts in separate businesses.
+These cases exercise the **RLS backstop directly at the table level** (they are
+database probes, not calls through the server actions), which is what makes them
+a meaningful independent check of the new application-layer scoping:
+
+1. cross-business customer update denied;
+2. cross-business customer **soft-delete probe** denied — a direct write to the
+   `customers.deleted_at` column. Note there is **no customer archive/restore
+   server action** on this surface today (see
+   [INPUT_VALIDATION_STANDARD.md](INPUT_VALIDATION_STANDARD.md)); this case
+   verifies the column cannot be written cross-tenant, and must not be read as
+   an archive action having been added or hardened;
+3. cross-business vehicle update denied;
+4. cross-business business-profile update denied;
+5. cross-business invitation revocation denied;
+6. same-business customer and vehicle updates succeeded (no over-blocking).
+
+Disposable rows were deleted afterwards; no hosted Supabase, production users, or
+external email were involved.
 
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
