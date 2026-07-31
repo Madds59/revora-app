@@ -24,7 +24,18 @@ import {
 import { validateVin } from "./vin.js";
 import { buildFallbackMaintenancePlan, buildFallbackDiagnostic } from "./service";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage } from "@/lib/validation/common";
+import {
+  buildVehicleMediaPath,
+  parseOwnedVehicleMediaPath,
+  vehicleMediaUploadSchema,
+  VEHICLE_MEDIA_BUCKET,
+} from "@/lib/validation/vehicle-media";
 import type { VehicleDtcInterpretation, VehicleVinDecode } from "./types";
+
+// Same response for a missing vehicle, another tenant's vehicle, a mismatched
+// customer, and an unprovable path — none of these may be distinguishable.
+const VEHICLE_MEDIA_UNAVAILABLE = "Vehicle media target not found or unavailable.";
 
 export type FormState<T = unknown> = {
   error?: string;
@@ -499,50 +510,95 @@ export async function uploadVehicleMediaAction(
   _prev: VehicleMediaState,
   formData: FormData,
 ): Promise<VehicleMediaState> {
-  const vehicleId = str(formData, "vehicle_id");
-  const objectPath = str(formData, "object_path");
-  const fileName = str(formData, "file_name");
-  const mimeType = str(formData, "mime_type");
-  const sizeBytes = Number(formData.get("size_bytes") ?? 0);
-  const description = optional(formData, "description");
-  if (!vehicleId || !objectPath) return { error: "Missing upload details." };
-
   const user = await getUser();
   const { member, business } = await requireMembership();
   if (!canManageCustomers(member.role)) {
     return { error: "You don't have permission to upload vehicle media." };
   }
 
+  // 1. Validate every client value before anything else touches the database.
+  //    `storage_bucket` is intentionally not read: the client posts one, and it
+  //    is ignored in favour of the server constant.
+  const parsed = vehicleMediaUploadSchema.safeParse({
+    vehicleId: formData.get("vehicle_id"),
+    customerId: formData.get("customer_id"),
+    objectPath: formData.get("object_path"),
+    fileName: formData.get("file_name"),
+    mimeType: formData.get("mime_type"),
+    sizeBytes: formData.get("size_bytes"),
+    mediaType: formData.get("media_type"),
+    description: formData.get("description"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
+
+  // 2. The vehicle id is only a selector — resolve it under the authenticated
+  //    business so a member of one tenant cannot record media against another's
+  //    vehicle. The row is also the authority for the customer relationship.
   const supabase = await createClient();
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from("vehicles")
+    .select("id, business_id, customer_id")
+    .eq("id", v.vehicleId)
+    .eq("business_id", business.id)
+    .maybeSingle();
+  if (vehicleError) {
+    console.error("uploadVehicleMediaAction lookup failed", vehicleError.code);
+    return { error: "Could not record media upload." };
+  }
+  if (!vehicle) return { error: VEHICLE_MEDIA_UNAVAILABLE };
+
+  // 3. A submitted customer id may only confirm the vehicle's real customer; it
+  //    can never create or redirect the link.
+  if (v.customerId && v.customerId !== vehicle.customer_id) {
+    return { error: VEHICLE_MEDIA_UNAVAILABLE };
+  }
+
+  // 4. Pin the Storage path to the verified business AND vehicle, then persist
+  //    the canonical rebuild rather than the raw client string.
+  const ownedPath = parseOwnedVehicleMediaPath(v.objectPath, {
+    businessId: business.id,
+    vehicleId: vehicle.id,
+  });
+  if (!ownedPath) return { error: VEHICLE_MEDIA_UNAVAILABLE };
+
   const { data, error } = await supabase
     .from("vehicle_media_uploads")
     .insert({
       business_id: business.id,
-      vehicle_id: vehicleId,
-      customer_id: optional(formData, "customer_id"),
+      vehicle_id: vehicle.id,
+      // Authoritative relationship from the verified vehicle row, not the client.
+      customer_id: vehicle.customer_id,
       uploaded_by: user?.id ?? "",
-      storage_bucket: str(formData, "storage_bucket") || "revora-private",
-      storage_path: objectPath,
-      media_type: (optional(formData, "media_type") ?? "other") as "image" | "video" | "document" | "audio" | "other",
-      description,
+      // Server-selected bucket; the posted value is never trusted.
+      storage_bucket: VEHICLE_MEDIA_BUCKET,
+      storage_path: buildVehicleMediaPath(ownedPath),
+      media_type: v.mediaType as "image" | "video" | "document" | "audio" | "other",
+      description: v.description ?? null,
     })
     .select("id")
     .single();
 
   if (error || !data) {
-    if (error) console.error("recordVehicleMediaUpload failed", error);
+    // Code only: paths and filenames may carry customer-supplied text.
+    if (error) console.error("recordVehicleMediaUpload failed", error.code);
     return { error: "Could not record media upload." };
   }
 
-  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath(`/vehicles/${vehicle.id}`);
   revalidatePath("/vehicles");
 
   await saveAiToolCall({
     businessId: business.id,
     userId: user?.id ?? null,
-    vehicleId,
+    vehicleId: vehicle.id,
     toolName: "vehicle_media_upload",
-    inputJson: { objectPath, fileName, mimeType, sizeBytes, description },
+    inputJson: {
+      fileName: v.fileName,
+      mimeType: v.mimeType,
+      sizeBytes: v.sizeBytes,
+      mediaType: v.mediaType,
+    },
     outputJson: { id: data.id },
     model: null,
     status: "success",
@@ -555,7 +611,7 @@ export async function uploadVehicleMediaAction(
     message: "Media uploaded.",
     result: {
       count: 1,
-      vehicleId,
+      vehicleId: vehicle.id,
     },
   };
 }

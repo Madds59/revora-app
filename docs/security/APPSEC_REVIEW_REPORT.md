@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–3 + 4A fixed** (dashboard quotations/jobs/complaints, portal customer actions, customers/vehicles/business settings, evidence/attachment Storage paths); Phase 4B pending | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–3 + 4A + 4B fixed** (dashboard quotations/jobs/complaints, portal customer actions, customers/vehicles/business settings, evidence/attachment Storage paths, vehicle media); Phase 4C pending | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -457,13 +457,34 @@ fix").
 
 ## APPSEC-09 — Selective Input Validation
 
-**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1, 2, 3 and
-4A complete** (dashboard quotations/jobs/complaints, portal customer actions,
+**Severity:** P2 | **Status:** WARNING → **Partially fixed — Phases 1, 2, 3, 4A
+and 4B complete** (dashboard quotations/jobs/complaints, portal customer actions,
 customers/vehicles/business settings, evidence/attachment Storage paths) |
 **Code changed:** Yes (Phase 1 on branch
 `security/appsec-09-input-validation-phase-1`; Phase 2 on branch
 `security/appsec-09-phase-2-portal-actions`; Phase 3 on branch
 `security/appsec-09-phase-3-customers-vehicles-settings`)
+
+**Phase 4B fix (vehicle media):** `uploadVehicleMediaAction` persisted a
+client-chosen Storage **bucket** and **object path**, plus an **unverified
+`vehicle_id`** and **`customer_id`** — so a member of one business could record
+media against another tenant's vehicle and attach an arbitrary customer.
+Severity was verified rather than assumed: every reader of
+`vehicle_media_uploads` was traced and both render `storage_path` as escaped
+text, with **no** service-role client, signed-URL generator, Storage operation or
+AI call consuming those columns — a write-boundary fix, hardened now so a future
+signing reader cannot inherit poisoned data. The action now `safeParse`s all
+input, resolves the vehicle under the authenticated business, takes the customer
+from that verified row (a submitted id may only confirm it), selects the bucket
+server-side, and persists a canonical path rebuilt from components verified
+against the business **and** vehicle
+(`<business>/vehicles/<vehicle-id>/media/<object>`, five segments — no policy or
+migration change needed). Ownership failures are non-enumerating; logs carry
+codes only and the path is no longer echoed into the AI tool-call audit payload.
+A **release rule** was added: database-stored values must be revalidated
+immediately before crossing a privileged boundary, backed by an explicit
+call-site registry test rather than a repo-wide regex. Tests:
+`tests/vehicle-media-security.test.mjs`.
 
 **Phase 4A corrective pass (read-time signing + resource binding):** the first
 cut protected new writes only. A pre-merge review found, and this branch closes,

@@ -112,6 +112,33 @@ non-interchangeable namespaces. Static regressions assert both actions call
 components, ownership-check document links, use non-enumerating errors, never
 log raw provider messages, and that no Storage `.remove()` path was introduced.
 
+`apps/web/tests/vehicle-media-security.test.mjs` (added with APPSEC-09
+Phase 4B) — 24 offline tests for vehicle-media upload authorization: payload
+validation (Arabic descriptions, malformed vehicle/customer UUIDs, the
+database-backed `media_type` allowlist, positive-integer size with **no invented
+maximum**, MIME shape, filename rules), client bucket/tenant fields proven
+stripped, and exhaustive five-segment path checks — wrong business, prefix
+collisions, **same-business wrong vehicle**, wrong namespace segments,
+traversal, absolute, backslash, empty/extra segments, control characters, NUL
+and unsafe object names. Plus a privileged-boundary guard
+(`authorizeStoredVehicleMediaPath`) covering unapproved buckets and malformed
+stored paths, and **release-gate tests** that fail if a known vehicle-media
+reader performs a privileged Storage operation without the guard, renders
+`storage_path` into `src`/`href`/background/`srcSet`, or if the stored-value
+revalidation rule disappears from the standard. Limitation stated honestly: the
+gate is an explicit call-site registry, so new privileged consumers must be
+added to it deliberately.
+
+**Local-only integration QA performed for Phase 4B (8/8 passed)** against the
+local Supabase stack with two disposable businesses, customers and vehicles. It
+proved: business A can record media on its own vehicle; A cannot record against
+B's vehicle (the ownership lookup returns no row); a customer from B cannot be
+paired with A's vehicle; a client-selected alternate bucket never reaches
+persistence; cross-tenant and same-business wrong-vehicle paths are rejected;
+and the privileged guard denies an unapproved bucket and a malformed stored
+path without invoking any signer. Disposable rows were deleted afterwards; no
+hosted Supabase, no real vehicle images, no AI provider calls.
+
 **Local-only corrective QA performed for Phase 4A (8/8 passed)** — a second
 local run covering the two gaps found in pre-merge review, using one business
 with two portal customers plus a second business. It proved: a new owned
