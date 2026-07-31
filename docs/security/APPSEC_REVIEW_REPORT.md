@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–3 + 4A + 4B fixed** (dashboard quotations/jobs/complaints, portal customer actions, customers/vehicles/business settings, evidence/attachment Storage paths, vehicle media); Phase 4C pending | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–4C fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service); Phase 4D pending | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -485,6 +485,29 @@ A **release rule** was added: database-stored values must be revalidated
 immediately before crossing a privileged boundary, backed by an explicit
 call-site registry test rather than a repo-wide regex. Tests:
 `tests/vehicle-media-security.test.mjs`.
+
+**Phase 4C fix (notification service):** `lib/notifications/service.ts` runs
+entirely on the service role and takes work from the
+`claim_queued_notification_events` SECURITY DEFINER RPC, which selects rows by
+channel/status/schedule only. The dispatcher **addressed messages using the
+stored `recipient_email`/`recipient_phone` columns**, coerced any non-`sms`
+channel to `email`, fell back to a generic message for unregistered templates,
+trusted the stored `attempt_count`, and persisted raw provider response text as
+the failure reason. A poisoned or merely stale row would therefore have been
+delivered verbatim to whatever destination it carried. Queue time now validates
+the caller input and persists only verified rows (business/customer come from
+`loadCustomerContext`, which loads the customer under the business; the payload
+is rebuilt through an allowlist so a signed URL, Storage path, redirect URL or
+API key cannot ride along). Dispatch time adds `authorizeEventForDispatch()`,
+which re-proves business, customer, customer↔business, source resource↔business,
+dispatchable channel, registered template, payload shape and attempt bounds, and
+**re-derives the destination from the verified customer** — the stored recipient
+columns are never used for addressing. Denials fail closed with stable codes,
+write a privacy-safe attempt row, and reach a terminal status; the batch now
+releases a throwing row instead of leaving it locked. Provider failures are
+normalized to categories and never stored or logged raw. **Live delivery remains
+disabled by default and no gate was changed.** No migration, no RLS change.
+Tests: `tests/notification-security.test.mjs`.
 
 **Phase 4A corrective pass (read-time signing + resource binding):** the first
 cut protected new writes only. A pre-merge review found, and this branch closes,

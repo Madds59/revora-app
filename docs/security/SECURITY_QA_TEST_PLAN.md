@@ -185,6 +185,38 @@ a meaningful independent check of the new application-layer scoping:
 Disposable rows were deleted afterwards; no hosted Supabase, production users, or
 external email were involved.
 
+
+`apps/web/tests/notification-security.test.mjs` (added with APPSEC-09
+Phase 4C) — 33 offline tests for the notification service, the product's
+largest service-role surface. Queue time: template/channel allowlists, bounded
+dedupe keys, scalar-only template variables, and an allowlisted payload that
+strips signed URLs, Storage paths, redirect URLs and API keys. Dispatch time:
+the claimed row is treated as untrusted stored input — tests prove a **poisoned
+`recipient_email`/`recipient_phone` is ignored and the destination is re-derived
+from the verified customer**, and that missing/mismatched business, mismatched
+customer, cross-business source resource, non-dispatchable channel (`push` and
+the unimplemented social enum values), unknown template, malformed payload,
+malformed row, clamped/exhausted attempts and a non-`processing` status all fail
+closed with stable PII-free codes. Static regressions assert authorization
+precedes every provider call, the live-send gate is consulted first, raw
+provider text is never stored or logged, and a throwing row is released rather
+than left locked.
+
+**Local-only QA performed for Phase 4C (11 of 12 cases).** Two disposable
+businesses with customers and quotes verified: valid queue validation;
+cross-business source, mismatched customer, arbitrary channel and arbitrary
+template all denied; poisoned stored recipient ignored with the destination
+re-derived; customer/business mismatch not dispatched; malformed payload denied
+without throwing; a poisoned row not blocking the next valid row; live delivery
+disabled so no provider is contacted; and denial codes containing no PII.
+**Documented limitation:** the local database predates migration `0030` —
+`notification_events` has no `dedupe_key`/`attempt_count`/`locked_until` columns
+and `claim_queued_notification_events` does not exist locally — so the
+idempotency unique-index case and the claim/lock semantics could not be
+exercised at runtime and are covered by schema review plus unit tests instead.
+No provider was contacted, no email or SMS was sent, and no destination or
+payload content was printed.
+
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
 
