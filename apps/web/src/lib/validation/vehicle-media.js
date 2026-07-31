@@ -121,6 +121,10 @@ export function authorizeStoredVehicleMediaPath({
  * Size/MIME follow the same evidence rules: a positive integer (zero-byte and
  * malformed rejected), no invented maximum, MIME shape-checked only with no
  * content inspection. No VIN decoding or specification enrichment occurs here.
+ *
+ * `fileName` is display/audit metadata only — it is never the Storage key (the
+ * object name comes from the verified path) and `vehicle_media_uploads` has no
+ * column for it, so it is validated and then used only in the tool-call record.
  */
 export const vehicleMediaUploadSchema = z.object({
   vehicleId: uuid("vehicle"),
