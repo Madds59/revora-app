@@ -507,7 +507,15 @@ write a privacy-safe attempt row, and reach a terminal status; the batch now
 releases a throwing row instead of leaving it locked. Provider failures are
 normalized to categories and never stored or logged raw. **Live delivery remains
 disabled by default and no gate was changed.** No migration, no RLS change.
-Tests: `tests/notification-security.test.mjs`.
+Tests: `tests/notification-security.test.mjs`. **Runtime verification:** the
+local-only Supabase stack was brought to migration parity (`0030` applied in
+place; no migration file created or edited, no hosted project contacted) and
+**23/23** runtime cases passed against the real `claim_queued_notification_events`
+RPC — dedupe-key idempotency, claim eligibility (`push` never claimed), lock
+acquisition and release, `attempt_count` increment and clamping, poisoned stored
+recipients ignored in favour of the re-derived destination, a throwing row
+released without ending the batch, terminal rows never re-claimed, and **0**
+provider invocations under a `fetch` tripwire.
 
 **Phase 4A corrective pass (read-time signing + resource binding):** the first
 cut protected new writes only. A pre-merge review found, and this branch closes,

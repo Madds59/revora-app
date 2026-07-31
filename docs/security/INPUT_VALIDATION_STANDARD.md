@@ -482,14 +482,31 @@ requires `NOTIFICATIONS_DISPATCH_ENABLED`, `NOTIFICATIONS_LIVE_SEND_ENABLED` and
 the per-business `live_send_enabled` flag; the gate is consulted before any
 provider call, and a regression test asserts that ordering.
 
-### Local QA limitation (documented, not fabricated)
+### Local runtime QA (environment gap closed)
 
-Local Supabase predates migration `0030`: `notification_events` has no
-`dedupe_key`/`attempt_count`/`locked_until` columns and
-`claim_queued_notification_events` does not exist locally. **11 of 12** QA cases
-ran; the idempotency/unique-index case could not be exercised and is covered by
-schema review plus unit tests instead. Claim/lock semantics were likewise not
-exercised at runtime.
+The first Phase 4C pass reached only **11 of 12** cases because the local
+Supabase stack predated migration `0030` — `notification_events` had no
+`dedupe_key`/`attempt_count`/`locked_until`, and
+`claim_queued_notification_events` did not exist locally — so idempotency and
+claim/lock semantics rested on schema review plus unit tests.
+
+That gap is now closed. Migration `0030` was applied in place to the local-only
+Docker stack (additive DDL; **no migration file was created or modified**, and no
+hosted project was contacted), putting the local ledger at exact parity with
+`supabase/migrations`. **23 of 23** runtime cases then passed against the real
+claim RPC and the shipped `authorizeEventForDispatch`: dedupe-key idempotency via
+the unique index, claim eligibility (`push` never claimed), lock acquisition and
+release, `attempt_count` increment and clamping to `MAX_ATTEMPTS`, poisoned
+stored `recipient_email`/`recipient_phone` ignored with the destination
+re-derived from the verified customer, cross-business/cross-customer/unknown
+template/malformed payload denials, a throwing row released rather than left
+locked without ending the batch, terminal rows never re-claimed, and
+privacy-safe attempt rows. `fetch` was replaced by a tripwire for the whole run
+and recorded **0** provider invocations; every allowed row settled as
+`skipped_disabled`. Disposable rows were deleted afterwards.
+
+Still not covered locally: hosted Supabase behaviour and any real provider
+delivery — neither was contacted, by design.
 
 ## Remaining boundaries (NOT covered by Phases 1–4C)
 

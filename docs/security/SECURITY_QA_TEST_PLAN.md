@@ -202,20 +202,55 @@ precedes every provider call, the live-send gate is consulted first, raw
 provider text is never stored or logged, and a throwing row is released rather
 than left locked.
 
-**Local-only QA performed for Phase 4C (11 of 12 cases).** Two disposable
-businesses with customers and quotes verified: valid queue validation;
-cross-business source, mismatched customer, arbitrary channel and arbitrary
-template all denied; poisoned stored recipient ignored with the destination
-re-derived; customer/business mismatch not dispatched; malformed payload denied
-without throwing; a poisoned row not blocking the next valid row; live delivery
-disabled so no provider is contacted; and denial codes containing no PII.
-**Documented limitation:** the local database predates migration `0030` —
-`notification_events` has no `dedupe_key`/`attempt_count`/`locked_until` columns
-and `claim_queued_notification_events` does not exist locally — so the
-idempotency unique-index case and the claim/lock semantics could not be
-exercised at runtime and are covered by schema review plus unit tests instead.
-No provider was contacted, no email or SMS was sent, and no destination or
-payload content was printed.
+**Local-only runtime QA performed for Phase 4C (23 of 23 cases passed).** The
+earlier pass could only reach 11 of 12 cases because the local database predated
+migration `0030`. That environment gap has since been closed: migration `0030`
+was applied in place to the local-only Docker stack (additive DDL — no migration
+file was created or edited, no hosted project was touched), bringing the local
+ledger to exact parity with `supabase/migrations`, so
+`notification_events.dedupe_key` / `attempt_count` / `locked_until`, the
+`notification_delivery_attempts` table, the
+`notification_events_business_dedupe_idx` unique index and the
+`claim_queued_notification_events(integer, integer)` SECURITY DEFINER RPC are all
+present locally.
+
+Two disposable businesses with customers, quotes and notification settings were
+then driven through the real claim RPC and the shipped
+`authorizeEventForDispatch` decision path. Verified at runtime:
+
+- **Queue/idempotency** — a valid event inserts; a second write on the same
+  `(business_id, dedupe_key)` is ignored by the unique index via the same
+  `on conflict` target the service uses, leaving exactly one row.
+- **Claim RPC** — claims only eligible `email`/`sms` rows; `push` is never
+  claimed and stays `queued` and unlocked; every claimed row comes back
+  `processing` with `locked_until` in the future.
+- **Attempts** — `attempt_count` advances by exactly one per handled attempt, and
+  a stored count of `9` is clamped to `MAX_ATTEMPTS`, denying as
+  `attempts_exhausted` rather than retrying.
+- **Dispatch authorization** — cross-business customer (`customer_unverified`),
+  source resource in another business and source resource owned by another
+  customer (`source_unverified`), unknown template (`template_unknown`),
+  malformed payload (`payload_invalid`) and a customer with no usable
+  destination (`recipient_unresolved` → `skipped_missing_recipient`) all fail
+  closed.
+- **Recipient re-derivation** — rows carrying a poisoned stored
+  `recipient_email` and `recipient_phone` dispatched to the address re-derived
+  from the verified customer; no dispatch in the batch used a stored recipient
+  column.
+- **Locks and continuation** — a row that throws mid-dispatch reaches terminal
+  `failed`, releases its lock, and does not end the batch; the following valid
+  row is still processed; no fixture row retained a lock afterwards.
+- **No duplicate send** — terminal rows are not re-claimed on a second pass.
+- **Provider** — live delivery disabled, so every allowed row settled as
+  `skipped_disabled`; `fetch` was replaced with a tripwire for the whole run and
+  recorded **0** invocations.
+- **Privacy** — the delivery-attempt rows written during the run contain only
+  channel/provider/status/stable-code fields, with no destination or payload
+  content.
+
+All disposable rows were deleted afterwards. No provider was contacted, no email
+or SMS was sent, no hosted Supabase project was read or modified, and no
+destination or payload content was printed.
 
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
