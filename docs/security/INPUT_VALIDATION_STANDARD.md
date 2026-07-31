@@ -325,20 +325,88 @@ validation is resource binding.
 there is no Storage `.remove()` call at all — so there was nothing to harden on
 that path. A regression test asserts none was introduced.
 
-## Remaining boundaries (NOT covered by Phases 1–4A)
+## Release rule: stored values are untrusted at privileged boundaries
+
+**Database-stored values must be revalidated immediately before they are passed
+into service-role clients, privileged RPCs, signed-URL generators, Storage
+mutations, or any other authorization-bypassing operation.** A row being visible
+to the caller is not an authorization decision about the value inside it.
+
+This applies to values flowing from a database row into `createAdminClient()`,
+service-role Storage clients, `createSignedUrl`, Storage
+`upload`/`download`/`remove`/`copy`/`move`, `SECURITY DEFINER` RPCs, external API
+calls, object-key operations, and anything rendered as an active URL or redirect.
+
+Approved guards today: `signOwnedStorageObject()` /
+`authorizeStoredPathForSigning()` for evidence and documents, and
+`authorizeStoredVehicleMediaPath()` for vehicle media.
+
+Regression coverage is an **explicit registry**, not a repo-wide regex:
+`tests/vehicle-media-security.test.mjs` enumerates the known vehicle-media
+readers and fails if one performs a privileged Storage operation without calling
+the guard, or renders a stored path into `src`/`href`/background/`srcSet`.
+**Honest limitation:** the registry only covers the call sites listed in it, so
+new privileged consumers must be added deliberately — the rule above is what
+governs new code.
+
+## Actions covered (Phase 4B — vehicle media)
+
+`uploadVehicleMediaAction` (`lib/vehicle-intelligence/actions.ts`) previously
+persisted a **client-chosen Storage bucket**, a **client-chosen object path**, an
+**unverified `vehicle_id`**, and an **unverified `customer_id`** — so a member of
+one business could record media against another tenant's vehicle, and attach an
+arbitrary customer.
+
+**Severity was verified, not assumed.** Every reader of `vehicle_media_uploads`
+was traced: the dashboard and portal vehicle detail pages both render
+`storage_path` as escaped JSX text. There is **no** service-role client,
+signed-URL generator, Storage download/remove, AI-provider call, or active URL
+consuming these columns today, so this is a **write-boundary fix** — but an
+unvalidated path stored now becomes a privileged-boundary problem the moment a
+reader starts signing it, which is exactly how the Phase 4A evidence issue arose.
+
+| Concern | Before | Now |
+|---|---|---|
+| Bucket | client-supplied, persisted | server constant `revora-private`; the posted value is not even read |
+| Path | client-supplied, persisted raw | pinned to verified business **and** vehicle, persisted as a canonical rebuild |
+| Vehicle | client selector, unverified | resolved under the authenticated business; a miss returns the non-enumerating "Vehicle media target not found or unavailable." |
+| Customer | client selector, persisted | taken from the verified vehicle row; a submitted id may only *confirm* it, mismatches are refused |
+| Media type | cast to a union, unchecked | allowlisted against the `vehicle_media_uploads_media_type_check` constraint |
+
+Path grammar, taken from `components/vehicle-media-upload.tsx` (which passes
+`entity="vehicles/<vehicleId>/media"` into the shared uploader):
+
+```
+<business-id>/vehicles/<vehicle-id>/media/<object-name>      five segments
+```
+
+The Storage policies authorize on `split_part(name, '/', 1)` only, so this
+deeper grammar needs **no policy or migration change**. Size/MIME/filename follow
+the Phase 4A rules (positive integer, no invented maximum, MIME shape-checked
+with no content inspection, filename display-only). No VIN decoding or
+specification enrichment occurs in this path. The stored path is also no longer
+echoed into the AI tool-call audit payload.
+
+### Privileged-boundary inventory (repository-wide)
+
+`createAdminClient()` call sites and their classification:
+
+- `lib/storage.ts` — signed URLs and public logo URLs: **guarded** (Phase 3/4A).
+- `(portal)/portal/actions.ts` — notification-event insert with session-derived
+  identity: **safe constants/session input**.
+- `lib/notifications/service.ts` (×6), `lib/actions/launch-ops.ts`,
+  `lib/stripe-webhook.ts` — **out of Phase 4B scope**; these consume stored rows
+  at a privileged boundary and are recorded here for Phase 4C+ review rather than
+  changed in this branch.
+
+## Remaining boundaries (NOT covered by Phases 1–4B)
 
 These external-input mutation boundaries still use ad-hoc validation and are the
-scope of **Phase 4B+**:
+scope of **Phase 4C+**:
 
 - `(dashboard)/notifications/actions.ts`, `(admin)/admin/actions.ts`,
   `(onboarding)/onboarding/actions.ts`, and billing surfaces.
-- `lib/vehicle-intelligence/actions.ts` `uploadVehicleMediaAction` is a **third
-  instance of the same client-supplied-path pattern**, and additionally trusts a
-  client `storage_bucket`, `customer_id` and `vehicle_id` with no ownership
-  check. Severity is lower than the evidence paths because
-  `vehicle_media_uploads.storage_path` is only rendered as text and never signed
-  into a URL. **Adjacent finding — deliberately not fixed here** (it is a vehicle
-  action file, outside this branch's scope); recommended for Phase 4B.
+- `lib/vehicle-intelligence/actions.ts` `uploadVehicleMediaAction` — **fixed in Phase 4B** (see above).
 - No maximum upload size is defined anywhere in the product; Phases 3 and 4A
   reject zero-byte/garbage sizes but do not invent a cap. Upload-size governance
   remains an open product-security decision.
@@ -350,7 +418,7 @@ scope of **Phase 4B+**:
 - The customer surface has **no** archive/restore/merge/note mutation actions
   today (soft-delete columns are read-filtered only), so none were added.
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3 and 4A
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A and 4B
 complete", not fully closed.**
 
 ## Rollout plan
