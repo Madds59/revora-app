@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–4C fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service); Phase 4D pending | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–4D fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service, platform administration); onboarding/billing remain Phase 4E+ | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 

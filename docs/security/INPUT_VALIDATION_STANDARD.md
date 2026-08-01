@@ -582,8 +582,8 @@ scope of **Phase 4E+**:
 - The customer surface has **no** archive/restore/merge/note mutation actions
   today (soft-delete columns are read-filtered only), so none were added.
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B
-and 4C complete", not fully closed.**
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B,
+4C and 4D complete", not fully closed.**
 
 ## Rollout plan
 
@@ -593,13 +593,14 @@ and 4C complete", not fully closed.**
 3. **Phase 3 (merged):** customers, vehicles, business settings
    (profile/branches/services), invitations (payload only — **not** APPSEC-10
    expiry) and branding/logo storage-path verification.
-4. **Phase 4A (this change):** evidence/attachment Storage-path ownership
+4. **Phase 4A (merged):** evidence/attachment Storage-path ownership
    (`recordComplaintEvidence`, `uploadDocument`).
 5. **Phase 4B (merged):** `uploadVehicleMediaAction` storage-path/ownership.
-6. **Phase 4C (this change):** notification service — queue-time validation and
+6. **Phase 4C (merged):** notification service — queue-time validation and
    dispatch-time revalidation of claimed rows at the service-role boundary.
-7. **Phase 4D:** admin, onboarding, billing. `lib/actions/launch-ops.ts` and
+7. **Phase 4D (current branch):** platform-administration mutations.
+8. **Phase 4E+:** onboarding and billing. `lib/actions/launch-ops.ts` and
    `lib/stripe-webhook.ts` remain separately scoped privileged-boundary work.
-4. Fold a "new server actions validate input via a `lib/validation` schema"
+9. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.
