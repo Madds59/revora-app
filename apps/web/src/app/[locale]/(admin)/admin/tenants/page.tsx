@@ -12,6 +12,7 @@ import { PaginationControls } from "@/components/pagination-controls";
 import { requireSuperAdmin } from "@/lib/auth";
 import type { AdminBusinessFilteredRow, PaginatedListResult } from "@/lib/admin-views";
 import { parsePageParam } from "@/lib/filtering";
+import { parseAdminPageSize } from "@/lib/validation/admin";
 import { createClient } from "@/lib/supabase/server";
 import { AdminTenantsBrowser } from "./tenants-browser";
 
@@ -55,7 +56,7 @@ export default async function AdminTenantsPage({
   const supabase = await createClient();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const page = parsePageParam(resolvedSearchParams?.page, 1);
-  const pageSize = Number(resolvedSearchParams?.pageSize ?? 25) || 25;
+  const pageSize = parseAdminPageSize(resolvedSearchParams?.pageSize);
   const search = resolvedSearchParams?.q ?? "";
   const owner = resolvedSearchParams?.owner ?? "";
   const date = resolvedSearchParams?.date ?? "";

@@ -508,13 +508,68 @@ and recorded **0** provider invocations; every allowed row settled as
 Still not covered locally: hosted Supabase behaviour and any real provider
 delivery — neither was contacted, by design.
 
-## Remaining boundaries (NOT covered by Phases 1–4C)
+## Phase 4D — platform-administration mutations
+
+`/admin` is the product's only **global** authority surface: a verified platform
+administrator acts across every tenant, unscoped by business membership. The
+inventory found the authorization model already sound, and it was preserved
+rather than rewritten:
+
+- **Canonical authority** is `requireSuperAdmin()` (`lib/auth.ts`), which resolves
+  the actor from the **server session** and checks the `platform_admins` table by
+  `user_id = user.id`. It consults no `account_intent`, no profile display role,
+  no `user_metadata`/`app_metadata`, no form field, no query parameter, and no
+  email domain. Unauthenticated callers redirect to `/login`; authenticated
+  non-admins redirect to `/`. Both redirects **throw**, so invoking a server
+  action directly cannot proceed past the guard — layout protection is not the
+  control.
+- **Defence in depth at the database**: all 14 `admin_*` RPCs are SECURITY
+  DEFINER and re-check `is_super_admin()` themselves, so even a caller reaching
+  PostgREST directly is denied. `admin_set_super_admin` additionally refuses
+  self-revocation.
+- **No service role anywhere in `/admin`** — every admin page and action uses the
+  RLS-scoped client and reaches privileged data only through those RPCs. This is
+  a materially stronger arrangement than the Phase 4A–4C surfaces and was left
+  intact.
+
+What was missing was the *other* half of this standard — strict parsing of the
+administrator's own input. Global authority does not make a malformed or
+ambiguous instruction safe; an administrator is still an external input source.
+
+**Defect fixed (highest impact):** the super-admin grant/revoke direction came
+from a hidden form field evaluated as
+`String(formData.get("make_admin") ?? "true") === "true"`. An **absent** field
+therefore meant **GRANT**, and any unrecognised string silently meant revoke. The
+new `adminIntent` schema requires the literal `"true"` or `"false"`; anything
+else — including absent — is rejected, so the operation fails closed toward *no
+privilege change*.
+
+**Also fixed:** `setSuperAdmin` now validates the target email (bounded to 320
+chars, control-character free, plausible shape, trimmed — and the trimmed value
+is what the confirmation echoes); `markNotificationRead` requires a real UUID, so
+a malformed selector fails as validation rather than as a database cast error;
+both actions log `error.code` only; and the five admin list pages bound their own
+`pageSize` via `parseAdminPageSize` (previously `Number(raw) || 25`, which
+accepted `1e9` and negative values, producing a negative offset and nonsense page
+counts — the RPCs already clamp to 100, so this is defence in depth).
+
+Schemas live in `lib/validation/admin.js`, with `ADMIN_MUTATION_REGISTRY` acting
+as the explicit call-site registry (the Phase 4B pattern: an explicit list, not a
+repo-wide regex that would go green by accident).
+
+**Known limitation — see APPSEC-12:** `platform_admins` has no audit trigger, so
+grant/revoke leaves no history. Fixing that requires a migration or an RLS change
+and was therefore out of scope for this branch; it is documented in the register
+with severity and a recommendation rather than silently worked around.
+
+## Remaining boundaries (NOT covered by Phases 1–4D)
 
 These external-input mutation boundaries still use ad-hoc validation and are the
-scope of **Phase 4D+**:
+scope of **Phase 4E+**:
 
-- `(dashboard)/notifications/actions.ts`, `(admin)/admin/actions.ts`,
-  `(onboarding)/onboarding/actions.ts`, and billing surfaces.
+- `(dashboard)/notifications/actions.ts`, `(onboarding)/onboarding/actions.ts`,
+  and billing surfaces. (`(admin)/admin/actions.ts` — **fixed in Phase 4D**, see
+  above.)
 - `lib/vehicle-intelligence/actions.ts` `uploadVehicleMediaAction` — **fixed in Phase 4B** (see above).
 - No maximum upload size is defined anywhere in the product; Phases 3 and 4A
   reject zero-byte/garbage sizes but do not invent a cap. Upload-size governance
@@ -527,8 +582,8 @@ scope of **Phase 4D+**:
 - The customer surface has **no** archive/restore/merge/note mutation actions
   today (soft-delete columns are read-filtered only), so none were added.
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B
-and 4C complete", not fully closed.**
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B,
+4C and 4D complete", not fully closed.**
 
 ## Rollout plan
 
@@ -538,13 +593,14 @@ and 4C complete", not fully closed.**
 3. **Phase 3 (merged):** customers, vehicles, business settings
    (profile/branches/services), invitations (payload only — **not** APPSEC-10
    expiry) and branding/logo storage-path verification.
-4. **Phase 4A (this change):** evidence/attachment Storage-path ownership
+4. **Phase 4A (merged):** evidence/attachment Storage-path ownership
    (`recordComplaintEvidence`, `uploadDocument`).
 5. **Phase 4B (merged):** `uploadVehicleMediaAction` storage-path/ownership.
-6. **Phase 4C (this change):** notification service — queue-time validation and
+6. **Phase 4C (merged):** notification service — queue-time validation and
    dispatch-time revalidation of claimed rows at the service-role boundary.
-7. **Phase 4D:** admin, onboarding, billing. `lib/actions/launch-ops.ts` and
+7. **Phase 4D (current branch):** platform-administration mutations.
+8. **Phase 4E+:** onboarding and billing. `lib/actions/launch-ops.ts` and
    `lib/stripe-webhook.ts` remain separately scoped privileged-boundary work.
-4. Fold a "new server actions validate input via a `lib/validation` schema"
+9. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.

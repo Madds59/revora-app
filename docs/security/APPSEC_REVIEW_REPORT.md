@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–4C fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service); Phase 4D pending | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–4D fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service, platform administration); onboarding/billing remain Phase 4E+ | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -516,6 +516,37 @@ acquisition and release, `attempt_count` increment and clamping, poisoned stored
 recipients ignored in favour of the re-derived destination, a throwing row
 released without ending the batch, terminal rows never re-claimed, and **0**
 provider invocations under a `fetch` tripwire.
+
+**Phase 4D fix (platform-administration mutations):** the `/admin` area is the
+product's only **global** authority surface. The inventory found authorization
+already sound and preserved it rather than rewriting it: `requireSuperAdmin()`
+resolves the actor from the server session and checks the canonical
+`platform_admins` table (never `account_intent`, profile role, metadata, form
+fields or email domain); its redirects throw, so direct server-action invocation
+cannot bypass the admin layout; all 14 `admin_*` RPCs are SECURITY DEFINER and
+re-check `is_super_admin()` independently; `admin_set_super_admin` refuses
+self-revocation; and **no service-role client exists anywhere under `/admin`**.
+The gap was the input half. Most seriously, the super-admin grant/revoke
+direction came from a hidden form field read as
+`String(formData.get("make_admin") ?? "true") === "true"` — so a request that
+simply **omitted** the field **granted** platform administration, and any
+unrecognised value silently revoked it. Both admin mutations now `safeParse`
+before their RPC (`lib/validation/admin.js`): the privilege direction must be an
+explicit `"true"`/`"false"` and fails closed toward no change, the target email is
+bounded/control-character-free/trimmed, the notification id must be a real UUID,
+unknown fields are stripped, errors stay curated and logs carry `error.code`
+only. The five admin list pages now bound `pageSize` (defence in depth — the
+filtered RPCs already clamp `p_limit` to 100). Local runtime QA (17/17) exercised
+each actor class against the live RPCs: platform admin allowed; plain user,
+tenant owner, anonymous and **spoofed `account_intent`/`is_admin`/`user_metadata`
+claims** all denied `forbidden` with zero rows changed; self-revocation blocked;
+unknown target `target_not_found` with no mutation; exactly one notification
+marked read with the unrelated row untouched and repeat marking idempotent; an
+absurd `p_limit` capped at 100. **Limitation, documented not fixed (APPSEC-12):**
+`platform_admins` carries no `audit_row_change()` trigger, so grant/revoke leaves
+no forensic history; closing it needs a migration or an `audit_events` INSERT
+policy, both out of scope here. No migration, no RLS change, no new admin
+feature. Tests: `tests/admin-security.test.mjs`.
 
 **Phase 4A corrective pass (read-time signing + resource binding):** the first
 cut protected new writes only. A pre-merge review found, and this branch closes,
