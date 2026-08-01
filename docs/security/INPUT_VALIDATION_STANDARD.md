@@ -394,15 +394,124 @@ echoed into the AI tool-call audit payload.
 - `lib/storage.ts` — signed URLs and public logo URLs: **guarded** (Phase 3/4A).
 - `(portal)/portal/actions.ts` — notification-event insert with session-derived
   identity: **safe constants/session input**.
-- `lib/notifications/service.ts` (×6), `lib/actions/launch-ops.ts`,
-  `lib/stripe-webhook.ts` — **out of Phase 4B scope**; these consume stored rows
-  at a privileged boundary and are recorded here for Phase 4C+ review rather than
-  changed in this branch.
+- `lib/notifications/service.ts` (×6) — **fixed in Phase 4C** (see below).
+- `lib/actions/launch-ops.ts`, `lib/stripe-webhook.ts` — still **out of scope**;
+  both consume stored rows at a privileged boundary and remain separately scoped
+  findings, unchanged by this branch.
 
-## Remaining boundaries (NOT covered by Phases 1–4B)
+## Actions covered (Phase 4C — notification service)
+
+`lib/notifications/service.ts` is the product's largest privileged surface: it
+runs entirely on `createAdminClient()` (service role) and takes its work from the
+`claim_queued_notification_events` SECURITY DEFINER RPC. **Six** service-role
+functions were reviewed — `queueCustomerNotification`,
+`processQueuedNotifications`, `enqueueQuoteSentNotification`,
+`enqueueQuoteDecisionNotification`, `enqueueJobStatusNotification`,
+`enqueueComplaintStatusNotification` — confirming the reported inventory.
+
+### The gap this closes
+
+The claim RPC selects rows by channel/status/schedule only. It does not prove a
+row is correctly scoped, and it returns whatever `recipient_email`,
+`recipient_phone`, `channel`, `template_key`, `locale` and `payload` the row
+carries. The dispatcher previously **addressed messages using those stored
+columns**, coerced any non-`sms` channel to `email`, and fell back to a generic
+message for unregistered templates. A row that was poisoned by any future write
+path — or merely stale after a customer changed address or was reassigned —
+would have been delivered verbatim. This is the same principle established in
+Phase 4A: data that has crossed into the database is still untrusted when it
+crosses back out through a privileged boundary.
+
+### Queue time
+
+`queueCustomerNotification` now `safeParse`s its input
+(`queueCustomerNotificationSchema`), then persists **only verified values**:
+`business_id`/`customer_id` come from the rows loaded by `loadCustomerContext`
+(which loads the customer *under* the business, proving the relationship), never
+from the caller's selectors. The template key must be in the registry, channels
+are filtered to the dispatchable set, the dedupe key is bounded and
+control-character free, and the payload is rebuilt through
+`persistablePayloadSchema` so unknown caller keys — a signed URL, Storage path,
+redirect URL, API key or customer note — are **stripped rather than stored**.
+Template variables accept bounded scalars only.
+
+### Dispatch time
+
+`authorizeEventForDispatch()` runs before any provider call and re-proves, from
+freshly loaded rows: the business exists and matches the event; the customer
+exists, matches, and belongs to that business; the payload's source resource
+belongs to the same business (and customer, where both name one — one extra
+scoped query per event, since the claim RPC does not return it); the channel is
+dispatchable; the template is registered; the payload parses; and the attempt
+count is within bounds. **The destination is re-derived from the verified
+customer** — the stored `recipient_email`/`recipient_phone` columns are
+deliberately ignored for addressing. Locale follows the verified customer and
+normalizes to `en`/`ar`.
+
+Denials fail closed with a stable code (`business_unverified`,
+`customer_unverified`, `customer_business_mismatch`, `source_unverified`,
+`channel_not_dispatchable`, `template_unknown`, `payload_invalid`,
+`recipient_unresolved`, `attempts_exhausted`, `event_malformed`), write a
+privacy-safe attempt row, and move the event to a terminal status so it cannot
+spin in the queue.
+
+### Channels, templates, state and retries
+
+Only `email` and `sms` are dispatchable — matching the claim RPC's own filter.
+`push` remains the in-app notification centre and is never sent to a provider;
+the `notification_channel` enum's social values are not implemented and none
+were invented. Attempt counts are clamped (`MAX_ATTEMPTS`), so a poisoned counter
+cannot run away and exhausted events stop retrying. Terminal updates are guarded
+on `status = 'processing'`, so a row that was not legitimately claimed is never
+transitioned, and `locked_until` is cleared on **every** handled path — including
+the batch's catch, which now releases a throwing row instead of leaving it locked
+until expiry. Idempotency is unchanged: the `(business_id, dedupe_key)` unique
+index plus `ignoreDuplicates` upsert.
+
+### Delivery privacy and live-send
+
+Raw provider responses are never stored or logged. `normalizeProviderFailure()`
+reduces them to stable categories (`provider_auth`, `provider_rate_limited`,
+`provider_unavailable`, `provider_rejected`, `provider_timeout`,
+`provider_unknown`) and provider message ids are bounded opaque handles. Attempt
+rows keep only operational fields — no destination, no rendered content, no
+provider body. Logs carry stable codes only.
+
+**Live delivery remains disabled by default and was not changed.** Sending still
+requires `NOTIFICATIONS_DISPATCH_ENABLED`, `NOTIFICATIONS_LIVE_SEND_ENABLED` and
+the per-business `live_send_enabled` flag; the gate is consulted before any
+provider call, and a regression test asserts that ordering.
+
+### Local runtime QA (environment gap closed)
+
+The first Phase 4C pass reached only **11 of 12** cases because the local
+Supabase stack predated migration `0030` — `notification_events` had no
+`dedupe_key`/`attempt_count`/`locked_until`, and
+`claim_queued_notification_events` did not exist locally — so idempotency and
+claim/lock semantics rested on schema review plus unit tests.
+
+That gap is now closed. Migration `0030` was applied in place to the local-only
+Docker stack (additive DDL; **no migration file was created or modified**, and no
+hosted project was contacted), putting the local ledger at exact parity with
+`supabase/migrations`. **23 of 23** runtime cases then passed against the real
+claim RPC and the shipped `authorizeEventForDispatch`: dedupe-key idempotency via
+the unique index, claim eligibility (`push` never claimed), lock acquisition and
+release, `attempt_count` increment and clamping to `MAX_ATTEMPTS`, poisoned
+stored `recipient_email`/`recipient_phone` ignored with the destination
+re-derived from the verified customer, cross-business/cross-customer/unknown
+template/malformed payload denials, a throwing row released rather than left
+locked without ending the batch, terminal rows never re-claimed, and
+privacy-safe attempt rows. `fetch` was replaced by a tripwire for the whole run
+and recorded **0** provider invocations; every allowed row settled as
+`skipped_disabled`. Disposable rows were deleted afterwards.
+
+Still not covered locally: hosted Supabase behaviour and any real provider
+delivery — neither was contacted, by design.
+
+## Remaining boundaries (NOT covered by Phases 1–4C)
 
 These external-input mutation boundaries still use ad-hoc validation and are the
-scope of **Phase 4C+**:
+scope of **Phase 4D+**:
 
 - `(dashboard)/notifications/actions.ts`, `(admin)/admin/actions.ts`,
   `(onboarding)/onboarding/actions.ts`, and billing surfaces.
@@ -418,8 +527,8 @@ scope of **Phase 4C+**:
 - The customer surface has **no** archive/restore/merge/note mutation actions
   today (soft-delete columns are read-filtered only), so none were added.
 
-Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A and 4B
-complete", not fully closed.**
+Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B
+and 4C complete", not fully closed.**
 
 ## Rollout plan
 
@@ -431,8 +540,11 @@ complete", not fully closed.**
    expiry) and branding/logo storage-path verification.
 4. **Phase 4A (this change):** evidence/attachment Storage-path ownership
    (`recordComplaintEvidence`, `uploadDocument`).
-5. **Phase 4B:** notifications, admin, onboarding, billing, and the
-   `uploadVehicleMediaAction` storage-path/ownership finding above.
+5. **Phase 4B (merged):** `uploadVehicleMediaAction` storage-path/ownership.
+6. **Phase 4C (this change):** notification service — queue-time validation and
+   dispatch-time revalidation of claimed rows at the service-role boundary.
+7. **Phase 4D:** admin, onboarding, billing. `lib/actions/launch-ops.ts` and
+   `lib/stripe-webhook.ts` remain separately scoped privileged-boundary work.
 4. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.

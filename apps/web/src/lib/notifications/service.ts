@@ -11,6 +11,17 @@ import {
   normalizeNotificationLocale,
   renderNotificationTemplate,
 } from "./templates.js";
+import {
+  authorizeEventForDispatch,
+  IN_APP_CHANNEL,
+  boundedAttemptCount,
+  isClaimedProcessingStatus,
+  normalizeProviderFailure,
+  normalizeProviderMessageId,
+  persistablePayloadSchema,
+  queueCustomerNotificationSchema,
+  TEMPLATE_SOURCES,
+} from "@/lib/validation/notifications";
 
 type NotificationChannel = "email" | "sms";
 type NotificationStatus =
@@ -77,6 +88,7 @@ type NotificationEventForDispatch = {
   recipient_name: string | null;
   recipient_phone: string | null;
   template_key: string;
+  status?: string;
 };
 
 function clean(value: string | null | undefined) {
@@ -182,43 +194,57 @@ export async function queueCustomerNotification(
   input: QueueCustomerNotificationInput,
 ) {
   try {
+    // Validate the caller's selectors before any privileged read or write.
+    const parsed = queueCustomerNotificationSchema.safeParse(input);
+    if (!parsed.success) {
+      console.error("queueCustomerNotification rejected", "input_invalid");
+      return { error: "Notification queue failed.", inserted: 0 };
+    }
+    const v = parsed.data;
+
     const admin = createAdminClient();
     const [{ business, customer }, settings, preferences] = await Promise.all([
-      loadCustomerContext(admin, input.businessId, input.customerId),
-      getSettings(admin, input.businessId),
-      getPreferences(admin, input.businessId, input.customerId),
+      loadCustomerContext(admin, v.businessId, v.customerId),
+      getSettings(admin, v.businessId),
+      getPreferences(admin, v.businessId, v.customerId),
     ]);
+    // The customer is loaded under the business, so this also proves the
+    // relationship — a mismatched pair yields no row and queues nothing.
     if (!business || !customer) return { inserted: 0, skipped: true };
 
     const locale = normalizeNotificationLocale(customer.preferred_language);
-    const channels = input.channels ?? ["email", "sms"];
+    const channels = v.channels;
     const now = new Date().toISOString();
     const rows = channels
-      .filter((channel) => isNotificationChannel(channel))
+      .filter((channel): channel is NotificationChannel => isNotificationChannel(channel))
       .map((channel) => {
         const skipped = skippedStatus({
           channel,
           customer,
           preferences,
           settings,
-          templateKey: input.templateKey,
+          templateKey: v.templateKey,
         });
-        const payload = {
-          ...input.payload,
+        // Allowlisted payload only: unknown caller keys are stripped, so no
+        // secret, Storage path, signed URL or arbitrary URL can be persisted.
+        const payloadParse = persistablePayloadSchema.safeParse({
+          ...(v.payload ?? {}),
           business_name: business.name,
           customer_name: customer.full_name,
           template_variables: {
-            ...input.variables,
+            ...(v.variables ?? {}),
             businessName: business.name,
             customerName: customer.full_name,
           },
-        };
+        });
+        const payload = payloadParse.success ? payloadParse.data : null;
 
         return {
-          business_id: input.businessId,
+          // Identity comes from the VERIFIED rows, not the caller's selectors.
+          business_id: business.id,
           channel,
-          customer_id: input.customerId,
-          dedupe_key: `${input.dedupeKey}:${channel}`,
+          customer_id: customer.id,
+          dedupe_key: `${v.dedupeKey}:${channel}`,
           locale,
           payload,
           recipient_email: channel === "email" ? customer.email : null,
@@ -226,9 +252,13 @@ export async function queueCustomerNotification(
           recipient_phone: channel === "sms" ? customer.phone : null,
           scheduled_for: now,
           status: skipped ?? "queued",
-          template_key: input.templateKey,
+          template_key: v.templateKey,
         };
-      });
+      })
+      .filter(
+        (row): row is typeof row & { payload: NonNullable<typeof row.payload> } =>
+          row.payload !== null,
+      );
 
     if (rows.length === 0) return { inserted: 0, skipped: true };
     const { error } = await admin
@@ -272,15 +302,17 @@ async function sendEmail({
   });
   const json = (await response.json().catch(() => null)) as { id?: string; message?: string } | null;
   if (!response.ok) {
+    // Never propagate the provider's own message: it can echo the destination
+    // or rendered content. Only a stable internal category is kept.
     return {
-      failureReason: json?.message ?? `Email provider returned ${response.status}.`,
+      failureReason: normalizeProviderFailure(response.status),
       providerMessageId: null,
       status: "failed" as const,
     };
   }
   return {
     failureReason: null,
-    providerMessageId: json?.id ?? null,
+    providerMessageId: normalizeProviderMessageId(json?.id ?? null),
     status: "sent" as const,
   };
 }
@@ -306,39 +338,135 @@ async function sendSms({ body, to }: { body: string; to: string }) {
   );
   const json = (await response.json().catch(() => null)) as { message?: string; sid?: string } | null;
   if (!response.ok) {
+    // Same rule as email: provider text is replaced by a stable category.
     return {
-      failureReason: json?.message ?? `SMS provider returned ${response.status}.`,
+      failureReason: normalizeProviderFailure(response.status),
       providerMessageId: null,
       status: "failed" as const,
     };
   }
   return {
     failureReason: null,
-    providerMessageId: json?.sid ?? null,
+    providerMessageId: normalizeProviderMessageId(json?.sid ?? null),
     status: "sent" as const,
   };
 }
 
+/**
+ * Confirm the payload's source resource lives in the event's business (and, for
+ * customer-scoped tables, belongs to the same customer). The claim RPC does not
+ * return the source resource, so this costs one extra scoped query per event
+ * that has one.
+ */
+async function sourceResourceMatches(
+  admin: SupabaseClient<Database>,
+  event: { business_id: string; customer_id: string | null; template_key: string; payload: unknown },
+): Promise<boolean | null> {
+  const source = TEMPLATE_SOURCES[event.template_key as keyof typeof TEMPLATE_SOURCES];
+  if (!source?.table || !source.payloadKey) return null;
+
+  const payload =
+    event.payload && typeof event.payload === "object" && !Array.isArray(event.payload)
+      ? (event.payload as Record<string, unknown>)
+      : {};
+  const sourceId = payload[source.payloadKey];
+  if (typeof sourceId !== "string") return false;
+
+  // Explicit branches so each query is statically typed against its own table.
+  const query =
+    source.table === "quotations"
+      ? admin.from("quotations").select("id, business_id, customer_id")
+      : source.table === "jobs"
+        ? admin.from("jobs").select("id, business_id, customer_id")
+        : source.table === "complaints"
+          ? admin.from("complaints").select("id, business_id, customer_id")
+          : null;
+  if (!query) return false;
+
+  const { data } = await query
+    .eq("id", sourceId)
+    .eq("business_id", event.business_id)
+    .maybeSingle();
+  if (!data) return false;
+  const row = data as { customer_id: string | null };
+  // When both the event and the resource name a customer, they must agree.
+  if (event.customer_id && row.customer_id && row.customer_id !== event.customer_id) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Dispatch one claimed event.
+ *
+ * The claimed row is UNTRUSTED stored input: the claim RPC selects by
+ * channel/status/schedule only and hands back whatever recipient, channel,
+ * template, locale and payload the row happens to carry. Before anything is
+ * sent, the business and customer are re-loaded, the source resource is proved
+ * to belong to the business, and the destination is **re-derived from the
+ * verified customer** — the stored `recipient_email`/`recipient_phone` columns
+ * are never used to address a message.
+ */
 async function dispatchEvent(
   admin: SupabaseClient<Database>,
   event: NotificationEventForDispatch,
 ) {
-  const channel = event.channel === "sms" ? "sms" : "email";
-  const settings = await getSettings(admin, event.business_id);
-  const recipient = channel === "email" ? clean(event.recipient_email) : clean(event.recipient_phone);
   const now = new Date().toISOString();
+  const attemptBase = boundedAttemptCount(event.attempt_count);
+
+  // Re-load the authorization inputs; never trust the row's own copies.
+  const [{ business, customer }, sourceMatches] = await Promise.all([
+    loadCustomerContext(admin, event.business_id, event.customer_id ?? ""),
+    sourceResourceMatches(admin, event),
+  ]);
+
+  const decision = authorizeEventForDispatch({
+    event,
+    business,
+    customer,
+    sourceMatches,
+  });
+
+  if (!decision.allowed) {
+    // Fail closed: no provider call, a privacy-safe attempt row, and a terminal
+    // status so the row cannot spin in the queue forever.
+    const status: NotificationStatus =
+      decision.code === "recipient_unresolved"
+        ? "skipped_missing_recipient"
+        : "failed";
+    console.error("notification dispatch denied", decision.code);
+    await recordAttempt(admin, {
+      businessId: event.business_id,
+      channel: isNotificationChannel(event.channel) ? event.channel : "email",
+      eventId: event.id,
+      failureReason: decision.code ?? "denied",
+      provider: "none",
+      providerMessageId: null,
+      status,
+    });
+    await finalizeEvent(admin, {
+      attemptCount: attemptBase + 1,
+      eventId: event.id,
+      failureReason: decision.code ?? "denied",
+      now,
+      providerMessageId: null,
+      status,
+    });
+    return status;
+  }
+
+  const channel = decision.channel as NotificationChannel;
+  const destination = decision.destination as string;
+  const settings = await getSettings(admin, business!.id);
 
   let status: NotificationStatus = "sent";
   let provider = channel === "email" ? "resend" : "twilio";
   let providerMessageId: string | null = null;
   let failureReason: string | null = null;
 
-  if (!recipient) {
-    status = "skipped_missing_recipient";
-    failureReason = "Recipient is missing.";
-  } else if (!channelEnabled(settings, channel)) {
+  if (!channelEnabled(settings, channel)) {
     status = "skipped_disabled";
-    failureReason = "Channel is disabled for this business.";
+    failureReason = "channel_disabled";
   } else {
     const live = canAttemptLiveSend({
       businessLiveEnabled: Boolean(settings?.live_send_enabled),
@@ -347,48 +475,113 @@ async function dispatchEvent(
     });
     provider = live.provider;
     if (!live.ok) {
+      // Live delivery disabled (the default): no provider is contacted.
       status = live.status as NotificationStatus;
-      failureReason = live.reason;
+      failureReason = live.status;
     } else {
-      const payload = event.payload && typeof event.payload === "object" && !Array.isArray(event.payload)
-        ? (event.payload as Record<string, unknown>)
-        : {};
-      const variables =
-        payload.template_variables &&
-        typeof payload.template_variables === "object" &&
-        !Array.isArray(payload.template_variables)
-          ? (payload.template_variables as Record<string, string | number | null | undefined>)
-          : {};
       const rendered = renderNotificationTemplate({
         channel,
-        locale: event.locale,
-        templateKey: event.template_key,
-        variables,
+        locale: decision.locale as string,
+        templateKey: decision.templateKey as string,
+        variables: decision.variables,
       });
       const result =
         channel === "email"
-          ? await sendEmail({ body: rendered.body, subject: rendered.subject, to: recipient })
-          : await sendSms({ body: rendered.body, to: recipient });
+          ? await sendEmail({
+              body: rendered.body,
+              subject: rendered.subject,
+              to: destination,
+            })
+          : await sendSms({ body: rendered.body, to: destination });
       status = result.status;
       providerMessageId = result.providerMessageId;
       failureReason = result.failureReason;
     }
   }
 
-  await admin.from("notification_delivery_attempts").insert({
-    business_id: event.business_id,
+  await recordAttempt(admin, {
+    businessId: business!.id,
     channel,
+    eventId: event.id,
+    failureReason,
+    provider,
+    providerMessageId,
+    status,
+  });
+  await finalizeEvent(admin, {
+    attemptCount: attemptBase + 1,
+    eventId: event.id,
+    failureReason,
+    now,
+    providerMessageId,
+    status,
+  });
+
+  return status;
+}
+
+/**
+ * Privacy-safe attempt record: only operational fields. No destination, no
+ * rendered content, no raw provider response.
+ */
+async function recordAttempt(
+  admin: SupabaseClient<Database>,
+  {
+    businessId,
+    channel,
+    eventId,
+    failureReason,
+    provider,
+    providerMessageId,
+    status,
+  }: {
+    businessId: string;
+    channel: string;
+    eventId: string;
+    failureReason: string | null;
+    provider: string;
+    providerMessageId: string | null;
+    status: NotificationStatus;
+  },
+) {
+  await admin.from("notification_delivery_attempts").insert({
+    business_id: businessId,
+    channel: channel as Database["public"]["Enums"]["notification_channel"],
     failure_reason: failureReason,
-    notification_event_id: event.id,
+    notification_event_id: eventId,
     provider,
     provider_message_id: providerMessageId,
     status,
   });
+}
 
+/**
+ * Terminal update for a claimed event. Guarded on `status = 'processing'` so a
+ * row that was not legitimately claimed is never transitioned, and the lock is
+ * always cleared so nothing stays stuck.
+ */
+async function finalizeEvent(
+  admin: SupabaseClient<Database>,
+  {
+    attemptCount,
+    eventId,
+    failureReason,
+    now,
+    providerMessageId,
+    status,
+  }: {
+    attemptCount: number;
+    eventId: string;
+    failureReason: string | null;
+    now: string;
+    providerMessageId: string | null;
+    status: NotificationStatus;
+  },
+) {
   await admin
     .from("notification_events")
     .update({
-      attempt_count: event.attempt_count + 1,
+      attempt_count: attemptCount,
       failed_at: status === "failed" ? now : null,
       failure_reason: failureReason,
       last_attempt_at: now,
@@ -397,10 +590,8 @@ async function dispatchEvent(
       sent_at: status === "sent" ? now : null,
       status,
     })
-    .eq("id", event.id)
+    .eq("id", eventId)
     .eq("status", "processing");
-
-  return status;
 }
 
 export async function processQueuedNotifications(limit = 20): Promise<DispatchResult> {
@@ -419,10 +610,34 @@ export async function processQueuedNotifications(limit = 20): Promise<DispatchRe
   for (const event of (data ?? []) as NotificationEventForDispatch[]) {
     result.attempted += 1;
     try {
+      // The RPC sets 'processing' on every row it returns; anything else means
+      // the row was not legitimately claimed.
+      if (event.status !== undefined && !isClaimedProcessingStatus(event.status)) {
+        console.error("notification dispatch denied", "unclaimed_status");
+        result.skipped += 1;
+        continue;
+      }
       const status = await dispatchEvent(admin, event);
       statusCounts(result, status);
     } catch {
+      // One poisoned row must never end the batch, and must never stay locked:
+      // release it so it cannot block the queue, with its attempt counted.
       result.failed += 1;
+      try {
+        await admin
+          .from("notification_events")
+          .update({
+            attempt_count: boundedAttemptCount(event.attempt_count) + 1,
+            failure_reason: "dispatch_error",
+            last_attempt_at: new Date().toISOString(),
+            locked_until: null,
+            status: "failed",
+          })
+          .eq("id", event.id)
+          .eq("status", "processing");
+      } catch {
+        console.error("notification dispatch denied", "unlock_failed");
+      }
     }
   }
   return result;
@@ -488,17 +703,27 @@ export async function enqueueQuoteDecisionNotification({
       | null;
     if (!quote) return { inserted: 0, skipped: true };
 
+    // In-app only: `push` rows feed the notification centre and are never
+    // dispatched to a provider (the claim RPC selects email/sms only).
+    // Identity comes from the verified quotation row, and the payload goes
+    // through the same allowlist as every other queued event.
+    const payload = persistablePayloadSchema.safeParse({
+      quote_id: quote.id,
+      quote_number: quote.quote_number,
+      type: `quote_${decision}`,
+    });
+    if (!payload.success) {
+      console.error("enqueueQuoteDecisionNotification rejected", "payload_invalid");
+      return { inserted: 0, skipped: true };
+    }
+
     await admin.from("notification_events").upsert(
       {
         business_id: quote.business_id,
-        channel: "push",
+        channel: IN_APP_CHANNEL,
         customer_id: quote.customer_id,
-        dedupe_key: `quote_${decision}:${quote.id}:push`,
-        payload: {
-          quote_id: quote.id,
-          quote_number: quote.quote_number,
-          type: `quote_${decision}`,
-        },
+        dedupe_key: `quote_${decision}:${quote.id}:${IN_APP_CHANNEL}`,
+        payload: payload.data,
         scheduled_for: new Date().toISOString(),
         status: "queued",
         template_key: decision === "approved" ? "quote_approved" : "quote_rejected",
