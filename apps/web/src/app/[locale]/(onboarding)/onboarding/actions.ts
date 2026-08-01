@@ -3,17 +3,24 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { isAccountIntent, type AccountIntent } from "@/lib/account-intent";
-import { getCurrentAccountIntent, getUser } from "@/lib/auth";
+import { type AccountIntent } from "@/lib/account-intent";
+import { getCurrentAccountIntent, getCurrentMembership, getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createBusinessSchema,
+  firstValidationMessage,
+  onboardingIntentSchema,
+} from "@/lib/validation/onboarding";
 
 export type OnboardingState = { error?: string; message?: string };
 
-function parseAccountIntent(value: FormDataEntryValue | null): AccountIntent | null {
-  if (typeof value !== "string") return null;
-  return isAccountIntent(value) ? value : null;
-}
-
+/**
+ * Records the caller's onboarding routing preference.
+ *
+ * `account_intent` is UX state only — it never grants tenant ownership, staff
+ * membership or platform-admin authority (APPSEC-02). The row written is keyed
+ * on the **session** user id, so a caller cannot set another user's intent.
+ */
 export async function saveOnboardingIntent(
   _prev: OnboardingState,
   formData: FormData,
@@ -21,8 +28,11 @@ export async function saveOnboardingIntent(
   const user = await getUser();
   if (!user) redirect("/login");
 
-  const accountIntent = parseAccountIntent(formData.get("account_intent"));
-  if (!accountIntent) return { error: "Choose an account type to continue." };
+  const parsed = onboardingIntentSchema.safeParse({
+    accountIntent: formData.get("account_intent"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const accountIntent = parsed.data.accountIntent as AccountIntent;
 
   const supabase = await createClient();
 
@@ -39,10 +49,15 @@ export async function saveOnboardingIntent(
   ]);
 
   if (profileError) {
-    console.error("saveOnboardingIntent failed", profileError);
+    console.error("saveOnboardingIntent failed", profileError.code);
     return { error: "Could not save your account type. Please try again." };
   }
-  if (authError) return { error: authError.message };
+  if (authError) {
+    // Never surface the provider's own message (APPSEC-07): it can echo the
+    // address or account state back to the caller.
+    console.error("saveOnboardingIntent auth update failed", authError.status);
+    return { error: "Could not save your account type. Please try again." };
+  }
 
   revalidatePath("/", "layout");
   if (accountIntent === "customer") redirect("/portal");
@@ -73,9 +88,17 @@ export async function createBusiness(
     };
   }
 
-  const name = String(formData.get("name") ?? "").trim();
-  const fullName = String(formData.get("full_name") ?? "").trim();
-  if (!name) return { error: "Business name is required." };
+  // Already onboarded: the onboarding page redirects members away, and this
+  // guard makes the action enforce the same rule, so a repeated or directly
+  // invoked submission cannot create a second business and owner membership.
+  const existingMembership = await getCurrentMembership();
+  if (existingMembership) redirect("/");
+
+  const parsed = createBusinessSchema.safeParse({
+    name: formData.get("name"),
+    fullName: formData.get("full_name"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
 
   const metadataName =
     typeof user.user_metadata?.full_name === "string"
@@ -83,12 +106,15 @@ export async function createBusiness(
       : null;
 
   const supabase = await createClient();
+  // Owner identity is NOT passed: `create_business` is SECURITY DEFINER and
+  // derives the owner from auth.uid(), generates the business id server-side and
+  // hard-codes the initial role to 'business_owner'.
   const { error } = await supabase.rpc("create_business", {
-    business_name: name,
-    owner_full_name: fullName || metadataName || undefined,
+    business_name: parsed.data.name,
+    owner_full_name: parsed.data.fullName || metadataName || undefined,
   });
   if (error) {
-    console.error("createBusiness failed", error);
+    console.error("createBusiness failed", error.code);
     return { error: "Could not create your business. Please try again." };
   }
 

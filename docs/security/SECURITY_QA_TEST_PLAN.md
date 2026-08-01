@@ -291,6 +291,54 @@ Synthetic fixtures only (reserved `.invalid` addresses); disposable rows deleted
 afterwards, cleanup verified; no hosted Supabase contact, no personal data, and
 no credentials or full rows printed.
 
+`apps/web/tests/onboarding-security.test.mjs` (added with APPSEC-09 Phase 4E) —
+42 offline tests for onboarding, business creation and invitations, the point at
+which a user first acquires tenant authority. Redirect safety is the largest
+group: the auth callback's `next` parameter is proven to reject the userinfo
+trick (`@host`), absolute URLs, protocol-relative `//host`, `/\host`,
+`javascript:`/`data:`/`mailto:` schemes, control characters and overlong values,
+while still preserving legitimate internal paths with query and hash — each
+refusal is asserted to keep the resolved host on the real origin. Business
+creation: name required/trimmed/bounded to the same 200-character rule as the
+settings form, control characters rejected, Arabic preserved, and injected
+`owner_id`/`business_id`/`role`/`created_by` stripped. Authority is asserted
+against the migrations themselves: `create_business` derives the owner from
+`auth.uid()` and hard-codes `business_owner` with no owner parameter;
+`claim_business_invitations()` takes no arguments, matches on the verified JWT
+email, takes business and role from the stored row, inserts membership
+`on conflict do nothing`, and claims only `pending` rows; invitation role is
+pinned by the app schema, the RLS `with check`, and the table check constraint.
+Plus: `account_intent` confers no authority in any guard, policy or admin
+migration; no service-role client exists in onboarding; errors are curated and
+logs carry `error.code`/`status` only; and APPSEC-10/APPSEC-12 regression gates
+assert neither was implemented.
+
+**Local-only runtime QA performed for Phase 4E (20 of 20 cases passed).** Actor
+context was simulated as PostgREST does it (`set local role authenticated` plus
+`request.jwt.claims` including the email claim), so `auth.uid()` and
+`auth.jwt() ->> 'email'` resolved as for a real request, against the live RPCs on
+the local Docker stack. Verified: an authenticated user creates their own
+business and becomes `business_owner`; an anonymous caller is refused
+(`not authenticated`) with no business created; **no owner parameter exists to
+substitute**; spoofed `account_intent` + `user_metadata.role` claims are refused
+by RLS with zero membership rows; the existing-membership guard prevents a second
+business; an owner can invite into their own business but **not** into another
+(`rls_denied`, zero rows), and an outsider cannot invite at all; an escalated
+`business_owner` invitation is refused (RLS `with check` fires before the table
+constraint); the intended invitee claims exactly one membership with the role
+taken from the invitation and the invitation marked `accepted`; the **wrong user
+claims nothing**; a **replayed claim creates no second membership**; a revoked
+invitation is not claimable; no cross-business membership appears; malformed
+input is rejected before any mutation; and every redirect payload stays confined
+to the real origin. ONB-19/ONB-20 record that `business_invitations` still has
+**no `expires_at`** (APPSEC-10 unchanged, Open) and **no token column** (nothing
+to leak). Synthetic `.invalid` fixtures only; cleanup verified; no hosted
+Supabase contact; no emails, tokens, claims or full rows printed.
+
+Release-control note: merge approval binds to one exact full commit SHA — see
+"Merge approval binds to one exact head" in
+[SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md).
+
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
 
