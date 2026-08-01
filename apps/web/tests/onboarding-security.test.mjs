@@ -323,6 +323,17 @@ test("logs: onboarding logs carry stable codes only, never raw error objects", (
   assert.ok(!/console\.error\([^)]*, *(profileError|error)\)/.test(actions), "no raw error object logged");
 });
 
+test("logs: invitation actions log a stable code, never the raw error object", () => {
+  assert.match(invites, /console\.error\("inviteTeammate failed", error\.code\)/);
+  assert.match(invites, /console\.error\("revokeInvitation failed", error\.code\)/);
+  // A PostgrestError carries message/details/hint — logging the object whole
+  // would put database text in the logs (APPSEC-07 posture).
+  assert.ok(
+    !/console\.error\([^)]*, *error\)/.test(invites),
+    "no raw error object may be logged from the invitation actions",
+  );
+});
+
 test("logs: no email, password or token is written to the onboarding logs", () => {
   for (const leak of ["password", "access_token", "refresh_token", "authorization", "jwt"]) {
     assert.ok(!actions.toLowerCase().includes(leak), `must not reference ${leak}`);
