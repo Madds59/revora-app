@@ -252,6 +252,45 @@ All disposable rows were deleted afterwards. No provider was contacted, no email
 or SMS was sent, no hosted Supabase project was read or modified, and no
 destination or payload content was printed.
 
+`apps/web/tests/admin-security.test.mjs` (added with APPSEC-09 Phase 4D) — 33
+offline tests for the platform-administration surface, the product's only
+**global** authority boundary. Authority: the canonical guard resolves the actor
+from the server session and checks `platform_admins`, and tests assert it
+consults none of `account_intent`, `user_metadata`, `app_metadata`, form data,
+search params, a client `is_admin` field, or any tenant role — and that every
+admin mutation calls the guard **itself**, before its RPC, so layout protection
+is never the control. Input: the grant/revoke direction must be explicitly
+`"true"`/`"false"` (absent no longer means grant), emails are shape-checked,
+bounded and control-character free, notification ids must be UUIDs, non-string
+selectors are rejected rather than coerced, and injected extras
+(`actor_id`, `is_admin`, `business_id`, `table`) are stripped. Wiring: no
+`Object.fromEntries`/formData spread, only the two registered RPCs are reachable,
+no service-role client appears anywhere in the admin tree, errors are curated and
+logs carry `error.code` only. Database defence in depth is asserted from the
+migrations themselves: all `admin_*` RPCs re-check `is_super_admin()`,
+self-revocation is refused, and the filtered list RPCs clamp limit and offset.
+
+**Local-only runtime QA performed for Phase 4D (17 of 17 cases passed).** Actor
+context was simulated exactly as PostgREST does it (`set local role
+authenticated` plus `request.jwt.claims`), so `auth.uid()` and `is_super_admin()`
+resolved as they do for a real request, against the live RPCs on the local Docker
+stack. Verified: a verified platform admin can grant and explicitly revoke; a
+plain authenticated user, a tenant owner, an anonymous caller, and a caller
+presenting **spoofed `account_intent`, `is_admin` and `user_metadata.role`
+claims** are each denied `forbidden` with **zero rows changed**; self-revocation
+is blocked; an unknown target email fails as `target_not_found` with no mutation;
+a missing grant/revoke direction is rejected by the schema before any RPC call; a
+malformed UUID never reaches the RPC and is rejected there too; exactly one
+notification is marked read with the unrelated row untouched; repeat marking is
+idempotent; a non-admin cannot mark notifications read; an admin list RPC is
+denied to a non-admin and caps an absurd `p_limit` of 1,000,000 at 100 rows,
+matching the app-side bound. Case **ADM-17** records the audit gap: a grant and a
+revoke produced **zero** `audit_events` rows, because `platform_admins` has no
+audit trigger (APPSEC-12, documented not fixed — the fix needs a migration).
+Synthetic fixtures only (reserved `.invalid` addresses); disposable rows deleted
+afterwards, cleanup verified; no hosted Supabase contact, no personal data, and
+no credentials or full rows printed.
+
 See [APPSEC_REVIEW_REPORT.md](APPSEC_REVIEW_REPORT.md) for the findings these
 tests guard against.
 
