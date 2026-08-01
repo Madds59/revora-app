@@ -30,7 +30,7 @@ missing or ineffective), **NOT REVIEWED** (out of scope for this pass),
 | 13 | AI Vehicle Intelligence safety | PASS | APPSEC-13 |
 | 14 | Stripe webhook safety | PASS | APPSEC-14 |
 | 15 | Error handling / DB error leakage | **FAIL → fixed**: action/mutation layer fixed in the original pass; read-path page components fixed in a follow-up pass (see APPSEC-07b) | APPSEC-07 / APPSEC-07b |
-| 16 | Input validation | WARNING → **Phases 1–4D fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service, platform administration); onboarding/billing remain Phase 4E+ | APPSEC-09 |
+| 16 | Input validation | WARNING → **Phases 1–4E fixed** (dashboard, portal, customers/vehicles/settings, evidence Storage, vehicle media, notification service, platform administration, onboarding/invitations); billing remains Phase 4F+ | APPSEC-09 |
 | 17 | URL/ID tampering | PASS → **Fixed** (portal quote ownership checks added in APPSEC-09 Phase 2) | APPSEC-06 / APPSEC-11 |
 | 18 | Business logic abuse | PASS | APPSEC-16 |
 
@@ -516,6 +516,35 @@ acquisition and release, `attempt_count` increment and clamping, poisoned stored
 recipients ignored in favour of the re-derived destination, a throwing row
 released without ending the batch, terminal rows never re-claimed, and **0**
 provider invocations under a `fetch` tripwire.
+
+**Phase 4E fix (onboarding, business creation and invitations):** onboarding is
+where a user first acquires tenant authority. The authority model was found sound
+and preserved: `create_business` (SECURITY DEFINER) derives the owner from
+`auth.uid()` with **no owner parameter to abuse**, generates the business id
+server-side, hard-codes the initial role to `business_owner`, and creates
+profile + business + membership in one body so a failure cannot orphan a
+business; `claim_business_invitations` takes **no arguments at all**, matching
+pending invitations against the caller's **verified JWT email** and taking
+`business_id` and `role` from the stored invitation row, with membership inserted
+`on conflict do nothing` — so an invitation cannot be claimed by the wrong user,
+redirected to another business, role-upgraded, or replayed into a second
+membership. Invitation role is pinned three times (app schema, RLS `with check`,
+table check constraint), and `account_intent` remains UX-only (APPSEC-02
+re-verified). **The real finding was an open redirect (P2):** the auth callback
+did `redirect(`${origin}${next}`)` with `next` from the query string, so
+`next=@evil.example` yields `https://<origin>@evil.example` — the origin becomes
+userinfo and the host becomes the attacker's, turning a link on the genuine
+Revora domain into a post-login phishing hop. `safeInternalRedirect()` now
+reduces `next` to a proven-internal path. Also fixed: `saveOnboardingIntent`
+returned a raw Supabase `authError.message` to the user (APPSEC-07 regression),
+and `createBusiness` passed unvalidated free text to the RPC — now bounded to the
+same 200-character rule as the settings form, control characters rejected, Arabic
+preserved, unknown fields stripped; and a repeat or direct invocation can no
+longer create a second business. Local runtime QA (20/20) confirmed owner
+derivation, cross-business invitation denial, wrong-user and replay denial with
+zero extra memberships, role-escalation refusal, and origin-confined redirects.
+No migration, no RLS change; APPSEC-10 (no expiry column) and APPSEC-12 both
+untouched. Tests: `tests/onboarding-security.test.mjs`.
 
 **Phase 4D fix (platform-administration mutations):** the `/admin` area is the
 product's only **global** authority surface. The inventory found authorization

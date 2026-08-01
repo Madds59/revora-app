@@ -84,6 +84,29 @@ notifications, or platform admin (see
       through `is_super_admin()`-gated RPCs
 - [ ] Self-elevation and self-demotion-of-others-without-being-admin remain blocked
 
+## Merge approval binds to one exact head
+
+Merge approval is granted for **one exact full commit SHA**, never for "the PR".
+
+- [ ] The approval names the **full 40-character SHA**, not an abbreviation
+- [ ] The live PR head **equals** that SHA at the moment of merging — re-check it
+      immediately before merging, not once at review time
+- [ ] **Any** new commit on the branch invalidates the approval, including a
+      documentation-only or comment-only commit
+- [ ] Re-sending an approval that names a **stale** SHA does not authorize a newer
+      head; a fresh approval naming the current head is required
+- [ ] An automated agent must never infer that a newer head is covered by an
+      earlier approval — it stops and asks for approval of the current head
+- [ ] Alternatively, the founder may execute the merge personally
+
+**Why this exists:** during the APPSEC-09 Phase 4D release, PR #12 was approved at
+`2d18dd6`, a documentation-only commit `fc8f03b` was then pushed to the same
+branch, and the merge executed at `fc8f03b`. Every release check passed on the
+merged head and the extra commit was benign documentation, so no rollback was
+required — but the merged commit was not the approved commit, which is a
+release-control deviation. The merge record must always be able to state that the
+merged SHA *is* the approved SHA.
+
 ## Sign-off
 
 Record in [SECURITY_RISK_REGISTER.md](SECURITY_RISK_REGISTER.md) if any checklist item

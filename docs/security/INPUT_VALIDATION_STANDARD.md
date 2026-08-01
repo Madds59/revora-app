@@ -562,14 +562,75 @@ grant/revoke leaves no history. Fixing that requires a migration or an RLS chang
 and was therefore out of scope for this branch; it is documented in the register
 with severity and a recommendation rather than silently worked around.
 
-## Remaining boundaries (NOT covered by Phases 1–4D)
+## Phase 4E — onboarding, business creation and invitations
+
+Onboarding is where a user first acquires tenant authority, so the trust model
+matters more than the input volume suggests. The inventory found the **authority**
+model sound, and it was preserved rather than rewritten:
+
+- **`create_business`** (migration 0004, SECURITY DEFINER) derives the owner from
+  `auth.uid()`, rejects unauthenticated callers, generates the business id
+  server-side, and inserts the initial membership for that same uid with the role
+  hard-coded to `'business_owner'`. **There is no owner parameter to abuse**, and
+  profile + business + membership are created in one plpgsql body, so a failure
+  cannot leave an orphan business.
+- **`claim_business_invitations`** (migration 0010, SECURITY DEFINER) takes **no
+  arguments at all**. It matches pending invitations against the caller's
+  **verified JWT email**, takes `business_id` and `role` from the stored
+  invitation row, and inserts membership `on conflict (business_id, user_id) do
+  nothing`. A caller therefore cannot accept another person's invitation by
+  learning its id, cannot substitute a business, cannot upgrade the role, and
+  cannot create a duplicate membership.
+- **Invitation role** is pinned three times: the Phase 3 app schema, the RLS
+  policy's `with check (… role in ('manager','employee'))`, and the table's
+  `business_invitations_role_check`. Platform administration lives in a separate
+  table and cannot be granted through a tenant invitation.
+- **`account_intent` is UX routing state only** and confers nothing — re-verified
+  against the guards, the RLS policies and the platform-admin migration.
+- No service-role client appears anywhere in onboarding.
+
+Three real defects were fixed at the app boundary:
+
+1. **Open redirect in the auth callback (P2).** `app/auth/callback/route.ts` did
+   `redirect(`${origin}${next}`)` with `next` straight from the query string.
+   `next=@evil.example` produces `https://<origin>@evil.example`, where the origin
+   is parsed as *userinfo* and the real host becomes `evil.example` — a link on
+   the genuine Revora domain would hand a freshly signed-in user to an attacker's
+   site. `safeInternalRedirect()` now reduces `next` to a safe internal path:
+   string-only, bounded, control-character free, must start with a single `/`
+   (rejects `@host`, `https://host`, `javascript:`), rejects `//host` and `/\host`,
+   and finally re-parses to prove the origin is unchanged.
+2. **Raw provider error returned to the user (P3).** `saveOnboardingIntent`
+   returned `authError.message` verbatim — an APPSEC-07 regression that had
+   survived earlier passes. Now curated, with `authError.status` logged.
+3. **Unvalidated business creation input (P3).** `createBusiness` passed raw form
+   text to the RPC. Now `createBusinessSchema` bounds the name to 200 characters
+   (matching the Phase 3 `updateBusiness` rule, so a name cannot be created that
+   the settings form would refuse to edit), rejects control characters, preserves
+   Arabic verbatim, and strips unknown fields such as `owner_id`/`role`.
+
+Also: a repeat or directly invoked `createBusiness` can no longer create a second
+business — the action now enforces the same existing-membership rule the
+onboarding page already applied. Logs carry `error.code`/`status` only.
+
+Schemas live in `lib/validation/onboarding.js`, with
+`ONBOARDING_MUTATION_REGISTRY` as the explicit call-site registry.
+
+**APPSEC-10 is unchanged and remains Open:** `business_invitations` has no
+`expires_at` column and no expiry semantics, so nothing here could honour or
+weaken one; no expiry column, policy or job was added. The table also has **no
+token column** — acceptance is by verified email, so there is no invitation
+bearer token to leak, log or replay.
+
+## Remaining boundaries (NOT covered by Phases 1–4E)
 
 These external-input mutation boundaries still use ad-hoc validation and are the
-scope of **Phase 4E+**:
+scope of **Phase 4F+**:
 
-- `(dashboard)/notifications/actions.ts`, `(onboarding)/onboarding/actions.ts`,
-  and billing surfaces. (`(admin)/admin/actions.ts` — **fixed in Phase 4D**, see
-  above.)
+- `(dashboard)/notifications/actions.ts` and billing surfaces.
+  (`(admin)/admin/actions.ts` — **fixed in Phase 4D**;
+  `(onboarding)/onboarding/actions.ts` and the auth callback — **fixed in Phase
+  4E**; both see above.)
 - `lib/vehicle-intelligence/actions.ts` `uploadVehicleMediaAction` — **fixed in Phase 4B** (see above).
 - No maximum upload size is defined anywhere in the product; Phases 3 and 4A
   reject zero-byte/garbage sizes but do not invent a cap. Upload-size governance
@@ -583,7 +644,7 @@ scope of **Phase 4E+**:
   today (soft-delete columns are read-filtered only), so none were added.
 
 Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B,
-4C and 4D complete", not fully closed.**
+4C, 4D and 4E complete", not fully closed.**
 
 ## Rollout plan
 
@@ -598,9 +659,10 @@ Because these remain, **APPSEC-09 is "Partially fixed — Phases 1, 2, 3, 4A, 4B
 5. **Phase 4B (merged):** `uploadVehicleMediaAction` storage-path/ownership.
 6. **Phase 4C (merged):** notification service — queue-time validation and
    dispatch-time revalidation of claimed rows at the service-role boundary.
-7. **Phase 4D (current branch):** platform-administration mutations.
-8. **Phase 4E+:** onboarding and billing. `lib/actions/launch-ops.ts` and
+7. **Phase 4D (merged):** platform-administration mutations.
+8. **Phase 4E (current branch):** onboarding, business creation and invitations.
+9. **Phase 4F+:** billing. `lib/actions/launch-ops.ts` and
    `lib/stripe-webhook.ts` remain separately scoped privileged-boundary work.
-9. Fold a "new server actions validate input via a `lib/validation` schema"
+10. Fold a "new server actions validate input via a `lib/validation` schema"
    item into [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) once coverage
    is broad.
