@@ -19,6 +19,10 @@ dist/
 .temp
 supabase/.temp/
 
+# Python caches (skill scripts)
+__pycache__/
+*.pyc
+
 # Misc
 .DS_Store
 *.pem
