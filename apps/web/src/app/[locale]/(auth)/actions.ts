@@ -9,7 +9,11 @@ import {
   buildLoginPath,
   buildResetPasswordPath,
 } from "@/lib/auth-links";
+// SERVER-ONLY (imports node:crypto). Never import this into a client
+// component — see the module header for the full fail-open contract.
+import { isPasswordBreached } from "@/lib/password-breach";
 import { createClient } from "@/lib/supabase/server";
+import { firstValidationMessage, passwordSchema } from "@/lib/validation/password";
 
 export type AuthState = { error?: string; message?: string };
 
@@ -49,8 +53,25 @@ export async function signUp(
   const password = String(formData.get("password") ?? "");
   const accountIntent = parseAccountIntent(formData.get("account_intent"));
   if (!email || !password) return { error: t("emailRequired") };
-  if (password.length < 8) return { error: t("passwordMin") };
+
+  // The canonical policy (APPSEC-10 Task 1). The client-side checklist
+  // (PasswordRequirements) is a UX affordance ONLY — this is the sole
+  // authority on whether a password is accepted. Do not remove this in favor
+  // of the client check; a client component can always be bypassed.
+  const parsedPassword = passwordSchema({ email }).safeParse(password);
+  if (!parsedPassword.success) {
+    return { error: firstValidationMessage(parsedPassword) };
+  }
   if (!accountIntent) return { error: t("chooseAccountType") };
+
+  // Only reached once the schema above has already rejected malformed input
+  // (including an absurdly long password), so this never hashes unbounded
+  // attacker-supplied data. `checked: false` means HIBP could not be reached
+  // (fail-open, Task 2's deliberate contract) and must proceed as normal —
+  // only a confirmed breach (`breached === true` AND `checked === true`)
+  // blocks signup.
+  const { breached, checked } = await isPasswordBreached(password);
+  if (checked && breached) return { error: t("passwordBreached") };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -123,8 +144,21 @@ export async function updatePassword(
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirm_password") ?? "");
   if (!password) return { error: t("passwordRequired") };
-  if (password.length < 8) return { error: t("passwordMin") };
+
+  // No email in scope here (see Task 3 brief) — the schema's email-based
+  // "not your email" rule is simply skipped. The client-side checklist is a
+  // UX affordance ONLY; this is the sole authority on password acceptance.
+  const parsedPassword = passwordSchema().safeParse(password);
+  if (!parsedPassword.success) {
+    return { error: firstValidationMessage(parsedPassword) };
+  }
   if (password !== confirmPassword) return { error: t("passwordMismatch") };
+
+  // See the identical comment in signUp: schema-then-breach-check ordering
+  // means this never hashes unbounded input, and `checked: false` (HIBP
+  // unreachable) must fail OPEN, not closed.
+  const { breached, checked } = await isPasswordBreached(password);
+  if (checked && breached) return { error: t("passwordBreached") };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });

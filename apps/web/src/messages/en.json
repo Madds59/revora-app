@@ -342,13 +342,25 @@
     },
     "actions": {
       "emailRequired": "Email and password are required.",
-      "passwordMin": "Password must be at least 8 characters.",
       "passwordRequired": "Password is required.",
       "passwordMismatch": "Passwords do not match.",
       "chooseAccountType": "Choose an account type to continue.",
       "checkEmail": "Check your email to confirm your account, then sign in.",
       "magicLinkSent": "Magic link sent. Check your email to sign in.",
-      "passwordResetSent": "If an account exists, a reset link was sent."
+      "passwordResetSent": "If an account exists, a reset link was sent.",
+      "passwordBreached": "This password has appeared in a known data breach. Please choose a different password."
+    },
+    "password": {
+      "requirementsTitle": "Password requirements",
+      "rules": {
+        "length": "At least 12 characters",
+        "lowercase": "One lowercase letter (a-z)",
+        "uppercase": "One uppercase letter (A-Z)",
+        "digit": "One number (0-9)",
+        "symbol": "One symbol (e.g. ! @ # $)",
+        "notEmail": "Doesn't contain your email address",
+        "notCommon": "Not a commonly used password"
+      }
     },
     "login": {
       "title": "Sign in",
