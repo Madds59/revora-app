@@ -295,14 +295,38 @@ rather than a stack trace.
 `apps/web/src/lib/validation/rate-limit-key.js` for the pure key/IP derivation
 so it is unit-testable offline (constraint 2 applies — `.js`).
 
-`rate-limit-key.js` exports `clientIpFrom(headerGetter)`: reads
-`x-forwarded-for` (taking the FIRST comma-separated entry, trimmed) and falls
-back to `x-real-ip`. When neither yields a usable value it returns the constant
-string `"unknown"` — a shared bucket. It must NOT return null/skip: failing open
-on a missing header would make the whole limit trivially bypassable by stripping
-it. Note that in a comment. Validate the extracted value looks like an IP
-(basic IPv4/IPv6 shape) and fall back to `"unknown"` if not, so a forged header
-cannot create unbounded distinct buckets.
+`rate-limit-key.js` exports `clientIpFrom(headerGetter)`, resolving the client IP
+in this precedence, most-trusted first:
+
+1. `x-vercel-forwarded-for` — set by the platform edge, not client-settable.
+2. `x-real-ip`.
+3. `x-forwarded-for`, taking the **LAST** comma-separated entry, trimmed.
+4. Otherwise the constant string `"unknown"` — a shared bucket.
+
+**CORRECTED 2026-08-22 after Task 5's review.** This originally said to take the
+FIRST `x-forwarded-for` entry. That entry is attacker-controlled whenever the edge
+APPENDS rather than overwrites, so an attacker sending a random valid IPv4 per
+request lands in a fresh bucket every time — reducing `login_ip`, `signup_ip`, and
+`password_reset_ip` to no protection at all. With a trusted appending proxy the
+RIGHTMOST hop is the one your own edge added, so it is the attacker-resistant
+choice. Where the edge overwrites XFF with a single value, first and last are
+identical and the change is inert.
+
+It must NOT return null or signal "skip": failing open on a missing header would
+make the limit trivially bypassable by stripping it. Note that in a comment.
+
+Validate the extracted value looks like an IP and fall back to `"unknown"` if not.
+Normalize an `::ffff:` prefix off IPv4-mapped IPv6 and strip any `%zone` suffix
+BEFORE validating — `::ffff:192.0.2.1` is what nginx `$remote_addr` and Node
+`req.socket.remoteAddress` emit on a dual-stack listener, and rejecting it
+collapses every client into the shared `"unknown"` bucket, turning `login_ip`'s
+20/15min into a site-wide login outage.
+
+**Do not overclaim the shape check in comments.** It bounds the character set, not
+the cardinality: `IPV4_RE` alone admits ~4.3 billion valid buckets. No shape
+validator can prevent a forged header minting unbounded distinct buckets — only a
+trusted edge-set header can. Say so honestly, because an overclaiming comment is
+how a real gap gets ignored.
 
 **You must also declare the RPC in `apps/web/src/lib/database.types.ts`.** That
 file is HAND-AUTHORED (a curated subset, not generated output) — see its
@@ -486,6 +510,22 @@ Docs:
   matching requirements; enable Supabase leaked-password protection if the plan
   offers it; and enrol MFA for every existing `platform_admins` member BEFORE
   this ships, or they will be redirected to enrollment on next login.
+
+  It must ALSO carry two items surfaced by earlier reviews:
+
+  **(a) Migration 0031 was edited in place.** Task 4's `0031_auth_rate_limits.sql`
+  was amended after first being written (to revoke the `anon` EXECUTE grant). Any
+  database where the ORIGINAL 0031 already ran will never receive those revokes —
+  Supabase's migration ledger records 0031 as applied and will not re-execute it,
+  so the RPC would remain callable with the public anon key. Local was covered by
+  `supabase db reset --local`, and this branch has not been pushed, so the risk is
+  currently nil. The operator must confirm 0031 was never applied to any shared or
+  hosted environment; if it was, a follow-up migration carrying only the three
+  revokes is required.
+
+  **(b) Why `password_requirements` is deliberately left empty.** Record the
+  reasoning from Task 7's config change below, so a future operator does not
+  "harden" it in the dashboard and start surfacing raw Supabase error strings.
 
 Tests: exhaustive `mfaRedirectFor` truth-table coverage including both
 loop-prevention cases; a release gate asserting middleware calls `mfaRedirectFor`
