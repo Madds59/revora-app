@@ -348,7 +348,13 @@
       "checkEmail": "Check your email to confirm your account, then sign in.",
       "magicLinkSent": "Magic link sent. Check your email to sign in.",
       "passwordResetSent": "If an account exists, a reset link was sent.",
-      "passwordBreached": "This password has appeared in a known data breach. Please choose a different password."
+      "passwordBreached": "This password has appeared in a known data breach. Please choose a different password.",
+      "tooManyAttempts": "Too many attempts. Please wait a while and try again.",
+      "invalidCredentials": "Invalid email or password.",
+      "signUpFailed": "We couldn't create your account. Please try again.",
+      "magicLinkFailed": "We couldn't send the magic link. Please try again.",
+      "passwordResetFailed": "We couldn't process your request. Please try again.",
+      "updatePasswordFailed": "We couldn't update your password. Please try again."
     },
     "password": {
       "requirementsTitle": "Password requirements",

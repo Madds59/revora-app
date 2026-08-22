@@ -12,10 +12,27 @@ import {
 // SERVER-ONLY (imports node:crypto). Never import this into a client
 // component — see the module header for the full fail-open contract.
 import { isPasswordBreached } from "@/lib/password-breach";
+// SERVER-ONLY (transitively imports lib/supabase/admin.ts, which holds the
+// service-role key). Never import this into a client component. See the
+// module header for the fail-CLOSED contract — the opposite of
+// password-breach.ts above, and deliberately so.
+import { enforceAuthRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
+import { clientIpFrom } from "@/lib/validation/rate-limit-key";
 import { firstValidationMessage, passwordSchema } from "@/lib/validation/password";
 
 export type AuthState = { error?: string; message?: string };
+
+/**
+ * Best-effort client IP for rate-limit bucket keys. `clientIpFrom` (see its
+ * module header) never returns null — a request with no usable IP header is
+ * bucketed under the literal string "unknown" rather than being exempted
+ * from limiting.
+ */
+async function clientIp(): Promise<string> {
+  const headerList = await headers();
+  return clientIpFrom((name) => headerList.get(name));
+}
 
 function parseAccountIntent(value: string | FormDataEntryValue | null): AccountIntent | null {
   if (typeof value !== "string") return null;
@@ -69,9 +86,26 @@ export async function signIn(
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: t("emailRequired") };
 
+  // Dual-key on purpose (see lib/rate-limit.ts): an email-only bucket lets an
+  // attacker lock a victim out; an IP-only bucket is beaten by distributing
+  // attempts across IPs. Runs BEFORE the Supabase call, and discloses neither
+  // remaining quota nor whether the account exists.
+  const allowed = await enforceAuthRateLimit({
+    scopes: [
+      ["login_ip", await clientIp()],
+      ["login_email", email],
+    ],
+  });
+  if (!allowed) return { error: t("tooManyAttempts") };
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
+  if (error) {
+    // Curated, non-enumerating message — never error.message (constraint 3).
+    // Only the stable SDK error code is logged.
+    console.error("auth_sign_in_error", error.code ?? "unknown");
+    return { error: t("invalidCredentials") };
+  }
 
   redirect("/");
 }
@@ -86,6 +120,16 @@ export async function signUp(
   const password = String(formData.get("password") ?? "");
   const accountIntent = parseAccountIntent(formData.get("account_intent"));
   if (!email || !password) return { error: t("emailRequired") };
+
+  // IP-only (no email scope here per the spec): burning through the breach
+  // check (a real HIBP network call) and Supabase signup quota is what this
+  // guards against, not per-email lockout on an action that doesn't yet
+  // authenticate anyone. Runs BEFORE the schema/breach checks and the
+  // Supabase call.
+  const signUpAllowed = await enforceAuthRateLimit({
+    scopes: [["signup_ip", await clientIp()]],
+  });
+  if (!signUpAllowed) return { error: t("tooManyAttempts") };
 
   // The canonical policy (APPSEC-10 Task 1). The client-side checklist
   // (PasswordRequirements) is a UX affordance ONLY — this is the sole
@@ -117,7 +161,12 @@ export async function signUp(
       data: { full_name: fullName, account_intent: accountIntent },
     },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    // Curated, non-enumerating message — never error.message (constraint 3).
+    // Only the stable SDK error code is logged.
+    console.error("auth_sign_up_error", error.code ?? "unknown");
+    return { error: t("signUpFailed") };
+  }
 
   // When email confirmation is enabled, there is no session yet.
   if (!data.session)
@@ -134,12 +183,30 @@ export async function signInWithMagicLink(
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: t("emailRequired") };
 
+  // Dual-key: an email bucket for this flow specifically, plus the shared
+  // login_ip bucket (this is still an unauthenticated-sign-in path). Runs
+  // BEFORE the Supabase call.
+  const allowed = await enforceAuthRateLimit({
+    scopes: [
+      ["magic_link_email", email],
+      ["login_ip", await clientIp()],
+    ],
+  });
+  if (!allowed) return { error: t("tooManyAttempts") };
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: await callbackUrl("/") },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    // Curated, non-enumerating message — never error.message (constraint 3).
+    // Preserves the existing success-shaped-regardless-of-account-existence
+    // property: this path never distinguishes "no such account" from any
+    // other failure. Only the stable SDK error code is logged.
+    console.error("auth_magic_link_error", error.code ?? "unknown");
+    return { error: t("magicLinkFailed") };
+  }
 
   return { message: t("magicLinkSent") };
 }
@@ -159,12 +226,28 @@ export async function requestPasswordReset(
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: t("emailRequired") };
 
+  // Dual-key, same rationale as signIn. Runs BEFORE the Supabase call.
+  const allowed = await enforceAuthRateLimit({
+    scopes: [
+      ["password_reset_ip", await clientIp()],
+      ["password_reset_email", email],
+    ],
+  });
+  if (!allowed) return { error: t("tooManyAttempts") };
+
   const supabase = await createClient();
   const locale = (await getLocale()) as "en" | "ar";
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: await callbackUrl(buildResetPasswordPath(locale)),
   });
-  if (error) return { error: error.message };
+  if (error) {
+    // Curated, non-enumerating message — never error.message (constraint 3).
+    // Preserves the existing success-shaped-regardless-of-account-existence
+    // property: this path never distinguishes "no such account" from any
+    // other failure. Only the stable SDK error code is logged.
+    console.error("auth_password_reset_error", error.code ?? "unknown");
+    return { error: t("passwordResetFailed") };
+  }
 
   return { message: t("passwordResetSent") };
 }
@@ -195,7 +278,12 @@ export async function updatePassword(
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { error: error.message };
+  if (error) {
+    // Curated, non-enumerating message — never error.message (constraint 3).
+    // Only the stable SDK error code is logged.
+    console.error("auth_update_password_error", error.code ?? "unknown");
+    return { error: t("updatePasswordFailed") };
+  }
 
   const locale = (await getLocale()) as "en" | "ar";
   await supabase.auth.signOut();

@@ -3387,6 +3387,10 @@ export type Database = {
       }
       claim_business_invitations: { Args: never; Returns: number }
       claim_customer_records: { Args: never; Returns: number }
+      consume_rate_limit: {
+        Args: { identifier: string; scope: string }
+        Returns: boolean
+      }
       create_business: {
         Args: { business_name: string; owner_full_name?: string }
         Returns: string
