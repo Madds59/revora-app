@@ -451,9 +451,20 @@ Rules:
 
 - `currentLevel === "aal1" && nextLevel === "aal2"` (a verified factor exists but
   this session has not satisfied it) → `"/login/mfa"`.
-- `isSuperAdmin && !hasVerifiedFactor` → `"/settings/security"`. An admin with no
-  factor is sent to ENROLL, never locked out. This is what closes
-  `THREAT_MODEL.md:84`.
+- `isSuperAdmin && !hasVerifiedFactor` **and the path is under `/admin`** →
+  `"/settings/security"`. An admin with no factor is sent to ENROLL, never locked
+  out. This is what closes `THREAT_MODEL.md:84`.
+
+  **AMENDED 2026-08-22.** This rule originally fired on EVERY path. Scoping it to
+  `/admin` is deliberate: the control being bought is "MFA is required to reach the
+  platform admin area", and scoping achieves exactly that. Firing globally adds no
+  security — an admin's non-admin access is governed by the same session either way
+  — but it converts any enrollment failure into a total app lockout. That failure is
+  not hypothetical: `supabase/config.toml` governs only the LOCAL stack, so if the
+  hosted project has MFA disabled in its dashboard, enrollment CANNOT succeed, and a
+  globally-firing rule would bounce every platform admin out of the entire product
+  with generic copy and no operator signal. Scoped, the same misconfiguration costs
+  admins only `/admin` while they keep normal access — recoverable, and diagnosable.
 - `isSuperAdmin && currentLevel !== "aal2"` and the path is under `/admin` →
   `"/login/mfa"`. Platform admins must be AAL2 to reach `/admin`.
 - Otherwise `null`.
@@ -526,6 +537,17 @@ Docs:
   **(b) Why `password_requirements` is deliberately left empty.** Record the
   reasoning from Task 7's config change below, so a future operator does not
   "harden" it in the dashboard and start surfacing raw Supabase error strings.
+
+  **(c) TOTP must be enabled on the HOSTED project, not just locally.**
+  `supabase/config.toml` governs only the local CLI stack, and no workflow pushes
+  it to a hosted project. Task 6 enabled `[auth.mfa.totp] enroll_enabled` /
+  `verify_enabled` there so the feature works locally. If the production project
+  has MFA disabled in its dashboard (Auth → Multi-Factor Authentication), the
+  security page ships DEAD in production: enrollment fails with the deliberately
+  generic `enrollFailed` copy and there is no operator signal that the cause is a
+  platform setting rather than a bug. Confirm this BEFORE Task 7's AAL gate goes
+  live — otherwise admins can be redirected to an enrollment page that cannot
+  possibly succeed, locking them out of the admin area.
 
 Tests: exhaustive `mfaRedirectFor` truth-table coverage including both
 loop-prevention cases; a release gate asserting middleware calls `mfaRedirectFor`
