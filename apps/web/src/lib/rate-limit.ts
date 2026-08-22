@@ -34,32 +34,52 @@ export type RateLimitScope =
  * `42501 permission denied`; that failure is not a bug to route around by
  * granting anything in SQL, it's the intended boundary.
  *
- * FAILS CLOSED: any RPC-level error (network, permission, unexpected scope,
- * anything) denies the attempt rather than silently disabling the limiter. A
- * broken limiter must never quietly turn into no limiter at all. This is the
- * OPPOSITE contract from `lib/password-breach.js`, which fails OPEN by
- * deliberate design — do not "fix" this to match that one, and do not "fix"
- * that one to match this.
+ * FAILS CLOSED: ANY failure here denies the attempt rather than silently
+ * disabling the limiter — a broken limiter must never quietly turn into no
+ * limiter at all. This is the OPPOSITE contract from `lib/password-breach.js`,
+ * which fails OPEN by deliberate design — do not "fix" this to match that
+ * one, and do not "fix" that one to match this.
  *
- * Only a stable error code is ever logged — never `error.message`, which
- * could echo back scope/identifier-derived SQL text.
+ * The whole body is wrapped in try/catch, not just the RPC call: this is
+ * deliberate, because `createAdminClient()` itself throws synchronously if
+ * `SUPABASE_SERVICE_ROLE_KEY` is unset (see `lib/supabase/admin.ts`), and an
+ * uncaught throw there would previously have escaped this function entirely
+ * — bypassing the curated `tooManyAttempts` message, surfacing a raw
+ * unhandled-action failure (and, in dev, the raw env-var error text) to the
+ * user instead. Catching it here means EVERY failure mode — RPC error,
+ * client construction, network — funnels through the same fail-closed path
+ * with the same stable logged code.
+ *
+ * Only a stable error code is ever logged — never `error.message`/a caught
+ * error's `.message`, which could echo back scope/identifier-derived SQL
+ * text or environment details.
  */
 export async function checkRateLimit(
   scope: RateLimitScope,
   identifier: string,
 ): Promise<boolean> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("consume_rate_limit", {
-    scope,
-    identifier,
-  });
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.rpc("consume_rate_limit", {
+      scope,
+      identifier,
+    });
 
-  if (error) {
-    console.error("rate_limit_rpc_error", scope, error.code ?? "unknown");
+    if (error) {
+      console.error("rate_limit_rpc_error", scope, error.code ?? "unknown");
+      return false;
+    }
+
+    return data === true;
+  } catch {
+    // Covers createAdminClient() throwing (missing service-role key) and any
+    // other unexpected throw from the client/network layer. Deliberately no
+    // caught-error detail is logged — only this stable code — since the
+    // thrown value here could be an env-var error message or other
+    // unstructured text we don't want in logs.
+    console.error("rate_limit_client_error", scope);
     return false;
   }
-
-  return data === true;
 }
 
 /**
@@ -75,6 +95,21 @@ export async function checkRateLimit(
  * scope passed in is always attempted exactly once), and avoids a request
  * that touches N buckets partially draining only some of them depending on
  * scope order.
+ *
+ * TRADEOFF, stated honestly rather than dismissed: not short-circuiting has
+ * a real cost. An attacker whose OWN `login_ip` bucket is already exhausted
+ * can keep issuing requests against arbitrary victims' `login_email` (etc.)
+ * buckets at zero marginal benefit to themselves but real cost to the
+ * victim — short-circuiting on the IP denial would force them to rotate IPs
+ * to keep draining a victim's email bucket; not short-circuiting doesn't.
+ * This is a deliberate, accepted tradeoff, not an oversight: the likelier
+ * real-world effect of not short-circuiting is a legitimate NAT/shared-IP
+ * user burning their OWN email bucket alongside their IP bucket on repeated
+ * failed logins, and every email bucket is already capped at a small number
+ * of attempts (8 for `login_email`) regardless of what the paired IP bucket
+ * is doing — so the attack this tradeoff enables doesn't get an attacker
+ * more attempts against a given email than they'd already have without it,
+ * it just removes the extra friction of having to rotate IPs to use them.
  *
  * IMPORTANT: each `[scope, identifier]` pair below results in its own
  * `checkRateLimit` call, i.e. its own PostgREST request and therefore its own
