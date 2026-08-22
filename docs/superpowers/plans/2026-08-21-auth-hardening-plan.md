@@ -258,9 +258,24 @@ RPC behaviour:
    attempt_count = case when auth_rate_limits.window_start < now() - make_interval(secs => window_seconds) then 1 else auth_rate_limits.attempt_count + 1 end
    returning attempt_count into v_count;`
 - Return `v_count <= max_attempts`.
-- `grant execute on function public.consume_rate_limit(text, text) to anon, authenticated;`
-  — login is unauthenticated, so `anon` genuinely needs it.
-- Follow the GRANT conventions already established in `0003_api_grants.sql`.
+- `revoke all on function public.consume_rate_limit(text, text) from public;`
+  FIRST, then `grant execute on function public.consume_rate_limit(text, text)
+  to service_role;` — and nothing else.
+  **CORRECTED 2026-08-22 after Task 4's review.** This originally read
+  "`to anon, authenticated` — login is unauthenticated, so `anon` genuinely needs
+  it." That was wrong: it confused the END USER being unauthenticated with the
+  DATABASE CALLER being `anon`. Server Actions run server-side and call through
+  the service-role client. An `anon` grant exposes the RPC at
+  `POST /rest/v1/rpc/consume_rate_limit` to anyone holding the public anon key,
+  letting them burn a known victim's `login_email` bucket in 8 requests and lock
+  them out for 15 minutes — a targeted account-lockout weapon, strictly worse
+  than the brute-force it prevents.
+  The `revoke from public` is NOT optional and NOT stylistic: Postgres grants
+  `EXECUTE` to `PUBLIC` on every newly created function, and `anon` is a member
+  of `PUBLIC`, so dropping the `anon` grant without the revoke changes nothing.
+- Follow the GRANT conventions already established in `0003_api_grants.sql`, and
+  the `revoke ... from public` convention used by every other SECURITY DEFINER
+  function in this migration set (e.g. `0004:46`, `0030:233-235`).
 
 `verify-rate-limit.mjs` follows the existing `apps/web/scripts/e2e.mjs`
 precedent (same env var handling and reporting style) and verifies against the
@@ -300,10 +315,29 @@ Match the surrounding style exactly. Do NOT regenerate the file with
 relies on.
 
 `rate-limit.ts` exports `checkRateLimit(scope, identifier)` calling
-`supabase.rpc("consume_rate_limit", { scope, identifier })` via the server
-client, plus `enforceAuthRateLimit({ scopes })` taking a list of
-`[scope, identifier]` pairs. **If the RPC itself errors, deny** (fail closed) and
-log a stable code — a broken limiter must not silently disable protection.
+`supabase.rpc("consume_rate_limit", { scope, identifier })`, plus
+`enforceAuthRateLimit({ scopes })` taking a list of `[scope, identifier]` pairs.
+**If the RPC itself errors, deny** (fail closed) and log a stable code — a broken
+limiter must not silently disable protection.
+
+**Call it through the SERVICE-ROLE client** (`lib/supabase/admin.ts`), NOT the
+request-scoped server client. Task 4's review established why: `EXECUTE` on
+`consume_rate_limit` is granted only to `service_role`, and revoked from `public`
+(and therefore from `anon`). If it were reachable by `anon`, the RPC would be
+callable directly at `POST /rest/v1/rpc/consume_rate_limit` with the public anon
+key, letting anyone who knows a victim's email burn that victim's `login_email`
+bucket in 8 requests and lock them out for 15 minutes — turning the limiter into
+a targeted account-lockout weapon. The Server Action runs server-side, so the
+service-role client is both available and correct here.
+
+`lib/supabase/admin.ts` is server-only. Importing it into a client component
+would leak the service-role key into the browser bundle — never do that. It
+belongs in `rate-limit.ts`, which only `actions.ts` imports.
+
+**Never batch several `consume_rate_limit` calls into one transaction.** Postgres
+`now()` is `transaction_timestamp()`, so calls sharing a transaction would share a
+frozen clock and mis-evaluate window roll-over. One RPC call per bucket, as
+separate statements, is correct.
 
 Wire into `actions.ts`, each consuming BOTH an IP bucket and an identifier
 bucket (both must pass — see the spec's dual-key rationale: email-only keying
