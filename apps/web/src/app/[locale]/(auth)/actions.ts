@@ -27,6 +27,39 @@ async function callbackUrl(nextPath = "/") {
   return `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 }
 
+// `passwordSchema` (lib/validation/password.js) is locale-free BY DESIGN — it
+// ships in the client bundle, so it returns stable dot-codes ("password.tooShort",
+// "password.tooLong", "password.controlChars", "password.classes",
+// "password.email", "password.common", "password.empty"), never English
+// prose. This is the one place those codes become user-facing copy, via the
+// `auth.password.errors.<code>` message namespace (both en.json and ar.json).
+// Any code this doesn't recognise — a typo, or a future schema refine that
+// forgot to add a translation — falls back to `auth.password.errors.generic`.
+// It must NEVER render a raw code like "password.tooShort" to a user.
+const PASSWORD_ERROR_CODES = [
+  "empty",
+  "tooShort",
+  "tooLong",
+  "controlChars",
+  "classes",
+  "email",
+  "common",
+] as const;
+
+type PasswordErrorKey = (typeof PASSWORD_ERROR_CODES)[number] | "generic";
+
+function isKnownPasswordErrorCode(value: string): value is (typeof PASSWORD_ERROR_CODES)[number] {
+  return (PASSWORD_ERROR_CODES as readonly string[]).includes(value);
+}
+
+async function passwordErrorMessage(parsed: unknown): Promise<string> {
+  const tErrors = await getTranslations("auth.password.errors");
+  const code = firstValidationMessage(parsed, "password.generic");
+  const suffix = code.startsWith("password.") ? code.slice("password.".length) : "generic";
+  const key: PasswordErrorKey = isKnownPasswordErrorCode(suffix) ? suffix : "generic";
+  return tErrors(key);
+}
+
 export async function signIn(
   _prev: AuthState,
   formData: FormData,
@@ -60,7 +93,7 @@ export async function signUp(
   // of the client check; a client component can always be bypassed.
   const parsedPassword = passwordSchema({ email }).safeParse(password);
   if (!parsedPassword.success) {
-    return { error: firstValidationMessage(parsedPassword) };
+    return { error: await passwordErrorMessage(parsedPassword) };
   }
   if (!accountIntent) return { error: t("chooseAccountType") };
 
@@ -150,7 +183,7 @@ export async function updatePassword(
   // UX affordance ONLY; this is the sole authority on password acceptance.
   const parsedPassword = passwordSchema().safeParse(password);
   if (!parsedPassword.success) {
-    return { error: firstValidationMessage(parsedPassword) };
+    return { error: await passwordErrorMessage(parsedPassword) };
   }
   if (password !== confirmPassword) return { error: t("passwordMismatch") };
 

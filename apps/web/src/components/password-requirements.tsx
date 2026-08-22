@@ -46,6 +46,14 @@ export function PasswordRequirements({
   className?: string;
 }) {
   const t = useTranslations("auth.password");
+
+  // An empty password isn't a real submission yet, and passwordRules()
+  // reports `notEmail`/`notCommon` as trivially "met" for "" (there's no
+  // email match and no denylist match in an empty string) — rendering that
+  // would show two misleading green checks alongside five red Xs before the
+  // user has typed anything. Show nothing until there's something to judge.
+  if (password.length === 0) return null;
+
   const rules = passwordRules(password, { email });
 
   return (

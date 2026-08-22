@@ -360,6 +360,16 @@
         "symbol": "One symbol (e.g. ! @ # $)",
         "notEmail": "Doesn't contain your email address",
         "notCommon": "Not a commonly used password"
+      },
+      "errors": {
+        "empty": "Please enter a password.",
+        "tooShort": "Password must be at least 12 characters.",
+        "tooLong": "Password is too long.",
+        "controlChars": "Password contains characters that aren't allowed.",
+        "classes": "Password must include at least 3 of: lowercase letters, uppercase letters, numbers, and symbols.",
+        "email": "Password must not contain your email address.",
+        "common": "This password is too common. Please choose a different one.",
+        "generic": "Please choose a password that meets the requirements below."
       }
     },
     "login": {

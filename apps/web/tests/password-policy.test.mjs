@@ -9,6 +9,12 @@ import test from "node:test";
 // (`passwordSchema`) and by a CLIENT component (`passwordRules`), which is why
 // several tests below assert this module never grows a Node-only or
 // browser-unsafe dependency.
+//
+// Task 3 review (2026-08-22): `passwordSchema`'s refine messages are stable
+// dot-codes ("password.tooShort" etc.), NOT curated English sentences — this
+// module is locale-free by design (client bundle, no next-intl). Localizing
+// a code into "auth.password.errors.<code>" copy is `actions.ts`'s job, not
+// this module's; see its header comment. Tests below assert on the codes.
 
 import {
   COMMON_PASSWORDS,
@@ -143,11 +149,17 @@ test("trimmed-empty: a password that is only whitespace is rejected even at 12+ 
   assert.equal(allSpaces.length, PASSWORD_MIN_LENGTH);
   assert.equal(ok(passwordSchema().safeParse(allSpaces)), false);
   const result = passwordSchema().safeParse(allSpaces);
-  assert.equal(firstValidationMessage(result), "Please enter a password.");
+  assert.equal(firstValidationMessage(result), "password.empty");
 });
 
 test("trimmed-empty: an empty string is rejected", () => {
   assert.equal(ok(passwordSchema().safeParse("")), false);
+});
+
+test("trimmed-empty: non-string input hits the same password.empty code as the base type message", () => {
+  const result = passwordSchema().safeParse(null);
+  assert.equal(ok(result), false);
+  assert.equal(firstValidationMessage(result), "password.empty");
 });
 
 // --- email local-part ------------------------------------------------------
@@ -244,9 +256,24 @@ test("denylist: an unrelated strong password is not flagged", () => {
   assert.equal(passwordRules(STRONG).find((r) => r.id === "notCommon").met, true);
 });
 
-// --- curated messages -------------------------------------------------------
+// --- error codes -------------------------------------------------------
+//
+// `passwordSchema` deliberately does NOT curate English sentences (see the
+// module header, and the Task 3 review that moved localization to
+// actions.ts). It emits stable "password.<code>" strings instead, which
+// `firstValidationMessage` still safely extracts.
 
-test("messages: failures never surface raw Zod issue text", () => {
+const PASSWORD_ERROR_CODES = [
+  "password.empty",
+  "password.tooShort",
+  "password.tooLong",
+  "password.controlChars",
+  "password.classes",
+  "password.email",
+  "password.common",
+];
+
+test("codes: failures never surface raw Zod issue text or English prose — only a stable password.<code>", () => {
   const cases = [
     "",
     "short",
@@ -262,6 +289,32 @@ test("messages: failures never surface raw Zod issue text", () => {
     assert.equal(typeof msg, "string");
     assert.ok(msg.length > 0 && msg.length <= 160);
     assert.doesNotMatch(msg, /zod|ZodError|issues|invalid_type|too_small|custom/i);
+    assert.ok(
+      PASSWORD_ERROR_CODES.includes(msg),
+      `${msg} must be one of the stable dot-codes, not English prose or a raw Zod message`,
+    );
+  }
+});
+
+test("codes: every refine in the schema emits its own distinct, documented code (full coverage audit)", () => {
+  const email = "johndoe@example.com"; // local-part "johndoe", 7 chars
+  const cases = {
+    "password.empty": passwordSchema().safeParse(" ".repeat(PASSWORD_MIN_LENGTH)), // trimmed-empty
+    "password.tooShort": passwordSchema().safeParse("Ab1!Ab1!Ab1"), // 11 chars
+    "password.tooLong": passwordSchema().safeParse(passwordOfByteLength(PASSWORD_MAX_BYTES + 1)),
+    "password.controlChars": passwordSchema().safeParse(`Ab1!Ab1!${String.fromCharCode(0)}Ab1!`),
+    "password.classes": passwordSchema().safeParse("abcdefgh1234"), // 2 of 4 classes
+    "password.email": passwordSchema({ email }).safeParse("MyJohndoe12!"),
+    // "qwerty123" is only 9 chars, so it would hit password.tooShort first —
+    // this needs a 12+ char, 3-of-4-class denylist hit to isolate password.common.
+    "password.common": passwordSchema().safeParse("Password1231"),
+  };
+  // Every code in PASSWORD_ERROR_CODES must be exercised by this audit —
+  // guards against a future refine being added without a matching code case.
+  assert.deepEqual(Object.keys(cases).sort(), [...PASSWORD_ERROR_CODES].sort());
+  for (const [code, result] of Object.entries(cases)) {
+    assert.equal(result.success, false, `${code} case must actually fail`);
+    assert.equal(firstValidationMessage(result), code);
   }
 });
 

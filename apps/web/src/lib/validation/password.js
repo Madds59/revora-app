@@ -13,10 +13,20 @@
 // Node and the browser — `Buffer.byteLength` does not exist in the browser and
 // would break that bundle.
 //
-// Every user-facing message is curated here; raw Zod issues are never
-// surfaced (see `firstValidationMessage` in ./common.js). `passwordRules`
-// deliberately returns rule ids, not sentences — the client component renders
-// those ids through i18n, so no English text belongs in that function.
+// `passwordSchema` returns stable dot-codes ("password.tooShort",
+// "password.tooLong", "password.controlChars", "password.classes",
+// "password.email", "password.common", "password.empty") as its Zod refine
+// messages, NOT curated English sentences — this module is locale-free by
+// design (no `next-intl`, since it ships in the client bundle). The Server
+// Action (`actions.ts`, Task 3) maps the code `firstValidationMessage`
+// extracts through `getTranslations("auth.password.errors")`, with an
+// unconditional "generic" fallback for any unmapped/unexpected code. Do NOT
+// change these strings back to English prose, and do NOT import next-intl
+// here to "fix" it — that would break the browser-safety boundary this file
+// exists to preserve. `passwordRules` deliberately returns rule ids, not
+// sentences either — the client component renders those ids through
+// `auth.password.rules.*`, a separate i18n namespace from the error codes
+// above.
 
 import { z } from "zod";
 
@@ -125,30 +135,34 @@ export function passwordRules(password, { email } = {}) {
 /**
  * Canonical password schema. `email`, when supplied, is used only to reject a
  * password containing its local-part — it is never itself validated here.
+ *
+ * Every refine message below is a stable dot-code (e.g. "password.tooShort"),
+ * not curated English text — see the module header for why, and for who is
+ * responsible for localizing it (the Server Action, not this module).
  */
 export function passwordSchema({ email } = {}) {
   return z
-    .string({ message: "Please enter a password." })
-    .refine((v) => v.trim().length > 0, "Please enter a password.")
-    .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`)
+    .string({ message: "password.empty" })
+    .refine((v) => v.trim().length > 0, "password.empty")
+    .min(PASSWORD_MIN_LENGTH, "password.tooShort")
     .refine(
       (v) => new TextEncoder().encode(v).length <= PASSWORD_MAX_BYTES,
-      "Password is too long.",
+      "password.tooLong",
     )
     .refine(
       (v) => !CONTROL_CHARS_RE.test(v),
-      "Password contains characters that aren't allowed.",
+      "password.controlChars",
     )
     .refine(
       (v) => classCount(v) >= 3,
-      "Password must include at least 3 of: lowercase letters, uppercase letters, numbers, and symbols.",
+      "password.classes",
     )
     .refine(
       (v) => !containsEmailLocalPart(v, email),
-      "Password must not contain your email address.",
+      "password.email",
     )
     .refine(
       (v) => !isCommonPassword(v),
-      "This password is too common. Please choose a different one.",
+      "password.common",
     );
 }

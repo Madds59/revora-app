@@ -15,11 +15,17 @@ import test from "node:test";
 // proven two ways: (1) structural assertions against the action source itself
 // — the same convention as admin-security.test.mjs — and (2) direct,
 // functional tests of the real `passwordSchema` / `isPasswordBreached`
-// exports against the exact decision predicate (`checked && breached`) that
-// the action source is asserted to contain.
+// exports, proving the actual fail-open CONTRACT (a confirmed breach
+// rejects, an unreachable HIBP proceeds). The structural assertions
+// deliberately do NOT pin the exact spelling of the reject condition
+// (`checked && breached` vs. `breached` alone are equally correct, since
+// breached: true always implies checked: true) — they only assert the
+// fail-CLOSED shortcut (treating checked === false as a rejection) is
+// absent, and leave proving the real contract to the functional tests.
 
 import {
   PASSWORD_MIN_LENGTH,
+  firstValidationMessage,
   passwordRules,
   passwordSchema,
 } from "../src/lib/validation/password.js";
@@ -89,9 +95,29 @@ test("signUp: parses the password through passwordSchema({ email }) before calli
   assert.ok(parseAt < supabaseAt, "the schema must run before Supabase is touched");
 });
 
-test("signUp: on schema failure, returns the curated message and never reaches Supabase", () => {
+test("signUp: on schema failure, localizes the code via passwordErrorMessage and never reaches Supabase", () => {
   const fn = functionBody("signUp");
-  assert.match(fn, /if \(!parsedPassword\.success\) \{\s*return \{ error: firstValidationMessage\(parsedPassword\) \};/);
+  // The schema itself returns a locale-free dot-code (Task 3 review fix —
+  // passwordSchema must not depend on next-intl, since it ships in the
+  // client bundle). actions.ts is what turns that code into user-facing
+  // copy, via the passwordErrorMessage() helper below, in the caller's
+  // locale — never firstValidationMessage(parsedPassword) rendered raw.
+  assert.match(fn, /if \(!parsedPassword\.success\) \{\s*return \{ error: await passwordErrorMessage\(parsedPassword\) \};/);
+});
+
+test("wiring: passwordErrorMessage localizes every known password.<code> and falls back to auth.password.errors.generic", () => {
+  assert.match(
+    actions,
+    /async function passwordErrorMessage\(parsed: unknown\): Promise<string> \{/,
+  );
+  assert.match(actions, /getTranslations\("auth\.password\.errors"\)/);
+  // Every code the schema can emit must be in the allowlist this function
+  // maps through — an unmapped code must fall back to "generic", never
+  // render a raw code like "password.tooShort" to the user.
+  for (const code of ["empty", "tooShort", "tooLong", "controlChars", "classes", "email", "common"]) {
+    assert.match(actions, new RegExp(`"${code}"`), `passwordErrorMessage must recognise the "${code}" code`);
+  }
+  assert.match(actions, /: "generic"/, "an unrecognised code must fall back to \"generic\"");
 });
 
 test("signUp: calls isPasswordBreached after the schema succeeds and before Supabase", () => {
@@ -104,9 +130,20 @@ test("signUp: calls isPasswordBreached after the schema succeeds and before Supa
   assert.ok(breachAt < supabaseAt, "the breach check must run before Supabase is touched");
 });
 
-test("signUp: rejects only on checked && breached, never on breached alone", () => {
+test("signUp: never fail-closes on checked === false (no !checked shortcut to a rejection)", () => {
   const fn = functionBody("signUp");
-  assert.match(fn, /if \(checked && breached\) return \{ error: t\("passwordBreached"\) \};/);
+  // NOT pinning the exact boolean spelling here: `if (breached)` alone is
+  // equally correct (breached: true always implies checked: true), and would
+  // wrongly fail a test that required the literal text "checked && breached".
+  // What must never appear is a shortcut that treats an UNREACHABLE HIBP
+  // lookup (checked: false) as grounds to reject — that's the fail-open
+  // contract this action must honor. The real contract (breach rejects,
+  // unreachable proceeds) is proven functionally below against the real
+  // isPasswordBreached export.
+  assert.ok(!/if\s*\(\s*!checked/.test(fn), "must not fail-closed on checked === false");
+  assert.ok(!/checked\s*===\s*false/.test(fn), "must not fail-closed on checked === false");
+  assert.match(fn, /breached/, "must still consult the breach result before rejecting");
+  assert.match(fn, /error: t\("passwordBreached"\)/, "must still return the curated breach message");
 });
 
 // --- updatePassword --------------------------------------------------------
@@ -120,6 +157,11 @@ test("updatePassword: parses the password through passwordSchema() (no email in 
   assert.ok(parseAt < supabaseAt, "the schema must run before Supabase is touched");
   // Must NOT pass an email — none is in scope for this action.
   assert.ok(!fn.includes("passwordSchema({ email })"), "updatePassword has no email in scope");
+});
+
+test("updatePassword: on schema failure, localizes the code via passwordErrorMessage and never reaches Supabase", () => {
+  const fn = functionBody("updatePassword");
+  assert.match(fn, /if \(!parsedPassword\.success\) \{\s*return \{ error: await passwordErrorMessage\(parsedPassword\) \};/);
 });
 
 test("updatePassword: keeps the confirm_password mismatch check", () => {
@@ -137,19 +179,31 @@ test("updatePassword: calls isPasswordBreached after the schema succeeds and bef
   assert.ok(breachAt < supabaseAt);
 });
 
-test("updatePassword: rejects only on checked && breached, never on breached alone", () => {
+test("updatePassword: never fail-closes on checked === false (no !checked shortcut to a rejection)", () => {
   const fn = functionBody("updatePassword");
-  assert.match(fn, /if \(checked && breached\) return \{ error: t\("passwordBreached"\) \};/);
+  assert.ok(!/if\s*\(\s*!checked/.test(fn), "must not fail-closed on checked === false");
+  assert.ok(!/checked\s*===\s*false/.test(fn), "must not fail-closed on checked === false");
+  assert.match(fn, /breached/, "must still consult the breach result before rejecting");
+  assert.match(fn, /error: t\("passwordBreached"\)/, "must still return the curated breach message");
 });
 
 // --- schema-before-breach-check guards against an absurdly long password ----
 
-test("guard: an absurdly long password fails the schema before any breach lookup would run", () => {
+test("guard: an absurdly long password fails the schema specifically on BYTE length, before any breach lookup would run", () => {
   // The schema is what stands between an attacker-controlled FormData value
   // and isPasswordBreached; it must reject before that call is ever reached.
-  const huge = "a".repeat(5000);
-  assert.equal(ok(passwordSchema({ email: "x@example.com" }).safeParse(huge)), false);
-  assert.equal(ok(passwordSchema().safeParse(huge)), false);
+  // "a".repeat(5000) would already fail the 3-of-4-classes rule (it's all
+  // lowercase), so it wouldn't actually exercise the byte-length guard this
+  // test is named for. This payload satisfies every OTHER rule instead —
+  // 12+ chars, all 4 character classes, no control chars, no email/denylist
+  // match — so PASSWORD_MAX_BYTES is the only thing left that can reject it.
+  const huge = "Aa1!".repeat(1250); // 5000 ASCII bytes, all 4 classes present
+  const withEmail = passwordSchema({ email: "x@example.com" }).safeParse(huge);
+  const withoutEmail = passwordSchema().safeParse(huge);
+  assert.equal(ok(withEmail), false);
+  assert.equal(ok(withoutEmail), false);
+  assert.equal(firstValidationMessage(withEmail), "password.tooLong");
+  assert.equal(firstValidationMessage(withoutEmail), "password.tooLong");
 });
 
 // --- breach-check decision predicate (functional) --------------------------
@@ -302,4 +356,46 @@ test("i18n: auth.password.requirementsTitle and every rule contain real Arabic s
       `ar.json auth.password.rules.${id} must contain real Arabic script`,
     );
   }
+});
+
+// --- Task 3 review fix: auth.password.errors.<code> localization -----------
+
+const PASSWORD_ERROR_KEYS = [
+  "empty",
+  "tooShort",
+  "tooLong",
+  "controlChars",
+  "classes",
+  "email",
+  "common",
+  "generic",
+];
+
+test("i18n: auth.password.errors has every schema code PLUS a generic fallback, with real copy in both locales", () => {
+  assert.ok(en.auth.password.errors, "en.json is missing auth.password.errors");
+  assert.ok(ar.auth.password.errors, "ar.json is missing auth.password.errors");
+  assert.deepEqual(Object.keys(en.auth.password.errors).sort(), [...PASSWORD_ERROR_KEYS].sort());
+  assert.deepEqual(Object.keys(ar.auth.password.errors).sort(), [...PASSWORD_ERROR_KEYS].sort());
+  for (const key of PASSWORD_ERROR_KEYS) {
+    const enMsg = en.auth.password.errors[key];
+    const arMsg = ar.auth.password.errors[key];
+    assert.equal(typeof enMsg, "string", `en auth.password.errors.${key} must be a string`);
+    assert.ok(enMsg.trim().length > 0, `en auth.password.errors.${key} must not be empty`);
+    assert.equal(typeof arMsg, "string", `ar auth.password.errors.${key} must be a string`);
+    assert.ok(arMsg.trim().length > 0, `ar auth.password.errors.${key} must not be empty`);
+    assert.ok(
+      /[؀-ۿ]/.test(arMsg),
+      `ar.json auth.password.errors.${key} must contain real Arabic script, not an English placeholder`,
+    );
+  }
+});
+
+// --- Task 3 review fix: empty password renders nothing, not misleading ticks -
+
+test("boundary: PasswordRequirements renders nothing for an empty password (no false-green notEmail/notCommon)", () => {
+  assert.match(
+    requirements,
+    /if \(password\.length === 0\) return null;/,
+    "an empty password must not render two misleading green checks alongside five red Xs",
+  );
 });
