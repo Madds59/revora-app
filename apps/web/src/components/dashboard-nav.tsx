@@ -58,7 +58,12 @@ const NAV: NavItem[] = [
   { labelKey: "billing", href: "/billing", icon: CreditCard },
   { labelKey: "analytics", href: "/analytics", icon: BarChart3 },
   { labelKey: "notifications", href: "/notifications", icon: Bell },
-  { labelKey: "settings", href: "/settings", icon: Settings, aliases: ["/settings/business"] },
+  {
+    labelKey: "settings",
+    href: "/settings",
+    icon: Settings,
+    aliases: ["/settings/business", "/settings/security"],
+  },
   { labelKey: "feedback", href: "/feedback", icon: MessageSquare },
   { labelKey: "implementation", href: "/implementation", icon: ClipboardList },
   { labelKey: "retainerCalculator", href: "/tools/retainer-calculator", icon: Calculator },

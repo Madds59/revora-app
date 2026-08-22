@@ -261,6 +261,55 @@
       "defaultPrice": "Default price (AED)",
       "description": "Description",
       "add": "Add service"
+    },
+    "security": {
+      "navLabel": "Security",
+      "title": "Sign-in security",
+      "description": "Add a second step to sign-in with an authenticator app.",
+      "status": {
+        "enabledTitle": "Authenticator app enabled",
+        "enabledDescription": "Your account is protected with a second sign-in step.",
+        "disabledTitle": "No authenticator app added",
+        "disabledDescription": "Add an authenticator app to require a code at sign-in, in addition to your password."
+      },
+      "factor": {
+        "addedOn": "Added {date}",
+        "remove": "Remove"
+      },
+      "empty": {
+        "title": "No authenticator app yet",
+        "description": "Set up an authenticator app to add a second step to sign-in."
+      },
+      "enroll": {
+        "start": "Set up authenticator app",
+        "cardTitle": "Set up an authenticator app",
+        "cardDescription": "Scan the QR code with an authenticator app (such as Google Authenticator or 1Password), or enter the code manually.",
+        "qrAlt": "QR code for authenticator app setup",
+        "secretLabel": "Can't scan the code?",
+        "secretHint": "Enter this key manually in your authenticator app instead.",
+        "codeLabel": "6-digit code",
+        "codePlaceholder": "123456",
+        "verify": "Activate",
+        "cancel": "Cancel"
+      },
+      "unenroll": {
+        "trigger": "Remove",
+        "title": "Remove authenticator app",
+        "description": "Enter a current code from your authenticator app to confirm removal. This turns off the extra sign-in step for your account.",
+        "codeLabel": "6-digit code",
+        "confirm": "Remove authenticator app"
+      },
+      "actions": {
+        "codeRequired": "Enter the 6-digit code from your authenticator app.",
+        "invalidCode": "That code isn't valid. Please try again.",
+        "codeExpired": "That code has expired. Please enter a new one.",
+        "tooManyAttempts": "Too many attempts. Please wait a while and try again.",
+        "alreadyEnrolled": "You already have an authenticator app enabled.",
+        "enrollFailed": "We couldn't start setup. Please try again.",
+        "removeFailed": "We couldn't remove the authenticator app. Please try again.",
+        "enrolled": "Authenticator app activated.",
+        "removed": "Authenticator app removed."
+      }
     }
   },
   "team": {
