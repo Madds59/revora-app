@@ -171,3 +171,45 @@ export function safeReturnPath(value) {
   if (isWithin(value, MFA_CHALLENGE_PATH)) return "/";
   return value;
 }
+
+/**
+ * Which of the three states the challenge page at `/login/mfa` is in.
+ *
+ * The page renders (rather than redirecting) whenever it cannot POSITIVELY
+ * establish that there is nothing to do — see its own header comment. That
+ * leaves it able to reach an empty factor list from two very different
+ * situations, and REVIEW ROUND 2 CAUGHT THEM BEING CONFLATED. They must not be:
+ *
+ *   - `hasVerifiedFactor === false` (the AAL read failed outright, or it
+ *     genuinely reports no second factor): offering enrollment is correct, and
+ *     `/settings/security` is actually REACHABLE, because with no verified
+ *     factor `mfaRedirectFor` rule 2 cannot fire.
+ *
+ *   - `hasVerifiedFactor === true` but the factor list came back empty: the
+ *     user demonstrably HAS an authenticator; `listFactors()` is a live network
+ *     call to GoTrue and can fail on its own while the AAL claim — a local JWT
+ *     decode — still reads fine. This is a TRANSIENT ERROR, and the enrollment
+ *     affordance is wrong twice over. It is wrong as copy ("set up an
+ *     authenticator" to somebody who has one), and it is wrong as a link:
+ *     `mfaRedirectFor({ currentLevel: "aal1", nextLevel: "aal2",
+ *     hasVerifiedFactor: true, path: "/settings/security" })` returns
+ *     `"/login/mfa"`, so the link would bounce the user straight back to the
+ *     same broken page. Retry is the only honest affordance; sign-out remains
+ *     the escape.
+ *
+ * Pure and dependency-free so the branch selection is testable without a
+ * Supabase client, a network, or a rendered page.
+ *
+ * @param {object} input
+ * @param {boolean} input.hasVerifiedFactor - `aal.nextLevel === "aal2"`, i.e.
+ *   what the SDK derives from VERIFIED factors only. A failed/absent AAL read
+ *   must arrive here as `false`, never as a guess.
+ * @param {number} input.listedFactorCount - length of `listFactors().data.totp`
+ *   (verified factors only); 0 when that call failed.
+ * @returns {"challenge" | "unavailable" | "enroll"}
+ */
+export function challengePageMode({ hasVerifiedFactor, listedFactorCount }) {
+  if (listedFactorCount > 0) return "challenge";
+  if (hasVerifiedFactor) return "unavailable";
+  return "enroll";
+}

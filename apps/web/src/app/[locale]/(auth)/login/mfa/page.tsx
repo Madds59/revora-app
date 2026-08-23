@@ -5,7 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { buildLoginPath } from "@/lib/auth-links";
 import { formatDate, type AppLocale } from "@/lib/formatters";
 import { switchLocalePath } from "@/lib/locale-path";
-import { safeReturnPath } from "@/lib/mfa-gate";
+import { challengePageMode, MFA_CHALLENGE_PATH, safeReturnPath } from "@/lib/mfa-gate";
 import { createClient } from "@/lib/supabase/server";
 
 import { MfaChallengeClient, type MfaChallengeFactor } from "./mfa-client";
@@ -33,7 +33,11 @@ export async function generateMetadata(): Promise<Metadata> {
  *     the same lookup, so redirecting on a state we failed to read is exactly
  *     how a page and its gate start bouncing a request between them.
  *   - The "no factors listed" and "listFactors failed" branches render a card
- *     with a sign-out escape instead of redirecting, for the same reason.
+ *     with a sign-out escape instead of redirecting, for the same reason. Which
+ *     of those two it is decides the affordance shown — `challengePageMode`
+ *     owns that call, because offering "set up an authenticator" to a user who
+ *     provably has one links them to a page the gate immediately bounces back
+ *     here.
  *   - `mfaRedirectFor` independently returns null for this path, so the
  *     middleware can never redirect a request that is already here.
  */
@@ -72,5 +76,29 @@ export default async function MfaChallengePage({
     addedOnLabel: formatDate(factor.created_at, undefined, locale),
   }));
 
-  return <MfaChallengeClient factors={factors} next={next} />;
+  // An empty list means two different things depending on what the AAL read
+  // said, and the difference decides whether offering enrollment is helpful or
+  // actively misleading — see `challengePageMode`. The AAL read is the ONLY
+  // signal used here: no extra round trip, and a failed read arrives as
+  // `false` rather than as a guess.
+  const mode = challengePageMode({
+    hasVerifiedFactor: aal?.nextLevel === "aal2",
+    listedFactorCount: factors.length,
+  });
+
+  // Retry for the transient case: a plain href back to this same URL, so the
+  // whole server render (AAL read + listFactors) runs again. `mfaRedirectFor`
+  // returns null for its own path, so this cannot bounce.
+  const retryHref =
+    switchLocalePath(MFA_CHALLENGE_PATH, locale) +
+    (next === "/" ? "" : `?next=${encodeURIComponent(next)}`);
+
+  return (
+    <MfaChallengeClient
+      factors={factors}
+      mode={mode}
+      next={next}
+      retryHref={retryHref}
+    />
+  );
 }

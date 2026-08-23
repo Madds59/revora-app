@@ -6,6 +6,7 @@ import { useActionState } from "react";
 
 import { signOut, verifyMfaChallenge, type AuthState } from "../../actions";
 import { switchLocalePath } from "@/lib/locale-path";
+import { MFA_ENROLLMENT_PATH } from "@/lib/mfa-gate";
 import { SubmitButton } from "@/components/submit-button";
 import {
   Card,
@@ -25,12 +26,28 @@ export type MfaChallengeFactor = {
 
 const initial: AuthState = {};
 
+/**
+ * `mode` is decided on the server by `challengePageMode` (lib/mfa-gate.js) and
+ * passed in rather than re-derived from `factors.length` here — an empty list
+ * means "you have no authenticator" or "we could not load your authenticator",
+ * and only the server saw the AAL read that tells them apart.
+ */
+const DESCRIPTION_KEY = {
+  challenge: "description",
+  unavailable: "unavailableDescription",
+  enroll: "noFactorDescription",
+} as const;
+
 export function MfaChallengeClient({
   factors,
+  mode,
   next,
+  retryHref,
 }: {
   factors: MfaChallengeFactor[];
+  mode: "challenge" | "unavailable" | "enroll";
   next: string;
+  retryHref: string;
 }) {
   const t = useTranslations("auth.mfa");
   const locale = useLocale();
@@ -41,12 +58,10 @@ export function MfaChallengeClient({
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>
-          {factors.length === 0 ? t("noFactorDescription") : t("description")}
-        </CardDescription>
+        <CardDescription>{t(DESCRIPTION_KEY[mode])}</CardDescription>
       </CardHeader>
 
-      {factors.length > 0 && (
+      {mode === "challenge" && factors.length > 0 && (
         <CardContent>
           <form action={formAction} className="flex flex-col gap-4">
             <input type="hidden" name="next" value={next} />
@@ -103,18 +118,28 @@ export function MfaChallengeClient({
       {/* Always reachable, in every branch: a user who lost their authenticator
           must be able to leave rather than be trapped on the gate page. */}
       <CardFooter className="flex-col items-start gap-2">
-        {factors.length === 0 ? (
-          // Reached when listFactors failed, or when the AAL lookup was
-          // unreadable so the page rendered rather than redirecting. Sign-out
-          // alone would make this a dead end — enrollment is the way forward,
-          // and /settings/security is reachable by any authenticated user.
+        {mode === "enroll" && (
+          // No verified factor exists (or the AAL read failed outright), so
+          // enrollment is both the right advice and an actually reachable
+          // destination: with no verified factor, the gate's rule 2 cannot
+          // fire on /settings/security.
           <Link
-            href={switchLocalePath("/settings/security", locale)}
+            href={switchLocalePath(MFA_ENROLLMENT_PATH, locale)}
             className="text-foreground text-sm underline"
           >
             {t("enrollLink")}
           </Link>
-        ) : (
+        )}
+        {mode === "unavailable" && (
+          // A verified factor DOES exist; listFactors just failed. Never link
+          // to enrollment here — the copy would be false, and the gate would
+          // bounce /settings/security straight back to this page. Retry is the
+          // only honest affordance; sign-out below is the escape.
+          <a href={retryHref} className="text-foreground text-sm underline">
+            {t("retry")}
+          </a>
+        )}
+        {mode === "challenge" && (
           <p className="text-muted-foreground text-sm">{t("lostDevice")}</p>
         )}
         <form action={signOut}>

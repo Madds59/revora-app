@@ -25,6 +25,7 @@ import test from "node:test";
 // allowlist. Those are structural facts about a file that imports next/server.
 
 import {
+  challengePageMode,
   MFA_CHALLENGE_PATH,
   MFA_ENROLLMENT_PATH,
   mfaRedirectFor,
@@ -358,6 +359,138 @@ test("i18n: both gate pages carry their own localized metadata", () => {
       ARABIC_SCRIPT.test(ar.metadata?.[key] ?? ""),
       `ar.json metadata.${key} must be real Arabic`,
     );
+  }
+});
+
+// --- the challenge page's three states, and why they cannot be collapsed ---
+//
+// Review round 2 finding. The page reaches an EMPTY factor list from two very
+// different situations, and treating them as one shipped a link that bounced
+// the user back to the page they were trying to leave:
+//
+//   (a) the AAL read failed, or genuinely reports no second factor;
+//   (b) the AAL read succeeded and says a verified factor EXISTS, but
+//       `listFactors()` — a live network call, unlike the AAL read's local JWT
+//       decode — failed on its own.
+//
+// The first test below is the one that makes (b) dangerous, and it is stated
+// against the real gate rather than described in a comment.
+
+test("/settings/security is NOT a safe destination once a verified factor exists", () => {
+  // Exactly why the enrollment link must not be offered in state (b):
+  // following it returns the user straight to the challenge page.
+  assert.equal(
+    mfaRedirectFor({
+      currentLevel: "aal1",
+      nextLevel: "aal2",
+      isSuperAdmin: false,
+      hasVerifiedFactor: true,
+      path: MFA_ENROLLMENT_PATH,
+    }),
+    MFA_CHALLENGE_PATH,
+  );
+});
+
+test("/settings/security IS reachable when no verified factor exists", () => {
+  // ...and equally why the link is correct in state (a).
+  for (const isSuperAdmin of [false, true]) {
+    assert.equal(
+      mfaRedirectFor({
+        currentLevel: "aal1",
+        nextLevel: "aal1",
+        isSuperAdmin,
+        hasVerifiedFactor: false,
+        path: MFA_ENROLLMENT_PATH,
+      }),
+      null,
+    );
+  }
+});
+
+test("challengePageMode: a listed factor means challenge", () => {
+  for (const hasVerifiedFactor of [true, false]) {
+    for (const listedFactorCount of [1, 3]) {
+      assert.equal(
+        challengePageMode({ hasVerifiedFactor, listedFactorCount }),
+        "challenge",
+      );
+    }
+  }
+});
+
+test("challengePageMode: empty list + a factor known to exist is a TRANSIENT error, not enrollment", () => {
+  // State (b). Offering enrollment here is wrong as copy and broken as a link.
+  assert.equal(
+    challengePageMode({ hasVerifiedFactor: true, listedFactorCount: 0 }),
+    "unavailable",
+  );
+});
+
+test("challengePageMode: empty list with no known factor offers enrollment", () => {
+  // State (a) — including the unreadable-AAL case, which must arrive as false.
+  assert.equal(
+    challengePageMode({ hasVerifiedFactor: false, listedFactorCount: 0 }),
+    "enroll",
+  );
+});
+
+test("challengePageMode never offers enrollment from a state where the gate would bounce it", () => {
+  // The cross-cutting invariant, tied back to the gate itself rather than
+  // asserted independently: whenever the page would show the enrollment link,
+  // the enrollment path must actually be reachable from that same state.
+  for (const hasVerifiedFactor of [true, false]) {
+    for (const listedFactorCount of [0, 1, 2]) {
+      const mode = challengePageMode({ hasVerifiedFactor, listedFactorCount });
+      if (mode !== "enroll") continue;
+      const bounce = mfaRedirectFor({
+        currentLevel: "aal1",
+        nextLevel: hasVerifiedFactor ? "aal2" : "aal1",
+        isSuperAdmin: false,
+        hasVerifiedFactor,
+        path: MFA_ENROLLMENT_PATH,
+      });
+      assert.equal(
+        bounce,
+        null,
+        `mode "enroll" offered from a state where ${MFA_ENROLLMENT_PATH} redirects to ${bounce}`,
+      );
+    }
+  }
+});
+
+test("every challengePageMode result has description copy in both locales", () => {
+  // A mode with no matching message key renders a raw key path to the user.
+  const modes = new Set();
+  for (const hasVerifiedFactor of [true, false]) {
+    for (const listedFactorCount of [0, 1]) {
+      modes.add(challengePageMode({ hasVerifiedFactor, listedFactorCount }));
+    }
+  }
+  assert.deepEqual([...modes].sort(), ["challenge", "enroll", "unavailable"]);
+
+  const descriptionKey = {
+    challenge: "description",
+    unavailable: "unavailableDescription",
+    enroll: "noFactorDescription",
+  };
+  for (const mode of modes) {
+    for (const [name, bundle] of [
+      ["en", en],
+      ["ar", ar],
+    ]) {
+      const value = bundle.auth.mfa[descriptionKey[mode]];
+      assert.ok(
+        typeof value === "string" && value.trim().length > 0,
+        `${name}.json is missing auth.mfa.${descriptionKey[mode]} for mode "${mode}"`,
+      );
+    }
+  }
+  // The transient state needs its own retry affordance in both locales.
+  for (const [name, bundle] of [
+    ["en", en],
+    ["ar", ar],
+  ]) {
+    assert.ok(bundle.auth.mfa.retry?.trim(), `${name}.json is missing auth.mfa.retry`);
   }
 });
 

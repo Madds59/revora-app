@@ -454,6 +454,8 @@
       "lostDevice": "Lost access to your authenticator app?",
       "signOut": "Sign out and use another account",
       "enrollLink": "Set up an authenticator app",
+      "unavailableDescription": "We could not load your authenticator app just now. This is usually temporary — please try again.",
+      "retry": "Try again",
       "errors": {
         "codeRequired": "Enter the 6-digit code from your authenticator app.",
         "invalidCode": "That code isn't valid. Please try again.",
