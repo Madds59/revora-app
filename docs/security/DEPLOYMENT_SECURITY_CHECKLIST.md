@@ -13,6 +13,15 @@ backed by Supabase project `yqscayjvvnpsvocqrrot`).
 - [ ] If this release touches a high-risk area (auth/RLS/payments/documents/AI/
       notifications/platform admin), the relevant section of
       [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) has been completed
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` is **set and valid in the production
+      environment**. Since APPSEC-10 it is a hard dependency of sign-in itself:
+      `rate-limit.ts` fails closed when it is missing or rotated, so *every*
+      auth path (sign-in, signup, magic link, password-reset request) is
+      refused. **The symptom users and operators report is "Too many
+      attempts."** The only server-side signal is a `rate_limit_client_error`
+      log line. Re-verify after any key rotation — a rotated-but-not-redeployed
+      key is a silent, total authentication outage. See
+      [AUTH_HARDENING.md](AUTH_HARDENING.md) §3(h)
 - [ ] If this release includes a new migration: confirmed additive-only, RLS
       enabled in the same migration for any new table, not numbered `0028`, and
       no historical migration file was edited
