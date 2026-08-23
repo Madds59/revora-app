@@ -118,6 +118,21 @@ export async function checkRateLimit(
  * calls sharing a transaction would share a frozen clock and mis-evaluate
  * window roll-over.
  *
+ * Issued CONCURRENTLY via `Promise.all`, not sequentially — this is safe
+ * precisely because of the paragraph above: every call is already its own
+ * PostgREST request and its own transaction, so running them concurrently
+ * doesn't merge them into a shared transaction and doesn't touch the
+ * `transaction_timestamp()` hazard at all; that hazard is specific to
+ * batching scopes into a single RPC call, which this still never does. This
+ * change is purely a latency win — one round trip's wall-clock time instead
+ * of N sequential ones for an N-scope call.
+ *
+ * Still fails CLOSED, and still consumes EVERY scope rather than
+ * short-circuiting on the first denial: `Promise.all` waits for every
+ * promise to settle before resolving, so that contract (see the tradeoff
+ * discussion above) is unchanged — only the "one at a time" part of the
+ * previous implementation is gone.
+ *
  * Returns `true` only when every scope allowed the attempt.
  */
 export async function enforceAuthRateLimit({
@@ -125,10 +140,8 @@ export async function enforceAuthRateLimit({
 }: {
   scopes: Array<[RateLimitScope, string]>;
 }): Promise<boolean> {
-  let allowed = true;
-  for (const [scope, identifier] of scopes) {
-    const result = await checkRateLimit(scope, identifier);
-    if (!result) allowed = false;
-  }
-  return allowed;
+  const results = await Promise.all(
+    scopes.map(([scope, identifier]) => checkRateLimit(scope, identifier)),
+  );
+  return results.every((result) => result === true);
 }

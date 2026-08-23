@@ -318,25 +318,40 @@ test("release gate: checkRateLimit's catch branch fails closed and logs only a s
 // --- release gate: enforceAuthRateLimit does not short-circuit, and the
 // tradeoff of not doing so is documented honestly ---------------------------
 
-test("release gate: enforceAuthRateLimit consumes every scope (no early return inside the loop)", () => {
-  // Matched up to its own distinctive final `return allowed;` rather than a
-  // generic "\n}" — the function's destructured-parameter type annotation
-  // (`}: { scopes: ... }`) contains an unindented "}" of its own partway
-  // through, which a naive "first \n}" match would stop at prematurely.
+test("release gate: enforceAuthRateLimit consumes every scope (Promise.all, not a short-circuiting combinator)", () => {
+  // Matched up to its own distinctive final `return results.every` rather
+  // than a generic "\n}" — the function's destructured-parameter type
+  // annotation (`}: { scopes: ... }`) contains an unindented "}" of its own
+  // partway through, which a naive "first \n}" match would stop at
+  // prematurely.
   const fnMatch = rateLimitSrc.match(
-    /export async function enforceAuthRateLimit[\s\S]*?return allowed;\n\}/,
+    /export async function enforceAuthRateLimit[\s\S]*?return results\.every[\s\S]*?\n\}/,
   );
   assert.ok(fnMatch, "enforceAuthRateLimit function body not found");
   const body = fnMatch[0];
 
-  const loopMatch = body.match(/for\s*\([^)]*\)\s*\{([\s\S]*?)\n  \}/);
-  assert.ok(loopMatch, "enforceAuthRateLimit must contain a for-loop over scopes");
-  assert.doesNotMatch(
-    loopMatch[1],
-    /return/,
-    "the loop must not return early — every scope must be consumed even after a denial",
+  // Every scope must be CONSUMED (i.e. checkRateLimit called) regardless of
+  // an earlier scope's result — that's what "does not short-circuit" means
+  // here. Promise.all over a .map(...) fires every call before anything is
+  // awaited, so this holds as long as the mapping isn't gated by a
+  // conditional and the combinator isn't a short-circuiting one
+  // (Promise.race/Promise.any would violate this; .some()/.find() would too
+  // if used instead of .every() below).
+  assert.match(
+    body,
+    /Promise\.all\(\s*scopes\.map\(/,
+    "must fire every checkRateLimit call via Promise.all(scopes.map(...)) — not a sequential loop or a short-circuiting combinator",
   );
-  assert.doesNotMatch(loopMatch[1], /\bbreak\b/, "the loop must not break early either");
+  assert.doesNotMatch(
+    body,
+    /Promise\.(race|any)\(/,
+    "must not use a short-circuiting Promise combinator — every scope must be consumed",
+  );
+  assert.match(
+    body,
+    /results\.every\(/,
+    "must fold results with .every (checks all), not .some (would short-circuit the boolean-and semantics differently but read the same on paper — spelled out for clarity)",
+  );
 });
 
 test("release gate: the non-short-circuit tradeoff is documented honestly, not dismissed as harmless", () => {
