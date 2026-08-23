@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { ErrorState } from "@/components/error-state";
 import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth";
 import { formatDate, type AppLocale } from "@/lib/formatters";
@@ -18,7 +19,31 @@ export default async function SecuritySettingsPage() {
   // appears here. It only shows up in `.data.all`, which
   // `startEnrollment` (actions.ts -> lib/validation/mfa.js) reads to recover
   // from it; this page has no reason to surface that internal detail.
-  const { data } = await supabase.auth.mfa.listFactors();
+  const { data, error } = await supabase.auth.mfa.listFactors();
+
+  // A transient failure here must NOT silently render as "no authenticator
+  // app" (factors = []) — that would tell a user who genuinely has MFA
+  // enabled that they don't, which could prompt them to needlessly re-enroll.
+  // Matches the existing convention (e.g. (dashboard)/vehicles/page.tsx):
+  // check the query error explicitly and show ErrorState instead of
+  // swallowing it into an empty-looking success state.
+  if (error) {
+    console.error("mfa_list_factors_error", error.code ?? "unknown");
+    return (
+      <>
+        <PageHeader title={t("title")} description={t("description")} />
+        <div className="p-6">
+          <ErrorState
+            title={t("error.title")}
+            description={t("error.description")}
+            backHref="/settings/business"
+            backLabel={t("error.backLabel")}
+          />
+        </div>
+      </>
+    );
+  }
+
   const factors: MfaFactorView[] = (data?.totp ?? []).map((factor) => ({
     id: factor.id,
     createdAtLabel: formatDate(factor.created_at, undefined, locale),

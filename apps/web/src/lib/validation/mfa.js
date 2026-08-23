@@ -171,3 +171,77 @@ export async function unenrollFactorWithFreshCode(mfa, { factorId, code }) {
 
   return { ok: true };
 }
+
+// --- curated error -> i18n MESSAGE KEY mapping (Task 6 review round 1) -----
+//
+// These three functions decide which curated copy a failure surfaces as —
+// including the security-critical NON-ENUMERATION property: a wrong code,
+// an unknown/expired factor id, and a rejected challenge must all resolve
+// to the SAME key, or the failure path leaks whether a given factor exists.
+// They live here (locale-free, like the rest of this module) rather than in
+// `(dashboard)/settings/security/actions.ts` specifically so this property
+// can be asserted BEHAVIOURALLY offline, under plain `node --test` — see
+// tests/mfa-enrollment.test.mjs. Each returns an i18n key, never a
+// translated string; the "use server" caller resolves it via
+// `getTranslations("settings.security.actions")`.
+
+/**
+ * Maps an `enrollTotpFactor()` failure code to a curated message key.
+ *
+ * `"already_enrolled"` is OUR synthetic code (see `enrollTotpFactor` above).
+ * `"mfa_verified_factor_exists"` is a real GoTrue `ErrorCode` (alongside
+ * `"mfa_factor_name_conflict"`, which `enrollTotpFactor` already handles) for
+ * the same underlying situation — some GoTrue versions may report a verified
+ * factor's presence this way instead. Both mean the same thing to a user
+ * ("you already have this enabled") and are safe to say plainly: they
+ * describe the caller's OWN account state, not another account's existence.
+ * Everything else collapses to the generic `"enrollFailed"` key.
+ *
+ * @param {string} code
+ * @returns {"alreadyEnrolled" | "enrollFailed"}
+ */
+export function enrollErrorKey(code) {
+  if (code === "already_enrolled" || code === "mfa_verified_factor_exists") {
+    return "alreadyEnrolled";
+  }
+  return "enrollFailed";
+}
+
+/**
+ * Maps a challenge/verify failure code — from `verifyTotpEnrollment` or the
+ * challenge+verify prefix of `unenrollFactorWithFreshCode` — to a curated
+ * message key.
+ *
+ * NON-ENUMERATION IS THE POINT: `"mfa_verification_failed"` (wrong code) and
+ * `"mfa_factor_not_found"` (unknown/expired factor id) — and any other
+ * challenge/verify failure code not explicitly listed below — all resolve to
+ * the SAME `"invalidCode"` key on purpose. Distinguishing them in the UI
+ * would let an attacker probe whether a given factor id exists.
+ *
+ * @param {string} code
+ * @returns {"tooManyAttempts" | "codeExpired" | "invalidCode"}
+ */
+export function challengeOrVerifyErrorKey(code) {
+  if (code === "over_request_rate_limit" || code === "over_sms_send_rate_limit") {
+    return "tooManyAttempts";
+  }
+  if (code === "mfa_challenge_expired") return "codeExpired";
+  return "invalidCode";
+}
+
+/**
+ * Maps an `unenrollFactorWithFreshCode()` failure result to a curated
+ * message key. A failure at `stage: "unenroll"` (the code WAS accepted, but
+ * the removal call itself then failed) is reported distinctly from a
+ * rejected/expired code via `"removeFailed"` — conflating the two would
+ * wrongly tell a user who typed the correct code that their code was wrong.
+ * Every other stage (`"challenge"` / `"verify"`) delegates to
+ * `challengeOrVerifyErrorKey`, inheriting the same non-enumeration property.
+ *
+ * @param {{ code: string, stage: "challenge" | "verify" | "unenroll" }} failure
+ * @returns {"removeFailed" | "tooManyAttempts" | "codeExpired" | "invalidCode"}
+ */
+export function unenrollErrorKey(failure) {
+  if (failure.stage === "unenroll") return "removeFailed";
+  return challengeOrVerifyErrorKey(failure.code);
+}

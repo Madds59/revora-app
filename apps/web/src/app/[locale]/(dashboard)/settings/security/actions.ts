@@ -6,7 +6,10 @@ import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
+  challengeOrVerifyErrorKey,
+  enrollErrorKey,
   enrollTotpFactor,
+  unenrollErrorKey,
   unenrollFactorWithFreshCode,
   verifyTotpEnrollment,
 } from "@/lib/validation/mfa";
@@ -37,31 +40,6 @@ export type StartEnrollmentState = MfaActionState & {
   secret?: string;
 };
 
-type Translator = Awaited<ReturnType<typeof getTranslations>>;
-
-function mapEnrollErrorCode(t: Translator, code: string): string {
-  // "already_enrolled" is OUR synthetic code (lib/validation/mfa.js), not a
-  // Supabase one — it means listFactors found a VERIFIED factor already
-  // holding our friendly name, i.e. the user's own account already has TOTP
-  // enabled. That's safe to say plainly: it describes the caller's own
-  // account state, not another account's existence.
-  if (code === "already_enrolled") return t("alreadyEnrolled");
-  return t("enrollFailed");
-}
-
-function mapChallengeOrVerifyErrorCode(t: Translator, code: string): string {
-  if (code === "over_request_rate_limit" || code === "over_sms_send_rate_limit") {
-    return t("tooManyAttempts");
-  }
-  if (code === "mfa_challenge_expired") return t("codeExpired");
-  // Curated + non-enumerating (constraint 3, and the brief's explicit
-  // instruction on this task): a wrong code, an unknown/expired factor id,
-  // and a rejected challenge all collapse to the SAME message on purpose.
-  // Distinguishing them in the UI would let an attacker probe whether a
-  // given factor id exists.
-  return t("invalidCode");
-}
-
 // Takes no arguments: `useActionState` always calls its action with
 // `(prevState, formData)`, but this action needs neither — the enrolled
 // factor's friendly name is fixed (lib/validation/mfa.js), and there is no
@@ -77,7 +55,7 @@ export async function startEnrollment(): Promise<StartEnrollmentState> {
   const result = await enrollTotpFactor(supabase.auth.mfa);
   if (!result.ok) {
     console.error("mfa_enroll_error", result.code);
-    return { error: mapEnrollErrorCode(t, result.code) };
+    return { error: t(enrollErrorKey(result.code)) };
   }
 
   return { factorId: result.factorId, qrCode: result.qrCode, secret: result.secret };
@@ -97,7 +75,7 @@ export async function verifyEnrollment(
   const result = await verifyTotpEnrollment(supabase.auth.mfa, { factorId, code });
   if (!result.ok) {
     console.error("mfa_verify_error", result.code);
-    return { error: mapChallengeOrVerifyErrorCode(t, result.code) };
+    return { error: t(challengeOrVerifyErrorKey(result.code)) };
   }
 
   revalidatePath("/settings/security");
@@ -121,8 +99,7 @@ export async function unenrollFactor(
   const result = await unenrollFactorWithFreshCode(supabase.auth.mfa, { factorId, code });
   if (!result.ok) {
     console.error("mfa_unenroll_error", result.code);
-    if (result.stage === "unenroll") return { error: t("removeFailed") };
-    return { error: mapChallengeOrVerifyErrorCode(t, result.code) };
+    return { error: t(unenrollErrorKey(result)) };
   }
 
   revalidatePath("/settings/security");

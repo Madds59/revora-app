@@ -263,9 +263,13 @@
       "add": "Add service"
     },
     "security": {
-      "navLabel": "Security",
       "title": "Sign-in security",
       "description": "Add a second step to sign-in with an authenticator app.",
+      "error": {
+        "title": "Security settings failed to load",
+        "description": "We couldn't check your authenticator app status right now. Try again or return later.",
+        "backLabel": "Back to settings"
+      },
       "status": {
         "enabledTitle": "Authenticator app enabled",
         "enabledDescription": "Your account is protected with a second sign-in step.",
@@ -288,12 +292,10 @@
         "secretLabel": "Can't scan the code?",
         "secretHint": "Enter this key manually in your authenticator app instead.",
         "codeLabel": "6-digit code",
-        "codePlaceholder": "123456",
         "verify": "Activate",
         "cancel": "Cancel"
       },
       "unenroll": {
-        "trigger": "Remove",
         "title": "Remove authenticator app",
         "description": "Enter a current code from your authenticator app to confirm removal. This turns off the extra sign-in step for your account.",
         "codeLabel": "6-digit code",
