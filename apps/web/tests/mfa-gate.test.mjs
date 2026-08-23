@@ -19,10 +19,14 @@ import test from "node:test";
 // fails if the sequence does not reach a fixed point.
 //
 // The static checks at the very bottom are a deliberate exception, confined to
-// two release-gate properties that cannot be observed by calling anything
+// three release-gate properties that cannot be observed by calling anything
 // under `node --test`: that middleware.ts DELEGATES to this module rather than
-// reimplementing the rules inline, and that /login/mfa is in its public-path
-// allowlist. Those are structural facts about a file that imports next/server.
+// reimplementing the rules inline, that /login/mfa is in its public-path
+// allowlist, and that mfa-gate.js itself stays browser-safe (see the "release
+// gate" test near the bottom — mfa-client.tsx, a "use client" component, now
+// imports MFA_ENROLLMENT_PATH from this module, so it ships in the client
+// bundle too, same as lib/validation/password.js does). Those are structural
+// facts about files that import next/server or ship in a browser bundle.
 
 import {
   challengePageMode,
@@ -557,4 +561,31 @@ test("/login/mfa is in the middleware public-path allowlist", () => {
     allowlist.includes("MFA_CHALLENGE_PATH") || allowlist.includes("/login/mfa"),
     "isPublicPath does not allow the MFA challenge path",
   );
+});
+
+// --- release gate: mfa-gate.js itself must stay browser-safe ---------------
+//
+// mfa-client.tsx (a "use client" component) imports MFA_ENROLLMENT_PATH from
+// this module, so mfa-gate.js ships in the client bundle, not just the
+// middleware/server bundle. It has always been dependency-free in practice,
+// but nothing enforced that as a release gate the way
+// tests/password-policy.test.mjs does for lib/validation/password.js — this
+// is that gate's equivalent for mfa-gate.js. Uses the same widened
+// next[/-] pattern for the same reason (a bare "next/" check would miss a
+// future "next-intl" import).
+const NEXT_PACKAGE_IMPORT_RE = /from\s+["']next[/-]/;
+const mfaGateSrc = readSrc("lib/mfa-gate.js");
+
+test("release gate: mfa-gate.js has no Node-only or browser-unsafe dependency", () => {
+  assert.ok(!mfaGateSrc.includes("localStorage"), "must not touch localStorage");
+  assert.ok(!mfaGateSrc.includes("sessionStorage"), "must not touch sessionStorage");
+  assert.ok(!/\bfetch\s*\(/.test(mfaGateSrc), "must not make a network call");
+  assert.ok(!mfaGateSrc.includes("XMLHttpRequest"), "must not make a network call");
+  assert.ok(!/\bBuffer\s*\.\s*\w+\s*\(/.test(mfaGateSrc), "must not call a Buffer method");
+  assert.ok(!/\bnew\s+Buffer\s*\(/.test(mfaGateSrc), "must not construct a Buffer");
+  assert.ok(!/from\s+["']node:/.test(mfaGateSrc), "must not import a node: builtin");
+  assert.ok(!/from\s+["']buffer["']/.test(mfaGateSrc), "must not import the buffer module");
+  assert.ok(!/require\(/.test(mfaGateSrc), "must not use require()");
+  assert.ok(!NEXT_PACKAGE_IMPORT_RE.test(mfaGateSrc), "must not import next/* or next-* (e.g. next-intl)");
+  assert.ok(!mfaGateSrc.includes("process.env"), "must not read server-only env vars");
 });

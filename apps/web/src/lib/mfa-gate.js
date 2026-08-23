@@ -6,6 +6,14 @@
 // live Supabase project. Nothing here imports a framework: every input is a
 // plain value the caller has already resolved.
 //
+// BROWSER-SAFETY IS ALSO LOAD-BEARING here, not just a testability nicety:
+// `mfa-client.tsx` (a "use client" component) imports `MFA_ENROLLMENT_PATH`
+// from this module, so it ships in the CLIENT bundle in addition to the
+// middleware/server one. Same constraint as `lib/validation/password.js`: no
+// `node:crypto`, no `Buffer`, no `fs`, no network, no `next/*` or `next-*`
+// imports (e.g. `next-intl`). See the "release gate" tests at the bottom of
+// tests/mfa-gate.test.mjs, which assert this mechanically.
+//
 // WHY THIS EXTRACTION EXISTS AT ALL: `mfaRedirectFor` decides whether to issue
 // a REDIRECT from middleware, which runs on nearly every request. A gate that
 // redirects to a path the gate itself also redirects away from is an infinite

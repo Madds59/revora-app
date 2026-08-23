@@ -357,6 +357,29 @@ test("fail-closed: passwordRules tolerates non-string input without throwing", (
 
 // --- release gate: this module must stay browser-safe -----------------------
 
+// Catches `from "next/..."` AND `from "next-intl"` (or any other `next-*`
+// package) — the original `/from\s+["']next\//` required a slash after
+// "next" and so did NOT match `from "next-intl"`, the exact regression this
+// gate exists to prevent (caught in the final whole-branch review: the file
+// is clean today, but the gate itself had a blind spot). `next[/-]` covers
+// both `next/foo` and `next-foo` import specifiers.
+const NEXT_PACKAGE_IMPORT_RE = /from\s+["']next[/-]/;
+
+test("the widened next-package regex actually catches next-intl (self-test)", () => {
+  // If this ever stops matching, the release gate below is not testing what
+  // it claims to — fail loudly here rather than trusting the gate silently.
+  assert.match(
+    'import { getTranslations } from "next-intl/server";',
+    NEXT_PACKAGE_IMPORT_RE,
+    "regex must catch a next-intl import",
+  );
+  assert.match(
+    'import x from "next/headers";',
+    NEXT_PACKAGE_IMPORT_RE,
+    "regex must still catch a plain next/* import",
+  );
+});
+
 test("release gate: password.js has no Node-only or browser-unsafe dependency", () => {
   assert.ok(!moduleSource.includes("localStorage"), "must not touch localStorage");
   assert.ok(!moduleSource.includes("sessionStorage"), "must not touch sessionStorage");
@@ -370,7 +393,7 @@ test("release gate: password.js has no Node-only or browser-unsafe dependency", 
   assert.ok(!/from\s+["']node:/.test(moduleSource), "must not import a node: builtin");
   assert.ok(!/from\s+["']buffer["']/.test(moduleSource), "must not import the buffer module");
   assert.ok(!/require\(/.test(moduleSource), "must not use require()");
-  assert.ok(!/from\s+["']next\//.test(moduleSource), "must not import next/*");
+  assert.ok(!NEXT_PACKAGE_IMPORT_RE.test(moduleSource), "must not import next/* or next-* (e.g. next-intl)");
   assert.ok(!moduleSource.includes("process.env"), "must not read server-only env vars");
 });
 
