@@ -5,6 +5,20 @@ import { signOut } from "@/app/[locale]/(auth)/actions";
 import { Logo } from "@/components/brand";
 
 /**
+ * Moving `/settings/security` out of `(dashboard)` cost it the title that
+ * layout's own `generateMetadata` supplied, dropping the page onto the
+ * site-wide fallback. Restored here so it keeps a real, localized title —
+ * the same treatment `/login/mfa` gets from `metadata.mfaTitle`.
+ */
+export async function generateMetadata() {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("securityTitle"),
+    description: t("securityDescription"),
+  };
+}
+
+/**
  * Account-level pages that must be reachable by ANY authenticated user,
  * whatever shell they normally live in (APPSEC-10 auth hardening, Task 7).
  *

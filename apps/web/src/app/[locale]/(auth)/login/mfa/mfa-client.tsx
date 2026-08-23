@@ -1,9 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useActionState } from "react";
 
 import { signOut, verifyMfaChallenge, type AuthState } from "../../actions";
+import { switchLocalePath } from "@/lib/locale-path";
 import { SubmitButton } from "@/components/submit-button";
 import {
   Card,
@@ -31,6 +33,7 @@ export function MfaChallengeClient({
   next: string;
 }) {
   const t = useTranslations("auth.mfa");
+  const locale = useLocale();
   const [state, formAction] = useActionState(verifyMfaChallenge, initial);
   const multiple = factors.length > 1;
 
@@ -100,7 +103,20 @@ export function MfaChallengeClient({
       {/* Always reachable, in every branch: a user who lost their authenticator
           must be able to leave rather than be trapped on the gate page. */}
       <CardFooter className="flex-col items-start gap-2">
-        <p className="text-muted-foreground text-sm">{t("lostDevice")}</p>
+        {factors.length === 0 ? (
+          // Reached when listFactors failed, or when the AAL lookup was
+          // unreadable so the page rendered rather than redirecting. Sign-out
+          // alone would make this a dead end — enrollment is the way forward,
+          // and /settings/security is reachable by any authenticated user.
+          <Link
+            href={switchLocalePath("/settings/security", locale)}
+            className="text-foreground text-sm underline"
+          >
+            {t("enrollLink")}
+          </Link>
+        ) : (
+          <p className="text-muted-foreground text-sm">{t("lostDevice")}</p>
+        )}
         <form action={signOut}>
           <button type="submit" className="text-foreground text-sm underline">
             {t("signOut")}

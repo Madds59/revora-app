@@ -73,7 +73,10 @@ use [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) for the release-level g
   **Remaining gap**, narrowed: non-auth surfaces are still unlimited — invite
   acceptance, the notification dispatch route, AI-advisory and
   vehicle-intelligence calls, and file uploads. The `/login/mfa` code
-  submission also has no bucket of its own and relies on GoTrue's own limits
+  submission also has no bucket of its own; it falls back on GoTrue's own limit,
+  which is *assumed* rather than established — nothing here configures it
+  (`config.toml`'s `[auth.rate_limit]` block has no MFA-verify knob) and it has
+  not been verified
   (see [AUTH_HARDENING.md](AUTH_HARDENING.md)). Extending coverage means adding
   scopes to the function's allowlist in a NEW migration, never by editing 0031
   in place — see [DEVSECOPS_SECURITY_RUNBOOK.md](DEVSECOPS_SECURITY_RUNBOOK.md).

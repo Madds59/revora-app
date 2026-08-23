@@ -314,6 +314,53 @@ test("safeReturnPath never returns the challenge page itself", () => {
   assert.equal(safeReturnPath(`${MFA_CHALLENGE_PATH}/anything`), "/");
 });
 
+// --- i18n: auth.mfa key parity + real Arabic copy --------------------------
+//
+// Same convention as password-enforcement.test.mjs and mfa-enrollment.test.mjs:
+// these run against the PARSED JSON, so they describe the data that ships
+// rather than how the file happens to be spelled. A key present in en.json and
+// absent from ar.json renders the raw key path to Arabic users.
+
+const en = JSON.parse(readSrc("messages/en.json"));
+const ar = JSON.parse(readSrc("messages/ar.json"));
+
+function collectKeys(node, prefix = "") {
+  return Object.entries(node).flatMap(([k, v]) =>
+    v && typeof v === "object" ? collectKeys(v, `${prefix}${k}.`) : [`${prefix}${k}`],
+  );
+}
+
+const ARABIC_SCRIPT = /[؀-ۿ]/;
+const at = (node, key) => key.split(".").reduce((n, k) => n[k], node);
+
+test("i18n parity: en.json and ar.json have IDENTICAL key sets under auth.mfa", () => {
+  assert.ok(en.auth?.mfa, "en.json is missing auth.mfa");
+  assert.ok(ar.auth?.mfa, "ar.json is missing auth.mfa");
+  assert.deepEqual(collectKeys(ar.auth.mfa).sort(), collectKeys(en.auth.mfa).sort());
+});
+
+test("i18n: every auth.mfa string is non-empty in en and real Arabic in ar", () => {
+  for (const key of collectKeys(en.auth.mfa)) {
+    assert.ok(at(en.auth.mfa, key).trim().length > 0, `en auth.mfa.${key} is empty`);
+    assert.ok(
+      ARABIC_SCRIPT.test(at(ar.auth.mfa, key)),
+      `ar auth.mfa.${key} must be real Arabic, not an English placeholder`,
+    );
+  }
+});
+
+test("i18n: both gate pages carry their own localized metadata", () => {
+  // /login/mfa, and the moved /settings/security page — which lost the title
+  // it used to inherit from the (dashboard) layout.
+  for (const key of ["mfaTitle", "mfaDescription", "securityTitle", "securityDescription"]) {
+    assert.ok(en.metadata?.[key]?.trim(), `en.json metadata.${key} is missing or empty`);
+    assert.ok(
+      ARABIC_SCRIPT.test(ar.metadata?.[key] ?? ""),
+      `ar.json metadata.${key} must be real Arabic`,
+    );
+  }
+});
+
 // --- release gate: middleware must delegate, not reimplement ---------------
 
 const middlewareSrc = readSrc("lib/supabase/middleware.ts");

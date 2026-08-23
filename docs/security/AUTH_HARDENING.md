@@ -151,12 +151,39 @@ reachable for customer-portal users, who were previously bounced to `/portal`.
 
 ## 2. Known residuals
 
+- **THE BIG ONE — the AAL2 requirement is a Next.js ROUTING control only. The
+  `admin_*` RPCs do not check assurance level, and remain callable with an aal1
+  token.** `is_super_admin()` (`0009_platform_admins.sql:21-31`) tests only
+  `platform_admins` membership; every `admin_*` function carries
+  `grant execute … to authenticated`; and no migration in this repository
+  references `aal2` or `assurance` at all. An attacker with stolen admin
+  credentials and no second factor therefore holds a perfectly valid aal1 token
+  and can `POST /rest/v1/rpc/admin_list_users` — and every sibling RPC —
+  directly at PostgREST, never touching middleware. **The gate raises the bar
+  for the admin console, not for the data behind it.** Read "MFA is required
+  for admin access" as true of the UI and false of the database until the
+  follow-up below lands.
+
+  Recommended follow-up, **as its own task**: add
+  `(auth.jwt() ->> 'aal') = 'aal2'` to `is_super_admin()` (or to each `admin_*`
+  function). **The rollout ordering is not optional** — applying it early
+  revokes data access from every admin who has not yet enrolled, including in
+  an environment where hosted TOTP is disabled and enrollment *cannot* succeed,
+  which is the exact lockout the gate's `/admin` scoping was amended to avoid:
+
+  1. confirm TOTP is enabled on the hosted project (§3(b));
+  2. enrol every existing `platform_admins` member, and verify each one truly
+     has a factor with status `verified` — not merely an enrollment started;
+  3. only then apply the enforcement migration;
+  4. have a rollback migration written and staged *before* you apply it.
 - **The `/login/mfa` code submission has no rate-limit bucket of its own.**
   Adding one means adding a scope to `consume_rate_limit`'s allowlist, which
-  must happen in a *new* migration (§3(a)). Today it relies on GoTrue's own
-  limits on `mfa.verify`; that error code (`over_request_rate_limit`) already
-  maps to the curated "too many attempts" copy. Worth closing if MFA becomes
-  mandatory for all users.
+  must happen in a *new* migration (§3(a)). GoTrue is *assumed* to apply its own
+  limit to `mfa.verify` — its `over_request_rate_limit` code is handled and maps
+  to the curated "too many attempts" copy — but that limit is **not configurable
+  from `config.toml`** (the `[auth.rate_limit]` block has no MFA-verify knob) and
+  has **not been verified here**. Do not count it as a measured control. Worth
+  closing properly if MFA becomes mandatory for all users.
 - **Password recovery interacts with the gate.** A user with a verified factor
   who follows a reset link arrives at AAL1 and is sent to `/login/mfa` first.
   This is intended (email access alone must not bypass the second factor); the

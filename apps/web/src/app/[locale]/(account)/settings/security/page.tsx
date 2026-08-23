@@ -36,7 +36,7 @@ export default async function SecuritySettingsPage() {
           <ErrorState
             title={t("error.title")}
             description={t("error.description")}
-            backHref="/settings/business"
+            backHref="/"
             backLabel={t("error.backLabel")}
           />
         </div>

@@ -233,9 +233,12 @@ export async function signInWithMagicLink(
  * NOT separately rate limited by `enforceAuthRateLimit`: adding a scope means
  * amending 0031's server-side scope allowlist, and re-editing an applied
  * migration in place is the exact hazard AUTH_HARDENING.md's operator actions
- * are about. GoTrue applies its own limits to `mfa.verify`, and its
- * `over_request_rate_limit` code already maps to the `tooManyAttempts` copy
- * below. Recorded as a residual in docs/security/AUTH_HARDENING.md.
+ * are about. GoTrue is ASSUMED to apply its own limit to `mfa.verify` — its
+ * `over_request_rate_limit` code is handled and maps to the `tooManyAttempts`
+ * copy below — but that limit is not configurable from `supabase/config.toml`
+ * (its `[auth.rate_limit]` block has no MFA-verify knob) and has not been
+ * verified here, so do not treat it as a measured control. Recorded as a
+ * residual in docs/security/AUTH_HARDENING.md.
  */
 export async function verifyMfaChallenge(
   _prev: AuthState,

@@ -62,7 +62,7 @@ const NAV: NavItem[] = [
     labelKey: "settings",
     href: "/settings",
     icon: Settings,
-    aliases: ["/settings/business", "/settings/security"],
+    aliases: ["/settings/business"],
   },
   { labelKey: "feedback", href: "/feedback", icon: MessageSquare },
   { labelKey: "implementation", href: "/implementation", icon: ClipboardList },

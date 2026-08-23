@@ -268,7 +268,7 @@
       "error": {
         "title": "Security settings failed to load",
         "description": "We couldn't check your authenticator app status right now. Try again or return later.",
-        "backLabel": "Back to settings"
+        "backLabel": "Back to home"
       },
       "status": {
         "enabledTitle": "Authenticator app enabled",
@@ -453,6 +453,7 @@
       "verify": "Continue",
       "lostDevice": "Lost access to your authenticator app?",
       "signOut": "Sign out and use another account",
+      "enrollLink": "Set up an authenticator app",
       "errors": {
         "codeRequired": "Enter the 6-digit code from your authenticator app.",
         "invalidCode": "That code isn't valid. Please try again.",
@@ -525,6 +526,8 @@
     "homeDescription": "Your operations at a glance.",
     "loginTitle": "Sign in",
     "loginDescription": "Access your Revora workspace.",
+    "securityTitle": "Sign-in security",
+    "securityDescription": "Manage the authenticator app on your Revora account.",
     "mfaTitle": "Two-step verification",
     "mfaDescription": "Confirm the code from your authenticator app.",
     "forgotPasswordTitle": "Reset your password",
