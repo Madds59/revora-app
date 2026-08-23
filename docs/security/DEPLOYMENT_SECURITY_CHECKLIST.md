@@ -56,6 +56,13 @@ backed by Supabase project `yqscayjvvnpsvocqrrot`).
       channels
 - [ ] Confirm `SUPABASE_SERVICE_ROLE_KEY` and other server-only secrets are not
       accidentally exposed via a debug/preview-only code path
+- [ ] Confirm `SUPABASE_SERVICE_ROLE_KEY` is actually **set and valid** for this
+      preview environment. Since APPSEC-10, it is a hard dependency of sign-in
+      itself (`rate-limit.ts` fails closed when it is missing) — a preview
+      lacking it, or holding a stale/rotated value, has no working
+      authentication at all, and the only symptom anyone will see or report is
+      **"Too many attempts."** See
+      [AUTH_HARDENING.md](AUTH_HARDENING.md) §3(h).
 
 ## Rollback Trigger Conditions
 

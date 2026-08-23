@@ -184,6 +184,17 @@ reachable for customer-portal users, who were previously bounced to `/portal`.
   from `config.toml`** (the `[auth.rate_limit]` block has no MFA-verify knob) and
   has **not been verified here**. Do not count it as a measured control. Worth
   closing properly if MFA becomes mandatory for all users.
+- **`updatePassword` (`(auth)/actions.ts`) has no rate-limit bucket at all —
+  not even an assumed one.** Unlike the other auth actions, this one runs for
+  an already-authenticated session, so the existing IP/email scopes don't fit
+  it cleanly; it was left out of Task 5's scope list rather than reusing one
+  that doesn't match. The practical cost: it fires an unmetered outbound HIBP
+  request per call (`isPasswordBreached`, 3 s timeout, fails open on its own —
+  see Task 2 above) with nothing bounding how often a session can trigger that
+  network call. Adding a scope needs a new migration (§3(a)) and is tracked as
+  a follow-up, not part of this branch. See
+  [API_SECURITY_CHECKLIST.md](API_SECURITY_CHECKLIST.md) for the same gap
+  stated against the inventory table.
 - **Password recovery interacts with the gate.** A user with a verified factor
   who follows a reset link arrives at AAL1 and is sent to `/login/mfa` first.
   This is intended (email access alone must not bypass the second factor); the
@@ -305,7 +316,43 @@ Dashboard → Authentication → Policies → **leaked password protection**. Th
 Supabase's own HIBP integration and is complementary to Task 2's check, not a
 replacement: ours screens on our side and fails open, theirs enforces at the
 Auth API. Enabling it does not surface raw error strings for the flows we
-control, because the client-side check rejects breached passwords first.
+control — `actions.ts` never returns `error.message` to the client, full
+stop, regardless of which check rejected the password. (There is no
+client-side breach check to credit for this: `password-breach.js` is
+server-only, and it fails open, so during an HIBP outage Supabase's own
+protection can reject a password that ours already passed.) The real residual
+is weaker copy, not a leaked string: the user sees the generic `signUpFailed`
+message with no hint that the specific reason was a breached password.
+
+### (h) REQUIRED IN EVERY ENVIRONMENT — `SUPABASE_SERVICE_ROLE_KEY` must be present and valid, or authentication fails closed with no other symptom
+
+Before this branch, `apps/web/src/lib/env.ts` required only
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the
+service-role key was needed only for storage/portal/notifications/Stripe
+paths, so an environment missing it could still sign users in. That is no
+longer true: `checkRateLimit` (`apps/web/src/lib/rate-limit.ts`) calls
+`createAdminClient()`, which throws synchronously if
+`SUPABASE_SERVICE_ROLE_KEY` is unset, and `enforceAuthRateLimit` runs on every
+sign-in, signup, magic-link and password-reset-request Server Action **before**
+the Supabase call. That throw is caught and treated as fail-closed (correct —
+see the module header), so the result is not a crash but a normal-looking
+denial.
+
+**The symptom an operator or user will actually report is "Too many
+attempts."** There is no other error surfaced anywhere in the UI. The only
+server-side signal is a `rate_limit_client_error` log line — no message text,
+no stack, by design (see `rate-limit.ts`'s comment on why nothing more
+specific is logged). An environment with a missing, empty, or
+rotated-but-not-redeployed `SUPABASE_SERVICE_ROLE_KEY` therefore has **no
+working authentication at all**, and it is indistinguishable, from the
+outside, from "someone is actually being rate-limited."
+
+If users report being permanently rate-limited — every attempt, every account,
+immediately — **check `SUPABASE_SERVICE_ROLE_KEY` in that environment first**,
+before investigating the rate-limit store itself. This is exactly the class of
+drift a preview deployment with divergent env is prone to — see
+[DEPLOYMENT_SECURITY_CHECKLIST.md](DEPLOYMENT_SECURITY_CHECKLIST.md)'s Preview
+Deployments section, which carries the matching checklist item.
 
 ---
 
