@@ -273,6 +273,39 @@ try {
       `found ${policies.rows.length}: ${policies.rows.map((r) => r.policyname).join(", ")}`,
     );
   }
+
+  // 6. THE HEADLINE CHECK, and the one this script previously did NOT make:
+  // anon must not be able to CALL consume_rate_limit. Check 5 above only
+  // proves anon can't SELECT the table directly — it says nothing about the
+  // RPC, which is Task 4's entire round-2 fix and the actual attack surface
+  // (POST /rest/v1/rpc/consume_rate_limit with the public anon key would let
+  // anyone burn a victim's login_email bucket without ever attempting a
+  // login; see 0031_auth_rate_limits.sql's grant comments).
+  //
+  // This calls the LIVE RPC as the anon client (mirroring check 5's shape,
+  // and the real unauthenticated-attacker path) rather than querying
+  // information_schema/pg_catalog for the grant — a live call is what
+  // actually caught the original bug. The first attempt at the Task 4
+  // round-2 fix was `revoke ... from public` alone, which was a SILENT
+  // NO-OP: 0003_api_grants.sql's `alter default privileges ... grant execute
+  // ... to anon` grants EXECUTE to anon DIRECTLY, independent of PUBLIC, so
+  // revoking only from PUBLIC left the RPC fully reachable with the anon
+  // key. That was caught only by live probing, not by a catalog query — this
+  // check exists so a future re-grant (accidental or "helpful") fails this
+  // script instead of shipping silently, exactly the failure mode a
+  // catalog-only check would stay green through.
+  {
+    const identifier = `verify-anon-denied-${stamp}@example.com`;
+    const { data, error } = await anon.rpc("consume_rate_limit", {
+      scope: "login_email",
+      identifier,
+    });
+    assert(
+      error?.code === "42501",
+      "anon RPC call to consume_rate_limit is denied with permission-denied (42501)",
+      error ? `got code=${error.code} message=${error.message}` : `unexpectedly succeeded: ${JSON.stringify(data)}`,
+    );
+  }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   if (/fetch failed|ECONNREFUSED|ENOTFOUND|EPERM|connect/i.test(message)) {
