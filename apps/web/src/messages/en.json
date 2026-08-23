@@ -443,6 +443,23 @@
       "noAccount": "No account?",
       "createOne": "Create one"
     },
+    "mfa": {
+      "title": "Two-step verification",
+      "description": "Enter the 6-digit code from your authenticator app to finish signing in.",
+      "noFactorDescription": "No authenticator app is set up on this account.",
+      "chooseFactor": "Choose an authenticator app",
+      "factorAddedOn": "Authenticator app added {date}",
+      "codeLabel": "6-digit code",
+      "verify": "Continue",
+      "lostDevice": "Lost access to your authenticator app?",
+      "signOut": "Sign out and use another account",
+      "errors": {
+        "codeRequired": "Enter the 6-digit code from your authenticator app.",
+        "invalidCode": "That code isn't valid. Please try again.",
+        "codeExpired": "That code has expired. Please enter a new one.",
+        "tooManyAttempts": "Too many attempts. Please wait a while and try again."
+      }
+    },
     "forgotPassword": {
       "title": "Reset your password",
       "description": "We will email a reset link if an account exists.",
@@ -508,6 +525,8 @@
     "homeDescription": "Your operations at a glance.",
     "loginTitle": "Sign in",
     "loginDescription": "Access your Revora workspace.",
+    "mfaTitle": "Two-step verification",
+    "mfaDescription": "Confirm the code from your authenticator app.",
     "forgotPasswordTitle": "Reset your password",
     "forgotPasswordDescription": "Request a password reset link for your Revora account.",
     "resetPasswordTitle": "Set a new password",

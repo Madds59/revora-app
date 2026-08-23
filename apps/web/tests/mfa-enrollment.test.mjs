@@ -12,7 +12,7 @@ import test from "node:test";
 // `supabase.auth.mfa` client — no Next.js runtime, no network, no live
 // Supabase project. It is the single place that decides call ORDER
 // (enroll -> recover-and-retry, challenge -> verify -> unenroll); the
-// "use server" wrapper in `(dashboard)/settings/security/actions.ts` only
+// "use server" wrapper in `(account)/settings/security/actions.ts` only
 // maps its results to curated copy and cannot itself be imported under plain
 // `node --test` (it pulls in next/navigation, next-intl/server, etc.) — for
 // that file, and for the client component, this suite falls back to the same
@@ -44,8 +44,8 @@ function readSrc(relativeToWebSrc) {
   return readFileSync(path.join(webSrc, relativeToWebSrc), "utf8");
 }
 
-const actionsSrc = readSrc("app/[locale]/(dashboard)/settings/security/actions.ts");
-const clientSrc = readSrc("app/[locale]/(dashboard)/settings/security/security-client.tsx");
+const actionsSrc = readSrc("app/[locale]/(account)/settings/security/actions.ts");
+const clientSrc = readSrc("app/[locale]/(account)/settings/security/security-client.tsx");
 const mfaLibSrc = readSrc("lib/validation/mfa.js");
 const en = JSON.parse(readSrc("messages/en.json"));
 const ar = JSON.parse(readSrc("messages/ar.json"));

@@ -112,16 +112,21 @@ export async function enrollTotpFactor(mfa) {
 
 /**
  * `mfa.challenge()` then `mfa.verify()` for `factorId`/`code`. Shared by
- * `verifyTotpEnrollment` (activating a freshly-enrolled factor) and
- * `unenrollFactorWithFreshCode` (authenticating a removal) — both need
- * exactly this "prove you have a current code" step and nothing more.
+ * `verifyTotpEnrollment` (activating a freshly-enrolled factor),
+ * `unenrollFactorWithFreshCode` (authenticating a removal), and — as of
+ * Task 7 — the sign-in challenge at `/login/mfa`. It is EXPORTED for that
+ * third caller rather than left module-private because a second copy of the
+ * challenge-then-verify ordering, living in a Server Action, is exactly the
+ * drift this module exists to prevent. Verifying a challenge is also what
+ * upgrades a session from aal1 to aal2, which is the state Task 7's
+ * middleware gate reads.
  *
  * @returns {Promise<
  *   | { ok: true }
  *   | { ok: false, code: string, stage: "challenge" | "verify" }
  * >}
  */
-async function challengeThenVerify(mfa, { factorId, code }) {
+export async function challengeThenVerify(mfa, { factorId, code }) {
   const challenge = await mfa.challenge({ factorId });
   if (challenge.error || !challenge.data) {
     return { ok: false, code: challenge.error?.code ?? "unknown", stage: "challenge" };
@@ -179,7 +184,7 @@ export async function unenrollFactorWithFreshCode(mfa, { factorId, code }) {
 // an unknown/expired factor id, and a rejected challenge must all resolve
 // to the SAME key, or the failure path leaks whether a given factor exists.
 // They live here (locale-free, like the rest of this module) rather than in
-// `(dashboard)/settings/security/actions.ts` specifically so this property
+// `(account)/settings/security/actions.ts` specifically so this property
 // can be asserted BEHAVIOURALLY offline, under plain `node --test` — see
 // tests/mfa-enrollment.test.mjs. Each returns an i18n key, never a
 // translated string; the "use server" caller resolves it via
