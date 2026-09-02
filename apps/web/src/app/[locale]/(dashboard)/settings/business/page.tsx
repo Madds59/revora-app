@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { getLocale } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -245,6 +247,22 @@ export default async function BusinessSettingsPage() {
               pending={pending}
               canManage={isOwner}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{locale === "ar" ? "الأمان" : "Security"}</CardTitle>
+            <CardDescription>
+              {locale === "ar"
+                ? "أضف خطوة تحقق إضافية عند تسجيل الدخول باستخدام تطبيق مصادقة."
+                : "Add a second step to sign-in with an authenticator app."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/settings/security" className={buttonVariants({ variant: "outline" })}>
+              {locale === "ar" ? "فتح إعدادات الأمان" : "Open security settings"}
+            </Link>
           </CardContent>
         </Card>
       </div>

@@ -44,18 +44,58 @@ use [SECURITY_RELEASE_GATE.md](SECURITY_RELEASE_GATE.md) for the release-level g
 - [ ] **Rate/abuse considerations**: For anything that could be hit at volume
       (invites, password reset, notification dispatch), is there a reasonable
       built-in limiter (e.g. the existing pending-invite-uniqueness constraint)?
-      Full rate-limiting strategy is not implemented platform-wide today — treat
-      new public-facing endpoints as higher risk until this is addressed.
+      Four of the seven actions in `(auth)/actions.ts` — `signIn`, `signUp`,
+      `signInWithMagicLink`, `requestPasswordReset` — are covered by the
+      shared Postgres limiter (`enforceAuthRateLimit`, see the gaps section
+      below). The other three are not: `signOut` needs no limiter, but
+      `verifyMfaChallenge` and `updatePassword` are genuinely unmetered — see
+      the gaps section below and
+      [AUTH_HARDENING.md](AUTH_HARDENING.md) §2 for what each of those two
+      actually relies on instead. Treat new public-facing endpoints outside
+      the four covered actions as higher risk until platform-wide coverage
+      exists.
 - [ ] **Public vs protected**: If the route is intentionally public (like the
       launch-ops template downloads), confirm it truly carries no tenant data and
       say so in a comment or this checklist's inventory table above.
 
 ## Known Platform-Wide Gaps (tracked, not blocking)
 
-- No centralized rate-limiting middleware for sensitive routes (login, password
-  reset, signup, invite acceptance). Recommend evaluating Vercel/Supabase-native
-  rate limiting or a lightweight middleware addition as a future DevSecOps item —
-  see [DEVSECOPS_SECURITY_RUNBOOK.md](DEVSECOPS_SECURITY_RUNBOOK.md).
+- Rate limiting now covers **four of the seven** `(auth)/actions.ts` actions
+  (`signIn`, `signUp`, `signInWithMagicLink`, `requestPasswordReset`), and
+  nothing outside that file at all. APPSEC-10
+  Task 4/5 added a Postgres-backed limiter: the `SECURITY DEFINER` function
+  `public.consume_rate_limit(scope, identifier)`
+  (`supabase/migrations/0031_auth_rate_limits.sql`), reached from
+  `apps/web/src/lib/rate-limit.ts` through the **service-role** client only —
+  `EXECUTE` is revoked from `public`, `anon` and `authenticated`, because an
+  anon-callable limiter is itself an account-lockout weapon. It **fails
+  closed**: any RPC, client-construction or network failure denies the attempt
+  rather than silently disabling the limiter. Six hard-coded scopes, with limits
+  and windows living inside the function (never in the caller): `login_ip`
+  (20/15 min), `login_email` (8/15 min), `password_reset_ip` (10/h),
+  `password_reset_email` (5/h), `signup_ip` (10/h), `magic_link_email` (5/h).
+  Identifiers are hashed before storage, so raw emails and IPs never land in the
+  table. Sign-in, magic link and password reset are **dual-keyed** (IP bucket
+  *and* identifier bucket) so that neither an identifier-only lockout nor an
+  IP-rotating attacker defeats it; signup is IP-only by design.
+  **Remaining gap**, narrowed: non-auth surfaces are still unlimited — invite
+  acceptance, the notification dispatch route, AI-advisory and
+  vehicle-intelligence calls, and file uploads. Two actions *inside*
+  `(auth)/actions.ts` are also unmetered:
+  - The `/login/mfa` code submission (`verifyMfaChallenge`) has no bucket of
+    its own; it falls back on GoTrue's own limit, which is *assumed* rather
+    than established — nothing here configures it (`config.toml`'s
+    `[auth.rate_limit]` block has no MFA-verify knob) and it has not been
+    verified (see [AUTH_HARDENING.md](AUTH_HARDENING.md) §2).
+  - `updatePassword` has **no bucket at all**, not even an assumed one — it is
+    reachable by any authenticated session and, per attempt, fires an
+    unmetered outbound HIBP request (`isPasswordBreached`, 3 s timeout) with
+    nothing bounding call volume. See
+    [AUTH_HARDENING.md](AUTH_HARDENING.md) §2.
+
+  Extending coverage means adding
+  scopes to the function's allowlist in a NEW migration, never by editing 0031
+  in place — see [DEVSECOPS_SECURITY_RUNBOOK.md](DEVSECOPS_SECURITY_RUNBOOK.md).
 - No centralized request schema validation library wired into every action (see
   APPSEC-09).
 - No automated test asserts a 403/404 on cross-tenant API/action access today (see

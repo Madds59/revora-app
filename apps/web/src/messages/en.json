@@ -261,6 +261,57 @@
       "defaultPrice": "Default price (AED)",
       "description": "Description",
       "add": "Add service"
+    },
+    "security": {
+      "title": "Sign-in security",
+      "description": "Add a second step to sign-in with an authenticator app.",
+      "error": {
+        "title": "Security settings failed to load",
+        "description": "We couldn't check your authenticator app status right now. Try again or return later.",
+        "backLabel": "Back to home"
+      },
+      "status": {
+        "enabledTitle": "Authenticator app enabled",
+        "enabledDescription": "Your account is protected with a second sign-in step.",
+        "disabledTitle": "No authenticator app added",
+        "disabledDescription": "Add an authenticator app to require a code at sign-in, in addition to your password."
+      },
+      "factor": {
+        "addedOn": "Added {date}",
+        "remove": "Remove"
+      },
+      "empty": {
+        "title": "No authenticator app yet",
+        "description": "Set up an authenticator app to add a second step to sign-in."
+      },
+      "enroll": {
+        "start": "Set up authenticator app",
+        "cardTitle": "Set up an authenticator app",
+        "cardDescription": "Scan the QR code with an authenticator app (such as Google Authenticator or 1Password), or enter the code manually.",
+        "qrAlt": "QR code for authenticator app setup",
+        "secretLabel": "Can't scan the code?",
+        "secretHint": "Enter this key manually in your authenticator app instead.",
+        "codeLabel": "6-digit code",
+        "verify": "Activate",
+        "cancel": "Cancel"
+      },
+      "unenroll": {
+        "title": "Remove authenticator app",
+        "description": "Enter a current code from your authenticator app to confirm removal. This turns off the extra sign-in step for your account.",
+        "codeLabel": "6-digit code",
+        "confirm": "Remove authenticator app"
+      },
+      "actions": {
+        "codeRequired": "Enter the 6-digit code from your authenticator app.",
+        "invalidCode": "That code isn't valid. Please try again.",
+        "codeExpired": "That code has expired. Please enter a new one.",
+        "tooManyAttempts": "Too many attempts. Please wait a while and try again.",
+        "alreadyEnrolled": "You already have an authenticator app enabled.",
+        "enrollFailed": "We couldn't start setup. Please try again.",
+        "removeFailed": "We couldn't remove the authenticator app. Please try again.",
+        "enrolled": "Authenticator app activated.",
+        "removed": "Authenticator app removed."
+      }
     }
   },
   "team": {
@@ -342,13 +393,41 @@
     },
     "actions": {
       "emailRequired": "Email and password are required.",
-      "passwordMin": "Password must be at least 8 characters.",
       "passwordRequired": "Password is required.",
       "passwordMismatch": "Passwords do not match.",
       "chooseAccountType": "Choose an account type to continue.",
       "checkEmail": "Check your email to confirm your account, then sign in.",
       "magicLinkSent": "Magic link sent. Check your email to sign in.",
-      "passwordResetSent": "If an account exists, a reset link was sent."
+      "passwordResetSent": "If an account exists, a reset link was sent.",
+      "passwordBreached": "This password has appeared in a known data breach. Please choose a different password.",
+      "tooManyAttempts": "Too many attempts. Please wait a while and try again.",
+      "invalidCredentials": "Invalid email or password.",
+      "signUpFailed": "We couldn't create your account. Please try again.",
+      "magicLinkFailed": "We couldn't send the magic link. Please try again.",
+      "passwordResetFailed": "We couldn't process your request. Please try again.",
+      "updatePasswordFailed": "We couldn't update your password. Please try again."
+    },
+    "password": {
+      "requirementsTitle": "Password requirements",
+      "rules": {
+        "length": "At least 12 characters",
+        "lowercase": "One lowercase letter (a-z)",
+        "uppercase": "One uppercase letter (A-Z)",
+        "digit": "One number (0-9)",
+        "symbol": "One symbol (e.g. ! @ # $)",
+        "notEmail": "Doesn't contain your email address",
+        "notCommon": "Not a commonly used password"
+      },
+      "errors": {
+        "empty": "Please enter a password.",
+        "tooShort": "Password must be at least 12 characters.",
+        "tooLong": "Password is too long.",
+        "controlChars": "Password contains characters that aren't allowed.",
+        "classes": "Password must include at least 3 of: lowercase letters, uppercase letters, numbers, and symbols.",
+        "email": "Password must not contain your email address.",
+        "common": "This password is too common. Please choose a different one.",
+        "generic": "Please choose a password that meets the requirements below."
+      }
     },
     "login": {
       "title": "Sign in",
@@ -363,6 +442,26 @@
       "passwordResetSuccess": "Password updated. Sign in with your new password.",
       "noAccount": "No account?",
       "createOne": "Create one"
+    },
+    "mfa": {
+      "title": "Two-step verification",
+      "description": "Enter the 6-digit code from your authenticator app to finish signing in.",
+      "noFactorDescription": "No authenticator app is set up on this account.",
+      "chooseFactor": "Choose an authenticator app",
+      "factorAddedOn": "Authenticator app added {date}",
+      "codeLabel": "6-digit code",
+      "verify": "Continue",
+      "lostDevice": "Lost access to your authenticator app?",
+      "signOut": "Sign out and use another account",
+      "enrollLink": "Set up an authenticator app",
+      "unavailableDescription": "We could not load your authenticator app just now. This is usually temporary — please try again.",
+      "retry": "Try again",
+      "errors": {
+        "codeRequired": "Enter the 6-digit code from your authenticator app.",
+        "invalidCode": "That code isn't valid. Please try again.",
+        "codeExpired": "That code has expired. Please enter a new one.",
+        "tooManyAttempts": "Too many attempts. Please wait a while and try again."
+      }
     },
     "forgotPassword": {
       "title": "Reset your password",
@@ -429,6 +528,10 @@
     "homeDescription": "Your operations at a glance.",
     "loginTitle": "Sign in",
     "loginDescription": "Access your Revora workspace.",
+    "securityTitle": "Sign-in security",
+    "securityDescription": "Manage the authenticator app on your Revora account.",
+    "mfaTitle": "Two-step verification",
+    "mfaDescription": "Confirm the code from your authenticator app.",
     "forgotPasswordTitle": "Reset your password",
     "forgotPasswordDescription": "Request a password reset link for your Revora account.",
     "resetPasswordTitle": "Set a new password",
@@ -806,14 +909,13 @@
     },
     "context": {
       "heading": "Scenario context",
-      "vehicles": "Set the customer, vehicle count, and contract shape.",
+      "subheading": "Set the customer, vehicle count, and contract shape.",
       "title": "Scenario title",
       "customerType": "Customer type",
       "serviceCategory": "Service category",
       "currency": "Currency",
       "billingCycle": "Billing cycle",
       "contractLength": "Contract length (months)",
-      "vehicles": "Vehicles covered",
       "vehiclesLabel": "Vehicles covered",
       "visits": "Expected monthly visits",
       "sla": "SLA level",

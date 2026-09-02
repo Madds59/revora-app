@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { updatePassword, type AuthState } from "../actions";
 import { buildLoginPath } from "@/lib/auth-links";
+import { PasswordRequirements } from "@/components/password-requirements";
 import { SubmitButton } from "@/components/submit-button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export function ResetPasswordClient() {
   const [state, action] = useActionState(updatePassword, initial);
   const locale = useLocale();
   const t = useTranslations("auth.resetPassword");
+  const [password, setPassword] = useState("");
 
   return (
     <Card className="w-full max-w-sm">
@@ -34,11 +36,20 @@ export function ResetPasswordClient() {
         <form action={action} className="flex flex-col gap-4">
           <div className="grid gap-2">
             <Label htmlFor="password">{t("passwordLabel")}</Label>
-            <Input id="password" name="password" type="password" minLength={8} required />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              minLength={12}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <PasswordRequirements password={password} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="confirm_password">{t("confirmPasswordLabel")}</Label>
-            <Input id="confirm_password" name="confirm_password" type="password" minLength={8} required />
+            <Input id="confirm_password" name="confirm_password" type="password" minLength={12} required />
           </div>
           <FormMessage state={state} />
           <SubmitButton className="w-full">{t("submit")}</SubmitButton>

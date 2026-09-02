@@ -6,6 +6,7 @@ import { useActionState, useState } from "react";
 
 import { signUp, type AuthState } from "../actions";
 import { AccountIntentPicker } from "@/components/account-intent-picker";
+import { PasswordRequirements } from "@/components/password-requirements";
 import { SubmitButton } from "@/components/submit-button";
 import {
   Card,
@@ -26,6 +27,8 @@ export function SignupClient() {
   const [accountIntent, setAccountIntent] = useState<AccountIntent | null>(
     null,
   );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const t = useTranslations("auth.signup");
 
   return (
@@ -56,7 +59,14 @@ export function SignupClient() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">{t("emailLabel")}</Label>
-            <Input id="email" name="email" type="email" required />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">{t("passwordLabel")}</Label>
@@ -64,9 +74,12 @@ export function SignupClient() {
               id="password"
               name="password"
               type="password"
-              minLength={8}
+              minLength={12}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <PasswordRequirements password={password} email={email} />
           </div>
           {state.error && (
             <p className="text-destructive text-sm">{state.error}</p>

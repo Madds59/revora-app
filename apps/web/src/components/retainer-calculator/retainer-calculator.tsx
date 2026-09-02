@@ -947,7 +947,7 @@ export function RetainerCalculator({
               <Card>
                 <CardHeader>
                   <CardTitle>{t("context.heading")}</CardTitle>
-                  <CardDescription>{t("context.vehicles")}</CardDescription>
+                  <CardDescription>{t("context.subheading")}</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-2 md:col-span-2">
@@ -991,7 +991,7 @@ export function RetainerCalculator({
                     </Select>
                   </div>
                   <DraftNumberInput label={t("context.contractLength")} value={draft.input.contractLengthMonths} min={1} step="1" onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, contractLengthMonths: Math.max(1, Math.floor(Number.isFinite(value) ? value : 1)) } }))} />
-                  <DraftNumberInput label={t("context.vehicles")} value={draft.input.numberOfVehicles} min={1} step="1" onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, numberOfVehicles: Math.max(1, Math.floor(Number.isFinite(value) ? value : 1)) } }))} />
+                  <DraftNumberInput label={t("context.vehiclesLabel")} value={draft.input.numberOfVehicles} min={1} step="1" onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, numberOfVehicles: Math.max(1, Math.floor(Number.isFinite(value) ? value : 1)) } }))} />
                   <DraftNumberInput label={t("context.visits")} value={draft.input.expectedMonthlyVisits} min={0} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, expectedMonthlyVisits: Math.max(0, Number.isFinite(value) ? value : 0) } }))} />
                   <div className="grid gap-2">
                     <Label>{t("context.sla")}</Label>

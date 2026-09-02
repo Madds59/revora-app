@@ -1,0 +1,23 @@
+-- Index on auth_rate_limits.window_start (APPSEC-10 final review, MINOR 6).
+--
+-- A NEW migration, deliberately — 0031_auth_rate_limits.sql was already
+-- edited in place once (see its own header and AUTH_HARDENING.md §3(a) for
+-- the hazard that created: a database that ran the original 0031 never
+-- re-executes it, so a change folded back into 0031 now would silently never
+-- reach any environment that already applied it). Never edit 0031 again.
+--
+-- Why this index: consume_rate_limit()'s opportunistic reaper
+-- (0031_auth_rate_limits.sql:109-112) runs `delete from auth_rate_limits
+-- where window_start < now() - interval '1 day'` on ~1% of calls, inline on
+-- the auth path (every sign-in, signup, magic-link and password-reset-
+-- request Server Action goes through this RPC). Without an index on
+-- window_start, that delete is a sequential scan of the whole table on every
+-- triggering call. The table's row count is not bounded by request-shape
+-- validation — each distinct (scope, identifier) pair gets its own row, and
+-- an attacker chooses identifiers — so this is a table an attacker can grow,
+-- and a sequential scan over it runs inline on a path every user depends on
+-- to sign in. That is documented and accepted as a residual (unbounded
+-- bucket cardinality), not something this index needs to fully solve, but
+-- there's no reason to pay for an unindexed scan on top of it.
+create index auth_rate_limits_window_start_idx
+  on public.auth_rate_limits (window_start);
