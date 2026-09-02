@@ -3,6 +3,8 @@
 //   node scripts/e2e.mjs
 import { createClient } from "@supabase/supabase-js";
 
+import { resolveLocalAnonKey } from "./lib/local-anon-key.mjs";
+
 // Inlined copies of src/lib/money.ts helpers (keep in sync).
 const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 function computeLine(quantity, unitPrice, discountAmount, taxRate) {
@@ -28,8 +30,7 @@ function computeTotals(rows) {
 }
 
 const SUPABASE_URL = "http://127.0.0.1:54321";
-const ANON =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
+const ANON = resolveLocalAnonKey();
 
 const stamp = Date.now();
 let passed = 0;
