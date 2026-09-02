@@ -5,11 +5,13 @@ import { execFileSync } from "node:child_process";
  *
  * Why this exists rather than a hardcoded fallback:
  * `.github/workflows/ci.yml` scans ADDED lines for secret-shaped strings, and its
- * pattern includes the bare JWT prefix `eyJ`. The local demo key is public and not
- * a real secret, but the scanner cannot tell a demo JWT from a leaked one -- and it
- * should not try. Inlining one makes every new script trip the gate, so the gate
- * gets weakened or the script gets excluded. Both are worse than resolving the key
- * at run time. Do NOT reintroduce a literal here, and do NOT relax the CI pattern.
+ * pattern includes the three-character JWT header prefix. The local demo key is
+ * public and not a real secret, but the scanner cannot tell a demo token from a
+ * leaked one -- and it should not try. Inlining one makes every new script trip the
+ * gate, so the gate gets weakened or the script gets excluded. Both are worse than
+ * resolving the key at run time. Do NOT reintroduce a literal here, and do NOT relax
+ * the CI pattern. (This comment deliberately does not spell the prefix out: doing so
+ * would make this very file trip the scanner, which is how the first attempt failed.)
  *
  * Resolution order, most explicit first:
  *   1. SUPABASE_ANON_KEY / NEXT_PUBLIC_SUPABASE_ANON_KEY from the environment.
