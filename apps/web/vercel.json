@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/notifications/dispatch",
-      "schedule": "*/10 * * * *"
+      "schedule": "30 4 * * *"
     }
   ]
 }

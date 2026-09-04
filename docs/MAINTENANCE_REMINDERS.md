@@ -120,18 +120,34 @@ committed; only their names appear here.
 | Job | Path | Schedule |
 |---|---|---|
 | reminder scan | `/api/maintenance/reminders/scan` | `0 4 * * *` UTC (08:00 Asia/Dubai) |
-| notification dispatch | `/api/notifications/dispatch` | `*/10 * * * *` |
+| notification dispatch | `/api/notifications/dispatch` | `30 4 * * *` UTC — **safety net only, see below** |
 
 Vercel Cron calls endpoints with **GET** and `Authorization: Bearer $CRON_SECRET`.
 Both routes also still accept **POST** with their own header, for manual runs or
 an external scheduler.
 
-> **Known deployment constraint.** Vercel's Hobby tier only runs cron jobs once
-> per day. On Hobby the ten-minute dispatch schedule will not run at that
-> frequency, and either the plan must be upgraded or an external caller (for
-> example a scheduled GitHub Action posting to the dispatch route with
-> `NOTIFICATIONS_DISPATCH_SECRET`) must drive it. The configuration in the repo
-> is correct either way; confirm the plan before assuming reminders are live.
+> **Dispatch cadence is a real constraint, verified against this project.**
+> Vercel's Hobby tier runs cron jobs at most once per day, and a deployment
+> carrying a more frequent schedule is **rejected outright** — a `*/10 * * * *`
+> dispatch schedule failed this project's deployment while `main` deployed
+> cleanly. Both schedules here are therefore daily, which is what the plan
+> accepts.
+>
+> A once-daily drain is fine for maintenance reminders, which are computed daily
+> anyway. It is **not** acceptable for transactional notifications: a quote-sent
+> or invoice-issued message would wait up to 24 hours. The daily dispatch cron
+> is a safety net, not the delivery cadence.
+>
+> For production, drive dispatch every few minutes by either upgrading the
+> Vercel plan and restoring a `*/10 * * * *` schedule, or pointing an external
+> scheduler at the route:
+>
+> ```bash
+> curl -X POST "$APP_URL/api/notifications/dispatch" \
+>   -H "x-notification-dispatch-secret: $NOTIFICATIONS_DISPATCH_SECRET"
+> ```
+>
+> A scheduled GitHub Action on a `*/10 * * * *` cron is sufficient.
 
 Manual run:
 
