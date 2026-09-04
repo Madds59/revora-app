@@ -19,6 +19,9 @@ import {
   CarFront,
   ScanSearch,
   ClipboardList,
+  Receipt,
+  CalendarClock,
+  Gauge,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,8 +32,11 @@ type NavItem = {
     | "dashboard"
     | "customers"
     | "vehicles"
+    | "appointments"
     | "jobs"
     | "quotes"
+    | "invoices"
+    | "maintenance"
     | "complaints"
     | "documents"
     | "billing"
@@ -51,8 +57,11 @@ const NAV: NavItem[] = [
   { labelKey: "dashboard", href: "/dashboard", icon: Home, aliases: ["/"] },
   { labelKey: "customers", href: "/customers", icon: Users },
   { labelKey: "vehicles", href: "/vehicles", icon: CarFront },
+  { labelKey: "appointments", href: "/appointments", icon: CalendarClock },
   { labelKey: "jobs", href: "/jobs", icon: Wrench },
   { labelKey: "quotes", href: "/quotes", icon: FileText, aliases: ["/quotations"] },
+  { labelKey: "invoices", href: "/invoices", icon: Receipt },
+  { labelKey: "maintenance", href: "/maintenance", icon: Gauge },
   { labelKey: "complaints", href: "/complaints", icon: MessageSquareWarning },
   { labelKey: "documents", href: "/documents", icon: Files },
   { labelKey: "billing", href: "/billing", icon: CreditCard },
