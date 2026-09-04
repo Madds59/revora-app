@@ -57,6 +57,9 @@ export const TEMPLATE_SOURCES = {
   complaint_status_changed: { table: "complaints", payloadKey: "complaint_id" },
   feedback_submitted: { table: null, payloadKey: null },
   vehicle_safety_critical: { table: null, payloadKey: null },
+  appointment_confirmed: { table: "appointments", payloadKey: "appointment_id" },
+  appointment_declined: { table: "appointments", payloadKey: "appointment_id" },
+  invoice_issued: { table: "invoices", payloadKey: "invoice_id" },
 };
 
 export function isDispatchableChannel(value) {
@@ -154,6 +157,13 @@ export const persistablePayloadSchema = z.object({
   complaint_id: z.string().regex(UUID_RE).optional(),
   subject: boundedText(200).optional(),
   status: boundedText(64).optional(),
+  // Resource ids for the invoicing and appointment templates. These must
+  // survive the allowlist: TEMPLATE_SOURCES reads them back at dispatch to
+  // prove the resource belongs to the event's business, so stripping them
+  // would make that check fail closed on every send.
+  invoice_id: z.string().regex(UUID_RE).optional(),
+  invoice_number: boundedText(64).optional(),
+  appointment_id: z.string().regex(UUID_RE).optional(),
   business_name: boundedText(200).optional(),
   customer_name: boundedText(200).optional(),
   template_variables: templateVariables.optional(),

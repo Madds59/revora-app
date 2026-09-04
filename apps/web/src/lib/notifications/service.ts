@@ -379,8 +379,12 @@ async function sourceResourceMatches(
       : source.table === "jobs"
         ? admin.from("jobs").select("id, business_id, customer_id")
         : source.table === "complaints"
-          ? admin.from("complaints").select("id, business_id, customer_id")
-          : null;
+        ? admin.from("complaints").select("id, business_id, customer_id")
+        : source.table === "invoices"
+          ? admin.from("invoices").select("id, business_id, customer_id")
+          : source.table === "appointments"
+            ? admin.from("appointments").select("id, business_id, customer_id")
+            : null;
   if (!query) return false;
 
   const { data } = await query
