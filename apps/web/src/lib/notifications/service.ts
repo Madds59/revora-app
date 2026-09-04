@@ -782,6 +782,89 @@ export async function enqueueJobStatusNotification({
   }
 }
 
+export async function enqueueAppointmentDecisionNotification({
+  appointmentId,
+  declineReason,
+  slotLabel,
+  status,
+}: {
+  appointmentId: string;
+  declineReason?: string;
+  slotLabel?: string;
+  status: "confirmed" | "declined";
+}) {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("appointments")
+      .select("id, business_id, customer_id")
+      .eq("id", appointmentId)
+      .maybeSingle();
+    const appointment = data as
+      | { business_id: string; customer_id: string; id: string }
+      | null;
+    if (!appointment) return { inserted: 0, skipped: true };
+
+    const templateKey = status === "confirmed" ? "appointment_confirmed" : "appointment_declined";
+    return queueCustomerNotification({
+      businessId: appointment.business_id,
+      customerId: appointment.customer_id,
+      dedupeKey: `appointment_${status}:${appointment.id}`,
+      payload: {
+        appointment_id: appointment.id,
+        decline_reason: declineReason ?? null,
+        type: templateKey,
+      },
+      templateKey,
+      variables: {
+        slotLabel: slotLabel ?? "",
+      },
+    });
+  } catch {
+    return { inserted: 0, skipped: true };
+  }
+}
+
+export async function enqueueInvoiceIssuedNotification(invoiceId: string) {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("invoices")
+      .select("id, business_id, customer_id, invoice_number, total, currency")
+      .eq("id", invoiceId)
+      .maybeSingle();
+    const invoice = data as
+      | {
+          business_id: string;
+          currency: string;
+          customer_id: string;
+          id: string;
+          invoice_number: string | null;
+          total: number;
+        }
+      | null;
+    if (!invoice?.invoice_number) return { inserted: 0, skipped: true };
+    return queueCustomerNotification({
+      businessId: invoice.business_id,
+      customerId: invoice.customer_id,
+      dedupeKey: `invoice_issued:${invoice.id}`,
+      payload: {
+        invoice_id: invoice.id,
+        invoice_number: invoice.invoice_number,
+        type: "invoice_issued",
+      },
+      templateKey: "invoice_issued",
+      variables: {
+        currency: invoice.currency,
+        invoiceNumber: invoice.invoice_number,
+        total: invoice.total.toFixed(2),
+      },
+    });
+  } catch {
+    return { inserted: 0, skipped: true };
+  }
+}
+
 export async function enqueueComplaintStatusNotification({
   complaintId,
   statusLabel,

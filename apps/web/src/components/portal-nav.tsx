@@ -11,6 +11,8 @@ import {
   Settings,
   CarFront,
   Layers,
+  Receipt,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,8 +22,10 @@ type NavItem = {
   labelKey:
     | "home"
     | "vehicles"
+    | "appointments"
     | "quotes"
     | "jobs"
+    | "invoices"
     | "complaints"
     | "documents"
     | "settings"
@@ -34,8 +38,10 @@ type NavItem = {
 const NAV: NavItem[] = [
   { labelKey: "home", href: "/portal", icon: Home },
   { labelKey: "vehicles", href: "/portal/vehicles", icon: CarFront },
+  { labelKey: "appointments", href: "/portal/appointments", icon: CalendarClock },
   { labelKey: "memberships", href: "/portal/memberships", icon: Layers },
   { labelKey: "quotes", href: "/portal/quotes", icon: FileText },
+  { labelKey: "invoices", href: "/portal/invoices", icon: Receipt },
   { labelKey: "jobs", href: "/portal/jobs", icon: Wrench },
   { labelKey: "complaints", href: "/portal/complaints", icon: MessageSquare },
   { labelKey: "documents", href: "/portal/documents", icon: Files },

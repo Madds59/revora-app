@@ -44,6 +44,16 @@ export const updateBusinessSchema = z.object({
   tagline: optionalText(300),
   country: textWithDefault("AE", 60, "Country"),
   defaultLanguage: textWithDefault("en", 20, "Default language"),
+  // UAE Tax Registration Number, required by issue_invoice() before an
+  // invoice can be issued. See 0034_invoicing_and_appointments.sql.
+  trn: z.preprocess(
+    (v) => (v === undefined || v === null || String(v).trim() === "" ? undefined : v),
+    z
+      .string()
+      .trim()
+      .regex(/^[0-9]{15}$/, "TRN must be exactly 15 digits.")
+      .optional(),
+  ),
 });
 
 /** addBranch: a branch belonging to the authenticated business. */

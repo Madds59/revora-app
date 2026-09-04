@@ -28,6 +28,7 @@ export async function updateBusiness(
     tagline: formData.get("tagline"),
     country: formData.get("country"),
     defaultLanguage: formData.get("default_language"),
+    trn: formData.get("trn"),
   });
   if (!parsed.success) return { error: firstValidationMessage(parsed) };
   const v = parsed.data;
@@ -41,6 +42,7 @@ export async function updateBusiness(
       tagline: v.tagline ?? null,
       country: v.country,
       default_language: v.defaultLanguage,
+      trn: v.trn ?? null,
     })
     // Target business is session-derived, never client-supplied.
     .eq("id", business.id);

@@ -10,6 +10,9 @@ export const NOTIFICATION_TEMPLATE_KEYS = [
   "complaint_status_changed",
   "feedback_submitted",
   "vehicle_safety_critical",
+  "appointment_confirmed",
+  "appointment_declined",
+  "invoice_issued",
 ];
 
 const UUID_PATTERN =
@@ -146,6 +149,50 @@ const TEMPLATES = {
         "مرحباً {{customerName}}، سجل {{businessName}} تحذير سلامة حرج للمركبة {{vehicleLabel}}. لا تتجاهل تحذيرات السلامة وتواصل مع الورشة.",
       sms:
         "سجل {{businessName}} تحذير سلامة حرج للمركبة {{vehicleLabel}}. تواصل مع الورشة.",
+    },
+  },
+  appointment_confirmed: {
+    en: {
+      subject: "Appointment confirmed",
+      body:
+        "Hello {{customerName}}, {{businessName}} confirmed your appointment for {{slotLabel}}. See you then.",
+      sms: "{{businessName}} confirmed your appointment for {{slotLabel}}.",
+    },
+    ar: {
+      subject: "تم تأكيد الموعد",
+      body:
+        "مرحباً {{customerName}}، أكّد {{businessName}} موعدك في {{slotLabel}}. نراك حينها.",
+      sms: "أكّد {{businessName}} موعدك في {{slotLabel}}.",
+    },
+  },
+  appointment_declined: {
+    en: {
+      subject: "Appointment request declined",
+      body:
+        "Hello {{customerName}}, {{businessName}} could not accommodate your requested appointment. Please request another time in your Revora portal.",
+      sms: "{{businessName}} could not accommodate your requested appointment. Please request another time.",
+    },
+    ar: {
+      subject: "تم رفض طلب الموعد",
+      body:
+        "مرحباً {{customerName}}، لم يتمكن {{businessName}} من تلبية طلب الموعد. يرجى طلب وقت آخر عبر بوابة Revora.",
+      sms: "لم يتمكن {{businessName}} من تلبية طلب الموعد. يرجى طلب وقت آخر.",
+    },
+  },
+  invoice_issued: {
+    en: {
+      subject: "Invoice {{invoiceNumber}} is ready",
+      body:
+        "Hello {{customerName}}, {{businessName}} issued invoice {{invoiceNumber}} for {{total}} {{currency}}. View it in your Revora portal.",
+      sms:
+        "{{businessName}} issued invoice {{invoiceNumber}} for {{total}} {{currency}}. Check your Revora portal.",
+    },
+    ar: {
+      subject: "الفاتورة {{invoiceNumber}} جاهزة",
+      body:
+        "مرحباً {{customerName}}، أصدر {{businessName}} الفاتورة {{invoiceNumber}} بقيمة {{total}} {{currency}}. اطّلع عليها في بوابة Revora.",
+      sms:
+        "أصدر {{businessName}} الفاتورة {{invoiceNumber}} بقيمة {{total}} {{currency}}. تحقق من بوابة Revora.",
     },
   },
 };

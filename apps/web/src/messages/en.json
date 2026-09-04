@@ -248,7 +248,9 @@
       "country": "Country",
       "defaultLanguage": "Default language",
       "save": "Save changes",
-      "ownersOnly": "Only owners can edit business details."
+      "ownersOnly": "Only owners can edit business details.",
+      "trn": "Tax Registration Number (TRN)",
+      "trnHint": "15-digit UAE TRN, required before invoices can be issued."
     },
     "branch": {
       "name": "Name",
@@ -298,7 +300,9 @@
     "users": "Users",
     "subscriptions": "Subscriptions",
     "auditLogs": "Audit logs",
-    "superAdmins": "Super admins"
+    "superAdmins": "Super admins",
+    "appointments": "Appointments",
+    "invoices": "Invoices"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -806,14 +810,13 @@
     },
     "context": {
       "heading": "Scenario context",
-      "vehicles": "Set the customer, vehicle count, and contract shape.",
+      "vehicles": "Vehicles covered",
       "title": "Scenario title",
       "customerType": "Customer type",
       "serviceCategory": "Service category",
       "currency": "Currency",
       "billingCycle": "Billing cycle",
       "contractLength": "Contract length (months)",
-      "vehicles": "Vehicles covered",
       "vehiclesLabel": "Vehicles covered",
       "visits": "Expected monthly visits",
       "sla": "SLA level",
@@ -1589,5 +1592,40 @@
       "title": "Download tips"
     },
     "download": "Download CSV"
+  },
+  "dashboardInvoices": {
+    "title": "Invoices",
+    "description": "Invoices issued to customers, payments, and credit notes.",
+    "empty": {
+      "title": "No invoices yet",
+      "description": "Create an invoice from a job once work is approved."
+    },
+    "table": {
+      "invoice": "Invoice",
+      "customer": "Customer",
+      "status": "Status",
+      "total": "Total",
+      "balance": "Balance due"
+    },
+    "fallback": {
+      "draft": "Draft",
+      "none": "—"
+    }
+  },
+  "dashboardAppointments": {
+    "title": "Appointments",
+    "description": "Booking requests from customers and your own schedule.",
+    "empty": {
+      "title": "No appointments yet",
+      "description": "Customer booking requests will appear here."
+    },
+    "table": {
+      "customer": "Customer",
+      "window": "When",
+      "status": "Status"
+    },
+    "fallback": {
+      "none": "—"
+    }
   }
 }

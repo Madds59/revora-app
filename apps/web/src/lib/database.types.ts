@@ -955,6 +955,7 @@ export type Database = {
           stripe_customer_id: string | null
           supported_languages: string[]
           tagline: string | null
+          trn: string | null
           updated_at: string
         }
         Insert: {
@@ -971,6 +972,7 @@ export type Database = {
           stripe_customer_id?: string | null
           supported_languages?: string[]
           tagline?: string | null
+          trn?: string | null
           updated_at?: string
         }
         Update: {
@@ -987,6 +989,7 @@ export type Database = {
           stripe_customer_id?: string | null
           supported_languages?: string[]
           tagline?: string | null
+          trn?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1593,6 +1596,423 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          branch_id: string
+          business_id: string
+          cancelled_by: string | null
+          confirmed_end: string | null
+          confirmed_start: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          decline_reason: string | null
+          id: string
+          notes: string | null
+          quotation_id: string | null
+          requested_end: string
+          requested_start: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          cancelled_by?: string | null
+          confirmed_end?: string | null
+          confirmed_start?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          decline_reason?: string | null
+          id?: string
+          notes?: string | null
+          quotation_id?: string | null
+          requested_end: string
+          requested_start: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          cancelled_by?: string | null
+          confirmed_end?: string | null
+          confirmed_start?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          decline_reason?: string | null
+          id?: string
+          notes?: string | null
+          quotation_id?: string | null
+          requested_end?: string
+          requested_start?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_appointment_settings: {
+        Row: {
+          branch_id: string
+          business_id: string
+          created_at: string
+          id: string
+          max_concurrent: number
+          slot_duration_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          created_at?: string
+          id?: string
+          max_concurrent?: number
+          slot_duration_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          max_concurrent?: number
+          slot_duration_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_appointment_settings_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: true
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_appointment_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          balance_due: number
+          branch_id: string | null
+          business_id: string
+          business_trn: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string
+          discount_total: number
+          due_at: string | null
+          id: string
+          invoice_number: string | null
+          issued_at: string | null
+          job_id: string | null
+          language: string
+          notes: string | null
+          quotation_id: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal: number
+          tax_total: number
+          total: number
+          updated_at: string
+          vehicle_id: string | null
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          amount_paid?: number
+          branch_id?: string | null
+          business_id: string
+          business_trn?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id: string
+          discount_total?: number
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          job_id?: string | null
+          language?: string
+          notes?: string | null
+          quotation_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          branch_id?: string | null
+          business_id?: string
+          business_trn?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string
+          discount_total?: number
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          job_id?: string | null
+          language?: string
+          notes?: string | null
+          quotation_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          description: string | null
+          discount_amount: number
+          id: string
+          invoice_id: string
+          kind: Database["public"]["Enums"]["item_kind"]
+          name: string
+          position: number
+          product_category: Database["public"]["Enums"]["product_category"] | null
+          product_id: string | null
+          quantity: number
+          tax_rate: number
+          total: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          id?: string
+          invoice_id: string
+          kind: Database["public"]["Enums"]["item_kind"]
+          name: string
+          position?: number
+          product_category?: Database["public"]["Enums"]["product_category"] | null
+          product_id?: string | null
+          quantity?: number
+          tax_rate?: number
+          total?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          id?: string
+          invoice_id?: string
+          kind?: Database["public"]["Enums"]["item_kind"]
+          name?: string
+          position?: number
+          product_category?: Database["public"]["Enums"]["product_category"] | null
+          product_id?: string | null
+          quantity?: number
+          tax_rate?: number
+          total?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_payments: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["invoice_payment_method"]
+          notes: string | null
+          paid_at: string
+          provider: string | null
+          provider_payment_id: string | null
+          provider_status: string | null
+          recorded_by: string | null
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["invoice_payment_method"]
+          notes?: string | null
+          paid_at?: string
+          provider?: string | null
+          provider_payment_id?: string | null
+          provider_status?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          method?: Database["public"]["Enums"]["invoice_payment_method"]
+          notes?: string | null
+          paid_at?: string
+          provider?: string | null
+          provider_payment_id?: string | null
+          provider_status?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_credit_notes: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          created_by: string | null
+          credit_note_number: string | null
+          id: string
+          invoice_id: string
+          reason: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          credit_note_number?: string | null
+          id?: string
+          invoice_id: string
+          reason: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          credit_note_number?: string | null
+          id?: string
+          invoice_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -3401,6 +3821,38 @@ export type Database = {
         }
         Returns: string
       }
+      cancel_appointment: {
+        Args: { target_appointment_id: string }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+      }
+      confirm_appointment: {
+        Args: {
+          new_end: string
+          new_start: string
+          target_appointment_id: string
+        }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+      }
+      convert_appointment_to_quotation: {
+        Args: { target_appointment_id: string }
+        Returns: string
+      }
+      create_invoice_credit_note: {
+        Args: { amount: number; reason: string; target_invoice_id: string }
+        Returns: Database["public"]["Tables"]["invoice_credit_notes"]["Row"]
+      }
+      decline_appointment: {
+        Args: { reason: string; target_appointment_id: string }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+      }
+      issue_invoice: {
+        Args: { target_invoice_id: string }
+        Returns: Database["public"]["Tables"]["invoices"]["Row"]
+      }
+      void_invoice: {
+        Args: { reason: string; target_invoice_id: string }
+        Returns: Database["public"]["Tables"]["invoices"]["Row"]
+      }
       customer_reject_quote: {
         Args: {
           rejection_note?: string
@@ -3531,6 +3983,13 @@ export type Database = {
       }
     }
     Enums: {
+      appointment_status:
+        | "requested"
+        | "confirmed"
+        | "declined"
+        | "cancelled"
+        | "completed"
+        | "no_show"
       complaint_severity: "low" | "medium" | "high" | "critical"
       complaint_status:
         | "open"
@@ -3540,6 +3999,13 @@ export type Database = {
         | "escalated"
         | "resolved"
         | "closed"
+      invoice_payment_method:
+        | "cash"
+        | "card_in_shop"
+        | "bank_transfer"
+        | "online_card"
+        | "other"
+      invoice_status: "draft" | "issued" | "partially_paid" | "paid" | "void"
       item_kind: "service" | "labor" | "product" | "part"
       job_status:
         | "pending"
@@ -3841,6 +4307,38 @@ export type CustomerUpdate = AppTables["customers"]["Update"];
 export type Document = AppTables["documents"]["Row"];
 export type DocumentInsert = AppTables["documents"]["Insert"];
 export type DocumentUpdate = AppTables["documents"]["Update"];
+
+export type Appointment = AppTables["appointments"]["Row"];
+export type AppointmentInsert = AppTables["appointments"]["Insert"];
+export type AppointmentUpdate = AppTables["appointments"]["Update"];
+export type AppointmentStatus = AppEnums["appointment_status"];
+
+export type BranchAppointmentSettings =
+  AppTables["branch_appointment_settings"]["Row"];
+export type BranchAppointmentSettingsInsert =
+  AppTables["branch_appointment_settings"]["Insert"];
+export type BranchAppointmentSettingsUpdate =
+  AppTables["branch_appointment_settings"]["Update"];
+
+export type Invoice = AppTables["invoices"]["Row"];
+export type InvoiceInsert = AppTables["invoices"]["Insert"];
+export type InvoiceUpdate = AppTables["invoices"]["Update"];
+export type InvoiceStatus = AppEnums["invoice_status"];
+
+export type InvoiceItem = AppTables["invoice_items"]["Row"];
+export type InvoiceItemInsert = AppTables["invoice_items"]["Insert"];
+export type InvoiceItemUpdate = AppTables["invoice_items"]["Update"];
+
+export type InvoicePayment = AppTables["invoice_payments"]["Row"];
+export type InvoicePaymentInsert = AppTables["invoice_payments"]["Insert"];
+export type InvoicePaymentUpdate = AppTables["invoice_payments"]["Update"];
+export type InvoicePaymentMethod = AppEnums["invoice_payment_method"];
+
+export type InvoiceCreditNote = AppTables["invoice_credit_notes"]["Row"];
+export type InvoiceCreditNoteInsert =
+  AppTables["invoice_credit_notes"]["Insert"];
+export type InvoiceCreditNoteUpdate =
+  AppTables["invoice_credit_notes"]["Update"];
 
 export type Job = AppTables["jobs"]["Row"];
 export type JobInsert = AppTables["jobs"]["Insert"];

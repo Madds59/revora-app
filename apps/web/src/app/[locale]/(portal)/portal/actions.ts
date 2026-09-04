@@ -21,12 +21,17 @@ import {
   approveQuoteSchema,
   rejectQuoteSchema,
 } from "@/lib/validation/quotations";
+import {
+  appointmentIdSchema,
+  requestAppointmentSchema,
+} from "@/lib/validation/appointments";
 
 // Non-enumerating response for missing OR unowned resources (APPSEC-09 Phase 2 /
 // APPSEC-11): a customer must not be able to distinguish "does not exist" from
 // "belongs to someone else".
 const QUOTE_UNAVAILABLE = "Quotation not found or unavailable.";
 const COMPLAINT_UNAVAILABLE = "Complaint not found or unavailable.";
+const APPOINTMENT_UNAVAILABLE = "Appointment not found or unavailable.";
 
 export type FormState = { error?: string; message?: string };
 
@@ -136,6 +141,76 @@ export async function createComplaint(
   revalidatePath("/portal");
   revalidatePath("/portal/complaints");
   redirect(`/${locale}/portal/complaints`);
+}
+
+export async function requestAppointment(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { accounts } = await requireCustomerPortal();
+  const user = await getUser();
+
+  const parsed = requestAppointmentSchema.safeParse({
+    customerId: formData.get("customer_id"),
+    businessId: formData.get("business_id"),
+    branchId: formData.get("branch_id"),
+    vehicleId: formData.get("vehicle_id"),
+    requestedStart: formData.get("requested_start"),
+    requestedEnd: formData.get("requested_end"),
+    notes: formData.get("notes"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
+
+  // Session-derived account row, never the raw client values -- mirrors
+  // createComplaint above.
+  const account = accounts.find(
+    (item) => item.id === v.customerId && item.business_id === v.businessId,
+  );
+  if (!account) return { error: "Select a linked account." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("appointments").insert({
+    business_id: account.business_id,
+    branch_id: v.branchId,
+    customer_id: account.id,
+    vehicle_id: v.vehicleId ?? null,
+    requested_start: v.requestedStart,
+    requested_end: v.requestedEnd,
+    notes: v.notes ?? null,
+    created_by: user?.id ?? null,
+  });
+  if (error) {
+    console.error("requestAppointment failed", error);
+    return { error: "Could not submit the appointment request." };
+  }
+
+  const locale = await getLocale();
+  revalidatePath("/portal/appointments");
+  redirect(`/${locale}/portal/appointments`);
+}
+
+export async function cancelAppointmentPortal(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireCustomerPortal();
+
+  const parsed = appointmentIdSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_appointment", {
+    target_appointment_id: parsed.data.id,
+  });
+  if (error) {
+    console.error("cancelAppointmentPortal failed", error);
+    return { error: APPOINTMENT_UNAVAILABLE };
+  }
+
+  revalidatePath("/portal/appointments");
+  revalidatePath(`/portal/appointments/${parsed.data.id}`);
+  return { message: "Appointment cancelled." };
 }
 
 export async function saveBusinessRating(

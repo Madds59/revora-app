@@ -63,3 +63,15 @@ export function canManageComplaints(
 ): boolean {
   return hasRole(role, ["business_owner", "manager", "employee"]);
 }
+
+/** Invoices, payments, void, credit notes (owner + manager per RLS invoices_staff_manage). */
+export function canManageInvoices(role: MemberRole | null | undefined): boolean {
+  return hasRole(role, ["business_owner", "manager"]);
+}
+
+/** Appointments: confirm/decline/cancel (owner + manager + employee per RLS appointments_staff_manage). */
+export function canManageAppointments(
+  role: MemberRole | null | undefined,
+): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}
