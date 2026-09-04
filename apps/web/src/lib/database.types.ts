@@ -1696,6 +1696,130 @@ export type Database = {
           },
         ]
       }
+      business_maintenance_settings: {
+        Row: {
+          assumed_annual_km: number | null
+          business_id: string
+          created_at: string
+          created_by: string | null
+          first_reminder_days: number
+          id: string
+          reminders_enabled: boolean
+          second_reminder_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assumed_annual_km?: number | null
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          first_reminder_days?: number
+          id?: string
+          reminders_enabled?: boolean
+          second_reminder_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assumed_annual_km?: number | null
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          first_reminder_days?: number
+          id?: string
+          reminders_enabled?: boolean
+          second_reminder_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_maintenance_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_odometer_readings: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          mileage: number
+          quality: string
+          quality_reason: string | null
+          recorded_at: string
+          recorded_by: string | null
+          source: string
+          source_appointment_id: string | null
+          source_symptom_report_id: string | null
+          unit: string
+          vehicle_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          mileage: number
+          quality?: string
+          quality_reason?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          source: string
+          source_appointment_id?: string | null
+          source_symptom_report_id?: string | null
+          unit?: string
+          vehicle_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          mileage?: number
+          quality?: string
+          quality_reason?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          source?: string
+          source_appointment_id?: string | null
+          source_symptom_report_id?: string | null
+          unit?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_odometer_readings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_odometer_readings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_odometer_readings_source_appointment_id_fkey"
+            columns: ["source_appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_odometer_readings_source_symptom_report_id_fkey"
+            columns: ["source_symptom_report_id"]
+            isOneToOne: true
+            referencedRelation: "vehicle_symptom_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branch_appointment_settings: {
         Row: {
           branch_id: string
@@ -4312,6 +4436,19 @@ export type Appointment = AppTables["appointments"]["Row"];
 export type AppointmentInsert = AppTables["appointments"]["Insert"];
 export type AppointmentUpdate = AppTables["appointments"]["Update"];
 export type AppointmentStatus = AppEnums["appointment_status"];
+
+export type BusinessMaintenanceSettings =
+  AppTables["business_maintenance_settings"]["Row"];
+export type BusinessMaintenanceSettingsInsert =
+  AppTables["business_maintenance_settings"]["Insert"];
+export type BusinessMaintenanceSettingsUpdate =
+  AppTables["business_maintenance_settings"]["Update"];
+
+export type VehicleOdometerReading = AppTables["vehicle_odometer_readings"]["Row"];
+export type VehicleOdometerReadingInsert =
+  AppTables["vehicle_odometer_readings"]["Insert"];
+export type VehicleOdometerReadingUpdate =
+  AppTables["vehicle_odometer_readings"]["Update"];
 
 export type BranchAppointmentSettings =
   AppTables["branch_appointment_settings"]["Row"];

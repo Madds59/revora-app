@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json } from "@/lib/database.types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { buildReminderDedupeKey } from "@/lib/maintenance/due-state.js";
 
 import { canAttemptLiveSend } from "./provider.js";
 import {
@@ -384,7 +385,9 @@ async function sourceResourceMatches(
           ? admin.from("invoices").select("id, business_id, customer_id")
           : source.table === "appointments"
             ? admin.from("appointments").select("id, business_id, customer_id")
-            : null;
+            : source.table === "vehicles"
+              ? admin.from("vehicles").select("id, business_id, customer_id")
+              : null;
   if (!query) return false;
 
   const { data } = await query
@@ -863,6 +866,52 @@ export async function enqueueInvoiceIssuedNotification(invoiceId: string) {
         invoiceNumber: invoice.invoice_number,
         total: invoice.total.toFixed(2),
       },
+    });
+  } catch {
+    return { inserted: 0, skipped: true };
+  }
+}
+
+/**
+ * Queue one maintenance reminder stage.
+ *
+ * The caller (the scanner) has already resolved due state and suppression; this
+ * only translates that decision into the existing queue. Identity is the plan
+ * and stage, never the projected date, so a drifting mileage estimate cannot
+ * re-notify the customer -- the unique index on (business_id, dedupe_key) turns
+ * a repeated or concurrent scan into a no-op.
+ */
+export async function enqueueMaintenanceReminderNotification({
+  businessId,
+  customerId,
+  vehicleId,
+  planId,
+  stage,
+  vehicleLabel,
+  dueDateLabel,
+}: {
+  businessId: string;
+  customerId: string;
+  dueDateLabel: string;
+  planId: string;
+  stage: "first" | "second";
+  vehicleId: string;
+  vehicleLabel: string;
+}) {
+  try {
+    const templateKey =
+      stage === "first" ? "maintenance_reminder_upcoming" : "maintenance_reminder_due";
+    return await queueCustomerNotification({
+      businessId,
+      customerId,
+      dedupeKey: buildReminderDedupeKey({ planId, stage }),
+      payload: {
+        maintenance_plan_id: planId,
+        type: templateKey,
+        vehicle_id: vehicleId,
+      },
+      templateKey,
+      variables: { dueDateLabel, vehicleLabel },
     });
   } catch {
     return { inserted: 0, skipped: true };

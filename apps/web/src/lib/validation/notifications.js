@@ -60,6 +60,10 @@ export const TEMPLATE_SOURCES = {
   appointment_confirmed: { table: "appointments", payloadKey: "appointment_id" },
   appointment_declined: { table: "appointments", payloadKey: "appointment_id" },
   invoice_issued: { table: "invoices", payloadKey: "invoice_id" },
+  // Maintenance reminders are addressed about a vehicle, so the vehicle is the
+  // resource whose tenancy must be proven before the message goes out.
+  maintenance_reminder_upcoming: { table: "vehicles", payloadKey: "vehicle_id" },
+  maintenance_reminder_due: { table: "vehicles", payloadKey: "vehicle_id" },
 };
 
 export function isDispatchableChannel(value) {
@@ -164,6 +168,8 @@ export const persistablePayloadSchema = z.object({
   invoice_id: z.string().regex(UUID_RE).optional(),
   invoice_number: boundedText(64).optional(),
   appointment_id: z.string().regex(UUID_RE).optional(),
+  vehicle_id: z.string().regex(UUID_RE).optional(),
+  maintenance_plan_id: z.string().regex(UUID_RE).optional(),
   business_name: boundedText(200).optional(),
   customer_name: boundedText(200).optional(),
   template_variables: templateVariables.optional(),
