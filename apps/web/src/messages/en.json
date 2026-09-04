@@ -302,7 +302,8 @@
     "auditLogs": "Audit logs",
     "superAdmins": "Super admins",
     "appointments": "Appointments",
-    "invoices": "Invoices"
+    "invoices": "Invoices",
+    "maintenance": "Maintenance"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -1627,5 +1628,29 @@
     "fallback": {
       "none": "—"
     }
+  },
+  "dashboardMaintenance": {
+    "title": "Maintenance",
+    "description": "Vehicles estimated to be due for a service, soonest first.",
+    "empty": {
+      "title": "Nothing due yet",
+      "description": "Vehicles appear here once a maintenance plan gives them a service date or mileage."
+    },
+    "restricted": {
+      "title": "No access",
+      "description": "The maintenance worklist is restricted to staff roles."
+    },
+    "table": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "due": "Estimated due",
+      "basis": "Based on",
+      "lastMileage": "Last mileage",
+      "status": "Status"
+    },
+    "badges": {
+      "booked": "Already booked"
+    },
+    "estimateNote": "Estimated dates are derived from the maintenance plan and any recorded mileage. They are guidance, not a manufacturer-specified service interval."
   }
 }
