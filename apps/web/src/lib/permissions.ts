@@ -63,3 +63,24 @@ export function canManageComplaints(
 ): boolean {
   return hasRole(role, ["business_owner", "manager", "employee"]);
 }
+
+/**
+ * Maintenance worklist and odometer readings. Employees are included because
+ * they are the staff physically handling vehicles at check-in, matching
+ * vehicle_odometer_readings_staff_manage in 0036.
+ */
+export function canViewMaintenance(role: MemberRole | null | undefined): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}
+
+/** Invoices, payments, void, credit notes (owner + manager per RLS invoices_staff_manage). */
+export function canManageInvoices(role: MemberRole | null | undefined): boolean {
+  return hasRole(role, ["business_owner", "manager"]);
+}
+
+/** Appointments: confirm/decline/cancel (owner + manager + employee per RLS appointments_staff_manage). */
+export function canManageAppointments(
+  role: MemberRole | null | undefined,
+): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}

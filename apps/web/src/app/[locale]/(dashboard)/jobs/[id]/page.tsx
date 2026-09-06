@@ -30,6 +30,7 @@ import {
   PostUpdateForm,
   ToggleTaskButton,
 } from "../job-controls";
+import { CreateInvoiceFromJobButton } from "../../invoices/create-invoice-button";
 
 type JobWithRelations = Job & {
   customer: { full_name: string } | null;
@@ -81,6 +82,13 @@ export default async function JobDetailPage({
   ]);
   const tasks = (taskRows ?? []) as JobTask[];
   const updates = (updateRows ?? []) as JobUpdate[];
+
+  const { data: existingInvoice } = await supabase
+    .from("invoices")
+    .select("id, invoice_number, status")
+    .eq("business_id", business.id)
+    .eq("job_id", id)
+    .maybeSingle();
 
   const attachments = await loadJobAttachments(id, "staff");
   const v = job.quotation?.vehicle;
@@ -154,6 +162,23 @@ export default async function JobDetailPage({
             {canManage && <AddTaskForm jobId={job.id} />}
           </CardContent>
         </Card>
+
+        {canManage && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{locale === "ar" ? "الفاتورة" : "Invoice"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {existingInvoice ? (
+                <Link href={`/${locale}/invoices/${existingInvoice.id}`} className="underline text-sm">
+                  {existingInvoice.invoice_number ?? (locale === "ar" ? "عرض المسودة" : "View draft")}
+                </Link>
+              ) : (
+                <CreateInvoiceFromJobButton jobId={job.id} />
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

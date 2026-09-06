@@ -81,6 +81,17 @@ export function BusinessProfileForm({
             />
           </div>
         </div>
+        <div className="grid gap-2">
+          <Label htmlFor="trn">{t("trn")}</Label>
+          <Input
+            id="trn"
+            name="trn"
+            inputMode="numeric"
+            placeholder="123456789012345"
+            defaultValue={business.trn ?? ""}
+          />
+          <p className="text-muted-foreground text-xs">{t("trnHint")}</p>
+        </div>
         {state.error && (
           <p className="text-destructive text-sm">{state.error}</p>
         )}
