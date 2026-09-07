@@ -1056,6 +1056,20 @@ $$;
 revoke all on function public.create_quotation_from_inspection(uuid, uuid[]) from public, anon;
 grant execute on function public.create_quotation_from_inspection(uuid, uuid[]) to authenticated;
 
+-- Trigger functions are covered by the SAME Supabase DEFAULT PRIVILEGES that
+-- grant EXECUTE on every new public function to `anon`. Postgres refuses to
+-- invoke a `returns trigger` function directly ("trigger functions can only be
+-- called as triggers"), so this is not exploitable today -- but leaving the
+-- grant in place contradicts the least-privilege posture the rest of this
+-- migration holds, and it would silently become a real grant if any of these
+-- were ever refactored into a callable helper. Revoking from `public` alone is
+-- NOT sufficient: the default privilege is granted to the anon ROLE.
+revoke all on function public.enforce_inspection_integrity() from public, anon;
+revoke all on function public.enforce_inspection_child_integrity() from public, anon;
+revoke all on function public.enforce_completed_inspection_immutable() from public, anon;
+revoke all on function public.handle_business_created_seed_inspection_template()
+  from public, anon;
+
 -- ---------------------------------------------------------------------------
 -- Grants (local/self-hosted Postgres does not auto-grant; see 0003_api_grants)
 -- ---------------------------------------------------------------------------

@@ -10,6 +10,7 @@ import {
   Files,
   Settings,
   CarFront,
+  ClipboardCheck,
   Layers,
   Receipt,
   CalendarClock,
@@ -25,6 +26,7 @@ type NavItem = {
     | "appointments"
     | "quotes"
     | "jobs"
+    | "inspections"
     | "invoices"
     | "complaints"
     | "documents"
@@ -40,6 +42,7 @@ const NAV: NavItem[] = [
   { labelKey: "vehicles", href: "/portal/vehicles", icon: CarFront },
   { labelKey: "appointments", href: "/portal/appointments", icon: CalendarClock },
   { labelKey: "memberships", href: "/portal/memberships", icon: Layers },
+  { labelKey: "inspections", href: "/portal/inspections", icon: ClipboardCheck },
   { labelKey: "quotes", href: "/portal/quotes", icon: FileText },
   { labelKey: "invoices", href: "/portal/invoices", icon: Receipt },
   { labelKey: "jobs", href: "/portal/jobs", icon: Wrench },

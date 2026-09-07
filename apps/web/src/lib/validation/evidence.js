@@ -28,6 +28,14 @@ import { optionalText, requiredText, uuid } from "./common.js";
 export const COMPLAINT_EVIDENCE_ENTITY = "complaint-evidence";
 export const DOCUMENT_ENTITIES = ["job-photos", "documents"];
 
+/**
+ * Digital vehicle inspection photos (DVI V1). Resource-bound to the individual
+ * checklist item, not the inspection: a photo is evidence for one finding, and
+ * binding it that tightly is what lets a portal customer be handed a signed URL
+ * for it (see RESOURCE_BOUND_NAMESPACES below).
+ */
+export const INSPECTION_ITEM_ENTITY = "inspection-item";
+
 /** One path segment as produced by the uploader: `<uuid>-<slugified-name>`. */
 const OBJECT_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,200}$/;
 
@@ -103,6 +111,10 @@ export function parseOwnedDocumentPath(objectPath, businessId) {
 export const RESOURCE_BOUND_NAMESPACES = {
   [COMPLAINT_EVIDENCE_ENTITY]: "complaint",
   "job-photos": "job",
+  // DVI ships after v2 exists, so it has no legacy objects at all: every
+  // inspection photo is resource-bound from the first write, and a v1-shaped
+  // path in this namespace is rejected outright rather than grandfathered.
+  [INSPECTION_ITEM_ENTITY]: "inspection_item",
 };
 
 /** Build the canonical v2 path from already-verified components. */
@@ -279,6 +291,13 @@ export const complaintEvidenceSchema = z.object({
   complaintId: uuid("complaint"),
   ...evidenceMetadataSchema.shape,
   description: optionalText(2000),
+});
+
+/** recordInspectionItemPhoto: checklist-item selector + upload metadata. */
+export const inspectionPhotoSchema = z.object({
+  inspectionId: uuid("inspection"),
+  itemId: uuid("checklist item"),
+  ...evidenceMetadataSchema.shape,
 });
 
 /** uploadDocument: upload metadata + the bound document context. */

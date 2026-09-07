@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
-import { canManageCustomers } from "@/lib/permissions";
+import { canManageCustomers, canManageInspections } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { Complaint, Document, Job, Quotation, Vehicle } from "@/lib/database.types";
 import { JOB_STATUS_VARIANT, getJobStatusLabel } from "@/lib/jobs";
@@ -33,7 +33,7 @@ import { COMPLAINT_STATUS_VARIANT, getComplaintSeverityLabel, getComplaintStatus
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 import { formatAED, formatDate, formatDateTime } from "@/lib/formatters";
 import type { VehicleDiagnosticJson } from "@/lib/vehicle-intelligence/types";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getUnknownVehicleLabel } from "@/lib/display-labels";
 
 type VehicleDetailRow = Pick<
@@ -135,7 +135,9 @@ export default async function VehicleDetailPage({
   const { id } = await params;
   const { member, business } = await requireMembership();
   const locale = await getLocale();
+  const tInspections = await getTranslations("dashboardInspections");
   const canManage = canManageCustomers(member.role);
+  const canInspect = canManageInspections(member.role);
   const supabase = await createClient();
 
   const { data: vehicleRow, error: vehicleError } = await supabase
@@ -318,6 +320,16 @@ export default async function VehicleDetailPage({
               <Link href={`/customers/${vehicle.customer_id}`} className={buttonVariants({ variant: "outline" })}>
                 View customer
               </Link>
+              {/* Pre-quote entry point (spec journey J1): the vehicle is the
+                  anchor, so the inspection needs no job and no appointment. */}
+              {canInspect && (
+                <Link
+                  href={`/inspections/new?vehicle=${vehicle.id}`}
+                  className={buttonVariants({ variant: "secondary" })}
+                >
+                  {tInspections("start.fromVehicle")}
+                </Link>
+              )}
               {canManage && (
                 <Link href={`/vehicles/${vehicle.id}/edit`} className={buttonVariants({ variant: "secondary" })}>
                   Edit vehicle

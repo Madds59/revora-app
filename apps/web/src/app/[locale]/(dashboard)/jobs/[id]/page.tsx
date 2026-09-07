@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireMembership } from "@/lib/auth";
-import { canManageJobs } from "@/lib/permissions";
-import { getLocale } from "next-intl/server";
+import { canManageInspections, canManageJobs } from "@/lib/permissions";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getJobStatusLabel } from "@/lib/jobs";
 import { loadJobAttachments } from "@/lib/documents";
@@ -52,6 +52,8 @@ export default async function JobDetailPage({
   const { id } = await params;
   const { member, business } = await requireMembership();
   const canManage = canManageJobs(member.role);
+  const canInspect = canManageInspections(member.role);
+  const tInspections = await getTranslations("dashboardInspections");
   const locale = await getLocale();
   const supabase = await createClient();
 
@@ -108,9 +110,21 @@ export default async function JobDetailPage({
         }
         description={[job.customer?.full_name, vehicleLabel].filter(Boolean).join(" · ")}
         action={
-          <Link href={`/${locale}/jobs`} className={buttonVariants({ variant: "outline" })}>
-            {locale === "ar" ? "العودة إلى المهام" : "Back to jobs"}
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {/* In-job entry point (spec journey J2): additional work found
+                mid-repair becomes its own inspection, anchored to this job. */}
+            {canInspect && (
+              <Link
+                href={`/inspections/new?job=${job.id}`}
+                className={buttonVariants({ variant: "secondary" })}
+              >
+                {tInspections("start.fromJob")}
+              </Link>
+            )}
+            <Link href={`/${locale}/jobs`} className={buttonVariants({ variant: "outline" })}>
+              {locale === "ar" ? "العودة إلى المهام" : "Back to jobs"}
+            </Link>
+          </div>
         }
       />
 
