@@ -47,12 +47,23 @@ Today, if a customer or business asks to delete their data:
 2. Soft-delete (`deleted_at`) is available for `businesses`/`customers` and should
    be preferred over hard delete so that linked legal records (approvals, billing)
    are not silently orphaned.
+2b. **For a `businesses` row, soft-delete is not merely preferred — it is the only
+   path that works.** Hard-deleting a business aborts as soon as the tenant has any
+   data: the cascade's own `audit_row_change()` trigger inserts an `audit_events`
+   row referencing the business it is in the middle of deleting, which its foreign
+   key then rejects. Verified by reproduction; tracked as **APPSEC-20** in
+   [SECURITY_RISK_REGISTER.md](SECURITY_RISK_REGISTER.md). An operator asked to
+   fully remove a tenant today cannot do so, and must escalate rather than assume a
+   manual database delete will work. Customer hard-delete is unaffected.
 3. Hard deletion of a customer cascades to `vehicles`/`projects` — this is
    irreversible and should only be used when explicitly required (e.g. a verified
    erasure request with no overriding legal retention need) and only by someone
    with direct database access, with the action itself logged.
 
-**This program does not implement an automated deletion pipeline.** Building one is
+**This program does not implement an automated deletion pipeline.** Any such
+pipeline must resolve APPSEC-20 first — a tenant-deletion flow built on top of a
+hard delete that cannot execute would fail at the last step, after the operator has
+already told the customer their data is being removed. Building one is
 a recommended next step (see [SECURITY_RISK_REGISTER.md](SECURITY_RISK_REGISTER.md)
 for tracking) but requires product, legal, and engineering design — it is not a
 "small safe fix" under this audit's rules.
