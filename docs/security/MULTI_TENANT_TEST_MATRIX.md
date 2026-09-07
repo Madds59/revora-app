@@ -7,7 +7,10 @@ future CI job once Docker/hosted test project is available) can execute it.
 
 **Partial automation now exists for DVI** *(pending merge)*.
 `supabase/tests/dvi_security_tests.sql` is an executable psql harness covering the
-inspection surface — cross-tenant read/write, the portal read model, the role split,
+inspection surface. It is **self-seeding** — it creates its own tenants, staff,
+portal users and records, so it runs against any database with the migrations
+applied rather than only on the machine it was written on. The command is in
+`README.md` under "Database security tests". It covers — cross-tenant read/write, the portal read model, the role split,
 photo visibility, and the anonymous share boundary. It was executed against a live
 local Postgres on branch `feature/dvi-v1`. Cases 15–26 below cite its assertion
 names, so they are **verified**, not merely specified, for that branch. The rest of
@@ -23,9 +26,11 @@ Create, in the test environment only (never against production):
 - **Customer A1** — a customer of Business A, with one vehicle and one quotation
 - **Customer A2** — a second customer of Business A
 - **Customer B1** — a customer of Business B
-- *(DVI)* Business A also needs an **employee** distinct from its manager, and
-  Customers A1/B1 need `app_user_id` linked to real `auth.users` rows, so the portal
-  and role-split cases can be exercised. The harness creates these itself.
+- *(DVI)* Cases 15–26 need more actors than the list above: an **employee**
+  distinct from the manager, and Customers A1/B1 linked to real `auth.users` rows
+  via `app_user_id` so the portal cases can be exercised. The harness seeds all of
+  them under ids reserved to it (the `d71c0a3e` prefix), so no manual setup is
+  required and it cannot collide with real data.
 
 ## Test Cases
 

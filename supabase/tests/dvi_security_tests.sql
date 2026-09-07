@@ -2,34 +2,154 @@
 \pset pager off
 \set QUIET on
 
--- Tenants
-\set BIZ_A '''a902dbeb-ff3c-4278-a1a9-fe3b53af7af1'''
-\set OWN_A '''396f6f24-e118-4423-b41e-66a14fc2da8f'''
-\set BIZ_B '''8771c46d-9198-43dc-a407-70fc39d6c532'''
-\set OWN_B '''0e4ac6a6-e404-4169-9ca7-51346ded612e'''
+-- ============================================================================
+-- Digital Vehicle Inspection (DVI) — database security harness
+--
+-- WHAT THIS IS
+-- Behavioural tests for migration 0037 and the authorization boundary the DVI
+-- application layer sits on. Named assertions print as `KEY=value`; cases that
+-- must be refused print a psql ERROR, which is the pass condition for them.
+-- The assertion names are cited by name from docs/security/ — renaming one
+-- silently falsifies a security document, so treat them as a public contract.
+--
+-- HOW TO RUN (local Supabase stack, from the repo root)
+--   docker exec -i supabase_db_Revora-app psql -U postgres \
+--     -f - < supabase/tests/dvi_security_tests.sql
+--
+-- Read the output for `KEY=value` lines and for ERRORs next to the `--
+-- must be REJECTED/DENIED --` banners. See docs/security/MULTI_TENANT_TEST_MATRIX.md
+-- (cases 15–26) for what each one proves.
+--
+-- REQUIREMENTS
+-- A database with migrations applied through 0037. Nothing else: the harness
+-- seeds every tenant, user and record it needs.
+--
+-- NEVER RUN THIS AGAINST PRODUCTION.
+-- It runs as `postgres` (RLS bypassed) and it deletes rows. Those deletes are
+-- scoped to the two fixture tenants below, which the harness creates and owns,
+-- so on a correct target it cannot touch real data — but it is still a
+-- destructive script pointed at whatever database you hand it.
+--
+-- FIXTURE OWNERSHIP
+-- Every id below is dedicated to this harness (the `d71c0a3e` prefix marks
+-- them). An earlier version of this file borrowed two real businesses that
+-- happened to exist on one developer's machine and deleted their customers,
+-- vehicles and quotations on every run; it also could not run anywhere else.
+-- Self-seeding fixes both problems.
+-- ============================================================================
+
+-- Fixture tenants
+\set BIZ_A '''d71c0a3e-0001-4a00-8000-000000000001'''
+\set BIZ_B '''d71c0a3e-0002-4a00-8000-000000000002'''
+
+-- Fixture identities. Each actor needs its id twice: once bare for SQL, once
+-- inside the JWT claims JSON. Defining both here keeps the uuid out of the
+-- body, where it previously appeared up to nine times per actor.
+\set OWN_A '''d71c0a3e-1001-4a00-8000-000000000001'''
+\set OWN_A_JWT '''{"role":"authenticated","sub":"d71c0a3e-1001-4a00-8000-000000000001"}'''
+\set OWN_B '''d71c0a3e-1002-4a00-8000-000000000002'''
+\set OWN_B_JWT '''{"role":"authenticated","sub":"d71c0a3e-1002-4a00-8000-000000000002"}'''
+\set EMP_A '''d71c0a3e-1003-4a00-8000-000000000003'''
+\set EMP_A_JWT '''{"role":"authenticated","sub":"d71c0a3e-1003-4a00-8000-000000000003"}'''
+\set PORTAL_A '''d71c0a3e-1004-4a00-8000-000000000004'''
+\set PORTAL_A_JWT '''{"role":"authenticated","sub":"d71c0a3e-1004-4a00-8000-000000000004"}'''
+\set PORTAL_B '''d71c0a3e-1005-4a00-8000-000000000005'''
+\set PORTAL_B_JWT '''{"role":"authenticated","sub":"d71c0a3e-1005-4a00-8000-000000000005"}'''
+
+-- ---------- preflight ----------
+-- Fail immediately and legibly on a wrong target, instead of emitting a
+-- confusing cascade of errors forty lines in.
+\set ON_ERROR_STOP on
+do $preflight$
+declare
+  missing text;
+begin
+  select string_agg(t, ', ') into missing
+  from unnest(array[
+    'inspection_templates','inspection_template_items',
+    'vehicle_inspections','inspection_items','inspection_item_media'
+  ]) as t
+  where to_regclass('public.' || t) is null;
+
+  if missing is not null then
+    raise exception
+      'DVI schema missing (%). Apply migrations through 0037 before running this harness.',
+      missing;
+  end if;
+
+  if to_regprocedure('public.resolve_inspection_share(bytea)') is null then
+    raise exception 'migration 0037 functions are absent -- apply it first';
+  end if;
+end
+$preflight$;
+\set ON_ERROR_STOP off
 
 -- ---------- fixtures (as postgres, RLS bypassed) ----------
+-- ON_ERROR_STOP stays ON for setup. The tests themselves need it OFF (a rejected
+-- write IS a pass there), but a broken FIXTURE must abort immediately: a failed
+-- insert leaves the following \gset unset, and every later :'cust_a' then
+-- degrades into "syntax error at or near :" -- forty lines of noise hiding one
+-- real cause.
+\set ON_ERROR_STOP on
+reset role;
+
+-- Tenants. Inserting a business fires businesses_seed_inspection_template,
+-- which seeds that tenant's default 20-item checklist -- asserted below.
+insert into public.businesses (id, name) values
+  (:BIZ_A, 'DVI Harness Tenant A'),
+  (:BIZ_B, 'DVI Harness Tenant B')
+on conflict (id) do nothing;
+
+-- Identities. The profiles row is created by the auth.users trigger; inserting
+-- into public.profiles directly collides with it.
+insert into auth.users
+  (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+values
+  (:OWN_A,    '00000000-0000-0000-0000-000000000000','authenticated','authenticated','owner-a@dvi-harness.invalid','x',now(),now(),now()),
+  (:OWN_B,    '00000000-0000-0000-0000-000000000000','authenticated','authenticated','owner-b@dvi-harness.invalid','x',now(),now(),now()),
+  (:EMP_A,    '00000000-0000-0000-0000-000000000000','authenticated','authenticated','employee-a@dvi-harness.invalid','x',now(),now(),now()),
+  (:PORTAL_A, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','customer-a@dvi-harness.invalid','x',now(),now(),now()),
+  (:PORTAL_B, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','customer-b@dvi-harness.invalid','x',now(),now(),now())
+-- Untargeted: tolerates a re-run hitting EITHER the id or the email unique index.
+on conflict do nothing;
+
+insert into public.business_members (business_id, user_id, role, is_active) values
+  (:BIZ_A, :OWN_A, 'business_owner', true),
+  (:BIZ_B, :OWN_B, 'business_owner', true),
+  (:BIZ_A, :EMP_A, 'employee', true)
+on conflict do nothing;
+
+-- Per-run data. Scoped to the fixture tenants only, so a repeat run resets the
+-- harness without touching anything else in the database.
 delete from public.vehicle_inspections where business_id in (:BIZ_A, :BIZ_B);
 delete from public.quotations where business_id in (:BIZ_A, :BIZ_B);
 delete from public.vehicles where business_id in (:BIZ_A, :BIZ_B);
 delete from public.customers where business_id in (:BIZ_A, :BIZ_B);
 
+-- Normalize position 1 so T-SNAPSHOT asserts against a known label regardless
+-- of the tenant's default_language.
 update public.inspection_template_items set label = 'Front tyre tread depth', section = 'Tyres & wheels'
  where position = 1 and template_id in (select id from public.inspection_templates where business_id = :BIZ_A and is_default);
-insert into public.customers (business_id, full_name) values (:BIZ_A, 'Cust A') returning id as cust_a \gset
-insert into public.customers (business_id, full_name) values (:BIZ_B, 'Cust B') returning id as cust_b \gset
+
+insert into public.customers (business_id, full_name, app_user_id)
+  values (:BIZ_A, 'Cust A', :PORTAL_A) returning id as cust_a \gset
+insert into public.customers (business_id, full_name, app_user_id)
+  values (:BIZ_B, 'Cust B', :PORTAL_B) returning id as cust_b \gset
 insert into public.vehicles (business_id, customer_id, make, model, plate_number)
   values (:BIZ_A, :'cust_a', 'Toyota', 'Hilux', 'A-111') returning id as veh_a \gset
 insert into public.vehicles (business_id, customer_id, make, model, plate_number)
   values (:BIZ_B, :'cust_b', 'Nissan', 'Patrol', 'B-222') returning id as veh_b \gset
+
+-- Fixtures are up; from here a raised error is often the assertion itself.
+\set ON_ERROR_STOP off
 
 \set QUIET off
 
 \echo ''
 \echo '################ T-INTEGRITY ################'
 set role authenticated;
-set request.jwt.claim.sub = '396f6f24-e118-4423-b41e-66a14fc2da8f';
-set request.jwt.claims = '{"role":"authenticated","sub":"396f6f24-e118-4423-b41e-66a14fc2da8f"}';
+set request.jwt.claim.sub = :OWN_A;
+set request.jwt.claims = :OWN_A_JWT;
 
 \echo '-- cross-tenant vehicle must be REJECTED --'
 select public.create_inspection(:BIZ_A, :'cust_a', :'veh_b', 'pre_quote');
@@ -44,8 +164,8 @@ select 'ITEMS_SNAPSHOTTED=' || count(*)::text from public.inspection_items where
 \echo ''
 \echo '################ T-TENANCY (G5) ################'
 reset role; set role authenticated;
-set request.jwt.claim.sub = '0e4ac6a6-e404-4169-9ca7-51346ded612e';
-set request.jwt.claims = '{"role":"authenticated","sub":"0e4ac6a6-e404-4169-9ca7-51346ded612e"}';
+set request.jwt.claim.sub = :OWN_B;
+set request.jwt.claims = :OWN_B_JWT;
 
 \echo '-- Owner B reading A inspections: expect 0 rows --'
 select 'CROSS_TENANT_READ_ROWS=' || count(*)::text from public.vehicle_inspections where business_id = :BIZ_A;
@@ -70,8 +190,8 @@ select 'SNAPSHOT_LABEL_AFTER_TEMPLATE_EDIT=' ||
 \echo ''
 \echo '################ T-SHARE-DRAFT (G7) ################'
 set role authenticated;
-set request.jwt.claim.sub = '396f6f24-e118-4423-b41e-66a14fc2da8f';
-set request.jwt.claims = '{"role":"authenticated","sub":"396f6f24-e118-4423-b41e-66a14fc2da8f"}';
+set request.jwt.claim.sub = :OWN_A;
+set request.jwt.claims = :OWN_A_JWT;
 \echo '-- sharing a DRAFT must be REJECTED --'
 select public.set_inspection_share(:'insp_a', sha256('tok-draft'::bytea), now() + interval '30 days');
 
@@ -126,8 +246,8 @@ where table_schema='public' and table_name='vehicle_inspections'
 \echo ''
 \echo '################ T-QUOTE (G11/G12) ################'
 set role authenticated;
-set request.jwt.claim.sub = '396f6f24-e118-4423-b41e-66a14fc2da8f';
-set request.jwt.claims = '{"role":"authenticated","sub":"396f6f24-e118-4423-b41e-66a14fc2da8f"}';
+set request.jwt.claim.sub = :OWN_A;
+set request.jwt.claims = :OWN_A_JWT;
 select array_agg(id) as finding_ids from public.inspection_items
   where inspection_id = :'insp_a' and result in ('attention','fail') \gset
 select public.create_quotation_from_inspection(:'insp_a', :'finding_ids') as q1 \gset
@@ -185,34 +305,45 @@ reset role;
 \echo '################ T-APP-FIXTURES ################'
 reset role;
 
-\set EMP_A '''3c1f0d24-8a52-4d6f-9b71-2e5c9a04d811'''
-\set PORTAL_A '''5b7e2f91-6c34-4a88-9d02-71f3ea55c4b6'''
-\set PORTAL_B '''9d4c8e17-2b65-4f39-8c47-3a08bd91e772'''
+-- Every actor and tenant is seeded at the top of this file. These assertions
+-- confirm the environment the rest of the suite assumes, so a failure here is
+-- read as "the fixtures did not take", not as a security finding.
+select 'FIXTURE_TENANTS=' || count(*)::text
+from public.businesses where id in (:BIZ_A, :BIZ_B);
 
-insert into auth.users
-  (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-values
-  (:EMP_A,    '00000000-0000-0000-0000-000000000000','authenticated','authenticated','dvi-emp-a@example.test','x',now(),now(),now()),
-  (:PORTAL_A, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','dvi-cust-a@example.test','x',now(),now(),now()),
-  (:PORTAL_B, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','dvi-cust-b@example.test','x',now(),now(),now())
-on conflict (id) do nothing;
-
-insert into public.business_members (business_id, user_id, role, is_active)
-values (:BIZ_A, :EMP_A, 'employee', true)
-on conflict do nothing;
-
--- Link each portal user to the customer record in its own tenant.
-update public.customers set app_user_id = :PORTAL_A where id = :'cust_a';
-update public.customers set app_user_id = :PORTAL_B where id = :'cust_b';
+select 'FIXTURE_OWNER_A_ROLE=' || coalesce(
+  (select role::text from public.business_members where business_id = :BIZ_A and user_id = :OWN_A), 'MISSING');
 
 select 'FIXTURE_EMPLOYEE_ROLE=' || coalesce(
   (select role::text from public.business_members where business_id = :BIZ_A and user_id = :EMP_A), 'MISSING');
 
-\echo ''
+select 'FIXTURE_PORTAL_LINKED=' || count(*)::text
+from public.customers where id in (:'cust_a', :'cust_b') and app_user_id is not null;
+
+\echo '-- creating a business must auto-seed its default checklist (0037 trigger) --'
+-- The spec claims new businesses are seeded with the default 20-item workshop
+-- checklist via a trigger on `businesses`. Nothing exercised that until the
+-- harness began creating its own tenants; now it is covered for free.
+select 'SEEDED_DEFAULT_TEMPLATES=' || count(*)::text
+from public.inspection_templates
+where business_id in (:BIZ_A, :BIZ_B) and is_default and is_active;
+
+select 'SEEDED_TEMPLATE_ITEMS_A=' || count(*)::text
+from public.inspection_template_items
+where template_id = (select id from public.inspection_templates
+                      where business_id = :BIZ_A and is_default limit 1);
+
+\echo '-- the seeded checklist is per-tenant, never shared across businesses --'
+select 'SEEDED_TEMPLATES_ARE_DISTINCT=' || (
+  (select id from public.inspection_templates where business_id = :BIZ_A and is_default limit 1)
+  is distinct from
+  (select id from public.inspection_templates where business_id = :BIZ_B and is_default limit 1)
+)::text;
+
 \echo '################ T-EMPLOYEE (role split) ################'
 set role authenticated;
-set request.jwt.claim.sub = '3c1f0d24-8a52-4d6f-9b71-2e5c9a04d811';
-set request.jwt.claims = '{"role":"authenticated","sub":"3c1f0d24-8a52-4d6f-9b71-2e5c9a04d811"}';
+set request.jwt.claim.sub = :EMP_A;
+set request.jwt.claims = :EMP_A_JWT;
 
 \echo '-- employee CAN start a draft inspection --'
 select public.create_inspection(:BIZ_A, :'cust_a', :'veh_a', 'pre_quote') as insp_emp \gset
@@ -244,13 +375,13 @@ select public.create_quotation_from_inspection(
 reset role;
 -- A draft belonging to customer A, to prove drafts stay invisible.
 set role authenticated;
-set request.jwt.claim.sub = '396f6f24-e118-4423-b41e-66a14fc2da8f';
-set request.jwt.claims = '{"role":"authenticated","sub":"396f6f24-e118-4423-b41e-66a14fc2da8f"}';
+set request.jwt.claim.sub = :OWN_A;
+set request.jwt.claims = :OWN_A_JWT;
 select public.create_inspection(:BIZ_A, :'cust_a', :'veh_a', 'pre_quote') as insp_draft \gset
 
 reset role; set role authenticated;
-set request.jwt.claim.sub = '5b7e2f91-6c34-4a88-9d02-71f3ea55c4b6';
-set request.jwt.claims = '{"role":"authenticated","sub":"5b7e2f91-6c34-4a88-9d02-71f3ea55c4b6"}';
+set request.jwt.claim.sub = :PORTAL_A;
+set request.jwt.claims = :PORTAL_A_JWT;
 
 \echo '-- customer sees ONLY completed inspections (drafts excluded) --'
 select 'PORTAL_VISIBLE_TOTAL=' || count(*)::text ||
@@ -285,8 +416,8 @@ select public.set_inspection_share(:'insp_a', sha256('cust-token'::bytea), now()
 
 \echo '-- OTHER tenant customer sees none of business A (expect 0) --'
 reset role; set role authenticated;
-set request.jwt.claim.sub = '9d4c8e17-2b65-4f39-8c47-3a08bd91e772';
-set request.jwt.claims = '{"role":"authenticated","sub":"9d4c8e17-2b65-4f39-8c47-3a08bd91e772"}';
+set request.jwt.claim.sub = :PORTAL_B;
+set request.jwt.claims = :PORTAL_B_JWT;
 select 'PORTAL_CROSS_TENANT_ROWS=' || count(*)::text
 from public.vehicle_inspections where business_id = :BIZ_A;
 
@@ -316,14 +447,14 @@ from public.media_assets where id = :'asset_a';
 
 \echo '-- owning customer CAN see the photo link (expect 1) --'
 set role authenticated;
-set request.jwt.claim.sub = '5b7e2f91-6c34-4a88-9d02-71f3ea55c4b6';
-set request.jwt.claims = '{"role":"authenticated","sub":"5b7e2f91-6c34-4a88-9d02-71f3ea55c4b6"}';
+set request.jwt.claim.sub = :PORTAL_A;
+set request.jwt.claims = :PORTAL_A_JWT;
 select 'MEDIA_OWNING_CUSTOMER_ROWS=' || count(*)::text from public.inspection_item_media;
 
 \echo '-- other tenant customer CANNOT (expect 0) --'
 reset role; set role authenticated;
-set request.jwt.claim.sub = '9d4c8e17-2b65-4f39-8c47-3a08bd91e772';
-set request.jwt.claims = '{"role":"authenticated","sub":"9d4c8e17-2b65-4f39-8c47-3a08bd91e772"}';
+set request.jwt.claim.sub = :PORTAL_B;
+set request.jwt.claims = :PORTAL_B_JWT;
 select 'MEDIA_CROSS_TENANT_ROWS=' || count(*)::text from public.inspection_item_media;
 
 \echo '-- anonymous CANNOT (expect 0) --'
@@ -336,11 +467,21 @@ select 'MEDIA_ANON_ROWS=' || count(*)::text from public.inspection_item_media;
 \echo ''
 \echo '################ T-ANON-RESOLVER (public share payload) ################'
 reset role;
--- Re-establish a live share on the completed inspection (T-SHARE-LIFECYCLE
--- left it revoked). Hashed exactly as lib/inspections/share.ts does: SHA-256
--- over the token's ASCII characters.
+-- Re-establish a live share on the completed inspection (T-SHARE-LIFECYCLE left
+-- it revoked). Hashed exactly as lib/inspections/share.ts does: SHA-256 over the
+-- token's ASCII characters.
+--
+-- The token is derived from the inspection id rather than being a fixed literal.
+-- `vehicle_inspections_share_hash_idx` is UNIQUE across the whole table, so a
+-- constant probe token collides with any other row that ever used it -- including
+-- rows in other tenants left behind by an earlier run. When that happened the
+-- UPDATE failed and the resolver then matched the OTHER tenant's inspection, so
+-- the row-count assertion below passed for entirely the wrong reason. Deriving
+-- the token per inspection makes a collision impossible, and the identity
+-- assertion catches it if one ever occurs anyway.
+\set PROBE_TOKEN '''anon-probe-'''
 update public.vehicle_inspections
-   set share_token_hash = sha256(convert_to('anon-probe-token','UTF8')),
+   set share_token_hash = sha256(convert_to(:PROBE_TOKEN || :'insp_a', 'UTF8')),
        share_created_at = now(),
        share_expires_at = now() + interval '30 days',
        share_revoked_at = null
@@ -352,9 +493,16 @@ set role anon;
 
 \echo '-- anon CAN resolve a live token (this is the whole feature) --'
 select 'ANON_RESOLVE_HEADER_ROWS=' || count(*)::text
-from public.resolve_inspection_share(sha256(convert_to('anon-probe-token','UTF8')));
+from public.resolve_inspection_share(sha256(convert_to(:PROBE_TOKEN || :'insp_a', 'UTF8')));
+
+\echo '-- and it resolves OUR inspection, not some other row sharing the hash --'
+select 'ANON_RESOLVE_IS_FIXTURE=' || (
+  (select inspection_id
+     from public.resolve_inspection_share(sha256(convert_to(:PROBE_TOKEN || :'insp_a','UTF8'))))
+  = :'insp_a'::uuid)::text;
+
 select 'ANON_RESOLVE_ITEM_ROWS=' || (count(*) > 0)::text
-from public.resolve_inspection_share_items(sha256(convert_to('anon-probe-token','UTF8')));
+from public.resolve_inspection_share_items(sha256(convert_to(:PROBE_TOKEN || :'insp_a', 'UTF8')));
 
 \echo '-- the public payload carries NO customer or tenant identifier --'
 reset role;
