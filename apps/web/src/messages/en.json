@@ -326,7 +326,8 @@
     "superAdmins": "Super admins",
     "appointments": "Appointments",
     "invoices": "Invoices",
-    "maintenance": "Maintenance"
+    "maintenance": "Maintenance",
+    "inspections": "Inspections"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -1986,6 +1987,155 @@
       "booked": "Already booked"
     },
     "estimateNote": "Estimated dates are derived from the maintenance plan and any recorded mileage. They are guidance, not a manufacturer-specified service interval."
+  },
+  "inspections": {
+    "result": {
+      "pass": "Pass",
+      "attention": "Needs attention",
+      "fail": "Fail",
+      "notChecked": "Not checked"
+    },
+    "resultHint": {
+      "pass": "Checked and in good condition",
+      "attention": "Wearing or borderline — worth planning for",
+      "fail": "Needs work now",
+      "notChecked": "This item was not inspected"
+    },
+    "context": {
+      "preQuote": "Pre-quote",
+      "inJob": "During the job"
+    },
+    "status": {
+      "draft": "Draft",
+      "completed": "Completed"
+    },
+    "notAStandard": "This is the workshop's own checklist, not a manufacturer or government inspection standard."
+  },
+  "dashboardInspections": {
+    "title": "Inspections",
+    "description": "Photo-backed vehicle inspections you can show the customer.",
+    "empty": {
+      "title": "No inspections yet",
+      "description": "Start one from a vehicle or from an active job."
+    },
+    "new": {
+      "title": "Start an inspection",
+      "description": "Choose the vehicle and the checklist to work through.",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "selectVehicle": "Select a vehicle",
+      "template": "Checklist",
+      "templateDefault": "Default checklist",
+      "odometer": "Odometer (km)",
+      "odometerHint": "Optional.",
+      "contextLabel": "Type",
+      "submit": "Start inspection",
+      "noVehicles": "Add a vehicle for this customer first.",
+      "noPermission": "You don't have permission to start inspections."
+    },
+    "list": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "started": "Started",
+      "status": "Status",
+      "open": "Open",
+      "quoted": "Quoted"
+    },
+    "editor": {
+      "progress": "{checked} of {total} items checked",
+      "noteLabel": "Note for the customer",
+      "notePlaceholder": "Optional note the customer will see",
+      "saveItem": "Save",
+      "addPhoto": "Add photo",
+      "removePhoto": "Remove photo",
+      "photoAlt": "Photo for {label}",
+      "resultLegend": "Result for {label}",
+      "readOnly": "This report is complete and can no longer be edited.",
+      "sectionCount": "{count} items"
+    },
+    "complete": {
+      "title": "Complete this inspection",
+      "description": "Once completed, the report is locked and can be shared with the customer. A correction needs a new inspection.",
+      "summaryLabel": "Summary for the customer",
+      "summaryPlaceholder": "Optional. A short, plain-language summary.",
+      "submit": "Complete inspection",
+      "unchecked": "{count} items are still marked as not checked. They will be recorded that way."
+    },
+    "findings": {
+      "title": "Findings",
+      "description": "Choose what to quote. Prices are left blank for you to fill in.",
+      "none": "Nothing was marked as needing attention or failing.",
+      "selectAll": "Select all",
+      "submit": "Create draft quotation",
+      "priceNote": "Lines are created with no price. Revora never infers an amount from a checklist.",
+      "alreadyQuoted": "A quotation has already been created from this inspection.",
+      "viewQuotation": "View quotation"
+    },
+    "share": {
+      "title": "Share with the customer",
+      "description": "Creates a private link the customer can open without signing in.",
+      "generate": "Create link",
+      "rotate": "Replace link",
+      "revoke": "Revoke link",
+      "durationLabel": "Link valid for",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "activeUntil": "Active until {date}",
+      "noLink": "No active link.",
+      "revoked": "The previous link was revoked.",
+      "expired": "The link has expired.",
+      "showOnce": "Copy this link now — it is shown once and cannot be retrieved later.",
+      "copy": "Copy link",
+      "copied": "Link copied.",
+      "rotateWarning": "Creating a new link immediately stops the old one working.",
+      "draftOnly": "Complete the inspection before sharing it.",
+      "noPermission": "Only owners and managers can manage share links."
+    },
+    "detail": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "started": "Started",
+      "completedOn": "Completed",
+      "odometer": "Odometer",
+      "summary": "Summary",
+      "notFound": "Inspection not found.",
+      "back": "All inspections",
+      "kmSuffix": "km",
+      "noPhotos": "No photos."
+    },
+    "start": {
+      "fromVehicle": "Start inspection",
+      "fromJob": "Inspect vehicle"
+    }
+  },
+  "portalInspections": {
+    "title": "Inspections",
+    "description": "Photo-backed reports from your workshop.",
+    "empty": {
+      "title": "No inspection reports yet",
+      "description": "Completed inspections from your workshop will appear here."
+    },
+    "completedOn": "Completed {date}",
+    "view": "View report",
+    "workshop": "Workshop",
+    "vehicle": "Vehicle",
+    "summary": "Summary",
+    "odometer": "Odometer",
+    "notFound": "That report is not available.",
+    "back": "All reports",
+    "photoAlt": "Photo for {label}"
+  },
+  "publicInspection": {
+    "title": "Vehicle inspection report",
+    "workshop": "Workshop",
+    "vehicle": "Vehicle",
+    "completedOn": "Completed",
+    "summary": "Summary",
+    "photoAlt": "Photo for {label}",
+    "unavailable": {
+      "title": "This report is not available",
+      "description": "The link may have expired, been replaced, or been turned off. Ask the workshop for a new one."
+    },
+    "privacyNote": "This page shows the inspection only. It contains no personal or pricing information."
   },
   "legal": {
     "nav": {

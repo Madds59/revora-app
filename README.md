@@ -88,7 +88,34 @@ pnpm dev                             # http://localhost:3000
 
 ```bash
 cd apps/web
+pnpm lint
 pnpm typecheck
 pnpm build
+pnpm test
 ```
+
+## Database security tests
+
+Behavioural tests for tenant isolation and the DVI authorization boundary. They
+run against the local Supabase Postgres, need only the migrations applied, and
+seed every tenant, user and record they use.
+
+```bash
+# from the repo root, with the local stack running
+docker exec -i supabase_db_Revora-app psql -U postgres \
+  -f - < supabase/tests/dvi_security_tests.sql
+```
+
+Reading the output:
+
+- `KEY=value` lines are assertions — compare them against
+  `docs/security/MULTI_TENANT_TEST_MATRIX.md` (cases 15–26), which says what
+  each one proves.
+- `ERROR:` lines next to a `-- must be REJECTED/DENIED --` banner are **passes**:
+  the database refused something it should refuse. An error anywhere else is a
+  real failure.
+- A failure during fixture setup aborts immediately rather than cascading.
+
+Never point this at production — it runs as `postgres` with RLS bypassed and
+deletes rows (scoped to the two fixture tenants it creates and owns).
 # revora-app
