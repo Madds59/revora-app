@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ChevronDown, CreditCard, LogOut, Settings, ShieldCheck } from "lucide-react";
+import { ChevronDown, CreditCard, LogOut, Scale, Settings, ShieldCheck } from "lucide-react";
 
 import { signOut } from "@/app/[locale]/(auth)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -73,6 +73,7 @@ export function ShellAccountMenu({
 }: ShellAccountMenuProps) {
   const initials = useMemo(() => getInitials(email), [email]);
   const t = useTranslations("shell");
+  const tLegal = useTranslations("legal.nav");
 
   return (
     <DropdownMenu>
@@ -172,6 +173,17 @@ export function ShellAccountMenu({
           </div>
         </div>
 
+        <DropdownMenuSeparator />
+        {/* Legal pages are public; the account menu is the one place every
+            signed-in role (dashboard, portal, admin) can reach them. */}
+        <DropdownMenuItem
+          render={
+            <Link href="/legal/privacy" className="flex w-full items-center gap-2">
+              <Scale className="size-4" />
+              <span>{tLegal("legal")}</span>
+            </Link>
+          }
+        />
         <DropdownMenuSeparator />
         <form action={signOut} className="w-full">
           <button

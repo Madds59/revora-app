@@ -346,3 +346,39 @@ export const SKIPPED_STATUSES = [
 export function isClaimedProcessingStatus(status) {
   return status === "processing";
 }
+
+// ---------------------------------------------------------------------------
+// Portal self-service preferences (legal-compliance V1).
+//
+// A customer may switch each dispatchable channel on or off for one of THEIR
+// linked customer accounts. The action re-checks that (business_id, customer_id)
+// belongs to the session's linked accounts before touching a row, and RLS
+// (`notification_preferences_customer_manage_own`) enforces it again.
+// ---------------------------------------------------------------------------
+
+/** One checkbox per dispatchable channel, keyed `<channel>_enabled`. */
+export const portalNotificationPreferencesSchema = z.object({
+  businessId: z.string().regex(UUID_RE, "Please select a valid workshop."),
+  customerId: z.string().regex(UUID_RE, "Please select a valid account."),
+  emailEnabled: z.preprocess((v) => v === "on" || v === true, z.boolean()),
+  smsEnabled: z.preprocess((v) => v === "on" || v === true, z.boolean()),
+});
+
+/**
+ * Rows to upsert for one account: one per dispatchable channel, template-wide
+ * (`template_key` null). `opted_out_at` is stamped only when a channel is off
+ * so the audit trail shows when the customer withdrew.
+ * @param {{ businessId: string, customerId: string, emailEnabled: boolean, smsEnabled: boolean }} input
+ * @param {string} [now]
+ */
+export function buildPortalPreferenceRows(input, now = new Date().toISOString()) {
+  const wanted = { email: input.emailEnabled, sms: input.smsEnabled };
+  return DISPATCHABLE_CHANNELS.map((channel) => ({
+    business_id: input.businessId,
+    customer_id: input.customerId,
+    channel,
+    template_key: null,
+    enabled: wanted[channel],
+    opted_out_at: wanted[channel] ? null : now,
+  }));
+}

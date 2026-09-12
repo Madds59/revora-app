@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/page-header";
+import { StatusBanner } from "@/components/status-banner";
+import { ReceiptText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -21,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
 import { canManageInvoices } from "@/lib/permissions";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/money";
 import { formatDateTime } from "@/lib/formatters";
@@ -56,6 +58,7 @@ export default async function InvoiceDetailPage({
   const { member, business } = await requireMembership();
   const canManage = canManageInvoices(member.role);
   const locale = await getLocale();
+  const tInvoices = await getTranslations("dashboardInvoices");
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -116,6 +119,9 @@ export default async function InvoiceDetailPage({
       />
 
       <div className="flex flex-col gap-6 p-6">
+        <StatusBanner tone="muted" icon={ReceiptText} title={tInvoices("complianceNotice.title")}>
+          <p>{tInvoices("complianceNotice.body")}</p>
+        </StatusBanner>
         <Card>
           <CardHeader>
             <CardTitle>Line items</CardTitle>

@@ -113,7 +113,9 @@
       "email": "Email",
       "preferredLanguage": "Preferred language",
       "languageEnglish": "English",
-      "languageArabic": "Arabic"
+      "languageArabic": "Arabic",
+      "marketingConsent": "Customer has consented to marketing messages",
+      "marketingConsentHint": "Only tick this if the customer explicitly agreed to receive promotional email or SMS from your workshop. Transactional notifications (quotes, jobs, invoices) do not need this."
     },
     "vehicle": {
       "customer": "Customer",
@@ -176,7 +178,7 @@
       "optionalNote": "Optional note",
       "noteForWorkshop": "Add a note for the workshop",
       "approve": "Approve quotation",
-      "approvalRecorded": "Your approval is recorded with a secure timestamp and digital signature.",
+      "approvalRecorded": "Your approval is recorded with a timestamp and your typed electronic signature.",
       "optionalReason": "Optional reason",
       "rejectPlaceholder": "Tell the workshop what you would like changed",
       "decline": "Decline quotation"
@@ -339,7 +341,7 @@
       "trustBuilt": "Built on trust",
       "trustBuiltBody": "Transparent quotes and a verifiable record customers can rely on.",
       "digitalApprovals": "Digital approvals",
-      "digitalApprovalsBody": "Signed, audited sign-off on every job - no more disputes.",
+      "digitalApprovalsBody": "Signed, audited sign-off on every job, so there is a clear record if a question comes up.",
       "resolveWithCare": "Resolve with care",
       "resolveWithCareBody": "Complaints handled in the open, start to finish.",
       "madeForUAE": "Made for UAE service businesses",
@@ -353,7 +355,8 @@
       "chooseAccountType": "Choose an account type to continue.",
       "checkEmail": "Check your email to confirm your account, then sign in.",
       "magicLinkSent": "Magic link sent. Check your email to sign in.",
-      "passwordResetSent": "If an account exists, a reset link was sent."
+      "passwordResetSent": "If an account exists, a reset link was sent.",
+      "termsRequired": "Please accept the Terms of Service and Privacy Policy to continue."
     },
     "login": {
       "title": "Sign in",
@@ -404,7 +407,12 @@
         "staffTitle": "I was invited as staff",
         "staffDescription": "Join a business team using an invitation from an owner or manager.",
         "invitationRequired": "Invitation required"
-      }
+      },
+      "acceptTermsPrefix": "I have read and agree to the",
+      "acceptTermsAnd": "and the",
+      "termsLink": "Terms of Service",
+      "privacyLink": "Privacy Policy",
+      "ageNote": "You must be 18 or older to create an account."
     }
   },
   "notFound": {
@@ -675,7 +683,11 @@
       "structuredInterpretation": "Structured interpretation of each diagnostic code.",
       "stopDriving": "Stop driving"
     },
-    "unknownVehicle": "Unknown vehicle"
+    "unknownVehicle": "Unknown vehicle",
+    "advisoryNotice": {
+      "title": "AI-assisted guidance is advisory only",
+      "body": "Results are generated with the help of an AI model and public vehicle data. They may be incomplete or wrong, are not a professional inspection, and must be reviewed by a qualified workshop or service advisor. If a result indicates a safety-critical condition, stop driving and contact a workshop."
+    }
   },
   "dashboardHome": {
     "title": "Welcome to {businessName}",
@@ -1051,7 +1063,8 @@
       "branch": "Branch",
       "status": "Status",
       "due": "Due"
-    }
+    },
+    "searchLabel": "Search jobs"
   },
   "dashboardQuotations": {
     "title": "Quotations",
@@ -1260,6 +1273,11 @@
     "fallback": {
       "workshop": "Workshop",
       "none": "—"
+    },
+    "new": {
+      "title": "Submit complaint",
+      "description": "Send a new complaint to the business team.",
+      "cardTitle": "Complaint details"
     }
   },
   "portalDocuments": {
@@ -1320,11 +1338,21 @@
     "security": {
       "title": "Security and communication",
       "description": "Portal access is linked to your signed-in email. Editable customer settings are not enabled yet.",
-      "body": "Communication preferences, delivery channels, and account edits are managed by the workshop for now."
+      "body": "Portal access is linked to your signed-in email. To change your name, phone or email on a workshop's record, contact that workshop. To request a copy or deletion of your data, see the Privacy Policy."
     },
     "fallback": {
       "noEmail": "No email",
       "workshop": "Workshop"
+    },
+    "preferences": {
+      "title": "Communication preferences",
+      "description": "Choose how each workshop may notify you about quotes, jobs, appointments, invoices and reminders. Your choices apply immediately.",
+      "email": "Email notifications",
+      "sms": "SMS notifications",
+      "save": "Save preferences",
+      "saved": "Preferences saved.",
+      "error": "Could not save your preferences. Please try again.",
+      "note": "Turning a channel off stops all notifications from that workshop on that channel, including reminders. The workshop can still reach you directly."
     }
   },
   "adminTenants": {
@@ -1611,6 +1639,14 @@
     "fallback": {
       "draft": "Draft",
       "none": "—"
+    },
+    "complianceNotice": {
+      "title": "Tax invoice responsibility",
+      "body": "Revora structures invoices with your TRN, sequential numbering and per-line VAT, but does not certify them as FTA-compliant tax invoices. Confirm mandatory contents (supplier and recipient details, date of supply, VAT rate and amount in AED) against current Federal Tax Authority requirements before relying on them as your tax record."
+    },
+    "controls": {
+      "voidReason": "Reason for voiding",
+      "voidSubmit": "Void invoice"
     }
   },
   "dashboardAppointments": {
@@ -1627,6 +1663,10 @@
     },
     "fallback": {
       "none": "—"
+    },
+    "controls": {
+      "declineReason": "Reason for declining",
+      "declineSubmit": "Decline"
     }
   },
   "dashboardMaintenance": {
@@ -1652,5 +1692,108 @@
       "booked": "Already booked"
     },
     "estimateNote": "Estimated dates are derived from the maintenance plan and any recorded mileage. They are guidance, not a manufacturer-specified service interval."
+  },
+  "legal": {
+    "nav": {
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "refunds": "Refund Policy"
+    },
+    "page": {
+      "lastUpdated": "Last updated {date}",
+      "draftTitle": "Draft — pending legal review",
+      "draftBody": "This document was prepared from Revora's actual data flows and has not yet been reviewed by qualified UAE counsel. It is published so you can see how your data is handled; wording may change after review.",
+      "backToSignIn": "Back to sign in",
+      "backToApp": "Back to Revora"
+    },
+    "footer": {
+      "operatedBy": "Operated by {entityName}",
+      "license": "Trade licence {license}",
+      "contact": "Contact",
+      "notConfigured": "Business details are not configured yet. Set the NEXT_PUBLIC_LEGAL_* environment variables before going live.",
+      "rights": "© {year} {entityName}. All rights reserved.",
+      "jurisdiction": {
+        "mainland": "United Arab Emirates",
+        "difc": "Dubai International Financial Centre, UAE",
+        "adgm": "Abu Dhabi Global Market, UAE"
+      }
+    }
+  },
+  "portalInvoices": {
+    "complianceNotice": {
+      "title": "About this invoice",
+      "body": "This invoice was issued by the workshop named on it. The workshop is responsible for its contents, tax details and any refund. Revora provides the platform only."
+    },
+    "title": "Invoices",
+    "description": "Invoices issued to you by your workshops.",
+    "empty": "No invoices yet.",
+    "back": "Back",
+    "table": {
+      "invoice": "Invoice",
+      "workshop": "Workshop",
+      "status": "Status",
+      "total": "Total"
+    },
+    "fallback": {
+      "workshop": "Workshop"
+    },
+    "detail": {
+      "lineItems": "Line items",
+      "item": "Item",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "paid": "Paid",
+      "balanceDue": "Balance due",
+      "taxDetails": "Tax details",
+      "businessTrn": "Business TRN",
+      "issued": "Issued"
+    }
+  },
+  "portalAppointments": {
+    "title": "Appointments",
+    "description": "Request a service slot and track your upcoming appointments.",
+    "request": "Request appointment",
+    "empty": "No appointments yet.",
+    "back": "Back",
+    "backToPortal": "Back to portal",
+    "fallback": {
+      "workshop": "Workshop",
+      "appointment": "Appointment"
+    },
+    "table": {
+      "workshop": "Workshop",
+      "when": "When",
+      "status": "Status"
+    },
+    "detail": {
+      "title": "Details",
+      "requested": "Requested",
+      "confirmed": "Confirmed",
+      "notes": "Notes",
+      "declined": "The workshop declined",
+      "cancel": "Cancel appointment"
+    },
+    "new": {
+      "title": "Request an appointment",
+      "description": "Pick a time and we'll confirm it.",
+      "cardTitle": "Appointment details",
+      "noBranch": "No linked workshop with an available branch was found for your account."
+    },
+    "form": {
+      "workshop": "Workshop",
+      "branch": "Branch",
+      "vehicle": "Vehicle (optional)",
+      "vehiclePlaceholder": "Not sure yet",
+      "start": "Preferred start (workshop time, UAE)",
+      "end": "Preferred end",
+      "notes": "What do you need? (optional)",
+      "notesPlaceholder": "e.g. brake noise, oil change",
+      "submit": "Request appointment"
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
+import { AiAdvisoryNotice } from "@/components/ai-advisory-notice";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
@@ -53,7 +54,8 @@ export default async function VehicleDiagnosisPage({
   return (
     <>
       <PageHeader title={t("diagnosis.title")} description={t("diagnosis.description")} />
-      <div className="p-6">
+      <div className="flex flex-col gap-6 p-6">
+        <AiAdvisoryNotice />
         <VehicleDiagnosisForm
           initialVehicleId={params.vehicle_id ?? ""}
           vehicles={vehicles}
