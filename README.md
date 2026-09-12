@@ -70,7 +70,11 @@ pnpm dev                             # http://localhost:3000
 2. In the SQL editor, run `supabase/migrations/0001_core_schema.sql` then
    `0002_rls_policies.sql` (and `supabase/policies/storage-policies.sql`).
 3. Put the project URL + anon key in `apps/web/.env.local`.
-4. `cd apps/web && pnpm install && pnpm dev`.
+4. Set the legal-entity variables (`NEXT_PUBLIC_LEGAL_ENTITY_NAME`, `_ADDRESS`,
+   `_EMAIL`, optional `_LICENSE`, `_JURISDICTION`) — see `docs/legal/README.md`.
+   Without them the `/legal/*` pages and auth footer show a visible
+   "not configured" hint.
+5. `cd apps/web && pnpm install && pnpm dev`.
 
 ## Try it
 
