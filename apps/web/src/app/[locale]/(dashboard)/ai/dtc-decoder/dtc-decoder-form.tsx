@@ -74,7 +74,7 @@ export function DtcDecoderForm({
           />
         </div>
 
-        {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+        {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
         {state.message && <p className="text-sm text-muted-foreground">{state.message}</p>}
 
         <div>

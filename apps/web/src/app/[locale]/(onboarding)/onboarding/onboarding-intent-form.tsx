@@ -42,7 +42,7 @@ export function OnboardingIntentForm() {
             You can update this later if your role changes.
           </p>
           {state.error && (
-            <p className="text-destructive text-sm">{state.error}</p>
+            <p role="alert" className="text-destructive text-sm">{state.error}</p>
           )}
           <SubmitButton className="w-full" disabled={!accountIntent}>
             Continue

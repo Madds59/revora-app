@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -91,7 +91,7 @@ export function ConfirmAppointmentForm({
           />
         </div>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton>Confirm appointment</SubmitButton>
       </div>
@@ -101,14 +101,16 @@ export function ConfirmAppointmentForm({
 
 export function DeclineAppointmentForm({ id }: { id: string }) {
   const [state, action] = useActionState(declineAppointment, initial);
+  const t = useTranslations("dashboardAppointments.controls");
   useToast(state);
   return (
     <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="id" value={id} />
-      <Textarea name="reason" placeholder="Reason for declining" required rows={2} />
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      <Label htmlFor={`decline-reason-${id}`}>{t("declineReason")}</Label>
+      <Textarea id={`decline-reason-${id}`} name="reason" required rows={2} />
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="destructive">Decline</SubmitButton>
+        <SubmitButton variant="destructive">{t("declineSubmit")}</SubmitButton>
       </div>
     </form>
   );

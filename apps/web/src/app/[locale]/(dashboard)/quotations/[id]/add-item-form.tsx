@@ -170,7 +170,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
         </fieldset>
       )}
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">{t("addLineItem")}</SubmitButton>
       </div>

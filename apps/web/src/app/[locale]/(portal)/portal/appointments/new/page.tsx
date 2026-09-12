@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { RequestAppointmentForm } from "../request-appointment-form";
 
 export default async function NewAppointmentPage() {
+  const t = await getTranslations("portalAppointments");
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
 
@@ -30,7 +32,7 @@ export default async function NewAppointmentPage() {
   const accountOptions = accounts.map((account) => ({
     customerId: account.id,
     businessId: account.business_id,
-    label: account.business?.name ?? account.full_name ?? "Workshop",
+    label: account.business?.name ?? account.full_name ?? t("fallback.workshop"),
     branches: (branchRows ?? [])
       .filter((b: { business_id: string }) => b.business_id === account.business_id)
       .map((b: { id: string; name: string }) => ({ id: b.id, name: b.name })),
@@ -48,20 +50,20 @@ export default async function NewAppointmentPage() {
 
   return (
     <>
-      <PageHeader title="Request an appointment" description="Pick a time and we'll confirm it." />
+      <PageHeader title={t("new.title")} description={t("new.description")} />
       <div className="p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Appointment details</CardTitle>
+            <CardTitle>{t("new.cardTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             {accountOptions.length === 0 || !hasBranch ? (
               <div className="flex flex-col gap-3">
                 <p className="text-muted-foreground text-sm">
-                  No linked workshop with an available branch was found for your account.
+                  {t("new.noBranch")}
                 </p>
                 <Link href="/portal" className={buttonVariants({ variant: "outline" })}>
-                  Back to portal
+                  {t("backToPortal")}
                 </Link>
               </div>
             ) : (

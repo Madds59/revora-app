@@ -109,7 +109,7 @@ export function PostUpdateForm({ jobId }: { jobId: string }) {
         />
         Visible to customer
       </label>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">Post update</SubmitButton>
       </div>

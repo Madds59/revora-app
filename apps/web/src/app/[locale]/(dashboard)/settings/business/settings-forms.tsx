@@ -93,7 +93,7 @@ export function BusinessProfileForm({
           <p className="text-muted-foreground text-xs">{t("trnHint")}</p>
         </div>
         {state.error && (
-          <p className="text-destructive text-sm">{state.error}</p>
+          <p role="alert" className="text-destructive text-sm">{state.error}</p>
         )}
         {canEdit && (
           <div>
@@ -132,7 +132,7 @@ export function AddBranchForm() {
           <Input id="branch-email" name="email" type="email" />
         </div>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">{t("add")}</SubmitButton>
       </div>
@@ -172,7 +172,7 @@ export function AddServiceForm() {
         <Label htmlFor="service-description">{t("description")}</Label>
         <Textarea id="service-description" name="description" rows={2} />
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">{t("add")}</SubmitButton>
       </div>

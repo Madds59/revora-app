@@ -43,7 +43,7 @@ export default async function AdminsPage() {
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-destructive text-sm">We could not load this data right now.</p>
+              <p role="alert" className="text-destructive text-sm">We could not load this data right now.</p>
             ) : (
               <div className="rounded-lg border">
                 <Table>

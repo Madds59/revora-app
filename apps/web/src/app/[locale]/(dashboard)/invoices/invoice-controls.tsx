@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -93,7 +95,7 @@ export function AddInvoiceItemForm({ invoiceId }: { invoiceId: string }) {
           <Input id="item-tax" name="tax_rate" type="number" step="0.01" defaultValue={0} />
         </div>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">Add item</SubmitButton>
       </div>
@@ -121,7 +123,7 @@ export function IssueInvoiceForm({ invoiceId }: { invoiceId: string }) {
   return (
     <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="invoice_id" value={invoiceId} />
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton>Issue invoice</SubmitButton>
       </div>
@@ -167,7 +169,7 @@ export function RecordPaymentForm({ invoiceId }: { invoiceId: string }) {
           <Input id="payment-reference" name="reference" />
         </div>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">Record payment</SubmitButton>
       </div>
@@ -177,14 +179,16 @@ export function RecordPaymentForm({ invoiceId }: { invoiceId: string }) {
 
 export function VoidInvoiceForm({ invoiceId }: { invoiceId: string }) {
   const [state, action] = useActionState(voidInvoice, initial);
+  const t = useTranslations("dashboardInvoices.controls");
   useToast(state);
   return (
     <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="invoice_id" value={invoiceId} />
-      <Textarea name="reason" placeholder="Reason for voiding" required rows={2} />
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      <Label htmlFor={`void-reason-${invoiceId}`}>{t("voidReason")}</Label>
+      <Textarea id={`void-reason-${invoiceId}`} name="reason" required rows={2} />
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="destructive">Void invoice</SubmitButton>
+        <SubmitButton variant="destructive">{t("voidSubmit")}</SubmitButton>
       </div>
     </form>
   );
@@ -207,7 +211,7 @@ export function CreditNoteForm({ invoiceId }: { invoiceId: string }) {
           <Input id="credit-reason" name="reason" required />
         </div>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">Issue credit note</SubmitButton>
       </div>

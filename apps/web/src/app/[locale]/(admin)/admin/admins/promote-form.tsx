@@ -39,7 +39,7 @@ export function PromoteAdminForm() {
           The person must have signed up already.
         </p>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton>Grant super admin</SubmitButton>
       </div>

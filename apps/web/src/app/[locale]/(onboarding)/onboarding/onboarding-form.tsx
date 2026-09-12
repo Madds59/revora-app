@@ -59,7 +59,7 @@ export function OnboardingForm({
             </p>
           </div>
           {state.error && (
-            <p className="text-destructive text-sm">{state.error}</p>
+            <p role="alert" className="text-destructive text-sm">{state.error}</p>
           )}
           <SubmitButton className="w-full">
             Create business &amp; continue
