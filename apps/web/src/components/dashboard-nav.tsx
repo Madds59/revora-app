@@ -18,6 +18,7 @@ import {
   Bell,
   CarFront,
   ScanSearch,
+  ClipboardCheck,
   ClipboardList,
   Receipt,
   CalendarClock,
@@ -34,6 +35,7 @@ type NavItem = {
     | "vehicles"
     | "appointments"
     | "jobs"
+    | "inspections"
     | "quotes"
     | "invoices"
     | "maintenance"
@@ -59,6 +61,9 @@ const NAV: NavItem[] = [
   { labelKey: "vehicles", href: "/vehicles", icon: CarFront },
   { labelKey: "appointments", href: "/appointments", icon: CalendarClock },
   { labelKey: "jobs", href: "/jobs", icon: Wrench },
+  // Sits between jobs and quotes because that is its place in the workflow:
+  // inspect -> quote the findings -> approve -> job.
+  { labelKey: "inspections", href: "/inspections", icon: ClipboardCheck },
   { labelKey: "quotes", href: "/quotes", icon: FileText, aliases: ["/quotations"] },
   { labelKey: "invoices", href: "/invoices", icon: Receipt },
   { labelKey: "maintenance", href: "/maintenance", icon: Gauge },
