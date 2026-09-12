@@ -57,6 +57,7 @@ export function ConfirmAppointmentForm({
   suggestedStart: string;
   suggestedEnd: string;
 }) {
+  const t = useTranslations("dashboardAppointments.controls");
   const [state, action] = useActionState(confirmAppointment, initial);
   const locale = useLocale();
   const [start, setStart] = useState(toLocalInput(suggestedStart));
@@ -71,7 +72,7 @@ export function ConfirmAppointmentForm({
       <input type="hidden" name="confirmed_end" value={`${end}:00${DUBAI_OFFSET}`} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="confirmed-start">Start (Dubai time)</Label>
+          <Label htmlFor="confirmed-start">{t("start")}</Label>
           <Input
             id="confirmed-start"
             type="datetime-local"
@@ -81,7 +82,7 @@ export function ConfirmAppointmentForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="confirmed-end">End (Dubai time)</Label>
+          <Label htmlFor="confirmed-end">{t("end")}</Label>
           <Input
             id="confirmed-end"
             type="datetime-local"
@@ -93,7 +94,7 @@ export function ConfirmAppointmentForm({
       </div>
       {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton>Confirm appointment</SubmitButton>
+        <SubmitButton>{t("confirmSubmit")}</SubmitButton>
       </div>
     </form>
   );
@@ -117,25 +118,27 @@ export function DeclineAppointmentForm({ id }: { id: string }) {
 }
 
 export function CancelAppointmentButton({ id }: { id: string }) {
+  const t = useTranslations("dashboardAppointments.controls");
   const [state, action] = useActionState(cancelAppointmentStaff, initial);
   useToast(state);
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
       <Button type="submit" variant="outline" size="sm">
-        Cancel appointment
+        {t("cancel")}
       </Button>
     </form>
   );
 }
 
 export function ConvertToQuotationButton({ id }: { id: string }) {
+  const t = useTranslations("dashboardAppointments.controls");
   const [state, action] = useActionState(convertAppointmentToQuotation, initial);
   useToast(state);
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
-      <SubmitButton variant="secondary">Create quotation from this appointment</SubmitButton>
+      <SubmitButton variant="secondary">{t("convert")}</SubmitButton>
     </form>
   );
 }

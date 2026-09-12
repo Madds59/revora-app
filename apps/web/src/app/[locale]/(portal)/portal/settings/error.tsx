@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ErrorState } from "@/components/error-state";
 
 export default function Error({
@@ -9,14 +11,15 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPages.portalSettings");
   return (
     <ErrorState
-      title="Settings failed to load"
-      description="The portal settings page could not finish loading. Retry or return to the portal home."
+      title={t("title")}
+      description={t("description")}
       errorDigest={error.digest}
       onRetry={reset}
       backHref="/portal"
-      backLabel="Back to portal"
+      backLabel={t("backLabel")}
     />
   );
 }

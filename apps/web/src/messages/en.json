@@ -19,7 +19,10 @@
       "search": "Search",
       "searchPlaceholder": "Search",
       "status": "Status",
-      "dateRange": "Date range"
+      "dateRange": "Date range",
+      "visibleCount": "{count} visible",
+      "reset": "Reset filters",
+      "noMatchDescription": "Try a different search or reset the filters."
     },
     "pagination": {
       "total": "{count} total",
@@ -32,6 +35,14 @@
       "errorBack": "Go back",
       "errorReference": "Reference: {digest}",
       "noEvidence": "No evidence uploaded yet."
+    },
+    "dateRanges": {
+      "all": "All time",
+      "today": "Today",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "1y": "Last year"
     }
   },
   "bundles": {
@@ -181,7 +192,15 @@
       "approvalRecorded": "Your approval is recorded with a timestamp and your typed electronic signature.",
       "optionalReason": "Optional reason",
       "rejectPlaceholder": "Tell the workshop what you would like changed",
-      "decline": "Decline quotation"
+      "decline": "Decline quotation",
+      "kinds": {
+        "service": "Service",
+        "labor": "Labor",
+        "product": "Product",
+        "part": "Part"
+      },
+      "namePlaceholder": "Brake pads",
+      "originPlaceholder": "Japan"
     }
   },
   "complaints": {
@@ -258,13 +277,15 @@
       "name": "Name",
       "phone": "Phone",
       "email": "Email",
-      "add": "Add branch"
+      "add": "Add branch",
+      "namePlaceholder": "Main"
     },
     "service": {
       "name": "Name",
       "defaultPrice": "Default price (AED)",
       "description": "Description",
-      "add": "Add service"
+      "add": "Add service",
+      "namePlaceholder": "Oil change"
     }
   },
   "team": {
@@ -774,7 +795,9 @@
     },
     "detail": {
       "editSubmit": "Save changes",
-      "addVehicleSubmit": "Add vehicle"
+      "addVehicleSubmit": "Add vehicle",
+      "addVehicleTitle": "Add a vehicle",
+      "customerDetailsTitle": "Customer details"
     }
   },
   "retainerCalculator": {
@@ -1028,6 +1051,81 @@
       "emptyTitle": "No customers yet",
       "emptyDescription": "Create or restore a customer before editing vehicle ownership.",
       "emptyAction": "Add customer"
+    },
+    "detail": {
+      "fallbackDescription": "Vehicle details",
+      "back": "Back to vehicles",
+      "summaryTitle": "Vehicle summary",
+      "summaryDescription": "Core vehicle profile and ownership details.",
+      "rows": {
+        "customer": "Customer",
+        "make": "Make",
+        "model": "Model",
+        "year": "Year",
+        "plate": "Plate",
+        "vin": "VIN",
+        "color": "Color",
+        "created": "Created",
+        "updated": "Updated"
+      },
+      "unlinked": "Unlinked",
+      "linked": "Linked",
+      "viewCustomer": "View customer",
+      "editVehicle": "Edit vehicle",
+      "history": {
+        "title": "Service history",
+        "description": "Jobs recorded against the linked customer.",
+        "error": "We could not load the service history right now.",
+        "emptyTitle": "No jobs yet",
+        "emptyDescription": "Jobs for this customer will appear here once they are created.",
+        "noQuote": "No quote",
+        "job": "Job",
+        "status": "Status",
+        "quote": "Quote",
+        "due": "Due"
+      },
+      "quotes": {
+        "title": "Related quotes",
+        "description": "Quotes that reference this vehicle.",
+        "error": "We could not load related quotes right now.",
+        "emptyTitle": "No quotes yet",
+        "emptyDescription": "Quotes will appear here when they are linked to this vehicle.",
+        "quote": "Quote",
+        "status": "Status",
+        "total": "Total",
+        "created": "Created"
+      },
+      "intelligence": {
+        "title": "Vehicle intelligence",
+        "description": "Safety triage, diagnostics, and maintenance follow-up.",
+        "planTitle": "Maintenance plan",
+        "planSummary": "Latest maintenance plan generated for this vehicle.",
+        "open": "Open diagnosis workspace",
+        "emptyTitle": "No diagnostic result yet",
+        "emptyDescription": "Run a diagnosis to generate a structured AI summary, maintenance plan, and workshop review.",
+        "latestSymptom": "Latest symptom report"
+      },
+      "media": {
+        "title": "Vehicle media",
+        "description": "Attach photos, videos, and documents to this vehicle.",
+        "emptyTitle": "No media yet",
+        "emptyDescription": "Uploaded files will appear here once they are recorded against this vehicle."
+      },
+      "complaints": {
+        "title": "Related complaints",
+        "description": "Complaints filed by the linked customer.",
+        "error": "We could not load related complaints right now.",
+        "emptyTitle": "No complaints yet",
+        "emptyDescription": "Complaints from the same customer will appear here."
+      },
+      "documents": {
+        "title": "Related documents",
+        "description": "Files linked to the customer, jobs, or quotes.",
+        "error": "We could not load related documents right now.",
+        "emptyTitle": "No documents yet",
+        "emptyDescription": "Documents will appear here when they are linked to this vehicle's customer or related records.",
+        "linkedRecord": "Linked record"
+      }
     }
   },
   "dashboardJobsPage": {
@@ -1064,7 +1162,20 @@
       "status": "Status",
       "due": "Due"
     },
-    "searchLabel": "Search jobs"
+    "searchLabel": "Search jobs",
+    "controls": {
+      "status": "Status",
+      "save": "Save",
+      "update": "Update",
+      "updatePlaceholder": "e.g. Parts arrived, work resuming today.",
+      "visibleToCustomer": "Visible to customer",
+      "postUpdate": "Post update",
+      "newTask": "New task",
+      "taskPlaceholder": "e.g. Bleed brakes",
+      "add": "Add",
+      "reopen": "Reopen",
+      "complete": "Complete"
+    }
   },
   "dashboardQuotations": {
     "title": "Quotations",
@@ -1363,6 +1474,28 @@
     "empty": {
       "title": "No businesses yet",
       "description": "Tenant records will appear here once a business signs up and creates its workspace."
+    },
+    "browser": {
+      "searchPlaceholder": "Search businesses or owner email",
+      "owners": {
+        "all": "All owners",
+        "with_owner": "With owner email",
+        "without_owner": "Without owner email"
+      },
+      "owned": "Owned",
+      "noOwnerEmail": "No owner email",
+      "showing": "Showing {shown} of {total} tenants",
+      "noMatch": "No tenants match",
+      "table": {
+        "business": "Business",
+        "owner": "Owner",
+        "status": "Status",
+        "members": "Members",
+        "customers": "Customers",
+        "quotes": "Quotes",
+        "complaints": "Complaints",
+        "created": "Created"
+      }
     }
   },
   "adminUsers": {
@@ -1379,6 +1512,29 @@
     "empty": {
       "title": "No users yet",
       "description": "Users will appear here once the platform starts collecting signups and memberships."
+    },
+    "browser": {
+      "searchPlaceholder": "Search users by name or email",
+      "roles": {
+        "all": "All users",
+        "super_admin": "Super admins",
+        "user": "Regular users"
+      },
+      "showing": "Showing {shown} of {total} users",
+      "subtitle": "Platform signups and roles",
+      "noMatch": "No users match",
+      "noEmail": "No email",
+      "noName": "No name",
+      "superAdmin": "Super admin",
+      "user": "User",
+      "table": {
+        "email": "Email",
+        "name": "Name",
+        "status": "Status",
+        "memberships": "Memberships",
+        "linkedCustomers": "Linked customers",
+        "created": "Created"
+      }
     }
   },
   "adminSubscriptions": {
@@ -1395,6 +1551,31 @@
     "empty": {
       "title": "No subscriptions yet",
       "description": "Stripe-backed subscription records will appear here once tenants are billed."
+    },
+    "browser": {
+      "searchPlaceholder": "Search business or plan",
+      "statuses": {
+        "all": "All statuses",
+        "active": "Active",
+        "trialing": "Trialing",
+        "past_due": "Past due",
+        "canceled": "Canceled",
+        "unpaid": "Unpaid",
+        "incomplete": "Incomplete"
+      },
+      "showing": "Showing {shown} of {total} subscriptions",
+      "noMatch": "No subscriptions match",
+      "noRenewalDate": "No renewal date",
+      "cancelAtPeriodEnd": "Cancel at period end",
+      "autoRenew": "Auto-renew",
+      "table": {
+        "business": "Business",
+        "plan": "Plan",
+        "status": "Status",
+        "periodStart": "Period start",
+        "renewal": "Renewal",
+        "autoRenew": "Auto-renew"
+      }
     }
   },
   "adminBilling": {
@@ -1435,6 +1616,26 @@
     "empty": {
       "title": "No audit events yet",
       "description": "Administrative activity will appear here once tenants and platform operators start making changes."
+    },
+    "browser": {
+      "searchPlaceholder": "Search actor, action, or table",
+      "actions": {
+        "all": "All actions",
+        "create": "Create",
+        "update": "Update",
+        "delete": "Delete",
+        "other": "Other"
+      },
+      "showing": "Showing {shown} of {total} events",
+      "noMatch": "No audit events match",
+      "platform": "Platform",
+      "table": {
+        "when": "When",
+        "business": "Business",
+        "actor": "Actor",
+        "table": "Table",
+        "action": "Action"
+      }
     }
   },
   "adminNotifications": {
@@ -1451,6 +1652,41 @@
     "empty": {
       "title": "No notifications yet",
       "description": "Queued and delivered notifications will appear here once the platform sends activity."
+    },
+    "browser": {
+      "searchPlaceholder": "Search notifications or recipients",
+      "typePlaceholder": "Notification type",
+      "statuses": {
+        "all": "All statuses",
+        "unread": "Unread",
+        "read": "Read",
+        "queued": "Queued",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "types": {
+        "all": "All types",
+        "quote": "Quote",
+        "complaint": "Complaint",
+        "job": "Job",
+        "billing": "Billing",
+        "system": "System"
+      },
+      "showing": "Showing {shown} of {total} notifications",
+      "noMatch": "No notifications match",
+      "read": "Read",
+      "unread": "Unread",
+      "systemUpdate": "System update",
+      "table": {
+        "business": "Business",
+        "type": "Type",
+        "channel": "Channel",
+        "status": "Status",
+        "state": "State",
+        "customer": "Customer",
+        "created": "Created",
+        "action": "Action"
+      }
     }
   },
   "adminAnalytics": {
@@ -1646,7 +1882,46 @@
     },
     "controls": {
       "voidReason": "Reason for voiding",
-      "voidSubmit": "Void invoice"
+      "voidSubmit": "Void invoice",
+      "type": "Type",
+      "name": "Name",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "taxPercent": "Tax %",
+      "addItem": "Add item",
+      "issueInvoice": "Issue invoice",
+      "method": "Method",
+      "amount": "Amount",
+      "reference": "Reference",
+      "recordPayment": "Record payment",
+      "reason": "Reason",
+      "issueCreditNote": "Issue credit note",
+      "createInvoice": "Create invoice"
+    },
+    "draftInvoice": "Draft invoice",
+    "back": "Back to invoices",
+    "detail": {
+      "lineItems": "Line items",
+      "noItems": "No items yet.",
+      "item": "Item",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "tax": "Tax",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "paid": "Paid",
+      "balanceDue": "Balance due",
+      "issueTitle": "Issue this invoice",
+      "issueDescription": "Assigns the sequential invoice number and freezes the business TRN onto the document. Requires a TRN set in business settings.",
+      "recordPayment": "Record a payment",
+      "payments": "Payments",
+      "creditNotes": "Credit notes",
+      "voidTitle": "Void this invoice",
+      "creditNoteTitle": "Issue a credit note",
+      "creditNoteDescription": "This invoice has payments recorded, so it can no longer be voided. A credit note is the correct way to reduce its net revenue while keeping the original document intact for the audit trail.",
+      "voidReason": "Void reason"
     }
   },
   "dashboardAppointments": {
@@ -1662,11 +1937,30 @@
       "status": "Status"
     },
     "fallback": {
-      "none": "—"
+      "none": "—",
+      "appointment": "Appointment"
     },
     "controls": {
       "declineReason": "Reason for declining",
-      "declineSubmit": "Decline"
+      "declineSubmit": "Decline",
+      "start": "Start (Dubai time)",
+      "end": "End (Dubai time)",
+      "confirmSubmit": "Confirm appointment",
+      "cancel": "Cancel appointment",
+      "convert": "Create quotation from this appointment"
+    },
+    "back": "Back to appointments",
+    "detail": {
+      "title": "Details",
+      "requestedWindow": "Requested window",
+      "confirmed": "Confirmed",
+      "phone": "Phone",
+      "notes": "Notes",
+      "declineReason": "Decline reason",
+      "confirmTitle": "Confirm this appointment",
+      "declineTitle": "Decline this appointment",
+      "readyTitle": "Ready for the appointment",
+      "viewQuotation": "View the quotation created from this appointment"
     }
   },
   "dashboardMaintenance": {
@@ -1794,6 +2088,138 @@
       "notes": "What do you need? (optional)",
       "notesPlaceholder": "e.g. brake noise, oil change",
       "submit": "Request appointment"
+    }
+  },
+  "errorPages": {
+    "portal": {
+      "title": "Portal error",
+      "description": "The customer portal failed to load. Try again or return to the portal home.",
+      "backLabel": "Go to portal home"
+    },
+    "portalSettings": {
+      "title": "Settings failed to load",
+      "description": "The portal settings page could not finish loading. Retry or return to the portal home.",
+      "backLabel": "Back to portal"
+    },
+    "portalDocuments": {
+      "title": "Documents failed to load",
+      "description": "The portal documents list could not finish loading. Retry or return to the portal home.",
+      "backLabel": "Back to portal"
+    },
+    "portalJobs": {
+      "title": "Jobs failed to load",
+      "description": "The portal jobs list could not finish loading. Retry or return to the portal home.",
+      "backLabel": "Back to portal"
+    },
+    "dashboard": {
+      "title": "Dashboard error",
+      "description": "The business dashboard failed to load. Try again or return to the home screen.",
+      "backLabel": "Go to dashboard"
+    },
+    "vehicles": {
+      "title": "Vehicles error",
+      "description": "Vehicle management could not be loaded. Try again or return to the dashboard.",
+      "backLabel": "Go to dashboard"
+    },
+    "vehicleDetail": {
+      "title": "Vehicle error",
+      "description": "The vehicle detail page failed to load. Try again or go back to the list.",
+      "backLabel": "Back to vehicles"
+    },
+    "vehicleNew": {
+      "title": "Add vehicle error",
+      "description": "The vehicle creation form failed to load. Try again or return to the vehicle list.",
+      "backLabel": "Back to vehicles"
+    },
+    "vehicleEdit": {
+      "title": "Edit vehicle error",
+      "description": "The vehicle edit form failed to load. Try again or return to the vehicle list.",
+      "backLabel": "Back to vehicles"
+    },
+    "notifications": {
+      "title": "Notifications failed to load",
+      "description": "The tenant notification center could not finish loading. Retry or go back to the dashboard.",
+      "backLabel": "Back to dashboard"
+    },
+    "analytics": {
+      "title": "Analytics failed to load",
+      "description": "The tenant analytics screen could not finish loading. Retry or return to the dashboard.",
+      "backLabel": "Back to dashboard"
+    },
+    "admin": {
+      "title": "Admin error",
+      "description": "The admin console failed to load. Try again or return to the platform home.",
+      "backLabel": "Go to admin home"
+    }
+  },
+  "adminSettings": {
+    "title": "Settings",
+    "description": "Platform-level controls and operational context.",
+    "currentAdmin": {
+      "title": "Current admin",
+      "description": "Signed-in platform operator.",
+      "note": "Platform access is governed by `platform_admins`."
+    },
+    "isolation": {
+      "title": "Tenant isolation",
+      "description": "RLS and security-definer boundaries.",
+      "body": "Customer and business data stay tenant-scoped. Cross-tenant access happens only through admin RPCs."
+    },
+    "surfaces": {
+      "title": "Admin surfaces",
+      "description": "Manage platform access and visibility.",
+      "superAdmins": "Super admins",
+      "tenants": "Tenants",
+      "auditLogs": "Audit logs"
+    },
+    "state": {
+      "title": "Settings state",
+      "description": "Platform configuration tables are not modeled yet, so this screen is informational instead of editable.",
+      "body": "Editable root-platform settings will need a dedicated backend table or RPC surface before we add form controls here."
+    }
+  },
+  "adminAdmins": {
+    "title": "Super admins",
+    "description": "Platform administrators with cross-tenant access.",
+    "currentTitle": "Current super admins ({count})",
+    "currentDescription": "These accounts can see and manage every tenant.",
+    "loadError": "We could not load this data right now.",
+    "table": {
+      "email": "Email",
+      "name": "Name",
+      "since": "Since"
+    },
+    "addTitle": "Add a super admin",
+    "addDescription": "Grant platform access to an existing user by email.",
+    "form": {
+      "email": "User email",
+      "grant": "Grant super admin",
+      "revoke": "Revoke"
+    }
+  },
+  "onboarding": {
+    "staff": {
+      "title": "Join your business",
+      "description": "An owner or manager must invite your email before you can access the dashboard.",
+      "emptyTitle": "Invitation required",
+      "emptyDescription": "We couldn't find a pending business invitation for this account yet. Ask the business owner or manager to invite the same email address you used to sign up."
+    },
+    "owner": {
+      "subtitle": "Set up your business workspace.",
+      "title": "Create your business",
+      "description": "Set up your workshop, service center, or operations team as the business owner.",
+      "businessName": "Business name",
+      "businessNamePlaceholder": "Al Mansoori Auto Workshop",
+      "yourName": "Your name",
+      "signedInAs": "Signed in as {email}",
+      "submit": "Create business & continue"
+    },
+    "intent": {
+      "title": "Choose your account type",
+      "description": "Tell us how you plan to use Revora so we can send you to the right place.",
+      "cardDescription": "This keeps business owners, customers, and invited staff on the right path.",
+      "note": "You can update this later if your role changes.",
+      "continue": "Continue"
     }
   }
 }

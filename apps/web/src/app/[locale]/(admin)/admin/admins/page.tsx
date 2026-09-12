@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -21,6 +22,7 @@ import { PromoteAdminForm, RevokeAdminButton } from "./promote-form";
 import type { AdminSuperAdminRow } from "@/lib/admin-views";
 
 export default async function AdminsPage() {
+  const t = await getTranslations("adminAdmins");
   const me = await requireSuperAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_list_super_admins");
@@ -30,28 +32,26 @@ export default async function AdminsPage() {
   return (
     <>
       <PageHeader
-        title="Super admins"
-        description="Platform administrators with cross-tenant access."
+        title={t("title")}
+        description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Current super admins ({admins.length})</CardTitle>
-            <CardDescription>
-              These accounts can see and manage every tenant.
-            </CardDescription>
+            <CardTitle>{t("currentTitle", { count: admins.length })}</CardTitle>
+            <CardDescription>{t("currentDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
-              <p role="alert" className="text-destructive text-sm">We could not load this data right now.</p>
+              <p role="alert" className="text-destructive text-sm">{t("loadError")}</p>
             ) : (
               <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Since</TableHead>
+                      <TableHead>{t("table.email")}</TableHead>
+                      <TableHead>{t("table.name")}</TableHead>
+                      <TableHead>{t("table.since")}</TableHead>
                       <TableHead />
                     </TableRow>
                   </TableHeader>
@@ -83,10 +83,8 @@ export default async function AdminsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Add a super admin</CardTitle>
-            <CardDescription>
-              Grant platform access to an existing user by email.
-            </CardDescription>
+            <CardTitle>{t("addTitle")}</CardTitle>
+            <CardDescription>{t("addDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <PromoteAdminForm />

@@ -104,7 +104,7 @@ export default async function InvoiceDetailPage({
       <PageHeader
         title={
           <span className="flex items-center gap-3">
-            {invoice.invoice_number ?? "Draft invoice"}
+            {invoice.invoice_number ?? tInvoices("draftInvoice")}
             <Badge variant={INVOICE_STATUS_VARIANT[invoice.status]}>
               {getInvoiceStatusLabel(invoice.status, locale)}
             </Badge>
@@ -113,7 +113,7 @@ export default async function InvoiceDetailPage({
         description={[invoice.customer?.full_name, vehicleLabel].filter(Boolean).join(" · ")}
         action={
           <Link href={`/${locale}/invoices`} className={buttonVariants({ variant: "outline" })}>
-            Back to invoices
+            {tInvoices("back")}
           </Link>
         }
       />
@@ -124,21 +124,21 @@ export default async function InvoiceDetailPage({
         </StatusBanner>
         <Card>
           <CardHeader>
-            <CardTitle>Line items</CardTitle>
+            <CardTitle>{tInvoices("detail.lineItems")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {items.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No items yet.</p>
+              <p className="text-muted-foreground text-sm">{tInvoices("detail.noItems")}</p>
             ) : (
               <div className="rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead className="text-end">Qty</TableHead>
-                      <TableHead className="text-end">Unit price</TableHead>
-                      <TableHead className="text-end">Tax</TableHead>
-                      <TableHead className="text-end">Total</TableHead>
+                      <TableHead>{tInvoices("detail.item")}</TableHead>
+                      <TableHead className="text-end">{tInvoices("detail.qty")}</TableHead>
+                      <TableHead className="text-end">{tInvoices("detail.unitPrice")}</TableHead>
+                      <TableHead className="text-end">{tInvoices("detail.tax")}</TableHead>
+                      <TableHead className="text-end">{tInvoices("detail.total")}</TableHead>
                       {canManage && invoice.status === "draft" && <TableHead />}
                     </TableRow>
                   </TableHeader>
@@ -168,27 +168,27 @@ export default async function InvoiceDetailPage({
 
             <div className="ml-auto flex w-full max-w-xs flex-col gap-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{tInvoices("detail.subtotal")}</span>
                 <span>{formatCurrency(invoice.subtotal, invoice.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Discount</span>
+                <span className="text-muted-foreground">{tInvoices("detail.discount")}</span>
                 <span>-{formatCurrency(invoice.discount_total, invoice.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax</span>
+                <span className="text-muted-foreground">{tInvoices("detail.tax")}</span>
                 <span>{formatCurrency(invoice.tax_total, invoice.currency)}</span>
               </div>
               <div className="flex justify-between font-medium">
-                <span>Total</span>
+                <span>{tInvoices("detail.total")}</span>
                 <span>{formatCurrency(invoice.total, invoice.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Paid</span>
+                <span className="text-muted-foreground">{tInvoices("detail.paid")}</span>
                 <span>{formatCurrency(invoice.amount_paid, invoice.currency)}</span>
               </div>
               <div className="flex justify-between font-medium">
-                <span>Balance due</span>
+                <span>{tInvoices("detail.balanceDue")}</span>
                 <span>{formatCurrency(invoice.balance_due, invoice.currency)}</span>
               </div>
             </div>
@@ -202,11 +202,8 @@ export default async function InvoiceDetailPage({
         {canManage && invoice.status === "draft" && (
           <Card>
             <CardHeader>
-              <CardTitle>Issue this invoice</CardTitle>
-              <CardDescription>
-                Assigns the sequential invoice number and freezes the business TRN onto the
-                document. Requires a TRN set in business settings.
-              </CardDescription>
+              <CardTitle>{tInvoices("detail.issueTitle")}</CardTitle>
+              <CardDescription>{tInvoices("detail.issueDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <IssueInvoiceForm invoiceId={invoice.id} />
@@ -217,7 +214,7 @@ export default async function InvoiceDetailPage({
         {canManage && (invoice.status === "issued" || invoice.status === "partially_paid") && (
           <Card>
             <CardHeader>
-              <CardTitle>Record a payment</CardTitle>
+              <CardTitle>{tInvoices("detail.recordPayment")}</CardTitle>
             </CardHeader>
             <CardContent>
               <RecordPaymentForm invoiceId={invoice.id} />
@@ -228,7 +225,7 @@ export default async function InvoiceDetailPage({
         {payments.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Payments</CardTitle>
+              <CardTitle>{tInvoices("detail.payments")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               {payments.map((p) => (
@@ -247,7 +244,7 @@ export default async function InvoiceDetailPage({
         {creditNotes.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Credit notes</CardTitle>
+              <CardTitle>{tInvoices("detail.creditNotes")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               {creditNotes.map((c) => (
@@ -267,7 +264,7 @@ export default async function InvoiceDetailPage({
           (invoice.status === "draft" || invoice.status === "issued") && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-destructive">Void this invoice</CardTitle>
+                <CardTitle className="text-destructive">{tInvoices("detail.voidTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <VoidInvoiceForm invoiceId={invoice.id} />
@@ -278,12 +275,8 @@ export default async function InvoiceDetailPage({
         {canManage && invoice.amount_paid > 0 && invoice.status !== "void" && (
           <Card>
             <CardHeader>
-              <CardTitle>Issue a credit note</CardTitle>
-              <CardDescription>
-                This invoice has payments recorded, so it can no longer be voided -- a credit note
-                is the correct way to reduce its net revenue while keeping the original document
-                intact for the audit trail.
-              </CardDescription>
+              <CardTitle>{tInvoices("detail.creditNoteTitle")}</CardTitle>
+              <CardDescription>{tInvoices("detail.creditNoteDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <CreditNoteForm invoiceId={invoice.id} />
@@ -294,7 +287,7 @@ export default async function InvoiceDetailPage({
         {invoice.status === "void" && invoice.void_reason && (
           <Card>
             <CardHeader>
-              <CardTitle>Void reason</CardTitle>
+              <CardTitle>{tInvoices("detail.voidReason")}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm">{invoice.void_reason}</p>

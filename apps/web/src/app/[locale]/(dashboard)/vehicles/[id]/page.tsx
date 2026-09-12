@@ -33,7 +33,7 @@ import { COMPLAINT_STATUS_VARIANT, getComplaintSeverityLabel, getComplaintStatus
 import { QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashboard)/quotations/status";
 import { formatAED, formatDate, formatDateTime } from "@/lib/formatters";
 import type { VehicleDiagnosticJson } from "@/lib/vehicle-intelligence/types";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getUnknownVehicleLabel } from "@/lib/display-labels";
 
 type VehicleDetailRow = Pick<
@@ -135,6 +135,7 @@ export default async function VehicleDetailPage({
   const { id } = await params;
   const { member, business } = await requireMembership();
   const locale = await getLocale();
+  const t = await getTranslations("dashboardVehicles.detail");
   const canManage = canManageCustomers(member.role);
   const supabase = await createClient();
 
@@ -288,39 +289,39 @@ export default async function VehicleDetailPage({
         description={
           [vehicle.customer?.full_name, vehicle.plate_number, vehicle.vin]
             .filter(Boolean)
-            .join(" · ") || "Vehicle details"
+            .join(" · ") || t("fallbackDescription")
         }
         action={
           <Link href="/vehicles" className={buttonVariants({ variant: "outline" })}>
-            Back to vehicles
+            {t("back")}
           </Link>
         }
       />
 
       <div className="flex flex-col gap-6 p-6">
         <DetailSummaryCard
-          title="Vehicle summary"
-          description="Core vehicle profile and ownership details."
+          title={t("summaryTitle")}
+          description={t("summaryDescription")}
           rows={[
-            { label: "Customer", value: vehicle.customer?.full_name ?? "Unlinked" },
-            { label: "Make", value: vehicle.make ?? "—" },
-            { label: "Model", value: vehicle.model ?? "—" },
-            { label: "Year", value: vehicle.year ?? "—" },
-            { label: "Plate", value: vehicle.plate_number ?? "—" },
-            { label: "VIN", value: vehicle.vin ?? "—" },
-            { label: "Color", value: vehicle.color ?? "—" },
-            { label: locale === "ar" ? "تاريخ الإنشاء" : "Created", value: formatDateTime(vehicle.created_at, undefined, locale) },
-            { label: locale === "ar" ? "تاريخ التحديث" : "Updated", value: formatDateTime(vehicle.updated_at, undefined, locale) },
+            { label: t("rows.customer"), value: vehicle.customer?.full_name ?? t("unlinked") },
+            { label: t("rows.make"), value: vehicle.make ?? "—" },
+            { label: t("rows.model"), value: vehicle.model ?? "—" },
+            { label: t("rows.year"), value: vehicle.year ?? "—" },
+            { label: t("rows.plate"), value: vehicle.plate_number ?? "—" },
+            { label: t("rows.vin"), value: vehicle.vin ?? "—" },
+            { label: t("rows.color"), value: vehicle.color ?? "—" },
+            { label: t("rows.created"), value: formatDateTime(vehicle.created_at, undefined, locale) },
+            { label: t("rows.updated"), value: formatDateTime(vehicle.updated_at, undefined, locale) },
           ]}
-          status={{ label: vehicle.customer ? "Linked" : "Unlinked", variant: vehicle.customer ? "default" : "outline" }}
+          status={{ label: vehicle.customer ? t("linked") : t("unlinked"), variant: vehicle.customer ? "default" : "outline" }}
           action={
             <div className="flex flex-wrap gap-2">
               <Link href={`/customers/${vehicle.customer_id}`} className={buttonVariants({ variant: "outline" })}>
-                View customer
+                {t("viewCustomer")}
               </Link>
               {canManage && (
                 <Link href={`/vehicles/${vehicle.id}/edit`} className={buttonVariants({ variant: "secondary" })}>
-                  Edit vehicle
+                  {t("editVehicle")}
                 </Link>
               )}
             </div>
@@ -330,16 +331,16 @@ export default async function VehicleDetailPage({
         <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Service history</CardTitle>
-              <CardDescription>Jobs recorded against the linked customer.</CardDescription>
+              <CardTitle>{t("history.title")}</CardTitle>
+              <CardDescription>{t("history.description")}</CardDescription>
             </CardHeader>
             <CardContent>
               {jobError ? (
-                <p className="text-sm text-destructive">We could not load the service history right now.</p>
+                <p className="text-sm text-destructive">{t("history.error")}</p>
               ) : jobs.length === 0 ? (
                 <EmptyState
-                  title="No jobs yet"
-                  description="Jobs for this customer will appear here once they are created."
+                  title={t("history.emptyTitle")}
+                  description={t("history.emptyDescription")}
                 />
               ) : (
                 <>
@@ -350,7 +351,7 @@ export default async function VehicleDetailPage({
                     renderItem={(job) => (
                       <MobileDataCard
                         title={job.title}
-                        subtitle={job.quotation?.quote_number ?? "No quote"}
+                        subtitle={job.quotation?.quote_number ?? t("history.noQuote")}
                         meta={
                           <div className="flex flex-wrap gap-2">
                             <Badge variant={JOB_STATUS_VARIANT[job.status]}>
@@ -367,10 +368,10 @@ export default async function VehicleDetailPage({
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Job</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Quote</TableHead>
-                          <TableHead>Due</TableHead>
+                          <TableHead>{t("history.job")}</TableHead>
+                          <TableHead>{t("history.status")}</TableHead>
+                          <TableHead>{t("history.quote")}</TableHead>
+                          <TableHead>{t("history.due")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -400,16 +401,16 @@ export default async function VehicleDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Related quotes</CardTitle>
-              <CardDescription>Quotes that reference this vehicle.</CardDescription>
+              <CardTitle>{t("quotes.title")}</CardTitle>
+              <CardDescription>{t("quotes.description")}</CardDescription>
             </CardHeader>
             <CardContent>
               {quoteError ? (
-                <p className="text-sm text-destructive">We could not load related quotes right now.</p>
+                <p className="text-sm text-destructive">{t("quotes.error")}</p>
               ) : quotes.length === 0 ? (
                 <EmptyState
-                  title="No quotes yet"
-                  description="Quotes will appear here when they are linked to this vehicle."
+                  title={t("quotes.emptyTitle")}
+                  description={t("quotes.emptyDescription")}
                 />
               ) : (
                 <>
@@ -441,10 +442,10 @@ export default async function VehicleDetailPage({
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Quote</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Total</TableHead>
-                          <TableHead>Created</TableHead>
+                          <TableHead>{t("quotes.quote")}</TableHead>
+                          <TableHead>{t("quotes.status")}</TableHead>
+                          <TableHead>{t("quotes.total")}</TableHead>
+                          <TableHead>{t("quotes.created")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -480,8 +481,8 @@ export default async function VehicleDetailPage({
         <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Vehicle intelligence</CardTitle>
-              <CardDescription>Safety triage, diagnostics, and maintenance follow-up.</CardDescription>
+              <CardTitle>{t("intelligence.title")}</CardTitle>
+              <CardDescription>{t("intelligence.description")}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {diagnostic ? (
@@ -493,8 +494,8 @@ export default async function VehicleDetailPage({
                   maintenancePlan={
                     maintenance
                           ? {
-                          title: "Maintenance plan",
-                          summary: "Latest maintenance plan generated for this vehicle.",
+                          title: t("intelligence.planTitle"),
+                          summary: t("intelligence.planSummary"),
                           items: maintenancePlanItems,
                           nextServiceDate: maintenance.next_service_date,
                           nextServiceMileage: maintenance.next_service_mileage,
@@ -509,21 +510,21 @@ export default async function VehicleDetailPage({
                         href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
                         className={buttonVariants({ variant: "outline" })}
                       >
-                        Open diagnosis workspace
+                        {t("intelligence.open")}
                       </Link>
                     </div>
                   }
                 />
               ) : (
                 <EmptyState
-                  title="No diagnostic result yet"
-                  description="Run a diagnosis to generate a structured AI summary, maintenance plan, and workshop review."
+                  title={t("intelligence.emptyTitle")}
+                  description={t("intelligence.emptyDescription")}
                   action={
                     <Link
                       href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
                       className={buttonVariants()}
                     >
-                      Open diagnosis workspace
+                      {t("intelligence.open")}
                     </Link>
                   }
                 />
@@ -531,7 +532,7 @@ export default async function VehicleDetailPage({
 
               {symptom && (
                 <div className="rounded-lg border bg-muted/20 p-4 text-sm">
-                  <div className="font-medium">Latest symptom report</div>
+                  <div className="font-medium">{t("intelligence.latestSymptom")}</div>
                   <p className="text-muted-foreground mt-2 leading-6">{symptom.symptoms}</p>
                   <div className="text-muted-foreground mt-2 text-xs">
                     {formatDateTime(symptom.created_at, undefined, locale)}
@@ -543,8 +544,8 @@ export default async function VehicleDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Vehicle media</CardTitle>
-              <CardDescription>Attach photos, videos, and documents to this vehicle.</CardDescription>
+              <CardTitle>{t("media.title")}</CardTitle>
+              <CardDescription>{t("media.description")}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <VehicleMediaUpload
@@ -554,8 +555,8 @@ export default async function VehicleDetailPage({
               />
               {mediaUploads.length === 0 ? (
                 <EmptyState
-                  title="No media yet"
-                  description="Uploaded files will appear here once they are recorded against this vehicle."
+                  title={t("media.emptyTitle")}
+                  description={t("media.emptyDescription")}
                 />
               ) : (
                 <div className="grid gap-3">
@@ -575,16 +576,16 @@ export default async function VehicleDetailPage({
         <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Related complaints</CardTitle>
-              <CardDescription>Complaints filed by the linked customer.</CardDescription>
+              <CardTitle>{t("complaints.title")}</CardTitle>
+              <CardDescription>{t("complaints.description")}</CardDescription>
             </CardHeader>
             <CardContent>
               {complaintError ? (
-                <p className="text-sm text-destructive">We could not load related complaints right now.</p>
+                <p className="text-sm text-destructive">{t("complaints.error")}</p>
               ) : complaints.length === 0 ? (
                 <EmptyState
-                  title="No complaints yet"
-                  description="Complaints from the same customer will appear here."
+                  title={t("complaints.emptyTitle")}
+                  description={t("complaints.emptyDescription")}
                 />
               ) : (
                 <div className="grid gap-3">
@@ -613,16 +614,16 @@ export default async function VehicleDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Related documents</CardTitle>
-              <CardDescription>Files linked to the customer, jobs, or quotes.</CardDescription>
+              <CardTitle>{t("documents.title")}</CardTitle>
+              <CardDescription>{t("documents.description")}</CardDescription>
             </CardHeader>
             <CardContent>
               {documentError ? (
-                <p className="text-sm text-destructive">We could not load related documents right now.</p>
+                <p className="text-sm text-destructive">{t("documents.error")}</p>
               ) : relatedDocuments.length === 0 ? (
                 <EmptyState
-                  title="No documents yet"
-                  description="Documents will appear here when they are linked to this vehicle's customer or related records."
+                  title={t("documents.emptyTitle")}
+                  description={t("documents.emptyDescription")}
                 />
               ) : (
                 <div className="grid gap-3">
@@ -633,7 +634,7 @@ export default async function VehicleDetailPage({
                         <Badge variant="outline">{document.document_type}</Badge>
                       </div>
                       <div className="text-muted-foreground mt-1 text-sm">
-                        {document.customer?.full_name ?? document.quotation?.quote_number ?? document.job?.title ?? "Linked record"}
+                        {document.customer?.full_name ?? document.quotation?.quote_number ?? document.job?.title ?? t("documents.linkedRecord")}
                       </div>
                       <div className="text-muted-foreground mt-2 text-xs">
                         {formatDate(document.created_at, undefined, locale)}

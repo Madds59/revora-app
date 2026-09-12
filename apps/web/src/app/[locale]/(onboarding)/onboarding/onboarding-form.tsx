@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useActionState } from "react";
 
 import { createBusiness, type OnboardingState } from "./actions";
@@ -23,31 +25,29 @@ export function OnboardingForm({
   defaultName: string;
   email: string;
 }) {
+  const t = useTranslations("onboarding.owner");
   const [state, action] = useActionState(createBusiness, initial);
 
   return (
     <Card className="w-full max-w-xl">
       <CardHeader>
-        <CardTitle>Create your business</CardTitle>
-        <CardDescription>
-          Set up your workshop, service center, or operations team as the
-          business owner.
-        </CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={action} className="flex flex-col gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Business name</Label>
+            <Label htmlFor="name">{t("businessName")}</Label>
             <Input
               id="name"
               name="name"
               type="text"
-              placeholder="Al Mansoori Auto Workshop"
+              placeholder={t("businessNamePlaceholder")}
               required
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="full_name">Your name</Label>
+            <Label htmlFor="full_name">{t("yourName")}</Label>
             <Input
               id="full_name"
               name="full_name"
@@ -55,14 +55,14 @@ export function OnboardingForm({
               defaultValue={defaultName}
             />
             <p className="text-muted-foreground text-xs">
-              Signed in as {email}
+              {t("signedInAs", { email })}
             </p>
           </div>
           {state.error && (
             <p role="alert" className="text-destructive text-sm">{state.error}</p>
           )}
           <SubmitButton className="w-full">
-            Create business &amp; continue
+            {t("submit")}
           </SubmitButton>
         </form>
       </CardContent>

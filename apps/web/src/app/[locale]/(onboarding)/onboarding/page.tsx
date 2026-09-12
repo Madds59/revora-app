@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -15,6 +16,7 @@ import { OnboardingForm } from "./onboarding-form";
 import { OnboardingIntentForm } from "./onboarding-intent-form";
 
 export default async function OnboardingPage() {
+  const t = await getTranslations("onboarding");
   const user = await getUser();
   if (!user) redirect("/login");
 
@@ -40,13 +42,13 @@ export default async function OnboardingPage() {
     return (
       <>
         <PageHeader
-          title="Join your business"
-          description="An owner or manager must invite your email before you can access the dashboard."
+          title={t("staff.title")}
+          description={t("staff.description")}
         />
         <div className="flex flex-col gap-6 p-6">
           <EmptyState
-            title="Invitation required"
-            description="We couldn&apos;t find a pending business invitation for this account yet. Ask the business owner or manager to invite the same email address you used to sign up."
+            title={t("staff.emptyTitle")}
+            description={t("staff.emptyDescription")}
           />
         </div>
       </>
@@ -64,7 +66,7 @@ export default async function OnboardingPage() {
         <div className="flex flex-col items-center gap-1 text-center">
           <span className="text-2xl font-semibold tracking-tight">Revora</span>
           <span className="text-muted-foreground text-sm">
-            Set up your business workspace.
+            {t("owner.subtitle")}
           </span>
         </div>
         <OnboardingForm defaultName={defaultName} email={user.email ?? ""} />
@@ -75,8 +77,8 @@ export default async function OnboardingPage() {
   return (
     <>
       <PageHeader
-        title="Choose your account type"
-        description="Tell us how you plan to use Revora so we can send you to the right place."
+        title={t("intent.title")}
+        description={t("intent.description")}
       />
       <div className="flex flex-col gap-6 p-6">
         <OnboardingIntentForm />

@@ -16,6 +16,17 @@ import { cn } from "@/lib/utils";
 
 export type FilterOption = { label: string; value: string };
 
+export const DATE_RANGE_VALUES = ["all", "today", "7d", "30d", "90d", "1y"] as const;
+
+/**
+ * Localised date-range options for the toolbar's date filter. Shared by every
+ * admin browser so the labels live once in `common.dateRanges`.
+ */
+export function useDateRangeOptions(): FilterOption[] {
+  const t = useTranslations("common.dateRanges");
+  return DATE_RANGE_VALUES.map((value) => ({ label: t(value), value }));
+}
+
 export function FilterToolbar({
   searchValue,
   onSearchValueChange,

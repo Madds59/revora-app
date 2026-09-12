@@ -47,6 +47,7 @@ function useToast(state: FormState, onSuccess?: () => void) {
 }
 
 export function AddInvoiceItemForm({ invoiceId }: { invoiceId: string }) {
+  const t = useTranslations("dashboardInvoices.controls");
   const [state, action] = useActionState(addInvoiceItem, initial);
   const [kind, setKind] = useState<ItemKind>("service");
   const formRef = useRef<HTMLFormElement>(null);
@@ -58,9 +59,9 @@ export function AddInvoiceItemForm({ invoiceId }: { invoiceId: string }) {
       <input type="hidden" name="kind" value={kind} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label>Type</Label>
+          <Label htmlFor="item-kind">{t("type")}</Label>
           <Select value={kind} onValueChange={(v) => setKind((v as ItemKind) ?? "service")}>
-            <SelectTrigger>
+            <SelectTrigger id="item-kind">
               <SelectValue>{(value) => value}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -73,31 +74,31 @@ export function AddInvoiceItemForm({ invoiceId }: { invoiceId: string }) {
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="item-name">Name</Label>
+          <Label htmlFor="item-name">{t("name")}</Label>
           <Input id="item-name" name="name" required />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="grid gap-2">
-          <Label htmlFor="item-qty">Qty</Label>
+          <Label htmlFor="item-qty">{t("qty")}</Label>
           <Input id="item-qty" name="quantity" type="number" step="0.01" defaultValue={1} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="item-price">Unit price</Label>
+          <Label htmlFor="item-price">{t("unitPrice")}</Label>
           <Input id="item-price" name="unit_price" type="number" step="0.01" defaultValue={0} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="item-discount">Discount</Label>
+          <Label htmlFor="item-discount">{t("discount")}</Label>
           <Input id="item-discount" name="discount_amount" type="number" step="0.01" defaultValue={0} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="item-tax">Tax %</Label>
+          <Label htmlFor="item-tax">{t("taxPercent")}</Label>
           <Input id="item-tax" name="tax_rate" type="number" step="0.01" defaultValue={0} />
         </div>
       </div>
       {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Add item</SubmitButton>
+        <SubmitButton variant="secondary">{t("addItem")}</SubmitButton>
       </div>
     </form>
   );
@@ -118,6 +119,7 @@ export function RemoveInvoiceItemButton({ id, invoiceId }: { id: string; invoice
 }
 
 export function IssueInvoiceForm({ invoiceId }: { invoiceId: string }) {
+  const t = useTranslations("dashboardInvoices.controls");
   const [state, action] = useActionState(issueInvoice, initial);
   useToast(state);
   return (
@@ -125,13 +127,14 @@ export function IssueInvoiceForm({ invoiceId }: { invoiceId: string }) {
       <input type="hidden" name="invoice_id" value={invoiceId} />
       {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton>Issue invoice</SubmitButton>
+        <SubmitButton>{t("issueInvoice")}</SubmitButton>
       </div>
     </form>
   );
 }
 
 export function RecordPaymentForm({ invoiceId }: { invoiceId: string }) {
+  const t = useTranslations("dashboardInvoices.controls");
   const [state, action] = useActionState(recordInvoicePayment, initial);
   const [method, setMethod] = useState<InvoicePaymentMethod>("cash");
   const formRef = useRef<HTMLFormElement>(null);
@@ -143,12 +146,12 @@ export function RecordPaymentForm({ invoiceId }: { invoiceId: string }) {
       <input type="hidden" name="method" value={method} />
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="grid gap-2">
-          <Label>Method</Label>
+          <Label htmlFor="payment-method">{t("method")}</Label>
           <Select
             value={method}
             onValueChange={(v) => setMethod((v as InvoicePaymentMethod) ?? "cash")}
           >
-            <SelectTrigger>
+            <SelectTrigger id="payment-method">
               <SelectValue>{(value) => value?.replaceAll("_", " ")}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -161,17 +164,17 @@ export function RecordPaymentForm({ invoiceId }: { invoiceId: string }) {
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="payment-amount">Amount</Label>
+          <Label htmlFor="payment-amount">{t("amount")}</Label>
           <Input id="payment-amount" name="amount" type="number" step="0.01" required />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="payment-reference">Reference</Label>
+          <Label htmlFor="payment-reference">{t("reference")}</Label>
           <Input id="payment-reference" name="reference" />
         </div>
       </div>
       {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Record payment</SubmitButton>
+        <SubmitButton variant="secondary">{t("recordPayment")}</SubmitButton>
       </div>
     </form>
   );
@@ -195,6 +198,7 @@ export function VoidInvoiceForm({ invoiceId }: { invoiceId: string }) {
 }
 
 export function CreditNoteForm({ invoiceId }: { invoiceId: string }) {
+  const t = useTranslations("dashboardInvoices.controls");
   const [state, action] = useActionState(createInvoiceCreditNote, initial);
   const formRef = useRef<HTMLFormElement>(null);
   useToast(state, () => formRef.current?.reset());
@@ -203,17 +207,17 @@ export function CreditNoteForm({ invoiceId }: { invoiceId: string }) {
       <input type="hidden" name="invoice_id" value={invoiceId} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="credit-amount">Amount</Label>
+          <Label htmlFor="credit-amount">{t("amount")}</Label>
           <Input id="credit-amount" name="amount" type="number" step="0.01" required />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="credit-reason">Reason</Label>
+          <Label htmlFor="credit-reason">{t("reason")}</Label>
           <Input id="credit-reason" name="reason" required />
         </div>
       </div>
       {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Issue credit note</SubmitButton>
+        <SubmitButton variant="secondary">{t("issueCreditNote")}</SubmitButton>
       </div>
     </form>
   );

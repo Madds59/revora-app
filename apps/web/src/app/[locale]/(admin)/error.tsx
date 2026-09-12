@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ErrorState } from "@/components/error-state";
 
 export default function AdminError({
@@ -9,15 +11,16 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPages.admin");
   return (
     <div className="p-6">
       <ErrorState
-        title="Admin error"
-        description="The admin console failed to load. Try again or return to the platform home."
+        title={t("title")}
+        description={t("description")}
         errorDigest={error.digest}
         onRetry={reset}
         backHref="/admin"
-        backLabel="Go to admin home"
+        backLabel={t("backLabel")}
       />
     </div>
   );

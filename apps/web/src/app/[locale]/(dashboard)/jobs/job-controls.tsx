@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { JOB_STATUS_LABELS, getJobStatusLabel } from "@/lib/jobs";
 import type { JobStatus } from "@/lib/database.types";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const initial: FormState = {};
 
@@ -52,6 +52,7 @@ export function JobStatusForm({
   jobId: string;
   current: JobStatus;
 }) {
+  const t = useTranslations("dashboardJobs.controls");
   const [state, action] = useActionState(updateJobStatus, initial);
   const [status, setStatus] = useState<JobStatus>(current);
   const locale = useLocale();
@@ -61,7 +62,7 @@ export function JobStatusForm({
       <input type="hidden" name="id" value={jobId} />
       <input type="hidden" name="status" value={status} />
       <div className="grid gap-2">
-        <Label htmlFor="job-status">Status</Label>
+        <Label htmlFor="job-status">{t("status")}</Label>
         <Select
           value={status}
           onValueChange={(v) => setStatus((v as JobStatus) ?? current)}
@@ -78,12 +79,13 @@ export function JobStatusForm({
           </SelectContent>
         </Select>
       </div>
-      <SubmitButton variant="secondary">Save</SubmitButton>
+      <SubmitButton variant="secondary">{t("save")}</SubmitButton>
     </form>
   );
 }
 
 export function PostUpdateForm({ jobId }: { jobId: string }) {
+  const t = useTranslations("dashboardJobs.controls");
   const [state, action] = useActionState(postJobUpdate, initial);
   const formRef = useRef<HTMLFormElement>(null);
   useToast(state, () => formRef.current?.reset());
@@ -91,12 +93,12 @@ export function PostUpdateForm({ jobId }: { jobId: string }) {
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="job_id" value={jobId} />
       <div className="grid gap-2">
-        <Label htmlFor="update-message">Update</Label>
+        <Label htmlFor="update-message">{t("update")}</Label>
         <Textarea
           id="update-message"
           name="message"
           rows={2}
-          placeholder="e.g. Parts arrived, work resuming today."
+          placeholder={t("updatePlaceholder")}
           required
         />
       </div>
@@ -107,17 +109,18 @@ export function PostUpdateForm({ jobId }: { jobId: string }) {
           defaultChecked
           className="size-4"
         />
-        Visible to customer
+        {t("visibleToCustomer")}
       </label>
       {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton variant="secondary">Post update</SubmitButton>
+        <SubmitButton variant="secondary">{t("postUpdate")}</SubmitButton>
       </div>
     </form>
   );
 }
 
 export function AddTaskForm({ jobId }: { jobId: string }) {
+  const t = useTranslations("dashboardJobs.controls");
   const [state, action] = useActionState(addJobTask, initial);
   const formRef = useRef<HTMLFormElement>(null);
   useToast(state, () => formRef.current?.reset());
@@ -125,10 +128,10 @@ export function AddTaskForm({ jobId }: { jobId: string }) {
     <form ref={formRef} action={action} className="flex items-end gap-3">
       <input type="hidden" name="job_id" value={jobId} />
       <div className="grid flex-1 gap-2">
-        <Label htmlFor="task-title">New task</Label>
-        <Input id="task-title" name="title" placeholder="e.g. Bleed brakes" required />
+        <Label htmlFor="task-title">{t("newTask")}</Label>
+        <Input id="task-title" name="title" placeholder={t("taskPlaceholder")} required />
       </div>
-      <SubmitButton variant="secondary">Add</SubmitButton>
+      <SubmitButton variant="secondary">{t("add")}</SubmitButton>
     </form>
   );
 }
@@ -142,6 +145,7 @@ export function ToggleTaskButton({
   jobId: string;
   isCompleted: boolean;
 }) {
+  const t = useTranslations("dashboardJobs.controls");
   const [state, action] = useActionState(toggleJobTask, initial);
   useToast(state);
   return (
@@ -150,7 +154,7 @@ export function ToggleTaskButton({
       <input type="hidden" name="job_id" value={jobId} />
       <input type="hidden" name="is_completed" value={(!isCompleted).toString()} />
       <Button type="submit" variant={isCompleted ? "ghost" : "outline"} size="sm">
-        {isCompleted ? "Reopen" : "Complete"}
+        {isCompleted ? t("reopen") : t("complete")}
       </Button>
     </form>
   );

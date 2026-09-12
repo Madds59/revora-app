@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireMembership } from "@/lib/auth";
 import { canManageAppointments } from "@/lib/permissions";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatters";
 import { getAppointmentStatusLabel, APPOINTMENT_STATUS_VARIANT } from "@/lib/appointments";
@@ -35,6 +35,7 @@ export default async function AppointmentDetailPage({
   const { member, business } = await requireMembership();
   const canManage = canManageAppointments(member.role);
   const locale = await getLocale();
+  const t = await getTranslations("dashboardAppointments");
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -58,7 +59,7 @@ export default async function AppointmentDetailPage({
       <PageHeader
         title={
           <span className="flex items-center gap-3">
-            {appointment.customer?.full_name ?? "Appointment"}
+            {appointment.customer?.full_name ?? t("fallback.appointment")}
             <Badge variant={APPOINTMENT_STATUS_VARIANT[appointment.status]}>
               {getAppointmentStatusLabel(appointment.status, locale)}
             </Badge>
@@ -67,7 +68,7 @@ export default async function AppointmentDetailPage({
         description={[vehicleLabel, appointment.branch?.name].filter(Boolean).join(" · ")}
         action={
           <Link href={`/${locale}/appointments`} className={buttonVariants({ variant: "outline" })}>
-            Back to appointments
+            {t("back")}
           </Link>
         }
       />
@@ -75,36 +76,36 @@ export default async function AppointmentDetailPage({
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Details</CardTitle>
+            <CardTitle>{t("detail.title")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <div>
-              <span className="text-muted-foreground">Requested window: </span>
+              <span className="text-muted-foreground">{t("detail.requestedWindow")}: </span>
               {formatDateTime(appointment.requested_start, undefined, locale)} –{" "}
               {formatDateTime(appointment.requested_end, undefined, locale)}
             </div>
             {appointment.confirmed_start && (
               <div>
-                <span className="text-muted-foreground">Confirmed: </span>
+                <span className="text-muted-foreground">{t("detail.confirmed")}: </span>
                 {formatDateTime(appointment.confirmed_start, undefined, locale)} –{" "}
                 {formatDateTime(appointment.confirmed_end, undefined, locale)}
               </div>
             )}
             {appointment.customer?.phone && (
               <div>
-                <span className="text-muted-foreground">Phone: </span>
+                <span className="text-muted-foreground">{t("detail.phone")}: </span>
                 {appointment.customer.phone}
               </div>
             )}
             {appointment.notes && (
               <div>
-                <span className="text-muted-foreground">Notes: </span>
+                <span className="text-muted-foreground">{t("detail.notes")}: </span>
                 {appointment.notes}
               </div>
             )}
             {appointment.decline_reason && (
               <div>
-                <span className="text-muted-foreground">Decline reason: </span>
+                <span className="text-muted-foreground">{t("detail.declineReason")}: </span>
                 {appointment.decline_reason}
               </div>
             )}
@@ -115,7 +116,7 @@ export default async function AppointmentDetailPage({
           <>
             <Card>
               <CardHeader>
-                <CardTitle>Confirm this appointment</CardTitle>
+                <CardTitle>{t("detail.confirmTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ConfirmAppointmentForm
@@ -127,7 +128,7 @@ export default async function AppointmentDetailPage({
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-destructive">Decline this appointment</CardTitle>
+                <CardTitle className="text-destructive">{t("detail.declineTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <DeclineAppointmentForm id={appointment.id} />
@@ -139,7 +140,7 @@ export default async function AppointmentDetailPage({
         {canManage && appointment.status === "confirmed" && (
           <Card>
             <CardHeader>
-              <CardTitle>Ready for the appointment</CardTitle>
+              <CardTitle>{t("detail.readyTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3">
               <ConvertToQuotationButton id={appointment.id} />
@@ -156,7 +157,7 @@ export default async function AppointmentDetailPage({
           <Card>
             <CardContent className="pt-6">
               <Link href={`/${locale}/quotations/${appointment.quotation_id}`} className="underline text-sm">
-                View the quotation created from this appointment
+                {t("detail.viewQuotation")}
               </Link>
             </CardContent>
           </Card>

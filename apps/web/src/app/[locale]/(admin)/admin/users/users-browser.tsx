@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
-import { FilterToolbar } from "@/components/filter-toolbar";
+import { FilterToolbar, useDateRangeOptions } from "@/components/filter-toolbar";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import {
   Table,
@@ -26,15 +27,6 @@ import {
 } from "@/lib/filtering";
 import type { AdminUserRow } from "@/lib/admin-views";
 
-const DATE_OPTIONS = [
-  { label: "All time", value: "all" },
-  { label: "Today", value: "today" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-  { label: "Last 90 days", value: "90d" },
-  { label: "Last year", value: "1y" },
-];
-
 export function AdminUsersBrowser({
   users,
   footer,
@@ -44,6 +36,9 @@ export function AdminUsersBrowser({
   totalCount?: number;
   users: AdminUserRow[];
 }) {
+  const t = useTranslations("adminUsers.browser");
+  const tFilters = useTranslations("common.filters");
+  const dateOptions = useDateRangeOptions();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -82,7 +77,7 @@ export function AdminUsersBrowser({
   return (
     <div className="flex flex-col gap-6">
       <FilterToolbar
-        searchPlaceholder="Search users by name or email"
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={search}
         onSearchValueChange={(value) => {
           setSearch(value);
@@ -93,11 +88,10 @@ export function AdminUsersBrowser({
           setRoleFilter(value as typeof roleFilter);
           pushQuery({ role: value === "all" ? null : value, page: null });
         }}
-        statusOptions={[
-          { label: "All users", value: "all" },
-          { label: "Super admins", value: "super_admin" },
-          { label: "Regular users", value: "user" },
-        ]}
+        statusOptions={(["all", "super_admin", "user"] as const).map((value) => ({
+          label: t(`roles.${value}`),
+          value,
+        }))}
         dateValue={dateRange}
         onDateValueChange={(value) => {
           const next = value as DateRange;
@@ -110,10 +104,10 @@ export function AdminUsersBrowser({
             page: null,
           });
         }}
-        dateOptions={DATE_OPTIONS}
+        dateOptions={dateOptions}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{filtered.length} visible</Badge>
+            <Badge variant="secondary">{tFilters("visibleCount", { count: filtered.length })}</Badge>
             <Button
               type="button"
               variant="ghost"
@@ -126,7 +120,7 @@ export function AdminUsersBrowser({
               }}
               disabled={search.length === 0 && dateRange === "all" && roleFilter === "all"}
             >
-              Reset filters
+              {tFilters("reset")}
             </Button>
           </div>
         }
@@ -136,15 +130,15 @@ export function AdminUsersBrowser({
         <CardContent className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">
-              Showing {filtered.length} of {totalCount ?? users.length} users
+              {t("showing", { shown: filtered.length, total: totalCount ?? users.length })}
             </span>
-            <span className="text-muted-foreground">Platform signups and roles</span>
+            <span className="text-muted-foreground">{t("subtitle")}</span>
           </div>
 
           {filtered.length === 0 ? (
             <EmptyState
-              title="No users match"
-              description="Try a different search or reset the filters."
+              title={t("noMatch")}
+              description={tFilters("noMatchDescription")}
             />
           ) : (
             <>
@@ -154,12 +148,12 @@ export function AdminUsersBrowser({
                 getKey={(user) => user.user_id}
                 renderItem={(user) => (
                   <MobileDataCard
-                    title={user.email ?? "No email"}
-                    subtitle={user.full_name ?? "No name"}
+                    title={user.email ?? t("noEmail")}
+                    subtitle={user.full_name ?? t("noName")}
                     meta={
                       <div className="flex flex-wrap gap-2">
                         <Badge variant={user.is_super_admin ? "default" : "outline"}>
-                          {user.is_super_admin ? "Super admin" : "User"}
+                          {user.is_super_admin ? t("superAdmin") : t("user")}
                         </Badge>
                         <span>{user.business_memberships} memberships</span>
                         <span>{user.linked_customers} linked customers</span>
@@ -173,12 +167,12 @@ export function AdminUsersBrowser({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-end">Memberships</TableHead>
-                      <TableHead className="text-end">Linked customers</TableHead>
-                      <TableHead>Created</TableHead>
+                      <TableHead>{t("table.email")}</TableHead>
+                      <TableHead>{t("table.name")}</TableHead>
+                      <TableHead>{t("table.status")}</TableHead>
+                      <TableHead className="text-end">{t("table.memberships")}</TableHead>
+                      <TableHead className="text-end">{t("table.linkedCustomers")}</TableHead>
+                      <TableHead>{t("table.created")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -190,7 +184,7 @@ export function AdminUsersBrowser({
                         </TableCell>
                         <TableCell>
                           <Badge variant={user.is_super_admin ? "default" : "outline"}>
-                            {user.is_super_admin ? "Super admin" : "User"}
+                            {user.is_super_admin ? t("superAdmin") : t("user")}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-end tabular-nums">

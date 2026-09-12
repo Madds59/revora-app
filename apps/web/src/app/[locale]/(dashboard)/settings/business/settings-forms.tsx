@@ -121,7 +121,7 @@ export function AddBranchForm() {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor="branch-name">{t("name")}</Label>
-          <Input id="branch-name" name="name" required placeholder="Main" />
+          <Input id="branch-name" name="name" required placeholder={t("namePlaceholder")} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="branch-phone">{t("phone")}</Label>
@@ -155,7 +155,7 @@ export function AddServiceForm() {
             id="service-name"
             name="name"
             required
-            placeholder="Oil change"
+            placeholder={t("namePlaceholder")}
           />
         </div>
         <div className="grid gap-2">
