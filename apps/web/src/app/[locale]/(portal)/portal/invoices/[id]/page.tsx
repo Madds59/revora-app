@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/page-header";
+import { StatusBanner } from "@/components/status-banner";
+import { ReceiptText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireCustomerPortal } from "@/lib/auth";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/money";
 import { formatDateTime } from "@/lib/formatters";
@@ -33,6 +35,7 @@ export default async function PortalInvoiceDetailPage({
 }) {
   const { id } = await params;
   const locale = await getLocale();
+  const tInvoices = await getTranslations("portalInvoices");
   const { accounts } = await requireCustomerPortal();
   const customerIds = accounts.map((account) => account.id);
   const supabase = await createClient();
@@ -73,24 +76,27 @@ export default async function PortalInvoiceDetailPage({
         description={[invoice.business?.name, vehicleLabel].filter(Boolean).join(" · ")}
         action={
           <Link href={`/${locale}/portal/invoices`} className={buttonVariants({ variant: "outline" })}>
-            Back
+            {tInvoices("back")}
           </Link>
         }
       />
       <div className="flex flex-col gap-6 p-6">
+        <StatusBanner tone="muted" icon={ReceiptText} title={tInvoices("complianceNotice.title")}>
+          <p>{tInvoices("complianceNotice.body")}</p>
+        </StatusBanner>
         <Card>
           <CardHeader>
-            <CardTitle>Line items</CardTitle>
+            <CardTitle>{tInvoices("detail.lineItems")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="text-end">Qty</TableHead>
-                    <TableHead className="text-end">Unit price</TableHead>
-                    <TableHead className="text-end">Total</TableHead>
+                    <TableHead>{tInvoices("detail.item")}</TableHead>
+                    <TableHead className="text-end">{tInvoices("detail.qty")}</TableHead>
+                    <TableHead className="text-end">{tInvoices("detail.unitPrice")}</TableHead>
+                    <TableHead className="text-end">{tInvoices("detail.total")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -110,25 +116,25 @@ export default async function PortalInvoiceDetailPage({
               </Table>
             </div>
 
-            <div className="ml-auto flex w-full max-w-xs flex-col gap-1 text-sm">
+            <div className="ms-auto flex w-full max-w-xs flex-col gap-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{tInvoices("detail.subtotal")}</span>
                 <span>{formatCurrency(invoice.subtotal, invoice.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax</span>
+                <span className="text-muted-foreground">{tInvoices("detail.tax")}</span>
                 <span>{formatCurrency(invoice.tax_total, invoice.currency)}</span>
               </div>
               <div className="flex justify-between font-medium">
-                <span>Total</span>
+                <span>{tInvoices("detail.total")}</span>
                 <span>{formatCurrency(invoice.total, invoice.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Paid</span>
+                <span className="text-muted-foreground">{tInvoices("detail.paid")}</span>
                 <span>{formatCurrency(invoice.amount_paid, invoice.currency)}</span>
               </div>
               <div className="flex justify-between font-medium">
-                <span>Balance due</span>
+                <span>{tInvoices("detail.balanceDue")}</span>
                 <span>{formatCurrency(invoice.balance_due, invoice.currency)}</span>
               </div>
             </div>
@@ -137,18 +143,18 @@ export default async function PortalInvoiceDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Tax details</CardTitle>
+            <CardTitle>{tInvoices("detail.taxDetails")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1 text-sm">
             {invoice.business_trn && (
               <div>
-                <span className="text-muted-foreground">Business TRN: </span>
+                <span className="text-muted-foreground">{tInvoices("detail.businessTrn")}: </span>
                 {invoice.business_trn}
               </div>
             )}
             {invoice.issued_at && (
               <div>
-                <span className="text-muted-foreground">Issued: </span>
+                <span className="text-muted-foreground">{tInvoices("detail.issued")}: </span>
                 {formatDateTime(invoice.issued_at, undefined, locale)}
               </div>
             )}

@@ -12,12 +12,30 @@ must not be presented to customers, regulators, or partners as a legal opinion.
 > [TERMS_PRIVACY_REQUIRED_CLAUSES.md](TERMS_PRIVACY_REQUIRED_CLAUSES.md)) changes
 > that requirement.
 
+## Status 2026-09-12 — what now exists for counsel to review
+
+Draft documents are live in the app (banner-marked "draft — pending legal review"):
+
+| Document | Route | Source |
+|---|---|---|
+| Privacy Policy (EN/AR) | `/legal/privacy` | `apps/web/src/lib/legal/content/privacy.js` |
+| Terms of Service (EN/AR) | `/legal/terms` | `apps/web/src/lib/legal/content/terms.js` |
+| Cookie Policy (EN/AR) | `/legal/cookies` | `apps/web/src/lib/legal/content/cookies.js` |
+| Refund & Cancellation Policy (EN/AR) | `/legal/refunds` | `apps/web/src/lib/legal/content/refunds.js` |
+| Data Processing Addendum (Revora ↔ tenant) | — | [../legal/DPA_DRAFT.md](../legal/DPA_DRAFT.md) |
+
+Consent mechanics now implemented: terms/privacy acceptance at signup (stored as
+`terms_accepted_at` + `terms_version` in auth user metadata), per-customer
+`marketing_consent` capture on the customer form, and portal self-service email/SMS
+opt-out (migration 0038). See [../legal/README.md](../legal/README.md) for how to
+flip the draft banner off once counsel signs off.
+
 ## Review Points for Counsel
 
 1. **Privacy policy** — does a customer-facing and business-facing privacy policy
    exist and accurately describe the data flows in
    [PRIVACY_IMPACT_ASSESSMENT.md](PRIVACY_IMPACT_ASSESSMENT.md) §3 (Supabase,
-   Vercel, Stripe, OpenAI, NHTSA, PostHog, Sentry, and Resend/Twilio if/when
+   Vercel, Stripe, OpenAI, NHTSA, and Resend/Twilio if/when
    enabled)?
 2. **Terms of service** — do they correctly describe Revora's role (platform
    processor) vs. the business's role (controller of its own customer data) for
@@ -62,7 +80,7 @@ must not be presented to customers, regulators, or partners as a legal opinion.
     (already implemented in code, gated behind disabled live-send) meets legal
     minimum requirements before go-live.
 16. **UAE/GCC telecom and sender ID review** — see dedicated checklist.
-17. **Third-party processors** — Supabase, Vercel, Stripe, PostHog, Sentry today;
+17. **Third-party processors** — Supabase (Seoul), Vercel (US), Stripe, OpenAI, NHTSA today;
     Resend/Twilio if/when enabled. Confirm each has adequate contractual terms
     (DPA, SCCs/cross-border transfer mechanism as applicable) for the data they
     process.

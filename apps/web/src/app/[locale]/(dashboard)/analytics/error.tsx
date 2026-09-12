@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ErrorState } from "@/components/error-state";
 
 export default function Error({
@@ -9,14 +11,15 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPages.analytics");
   return (
     <ErrorState
-      title="Analytics failed to load"
-      description="The tenant analytics screen could not finish loading. Retry or return to the dashboard."
+      title={t("title")}
+      description={t("description")}
       errorDigest={error.digest}
       onRetry={reset}
       backHref="/"
-      backLabel="Back to dashboard"
+      backLabel={t("backLabel")}
     />
   );
 }

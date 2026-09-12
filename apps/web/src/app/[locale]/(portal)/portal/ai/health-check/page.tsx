@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
+import { AiAdvisoryNotice } from "@/components/ai-advisory-notice";
 import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
@@ -44,7 +45,8 @@ export default async function PortalHealthCheckPage({
   return (
     <>
       <PageHeader title={t("portal.healthCheckTitle")} description={t("portal.healthCheckDescription")} />
-      <div className="p-6">
+      <div className="flex flex-col gap-6 p-6">
+        <AiAdvisoryNotice />
         <PortalHealthCheckForm initialVehicleId={params.vehicle_id ?? ""} vehicles={vehicles} />
       </div>
     </>

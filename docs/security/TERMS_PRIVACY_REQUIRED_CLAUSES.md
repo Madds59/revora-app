@@ -12,7 +12,7 @@ language — none of the bullet points below are ready-to-publish legal text.**
 - What personal data is collected, from whom (customer vs. staff vs. business),
   and why — see [DATA_CLASSIFICATION_MATRIX.md](DATA_CLASSIFICATION_MATRIX.md).
 - Third parties data is shared with: Supabase, Vercel, Stripe, OpenAI, NHTSA
-  (VIN only), PostHog, Sentry, and Resend/Twilio if/when live notifications are
+  (VIN only), and Resend/Twilio if/when live notifications are
   enabled.
 - Retention periods per data class (pending confirmation — see
   [DATA_RETENTION_AND_DELETION_PLAN.md](DATA_RETENTION_AND_DELETION_PLAN.md)).
@@ -53,8 +53,9 @@ language — none of the bullet points below are ready-to-publish legal text.**
 - Scope of processing Revora performs on the business's behalf (hosting,
   storage, notification dispatch, AI advisory processing of the business's
   customer data).
-- Sub-processor list: Supabase, Vercel, Stripe, OpenAI, Resend, Twilio, PostHog,
-  Sentry — with a commitment to notify the business of material changes.
+- Sub-processor list: Supabase (Seoul), Vercel (US), Stripe, OpenAI, NHTSA, Resend,
+  Twilio — with a commitment to notify the business of material changes. (PostHog and
+  Sentry are not integrated; do not list them.)
 - Security commitments referencing this program's controls (RLS-enforced
   isolation, signed-URL document access, webhook signature verification) as
   evidence of "appropriate technical measures," framed by counsel in whatever

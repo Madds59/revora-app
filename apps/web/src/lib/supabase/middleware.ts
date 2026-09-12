@@ -50,7 +50,10 @@ function isPublicPath(rest: string): boolean {
     rest === "/signup" ||
     rest === "/forgot-password" ||
     rest.startsWith("/auth") ||
-    isInspectionSharePath(rest)
+    isInspectionSharePath(rest) ||
+    // Legal pages must be readable before signup (terms/privacy acceptance).
+    rest === "/legal" ||
+    rest.startsWith("/legal/")
   );
 }
 

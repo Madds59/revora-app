@@ -5,14 +5,58 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import { DetailSummaryCard } from "@/components/detail-summary-card";
+import { Link } from "@/i18n/navigation";
+import {
+  PortalNotificationPreferencesForm,
+  type PortalPreferenceAccount,
+} from "@/components/portal-notification-preferences-form";
 import { requireCustomerPortal, getUser } from "@/lib/auth";
 import { formatDate } from "@/lib/formatters";
+import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Current template-wide email/SMS preference per linked account. A missing row
+ * means "enabled" — that is also how the dispatcher reads it.
+ */
+async function loadPreferenceAccounts(
+  accounts: Awaited<ReturnType<typeof requireCustomerPortal>>["accounts"],
+  workshopFallback: string,
+): Promise<PortalPreferenceAccount[]> {
+  if (accounts.length === 0) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("notification_preferences")
+    .select("business_id, customer_id, channel, enabled")
+    .in(
+      "customer_id",
+      accounts.map((account) => account.id),
+    )
+    .is("template_key", null);
+  const rows = data ?? [];
+  const lookup = (businessId: string, customerId: string, channel: "email" | "sms") =>
+    rows.find(
+      (row) =>
+        row.business_id === businessId &&
+        row.customer_id === customerId &&
+        row.channel === channel,
+    )?.enabled ?? true;
+
+  return accounts.map((account) => ({
+    customerId: account.id,
+    businessId: account.business_id,
+    businessName: account.business?.name ?? workshopFallback,
+    emailEnabled: lookup(account.business_id, account.id, "email"),
+    smsEnabled: lookup(account.business_id, account.id, "sms"),
+  }));
+}
 
 export default async function PortalSettingsPage() {
   const t = await getTranslations("portalSettings");
+  const tLegal = await getTranslations("legal");
   const { accounts } = await requireCustomerPortal();
   const user = await getUser();
   const primary = accounts[0]?.business ?? null;
+  const preferenceAccounts = await loadPreferenceAccounts(accounts, t("fallback.workshop"));
 
   return (
     <>
@@ -82,11 +126,30 @@ export default async function PortalSettingsPage() {
 
             <Card>
               <CardHeader>
+                <CardTitle>{t("preferences.title")}</CardTitle>
+                <CardDescription>{t("preferences.description")}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                {preferenceAccounts.map((account) => (
+                  <PortalNotificationPreferencesForm
+                    key={`${account.businessId}:${account.customerId}`}
+                    account={account}
+                  />
+                ))}
+                <p className="text-muted-foreground text-xs">{t("preferences.note")}</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>{t("security.title")}</CardTitle>
                 <CardDescription>{t("security.description")}</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                {t("security.body")}
+              <CardContent className="text-muted-foreground flex flex-col gap-2 text-sm">
+                <p>{t("security.body")}</p>
+                <Link href="/legal/privacy" className="text-foreground w-fit underline underline-offset-4">
+                  {tLegal("nav.privacy")}
+                </Link>
               </CardContent>
             </Card>
           </>

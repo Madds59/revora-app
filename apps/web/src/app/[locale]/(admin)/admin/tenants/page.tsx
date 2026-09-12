@@ -94,7 +94,7 @@ export default async function AdminTenantsPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-destructive text-sm">{tError("description")}</p>
+              <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
             ) : businesses.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

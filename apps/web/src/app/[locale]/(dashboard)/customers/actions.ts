@@ -32,6 +32,7 @@ export async function createCustomer(
     phone: formData.get("phone"),
     email: formData.get("email"),
     preferredLanguage: formData.get("preferred_language"),
+    marketingConsent: formData.get("marketing_consent"),
   });
   if (!parsed.success) return { error: firstValidationMessage(parsed) };
   const v = parsed.data;
@@ -47,6 +48,7 @@ export async function createCustomer(
       phone: v.phone ?? null,
       email: v.email ?? null,
       preferred_language: v.preferredLanguage as string,
+      marketing_consent: v.marketingConsent,
       created_by: user?.id ?? null,
     })
     .select("id")
@@ -74,6 +76,7 @@ export async function updateCustomer(
     phone: formData.get("phone"),
     email: formData.get("email"),
     preferredLanguage: formData.get("preferred_language"),
+    marketingConsent: formData.get("marketing_consent"),
   });
   if (!parsed.success) return { error: firstValidationMessage(parsed) };
   const v = parsed.data;
@@ -88,6 +91,7 @@ export async function updateCustomer(
       phone: v.phone ?? null,
       email: v.email ?? null,
       preferred_language: v.preferredLanguage as string,
+      marketing_consent: v.marketingConsent,
     })
     .eq("id", v.id)
     .eq("business_id", business.id)

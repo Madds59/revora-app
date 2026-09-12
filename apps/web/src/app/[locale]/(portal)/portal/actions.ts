@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { getUser, requireCustomerPortal } from "@/lib/auth";
-import type { ComplaintSeverity } from "@/lib/database.types";
+import type { ComplaintSeverity, Database } from "@/lib/database.types";
 import { normalizeLocale, switchLocalePath } from "@/lib/locale-path";
 import { enqueueQuoteDecisionNotification } from "@/lib/notifications/service";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -25,6 +25,10 @@ import {
   appointmentIdSchema,
   requestAppointmentSchema,
 } from "@/lib/validation/appointments";
+import {
+  buildPortalPreferenceRows,
+  portalNotificationPreferencesSchema,
+} from "@/lib/validation/notifications";
 
 // Non-enumerating response for missing OR unowned resources (APPSEC-09 Phase 2 /
 // APPSEC-11): a customer must not be able to distinguish "does not exist" from
@@ -463,4 +467,77 @@ export async function rejectQuote(
   revalidatePath(`/portal/quotes/${quoteRow.id}`);
   const locale = normalizeLocale(await getLocale());
   redirect(switchLocalePath("/portal/quotes?quote_status=declined", locale));
+}
+
+/**
+ * Customer self-service opt-out (legal-compliance V1). Writes one template-wide
+ * row per dispatchable channel for ONE of the caller's linked accounts. The
+ * dispatcher already honours `notification_preferences.enabled`, so no send
+ * path changes. The workshop's business-wide gates still apply on top.
+ *
+ * The unique index on notification_preferences is expression-based
+ * (coalesce(template_key, '')), which PostgREST upsert cannot target, so this
+ * updates-then-inserts per channel instead.
+ */
+export async function savePortalNotificationPreferences(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { accounts } = await requireCustomerPortal();
+  const t = await getTranslations("portalSettings.preferences");
+
+  const parsed = portalNotificationPreferencesSchema.safeParse({
+    businessId: formData.get("business_id"),
+    customerId: formData.get("customer_id"),
+    emailEnabled: formData.get("email_enabled"),
+    smsEnabled: formData.get("sms_enabled"),
+  });
+  if (!parsed.success) return { error: firstValidationMessage(parsed) };
+  const v = parsed.data;
+
+  // Ownership: the pair must be one of this session's linked accounts. RLS
+  // (`notification_preferences_customer_manage_own`) is the backstop.
+  const account = accounts.find(
+    (item) => item.id === v.customerId && item.business_id === v.businessId,
+  );
+  if (!account) return { error: t("error") };
+
+  const supabase = await createClient();
+  for (const row of buildPortalPreferenceRows(v)) {
+    // buildPortalPreferenceRows only emits DISPATCHABLE_CHANNELS ("email"|"sms"),
+    // a strict subset of the Postgres enum.
+    const channel = row.channel as Database["public"]["Enums"]["notification_channel"];
+    const { data: updated, error: updateError } = await supabase
+      .from("notification_preferences")
+      .update({ enabled: row.enabled, opted_out_at: row.opted_out_at })
+      .eq("business_id", row.business_id)
+      .eq("customer_id", row.customer_id)
+      .eq("channel", channel)
+      .is("template_key", null)
+      .select("id");
+    if (updateError) {
+      console.error("savePortalNotificationPreferences update failed", updateError);
+      return { error: t("error") };
+    }
+    if (updated && updated.length > 0) continue;
+
+    const { error: insertError } = await supabase
+      .from("notification_preferences")
+      .insert({
+        business_id: row.business_id,
+        customer_id: row.customer_id,
+        channel,
+        template_key: null,
+        enabled: row.enabled,
+        opted_out_at: row.opted_out_at,
+        locale: account.preferred_language ?? "en",
+      });
+    if (insertError) {
+      console.error("savePortalNotificationPreferences insert failed", insertError);
+      return { error: t("error") };
+    }
+  }
+
+  revalidatePath("/portal/settings");
+  return { message: t("saved") };
 }

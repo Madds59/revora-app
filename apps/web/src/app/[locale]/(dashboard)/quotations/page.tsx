@@ -59,7 +59,7 @@ export default async function QuotationsPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{tError("description")}</p>
+          <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
         ) : quotes.length === 0 ? (
           <EmptyState
             title={t("empty.title")}

@@ -96,7 +96,7 @@ export default async function PortalJobsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-destructive text-sm">{tError("description")}</p>
+              <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
             ) : jobs.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

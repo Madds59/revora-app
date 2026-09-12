@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ErrorState } from "@/components/error-state";
 
 export default function VehiclesError({
@@ -9,15 +11,16 @@ export default function VehiclesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errorPages.vehicles");
   return (
     <div className="p-6">
       <ErrorState
-        title="Vehicles error"
-        description="Vehicle management could not be loaded. Try again or return to the dashboard."
+        title={t("title")}
+        description={t("description")}
         errorDigest={error.digest}
         onRetry={reset}
         backHref="/"
-        backLabel="Go to dashboard"
+        backLabel={t("backLabel")}
       />
     </div>
   );

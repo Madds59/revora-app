@@ -95,7 +95,7 @@ export default async function PortalDocumentsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-destructive text-sm">{tError("description")}</p>
+              <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
             ) : rows.length === 0 ? (
               <EmptyState
                 title={t("empty.noDocumentsTitle")}

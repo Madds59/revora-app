@@ -93,7 +93,7 @@ export function BusinessProfileForm({
           <p className="text-muted-foreground text-xs">{t("trnHint")}</p>
         </div>
         {state.error && (
-          <p className="text-destructive text-sm">{state.error}</p>
+          <p role="alert" className="text-destructive text-sm">{state.error}</p>
         )}
         {canEdit && (
           <div>
@@ -121,7 +121,7 @@ export function AddBranchForm() {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor="branch-name">{t("name")}</Label>
-          <Input id="branch-name" name="name" required placeholder="Main" />
+          <Input id="branch-name" name="name" required placeholder={t("namePlaceholder")} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="branch-phone">{t("phone")}</Label>
@@ -132,7 +132,7 @@ export function AddBranchForm() {
           <Input id="branch-email" name="email" type="email" />
         </div>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">{t("add")}</SubmitButton>
       </div>
@@ -155,7 +155,7 @@ export function AddServiceForm() {
             id="service-name"
             name="name"
             required
-            placeholder="Oil change"
+            placeholder={t("namePlaceholder")}
           />
         </div>
         <div className="grid gap-2">
@@ -172,7 +172,7 @@ export function AddServiceForm() {
         <Label htmlFor="service-description">{t("description")}</Label>
         <Textarea id="service-description" name="description" rows={2} />
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">{t("add")}</SubmitButton>
       </div>

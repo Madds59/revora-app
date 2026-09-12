@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { requestAppointment, type FormState } from "../actions";
 import { SubmitButton } from "@/components/submit-button";
@@ -32,6 +33,7 @@ const DUBAI_OFFSET = "+04:00";
 
 export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[] }) {
   const [state, action] = useActionState(requestAppointment, initial);
+  const t = useTranslations("portalAppointments.form");
   const [accountIndex, setAccountIndex] = useState(0);
   const [branchId, setBranchId] = useState(accounts[0]?.branches[0]?.id ?? "");
   const [vehicleId, setVehicleId] = useState("");
@@ -52,7 +54,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
 
       {accounts.length > 1 && (
         <div className="grid gap-2">
-          <Label>Workshop</Label>
+          <Label htmlFor="req-workshop">{t("workshop")}</Label>
           <Select
             value={String(accountIndex)}
             onValueChange={(v) => {
@@ -62,7 +64,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
               setVehicleId("");
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger id="req-workshop">
               <SelectValue>{() => account?.label}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -78,9 +80,9 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
 
       {branches.length > 1 && (
         <div className="grid gap-2">
-          <Label>Branch</Label>
+          <Label htmlFor="req-branch">{t("branch")}</Label>
           <Select value={branchId} onValueChange={(v) => setBranchId(v ?? "")}>
-            <SelectTrigger>
+            <SelectTrigger id="req-branch">
               <SelectValue>{() => branches.find((b) => b.id === branchId)?.name}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -96,10 +98,10 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
 
       {(account?.vehicles.length ?? 0) > 0 && (
         <div className="grid gap-2">
-          <Label htmlFor="vehicle">Vehicle (optional)</Label>
+          <Label htmlFor="vehicle">{t("vehicle")}</Label>
           <Select value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "")}>
             <SelectTrigger id="vehicle">
-              <SelectValue placeholder="Not sure yet">
+              <SelectValue placeholder={t("vehiclePlaceholder")}>
                 {() => account?.vehicles.find((v) => v.id === vehicleId)?.label}
               </SelectValue>
             </SelectTrigger>
@@ -116,7 +118,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="req-start">Preferred start (workshop time, UAE)</Label>
+          <Label htmlFor="req-start">{t("start")}</Label>
           <Input
             id="req-start"
             type="datetime-local"
@@ -126,7 +128,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="req-end">Preferred end</Label>
+          <Label htmlFor="req-end">{t("end")}</Label>
           <Input
             id="req-end"
             type="datetime-local"
@@ -138,13 +140,13 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="notes">What do you need? (optional)</Label>
-        <Textarea id="notes" name="notes" rows={3} placeholder="e.g. brake noise, oil change" />
+        <Label htmlFor="notes">{t("notes")}</Label>
+        <Textarea id="notes" name="notes" rows={3} placeholder={t("notesPlaceholder")} />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton>Request appointment</SubmitButton>
+        <SubmitButton>{t("submit")}</SubmitButton>
       </div>
     </form>
   );
