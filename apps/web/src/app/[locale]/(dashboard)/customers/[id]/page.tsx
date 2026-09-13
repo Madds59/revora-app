@@ -138,7 +138,7 @@ export default async function CustomerDetailPage({
             {canManage && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Add a vehicle</CardTitle>
+                  <CardTitle>{tDetail("addVehicleTitle")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <AddVehicleForm customerId={typedCustomer.id} />
@@ -150,7 +150,7 @@ export default async function CustomerDetailPage({
           <TabsContent value="details" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Customer details</CardTitle>
+                <CardTitle>{tDetail("customerDetailsTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {canManage ? (

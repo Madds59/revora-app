@@ -16,7 +16,7 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { formatCurrency } from "@/lib/money";
 import { getInvoiceStatusLabel, INVOICE_STATUS_VARIANT } from "@/lib/invoices";
 import { createClient } from "@/lib/supabase/server";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Invoice } from "@/lib/database.types";
 
 type Row = Pick<Invoice, "id" | "invoice_number" | "status" | "total" | "currency"> & {
@@ -25,6 +25,7 @@ type Row = Pick<Invoice, "id" | "invoice_number" | "status" | "total" | "currenc
 
 export default async function PortalInvoicesPage() {
   const locale = await getLocale();
+  const t = await getTranslations("portalInvoices");
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
   const customerIds = accounts.map((account) => account.id);
@@ -40,12 +41,12 @@ export default async function PortalInvoicesPage() {
 
   return (
     <>
-      <PageHeader title="Invoices" description="Invoices issued to you by your workshops." />
+      <PageHeader title={t("title")} description={t("description")} />
       <div className="p-6">
         {invoices.length === 0 ? (
           <Card>
             <CardContent className="text-muted-foreground p-10 text-center text-sm">
-              No invoices yet.
+              {t("empty")}
             </CardContent>
           </Card>
         ) : (
@@ -61,7 +62,7 @@ export default async function PortalInvoicesPage() {
                       {inv.invoice_number}
                     </Link>
                   }
-                  subtitle={inv.business?.name ?? "Workshop"}
+                  subtitle={inv.business?.name ?? t("fallback.workshop")}
                   meta={
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={INVOICE_STATUS_VARIANT[inv.status]}>
@@ -77,10 +78,10 @@ export default async function PortalInvoicesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Workshop</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-end">Total</TableHead>
+                    <TableHead>{t("table.invoice")}</TableHead>
+                    <TableHead>{t("table.workshop")}</TableHead>
+                    <TableHead>{t("table.status")}</TableHead>
+                    <TableHead className="text-end">{t("table.total")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -91,7 +92,7 @@ export default async function PortalInvoicesPage() {
                           {inv.invoice_number}
                         </Link>
                       </TableCell>
-                      <TableCell>{inv.business?.name ?? "Workshop"}</TableCell>
+                      <TableCell>{inv.business?.name ?? t("fallback.workshop")}</TableCell>
                       <TableCell>
                         <Badge variant={INVOICE_STATUS_VARIANT[inv.status]}>
                           {getInvoiceStatusLabel(inv.status, locale)}

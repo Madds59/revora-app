@@ -5,6 +5,14 @@ backed by Supabase project `yqscayjvvnpsvocqrrot`).
 
 ## Pre-Deploy
 
+- [ ] Supabase Auth → **Leaked password protection** is enabled in the hosted
+      dashboard (Authentication → Providers → Email → "Prevent use of leaked
+      passwords"). This is a dashboard setting, not a migration; the security
+      advisor (`auth_leaked_password_protection`) flags it when off.
+- [ ] `NEXT_PUBLIC_LEGAL_ENTITY_NAME` / `_ADDRESS` / `_EMAIL` are set in the Vercel
+      project so `/legal/*` and the auth footer show a real controller identity
+      (the footer renders a visible "not configured" hint otherwise)
+
 - [ ] `pnpm lint` / `pnpm typecheck` / `pnpm build` / `pnpm test` all green (from
       `apps/web`)
 - [ ] `git diff --check` clean (repo root)

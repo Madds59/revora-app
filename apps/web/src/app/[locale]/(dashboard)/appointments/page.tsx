@@ -54,7 +54,7 @@ export default async function AppointmentsPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{tError("description")}</p>
+          <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
         ) : appointments.length === 0 ? (
           <EmptyState title={t("empty.title")} description={t("empty.description")} />
         ) : (

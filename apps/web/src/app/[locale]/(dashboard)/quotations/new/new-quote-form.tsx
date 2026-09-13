@@ -77,7 +77,7 @@ export function NewQuoteForm({ customers }: { customers: CustomerOption[] }) {
         </div>
       )}
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton disabled={!customerId}>{t("createDraft")}</SubmitButton>
       </div>

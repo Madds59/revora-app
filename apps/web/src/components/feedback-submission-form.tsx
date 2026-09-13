@@ -182,7 +182,7 @@ export function FeedbackSubmissionForm({
         <Textarea id="description" name="description" rows={6} required />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton>{submitLabel}</SubmitButton>
       </div>

@@ -135,7 +135,7 @@ export function VehicleDiagnosisForm({
           <Input id="symptom_tags" name="symptom_tags" placeholder={t("diagnosis.tagsPlaceholder")} />
         </div>
 
-        {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+        {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
         {state.message && <p className="text-sm text-muted-foreground">{state.message}</p>}
 
         <div>

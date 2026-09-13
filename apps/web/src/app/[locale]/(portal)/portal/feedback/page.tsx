@@ -104,7 +104,7 @@ export default async function PortalFeedbackPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-destructive text-sm">{t("submissions.error")}</p>
+              <p role="alert" className="text-destructive text-sm">{t("submissions.error")}</p>
             ) : reports.length === 0 ? (
               <EmptyState
                 title={t("submissions.empty.title")}

@@ -39,7 +39,7 @@ export default async function AdminOverviewPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{tError("description")}</p>
+          <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((s) => (

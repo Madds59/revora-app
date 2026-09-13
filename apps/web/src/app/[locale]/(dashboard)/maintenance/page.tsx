@@ -85,7 +85,7 @@ export default async function MaintenancePage() {
       <PageHeader title={t("title")} description={t("description")} />
       <div className="p-6">
         {failed ? (
-          <p className="text-destructive text-sm">{tError("description")}</p>
+          <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
         ) : rows.length === 0 ? (
           <EmptyState title={t("empty.title")} description={t("empty.description")} />
         ) : (

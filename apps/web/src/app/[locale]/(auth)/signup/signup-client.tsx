@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Link as LocaleLink } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useActionState, useState } from "react";
 
@@ -68,11 +69,33 @@ export function SignupClient() {
               required
             />
           </div>
+          <div className="grid gap-2">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="accept_terms"
+                required
+                className="accent-primary mt-0.5 size-4 shrink-0"
+              />
+              <span>
+                {t("acceptTermsPrefix")}{" "}
+                <LocaleLink href="/legal/terms" target="_blank" className="underline underline-offset-4">
+                  {t("termsLink")}
+                </LocaleLink>{" "}
+                {t("acceptTermsAnd")}{" "}
+                <LocaleLink href="/legal/privacy" target="_blank" className="underline underline-offset-4">
+                  {t("privacyLink")}
+                </LocaleLink>
+                .
+              </span>
+            </label>
+            <p className="text-muted-foreground text-xs">{t("ageNote")}</p>
+          </div>
           {state.error && (
-            <p className="text-destructive text-sm">{state.error}</p>
+            <p role="alert" className="text-destructive text-sm">{state.error}</p>
           )}
           {state.message && (
-            <p className="text-sm text-emerald-600">{state.message}</p>
+            <p role="status" className="text-primary text-sm">{state.message}</p>
           )}
           <SubmitButton className="w-full" disabled={!accountIntent}>
             {t("createAccount")}

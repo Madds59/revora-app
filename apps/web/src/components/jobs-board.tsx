@@ -9,6 +9,7 @@ import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -108,7 +109,11 @@ export function JobsBoard({ rows }: { rows: JobBoardRow[] }) {
       </div>
 
       <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row">
+        <Label htmlFor="jobs-search" className="sr-only">
+          {t("searchLabel")}
+        </Label>
         <Input
+          id="jobs-search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("searchPlaceholder")}

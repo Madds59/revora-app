@@ -147,3 +147,26 @@ test("security: customer actions validate before mutating and scope by session",
   // Non-enumerating response for a missing/cross-tenant customer.
   assert.match(actions, /Customer not found or unavailable\./);
 });
+
+// Marketing consent is an HTML checkbox: present as "on" when ticked, absent
+// otherwise. It must never default to true and must not reject garbage — an
+// unexpected value simply means "not consented".
+test("customers: marketingConsent parses checkbox semantics", () => {
+  const base = { fullName: "Ahmed", phone: "", email: "", preferredLanguage: "en" };
+
+  const ticked = createCustomerSchema.safeParse({ ...base, marketingConsent: "on" });
+  assert.equal(ticked.success, true);
+  assert.equal(ticked.data.marketingConsent, true);
+
+  const absent = createCustomerSchema.safeParse(base);
+  assert.equal(absent.success, true);
+  assert.equal(absent.data.marketingConsent, false);
+
+  const garbage = createCustomerSchema.safeParse({ ...base, marketingConsent: "yes please" });
+  assert.equal(garbage.success, true);
+  assert.equal(garbage.data.marketingConsent, false);
+
+  const nullish = createCustomerSchema.safeParse({ ...base, marketingConsent: null });
+  assert.equal(nullish.success, true);
+  assert.equal(nullish.data.marketingConsent, false);
+});

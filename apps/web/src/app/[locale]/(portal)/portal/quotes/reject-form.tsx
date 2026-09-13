@@ -45,7 +45,7 @@ export function RejectForm({
           placeholder={t("rejectPlaceholder")}
         />
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="destructive">{t("decline")}</SubmitButton>
       </div>

@@ -46,7 +46,7 @@ export default async function InvoicesPage() {
       <PageHeader title={t("title")} description={t("description")} />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{tError("description")}</p>
+          <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
         ) : invoices.length === 0 ? (
           <EmptyState title={t("empty.title")} description={t("empty.description")} />
         ) : (

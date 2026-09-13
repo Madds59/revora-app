@@ -14,8 +14,8 @@ import { Label } from "@/components/ui/label";
 const initial: AuthState = {};
 
 function FormMessage({ state }: { state: AuthState }) {
-  if (state.error) return <p className="text-destructive text-sm">{state.error}</p>;
-  if (state.message) return <p className="text-sm text-emerald-600">{state.message}</p>;
+  if (state.error) return <p role="alert" className="text-destructive text-sm">{state.error}</p>;
+  if (state.message) return <p role="status" className="text-primary text-sm">{state.message}</p>;
   return null;
 }
 

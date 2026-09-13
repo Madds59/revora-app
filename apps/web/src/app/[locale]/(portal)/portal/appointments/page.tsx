@@ -17,7 +17,7 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { formatDateTime } from "@/lib/formatters";
 import { getAppointmentStatusLabel, APPOINTMENT_STATUS_VARIANT } from "@/lib/appointments";
 import { createClient } from "@/lib/supabase/server";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Appointment } from "@/lib/database.types";
 
 type Row = Pick<
@@ -27,6 +27,7 @@ type Row = Pick<
 
 export default async function PortalAppointmentsPage() {
   const locale = await getLocale();
+  const t = await getTranslations("portalAppointments");
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
   const customerIds = accounts.map((account) => account.id);
@@ -42,11 +43,11 @@ export default async function PortalAppointmentsPage() {
   return (
     <>
       <PageHeader
-        title="Appointments"
-        description="Request a service slot and track your upcoming appointments."
+        title={t("title")}
+        description={t("description")}
         action={
           <Link href="/portal/appointments/new" className={buttonVariants()}>
-            Request appointment
+            {t("request")}
           </Link>
         }
       />
@@ -54,7 +55,7 @@ export default async function PortalAppointmentsPage() {
         {appointments.length === 0 ? (
           <Card>
             <CardContent className="text-muted-foreground p-10 text-center text-sm">
-              No appointments yet.
+              {t("empty")}
             </CardContent>
           </Card>
         ) : (
@@ -67,7 +68,7 @@ export default async function PortalAppointmentsPage() {
                 <MobileDataCard
                   title={
                     <Link href={`/portal/appointments/${a.id}`} className="hover:underline">
-                      {a.business?.name ?? "Workshop"}
+                      {a.business?.name ?? t("fallback.workshop")}
                     </Link>
                   }
                   subtitle={formatDateTime(a.confirmed_start ?? a.requested_start, undefined, locale)}
@@ -83,9 +84,9 @@ export default async function PortalAppointmentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Workshop</TableHead>
-                    <TableHead>When</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t("table.workshop")}</TableHead>
+                    <TableHead>{t("table.when")}</TableHead>
+                    <TableHead>{t("table.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -93,7 +94,7 @@ export default async function PortalAppointmentsPage() {
                     <TableRow key={a.id}>
                       <TableCell>
                         <Link href={`/portal/appointments/${a.id}`} className="font-medium hover:underline">
-                          {a.business?.name ?? "Workshop"}
+                          {a.business?.name ?? t("fallback.workshop")}
                         </Link>
                       </TableCell>
                       <TableCell>

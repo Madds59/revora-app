@@ -29,7 +29,7 @@ export function CustomerForm({
   action: Action;
   customer?: Pick<
     Customer,
-    "id" | "full_name" | "phone" | "email" | "preferred_language"
+    "id" | "full_name" | "phone" | "email" | "preferred_language" | "marketing_consent"
   >;
   submitLabel: string;
 }) {
@@ -99,7 +99,23 @@ export function CustomerForm({
           </SelectContent>
         </Select>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      <div className="grid gap-1">
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="marketing_consent"
+            defaultChecked={customer?.marketing_consent ?? false}
+            className="accent-primary mt-0.5 size-4 shrink-0"
+          />
+          <span>{t("marketingConsent")}</span>
+        </label>
+        <p className="text-muted-foreground ps-6 text-xs">{t("marketingConsentHint")}</p>
+      </div>
+      {state.error && (
+        <p role="alert" className="text-destructive text-sm">
+          {state.error}
+        </p>
+      )}
       <div>
         <SubmitButton>{submitLabel}</SubmitButton>
       </div>

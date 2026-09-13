@@ -5,6 +5,8 @@ This document is operational guidance prepared by the Privacy Owner function. It
 **not legal advice** and does not constitute a compliance certification — see the
 disclaimer in §7.
 
+> **Correction 2026-09-12 (legal-compliance V1):** PostHog and Sentry are **not** integrated — `lib/analytics/track.ts` is a no-op and no telemetry SDK is in `package.json`. Earlier revisions of this document listed them as live processors; they are not. The Supabase project (`yqscayjvvnpsvocqrrot`) is hosted in region **`ap-northeast-2` (Seoul, Republic of Korea)**; Vercel uses its default US region for serverless functions; OpenAI, Stripe, Resend and Twilio process in the United States. The public legal pages at `/legal/{privacy,terms,cookies,refunds}` (source: `apps/web/src/lib/legal/content/`) are drafted from this corrected inventory.
+
 ## 1. Governance Principles
 
 1. **Tenant data belongs to the tenant business**, not to Revora. Revora is a
@@ -39,7 +41,8 @@ have changed since 2026-06-26.
 - **Supabase Postgres** — system of record for all tenant/customer data (see
   classification matrix).
 - **Supabase Storage** — uploaded documents/media (private bucket, signed URLs;
-  public bucket reserved for non-personal assets like logos).
+  public bucket reserved for non-personal assets like logos). The whole Supabase
+  project runs in `ap-northeast-2` (Seoul) — a cross-border transfer from the UAE.
 - **Stripe** — billing/payment data for the *business* (Revora's customer), driven
   by webhook, signature-validated.
 - **OpenAI** (`OPENAI_API_KEY`, server-only) — receives vehicle symptom/diagnostic
@@ -52,13 +55,10 @@ have changed since 2026-06-26.
   disabled) — would receive customer email/phone and message content if live
   notification sending is ever enabled. See
   [NOTIFICATION_SAFETY_TEST_MATRIX.md](NOTIFICATION_SAFETY_TEST_MATRIX.md).
-- **PostHog** — product analytics; confirm event payloads do not include personal
-  data beyond what's necessary (see DevSecOps logging review in
-  [DEVSECOPS_SECURITY_RUNBOOK.md](DEVSECOPS_SECURITY_RUNBOOK.md)).
-- **Sentry** — error tracking; error payloads can inadvertently capture personal
-  data if exceptions include user objects/request bodies — flagged as a review item
-  in the DevSecOps runbook.
-- **Vercel** — hosting/runtime logs.
+- **Vercel** — hosting/runtime logs (US region by default).
+- **No analytics or error-telemetry provider.** PostHog/Sentry were listed in earlier
+  revisions but are not integrated (`lib/analytics/track.ts` is a no-op). Adding one
+  is a privacy-policy and consent change, not just a dependency bump.
 
 ## 4. Logs and Leak Surfaces Reviewed
 

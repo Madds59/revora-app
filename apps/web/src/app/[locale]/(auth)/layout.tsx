@@ -2,6 +2,7 @@ import { ShieldCheck, FileCheck2, MessageSquareHeart } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { Logo, FlagStripe } from "@/components/brand";
+import { LegalFooter } from "@/components/legal-footer";
 
 export default async function AuthLayout({
   children,
@@ -56,7 +57,7 @@ export default async function AuthLayout({
 
         <div className="relative flex items-center gap-3">
           <FlagStripe className="max-w-24 rounded-full" />
-          <span className="text-sidebar-foreground/45 text-xs">{t("madeForUAE")}</span>
+          <span className="text-sidebar-foreground/60 text-xs">{t("madeForUAE")}</span>
         </div>
       </aside>
 
@@ -67,6 +68,7 @@ export default async function AuthLayout({
           <span className="text-muted-foreground text-sm">{t("tagline")}</span>
         </div>
         {children}
+        <LegalFooter className="w-full max-w-2xl items-center text-center sm:items-start sm:text-start" />
       </div>
     </div>
   );

@@ -4,6 +4,8 @@ Owner: Privacy Owner. This is an internal engineering-led PIA to identify and
 mitigate privacy risk in the current architecture. It is **not** a substitute for
 a legal Data Protection Impact Assessment under any specific statute — see §8.
 
+> **Correction 2026-09-12 (legal-compliance V1):** PostHog and Sentry are **not** integrated — `lib/analytics/track.ts` is a no-op and no telemetry SDK is in `package.json`. Earlier revisions of this document listed them as live processors; they are not. The Supabase project (`yqscayjvvnpsvocqrrot`) is hosted in region **`ap-northeast-2` (Seoul, Republic of Korea)**; Vercel uses its default US region for serverless functions; OpenAI, Stripe, Resend and Twilio process in the United States. The public legal pages at `/legal/{privacy,terms,cookies,refunds}` (source: `apps/web/src/lib/legal/content/`) are drafted from this corrected inventory.
+
 ## 1. Scope
 
 Revora's web application (`apps/web`) and Supabase backend, as of `origin/main` @
@@ -23,8 +25,7 @@ customer-portal, and platform-admin processing of personal data.
 | Notifications (currently disabled live) | Customer name, contact channel (email/phone), message content | Product feature, gated off by default |
 | Billing | Business payment/subscription data via Stripe | Necessary for Revora's own commercial relationship with the business |
 | AI Vehicle Intelligence | VIN (to NHTSA), symptom/diagnostic text (to OpenAI) | Product feature; minimization applies (see §4) |
-| Analytics (PostHog) | Usage events, potentially user/business identifiers | Product improvement; should avoid unnecessary personal data in event payloads |
-| Error tracking (Sentry) | Exception context, potentially request/user data if not scrubbed | Operational necessity; needs scrubbing review |
+| Analytics / error telemetry | **None.** No PostHog, Sentry, GA or Vercel Analytics script is integrated (`lib/analytics/track.ts` is a no-op). Server-side `console.error` only. | If either is added later, re-run this PIA and update the Cookie Policy + consent model first |
 | Platform admin oversight | Cross-tenant aggregate counts and per-business owner email (`admin_list_businesses`) | Necessary for platform operation; tightly gated by `is_super_admin()` |
 
 ## 3. Data Flow Summary
@@ -37,11 +38,10 @@ Customer / Staff browser
    -> OpenAI (vehicle symptom text, advisory explanation only)
    -> NHTSA vPIC (VIN only, public API)
    -> Resend / Twilio (disabled today; would carry customer email/phone + message text if enabled)
-   -> PostHog (product analytics)
-   -> Sentry (error telemetry)
 ```
 
-All of the above except NHTSA and (today) Resend/Twilio are live data flows.
+Regions: Supabase `ap-northeast-2` (Seoul); Vercel default US; Stripe/OpenAI/Resend/Twilio US.
+All of the above except (today) Resend/Twilio are live data flows.
 Resend/Twilio credentials exist server-side but live sending is gated off — see
 [NOTIFICATION_SAFETY_TEST_MATRIX.md](NOTIFICATION_SAFETY_TEST_MATRIX.md).
 
@@ -56,8 +56,8 @@ Resend/Twilio credentials exist server-side but live sending is gated off — se
 | Indefinite data retention (no purge policy) | High (no automation exists) | Medium | None automated. Manual deletion is possible **for customer records**; it is **not currently possible for a whole tenant** — hard-deleting a `businesses` row aborts once the tenant has any data (APPSEC-20), leaving soft-delete as the only path | Medium — open item, see [DATA_RETENTION_AND_DELETION_PLAN.md](DATA_RETENTION_AND_DELETION_PLAN.md) |
 | No self-service export/delete | High (feature doesn't exist) | Medium | Manual fallback only | Medium — open item, product/legal scoping needed |
 | Audit log shadow-copy of personal data (`old_data`/`new_data`) complicating erasure | Medium | Medium | RLS restricts read access | Medium — needs legal guidance on reconciling audit retention with erasure requests |
-| Analytics/error tools capturing unintended personal data | Unknown (not instrumented-audited line by line in this pass) | Medium | Not yet reviewed in depth | Medium — tracked in [DEVSECOPS_SECURITY_RUNBOOK.md](DEVSECOPS_SECURITY_RUNBOOK.md) as a follow-up |
-| Cross-border data transfer (Supabase/Vercel/Stripe/OpenAI region) | Unknown region configuration not verified in this pass | Medium | N/A | Needs legal review of UAE PDPL cross-border transfer rules |
+| Analytics/error tools capturing unintended personal data | N/A — none integrated (verified 2026-09-12) | — | Not applicable | None today; becomes Medium the moment a telemetry SDK is added without a scrubbing review |
+| Cross-border data transfer (Supabase Seoul / Vercel US / Stripe, OpenAI, Resend, Twilio US) | Certain — all providers are outside the UAE | Medium–High | Disclosed in the Privacy Policy §5 with a safeguards commitment; no contractual transfer mechanism reviewed yet | **High until counsel confirms a PDPL Art. 22/23 mechanism.** Moving the Supabase project to a nearer/adequate region before launch is the cheapest mitigation |
 
 ## 5. Data Minimization Observations
 
@@ -75,8 +75,9 @@ Resend/Twilio credentials exist server-side but live sending is gated off — se
 1. Decide and document retention windows per
    [DATA_RETENTION_AND_DELETION_PLAN.md](DATA_RETENTION_AND_DELETION_PLAN.md), then
    build a deletion/export flow as a dedicated future project.
-2. Confirm Sentry/PostHog scrubbing configuration excludes personal data fields
-   (emails, names, free-text complaint/symptom content) from telemetry payloads.
+2. If a telemetry SDK (Sentry/PostHog) is ever added, configure scrubbing to exclude
+   personal data fields (emails, names, free-text complaint/symptom content) BEFORE
+   the first deploy, and update the Cookie Policy and consent model.
 3. Before enabling live notification sending, re-run this PIA's §4 row on
    notification risk and get explicit operator sign-off (see
    [REVORA_SECURITY_PROGRAM.md](REVORA_SECURITY_PROGRAM.md) §8).

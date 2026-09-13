@@ -268,7 +268,7 @@ export function NotificationsPanel({
                       </Link>
                     )}
                     {notification.failure_reason && (
-                      <p className="text-destructive text-sm">{notification.failure_reason}</p>
+                      <p role="alert" className="text-destructive text-sm">{notification.failure_reason}</p>
                     )}
                   </div>
 

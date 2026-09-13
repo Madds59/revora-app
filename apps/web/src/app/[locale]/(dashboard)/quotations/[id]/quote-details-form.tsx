@@ -86,7 +86,7 @@ export function QuoteDetailsForm({
           />
         </div>
         {state.error && (
-          <p className="text-destructive text-sm">{state.error}</p>
+          <p role="alert" className="text-destructive text-sm">{state.error}</p>
         )}
         {!disabled && (
           <div>

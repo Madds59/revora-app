@@ -45,7 +45,7 @@ export default async function CustomersPage() {
       />
       <div className="p-6">
         {error ? (
-          <p className="text-destructive text-sm">{tError("description")}</p>
+          <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
         ) : !customers || customers.length === 0 ? (
           <EmptyState
             title={t("empty.title")}

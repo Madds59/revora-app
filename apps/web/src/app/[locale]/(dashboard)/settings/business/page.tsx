@@ -126,7 +126,7 @@ export default async function BusinessSettingsPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={logoUrl}
-                alt="Business logo"
+                alt={locale === "ar" ? "شعار المنشأة" : "Business logo"}
                 className="h-16 w-auto rounded-lg border bg-white object-contain p-2"
               />
             ) : (

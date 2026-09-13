@@ -121,7 +121,7 @@ export default async function HomePage() {
                   <CardTitle
                     className={cn(
                       "text-3xl tabular-nums",
-                      !s.ready && "text-muted-foreground/50",
+                      !s.ready && "text-muted-foreground/80",
                     )}
                   >
                     {s.value}

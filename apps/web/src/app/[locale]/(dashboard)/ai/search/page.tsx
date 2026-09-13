@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { AiAdvisoryNotice } from "@/components/ai-advisory-notice";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -154,6 +155,7 @@ export default async function VehicleIntelligenceSearchPage({
     <>
       <PageHeader title={t("search.title")} description={t("search.description")} />
       <div className="space-y-6 p-6">
+        <AiAdvisoryNotice />
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">

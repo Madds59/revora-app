@@ -11,6 +11,7 @@
 
 import { z } from "zod";
 import {
+  checkbox,
   enumOf,
   optionalEmail,
   optionalPhone,
@@ -32,6 +33,9 @@ const customerFields = {
   phone: optionalPhone(),
   email: optionalEmail(),
   preferredLanguage,
+  // Marketing consent is recorded by the workshop on the customer's behalf;
+  // it defaults to false and is only ever set true by an explicit tick.
+  marketingConsent: checkbox(),
 };
 
 /** createCustomer: no id; tenant scope comes from the session. */

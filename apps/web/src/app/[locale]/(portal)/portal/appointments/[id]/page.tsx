@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireCustomerPortal } from "@/lib/auth";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatters";
 import { getAppointmentStatusLabel, APPOINTMENT_STATUS_VARIANT } from "@/lib/appointments";
@@ -26,6 +26,7 @@ export default async function PortalAppointmentDetailPage({
 }) {
   const { id } = await params;
   const locale = await getLocale();
+  const t = await getTranslations("portalAppointments");
   const { accounts } = await requireCustomerPortal();
   const customerIds = accounts.map((account) => account.id);
   const supabase = await createClient();
@@ -49,7 +50,7 @@ export default async function PortalAppointmentDetailPage({
       <PageHeader
         title={
           <span className="flex items-center gap-3">
-            {appointment.business?.name ?? "Appointment"}
+            {appointment.business?.name ?? t("fallback.appointment")}
             <Badge variant={APPOINTMENT_STATUS_VARIANT[appointment.status]}>
               {getAppointmentStatusLabel(appointment.status, locale)}
             </Badge>
@@ -58,37 +59,37 @@ export default async function PortalAppointmentDetailPage({
         description={vehicleLabel ?? undefined}
         action={
           <Link href={`/${locale}/portal/appointments`} className={buttonVariants({ variant: "outline" })}>
-            Back
+            {t("back")}
           </Link>
         }
       />
       <div className="flex flex-col gap-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Details</CardTitle>
+            <CardTitle>{t("detail.title")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <div>
-              <span className="text-muted-foreground">Requested: </span>
+              <span className="text-muted-foreground">{t("detail.requested")}: </span>
               {formatDateTime(appointment.requested_start, undefined, locale)} –{" "}
               {formatDateTime(appointment.requested_end, undefined, locale)}
             </div>
             {appointment.confirmed_start && (
               <div>
-                <span className="text-muted-foreground">Confirmed: </span>
+                <span className="text-muted-foreground">{t("detail.confirmed")}: </span>
                 {formatDateTime(appointment.confirmed_start, undefined, locale)} –{" "}
                 {formatDateTime(appointment.confirmed_end, undefined, locale)}
               </div>
             )}
             {appointment.notes && (
               <div>
-                <span className="text-muted-foreground">Notes: </span>
+                <span className="text-muted-foreground">{t("detail.notes")}: </span>
                 {appointment.notes}
               </div>
             )}
             {appointment.decline_reason && (
               <div>
-                <span className="text-muted-foreground">The workshop declined: </span>
+                <span className="text-muted-foreground">{t("detail.declined")}: </span>
                 {appointment.decline_reason}
               </div>
             )}

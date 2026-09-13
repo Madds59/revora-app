@@ -126,7 +126,7 @@ export function ComplaintSubmissionForm({
         <Textarea id="description" name="description" rows={5} required />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton disabled={!accountIndex}>{t("submit")}</SubmitButton>
       </div>

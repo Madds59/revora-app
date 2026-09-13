@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
+import { AiAdvisoryNotice } from "@/components/ai-advisory-notice";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
@@ -52,7 +53,8 @@ export default async function VinDecoderPage({
   return (
     <>
       <PageHeader title={t("vin.title")} description={t("vin.description")} />
-      <div className="p-6">
+      <div className="flex flex-col gap-6 p-6">
+        <AiAdvisoryNotice />
         <VinDecoderForm initialVehicleId={params.vehicle_id ?? ""} vehicles={vehicles} />
       </div>
     </>

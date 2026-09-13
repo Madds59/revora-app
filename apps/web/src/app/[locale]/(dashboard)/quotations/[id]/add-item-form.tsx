@@ -23,17 +23,11 @@ const PRODUCT_CATEGORIES = ["genuine", "oem", "aftermarket", "used"] as const;
 
 const initial: FormState = {};
 
-const KIND_LABELS: Record<ItemKind, string> = {
-  service: "Service",
-  labor: "Labor",
-  product: "Product",
-  part: "Part",
-};
-
 export function AddItemForm({ quotationId }: { quotationId: string }) {
   const [state, action] = useActionState(addItem, initial);
   const t = useTranslations("forms.quote");
   const [kind, setKind] = useState<ItemKind>("service");
+  const kindLabel = (value: ItemKind) => t(`kinds.${value}`);
   const formRef = useRef<HTMLFormElement>(null);
   const lastMessage = useRef<string | undefined>(undefined);
 
@@ -62,12 +56,12 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
             onValueChange={(v) => setKind((v as ItemKind) ?? "service")}
           >
             <SelectTrigger id="kind" className="w-full">
-              <SelectValue>{(value) => (value ? KIND_LABELS[value as ItemKind] : null)}</SelectValue>
+              <SelectValue>{(value) => (value ? kindLabel(value as ItemKind) : null)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {ITEM_KINDS.map((k) => (
                 <SelectItem key={k} value={k}>
-                  {KIND_LABELS[k]}
+                  {kindLabel(k)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -75,7 +69,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
         </div>
         <div className="grid gap-2">
           <Label htmlFor="name">{t("name")}</Label>
-          <Input id="name" name="name" required placeholder="Brake pads" />
+          <Input id="name" name="name" required placeholder={t("namePlaceholder")} />
         </div>
       </div>
 
@@ -153,7 +147,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="origin">{t("origin")}</Label>
-            <Input id="origin" name="origin" placeholder="Japan" />
+            <Input id="origin" name="origin" placeholder={t("originPlaceholder")} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="supplier">{t("supplier")}</Label>
@@ -170,7 +164,7 @@ export function AddItemForm({ quotationId }: { quotationId: string }) {
         </fieldset>
       )}
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton variant="secondary">{t("addLineItem")}</SubmitButton>
       </div>
