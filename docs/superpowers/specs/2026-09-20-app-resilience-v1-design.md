@@ -163,33 +163,44 @@ identified: `portal/page`, `quotations/[id]`, `inspections/new`,
 `jobs/[id]`, `invoices`. Error handling per query is preserved (each result's
 `error` is still checked and reported).
 
-**Streaming.** Three pages are split so the shell + primary content paint
-before secondary data:
+**Streaming.** One page is split so the shell + primary content paint before
+secondary data:
 
 | Page | Streams first | Suspense-wrapped |
 |---|---|---|
-| `(dashboard)/dashboard` | header + KPI cards | recent jobs, activity/notifications |
 | `(portal)/portal` | header + vehicles/next appointment | recent quotes, invoices, complaints |
-| `(dashboard)/quotations/[id]` | header + quote details + items | related job, customer history, activity |
 
-Secondary sections become `async` Server Components rendered under
+Its secondary sections become `async` Server Components rendered under
 `<Suspense fallback={<SectionSkeleton rows={n} />}>`. Each keeps its own
 query-error branch. Auth guards run once in the page before any Suspense
 boundary; child sections receive `business.id`/customer ids as props and
 never re-run guards.
+
+The dashboard home and `quotations/[id]` were handled by query
+parallelisation instead of streaming: the dashboard home already batches its
+counts into a single `Promise.all` and has no secondary section left to
+defer, and the quote detail page's approval query drives the header's status
+badge directly, so there is no secondary section that could stream in after
+the header without the header itself waiting on it.
 
 ### 4.4 Draft persistence
 
 **Hook** `src/hooks/use-form-draft.ts`:
 
 ```ts
-const draft = useFormDraft({ key: "quote:new", scope: business.id });
+const draft = useFormDraft({ key: "quote:new", scope: business.id, error: state.error });
 // draft.ref      -> attach to <form>
 // draft.restored -> boolean, true when values were written back on mount
 // draft.savedAt  -> Date | null
 // draft.discard()-> clears storage and resets the form to defaults
 // draft.clear()  -> clears storage only (call on success)
 ```
+
+Signature: `useFormDraft({ key, scope, error?, enabled? })`. `key` and
+`scope` build the storage key; `error` is the current `useActionState` error
+message, checked once the form's native `reset` event settles (see below);
+`enabled` (default `true`) lets a caller opt a form instance out entirely
+(e.g. edit forms) without conditionally calling the hook.
 
 Behaviour:
 
@@ -199,12 +210,29 @@ Behaviour:
   400ms. Skips `type=password`, `type=file`, `type=hidden`, and any control
   with `data-no-draft`. Checkbox groups and multi-selects serialise as arrays.
 - On mount: reads storage; ignores and deletes drafts older than 7 days or
-  with a different `v`; otherwise sets each matching `[name]` control's
-  value (text/textarea/select/radio/checkbox), dispatches an `input` event so
-  any React-observed state updates, and sets `restored = true`.
-- Clears when the action reports success (`state.success === true`, or the
-  form is unmounted immediately after a submit that produced no error — the
-  redirect case) and on `discard()`.
+  with a different `v`; otherwise restores each matching `[name]` control's
+  value and sets `restored = true` (see "Restoring values" below).
+- **Clear-on-submit, restore-on-error:** a `useActionState` form resets its
+  uncontrolled fields via a native `reset` event fired in the same commit
+  that delivers the action result — before any passive effect can run — so
+  the hook can't tell success from failure at submit time. Instead, the
+  form's `submit` handler captures the about-to-be-cleared values into a ref
+  and clears storage optimistically; the `reset` event handler then defers to
+  a macrotask (by which point the latest `error` from `useActionState` has
+  landed via a layout effect) and, only if that error is set, restores both
+  the DOM values and the persisted draft from what was captured. A
+  successful submit's `reset` leaves storage cleared. `discard()` flags its
+  own `form.reset()` to be ignored by this listener and clears the captured
+  values so a discard during an in-flight failed submit can't resurrect the
+  discarded draft.
+- **Restoring values (native setters):** both the on-mount restore and the
+  restore-on-error path write through the DOM prototype's `value`/`checked`
+  setter (the same path browser autofill takes) rather than assigning
+  `el.value` directly, then dispatch `input`/`change` events. This is
+  required for Base UI `<Select>`s, whose hidden input only reacts to a
+  "real" native value change — a plain `el.value = ...` assignment is
+  invisible to it and would leave the visible trigger unsynced with the
+  restored value.
 - All storage access wrapped in try/catch; a throwing `localStorage`
   (private mode, quota) degrades to no persistence, never an error.
 - Cross-tab: no sync; last write wins.
