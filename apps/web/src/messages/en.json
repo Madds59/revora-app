@@ -33,7 +33,7 @@
     "states": {
       "errorRetry": "Try again",
       "errorBack": "Go back",
-      "errorReference": "Reference: {digest}",
+      "errorReference": "Send us reference {digest} and we'll fix it fast.",
       "noEvidence": "No evidence uploaded yet."
     },
     "dateRanges": {
@@ -445,12 +445,12 @@
     "goToPortal": "Go to portal"
   },
   "error": {
-    "code": "Something went wrong",
-    "title": "That didn't work as expected",
-    "description": "An unexpected error occurred. You can try again, or head back to safety. If it keeps happening, please let the team know.",
+    "code": "Page didn't load",
+    "title": "This page didn't load",
+    "description": "We couldn't finish loading this screen. Nothing was lost — your data is safe on the server.",
     "tryAgain": "Try again",
     "backToDashboard": "Back to dashboard",
-    "reference": "Reference: {id}"
+    "reference": "Send us reference {id} and we'll fix it fast."
   },
   "globalError": {
     "code": "Critical error",
@@ -2241,65 +2241,255 @@
     }
   },
   "errorPages": {
-    "portal": {
-      "title": "Portal error",
-      "description": "The customer portal failed to load. Try again or return to the portal home.",
-      "backLabel": "Go to portal home"
-    },
-    "portalSettings": {
-      "title": "Settings failed to load",
-      "description": "The portal settings page could not finish loading. Retry or return to the portal home.",
-      "backLabel": "Back to portal"
-    },
-    "portalDocuments": {
-      "title": "Documents failed to load",
-      "description": "The portal documents list could not finish loading. Retry or return to the portal home.",
-      "backLabel": "Back to portal"
-    },
-    "portalJobs": {
-      "title": "Jobs failed to load",
-      "description": "The portal jobs list could not finish loading. Retry or return to the portal home.",
-      "backLabel": "Back to portal"
+    "generic": {
+      "title": "This page didn't load",
+      "description": "We couldn't finish loading this screen. Nothing was lost — your data is safe. Try again in a moment.",
+      "backLabel": "Go back"
     },
     "dashboard": {
-      "title": "Dashboard error",
-      "description": "The business dashboard failed to load. Try again or return to the home screen.",
+      "title": "Dashboard didn't load",
+      "description": "We couldn't reach your business data just now. Nothing was lost — everything is safe on the server.",
       "backLabel": "Go to dashboard"
+    },
+    "customers": {
+      "title": "Customers didn't load",
+      "description": "We couldn't reach your customer records just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to customers"
     },
     "vehicles": {
-      "title": "Vehicles error",
-      "description": "Vehicle management could not be loaded. Try again or return to the dashboard.",
-      "backLabel": "Go to dashboard"
+      "title": "Vehicles didn't load",
+      "description": "We couldn't reach your vehicle records just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to vehicles"
     },
     "vehicleDetail": {
-      "title": "Vehicle error",
-      "description": "The vehicle detail page failed to load. Try again or go back to the list.",
+      "title": "This vehicle didn't load",
+      "description": "We couldn't open this vehicle's record just now. Nothing was lost — it's safe on the server.",
       "backLabel": "Back to vehicles"
     },
     "vehicleNew": {
-      "title": "Add vehicle error",
-      "description": "The vehicle creation form failed to load. Try again or return to the vehicle list.",
+      "title": "Add vehicle didn't load",
+      "description": "The form didn't open just now. Nothing was lost — try again and your entry will go through.",
       "backLabel": "Back to vehicles"
     },
     "vehicleEdit": {
-      "title": "Edit vehicle error",
-      "description": "The vehicle edit form failed to load. Try again or return to the vehicle list.",
+      "title": "Edit vehicle didn't load",
+      "description": "The form didn't open just now. Nothing was lost — the vehicle record is unchanged.",
       "backLabel": "Back to vehicles"
     },
-    "notifications": {
-      "title": "Notifications failed to load",
-      "description": "The tenant notification center could not finish loading. Retry or go back to the dashboard.",
-      "backLabel": "Back to dashboard"
+    "jobs": {
+      "title": "Jobs didn't load",
+      "description": "We couldn't reach your jobs list just now. Nothing was lost — every job is safe on the server.",
+      "backLabel": "Back to jobs"
+    },
+    "quotations": {
+      "title": "Quotes didn't load",
+      "description": "We couldn't reach your quotes just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to quotes"
+    },
+    "invoices": {
+      "title": "Invoices didn't load",
+      "description": "We couldn't reach your invoices just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to invoices"
+    },
+    "appointments": {
+      "title": "Appointments didn't load",
+      "description": "We couldn't reach your appointments just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to appointments"
+    },
+    "inspections": {
+      "title": "Inspections didn't load",
+      "description": "We couldn't reach your inspections just now. Nothing was lost — every saved result is on the server.",
+      "backLabel": "Back to inspections"
+    },
+    "complaints": {
+      "title": "Complaints didn't load",
+      "description": "We couldn't reach your complaints just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to complaints"
+    },
+    "documents": {
+      "title": "Documents didn't load",
+      "description": "We couldn't reach your documents just now. Nothing was lost — every file is safe in storage.",
+      "backLabel": "Go to dashboard"
+    },
+    "billing": {
+      "title": "Billing didn't load",
+      "description": "We couldn't reach your billing details just now. Your subscription is unaffected.",
+      "backLabel": "Go to dashboard"
     },
     "analytics": {
-      "title": "Analytics failed to load",
-      "description": "The tenant analytics screen could not finish loading. Retry or return to the dashboard.",
-      "backLabel": "Back to dashboard"
+      "title": "Analytics didn't load",
+      "description": "We couldn't build your analytics just now. Nothing was lost — the underlying records are safe.",
+      "backLabel": "Go to dashboard"
+    },
+    "notifications": {
+      "title": "Notifications didn't load",
+      "description": "We couldn't reach your notifications just now. Nothing was lost — they're waiting on the server.",
+      "backLabel": "Go to dashboard"
+    },
+    "settings": {
+      "title": "Settings didn't load",
+      "description": "We couldn't open your business settings just now. Nothing has changed — your settings are intact.",
+      "backLabel": "Go to dashboard"
+    },
+    "ai": {
+      "title": "AI tools didn't load",
+      "description": "We couldn't open this tool just now. Try again — your vehicles and records are unaffected.",
+      "backLabel": "Go to dashboard"
+    },
+    "tools": {
+      "title": "This tool didn't load",
+      "description": "We couldn't open this tool just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to dashboard"
+    },
+    "implementation": {
+      "title": "Implementation didn't load",
+      "description": "We couldn't open your implementation workspace just now. Nothing was lost — your notes are safe.",
+      "backLabel": "Go to dashboard"
+    },
+    "maintenance": {
+      "title": "Maintenance didn't load",
+      "description": "We couldn't reach your maintenance reminders just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Go to dashboard"
+    },
+    "feedback": {
+      "title": "Feedback didn't load",
+      "description": "We couldn't open feedback just now. Nothing was lost — every submission is safe.",
+      "backLabel": "Go to dashboard"
     },
     "admin": {
-      "title": "Admin error",
-      "description": "The admin console failed to load. Try again or return to the platform home.",
+      "title": "Admin didn't load",
+      "description": "We couldn't reach platform data just now. Nothing was lost — try again in a moment.",
       "backLabel": "Go to admin home"
+    },
+    "adminTenants": {
+      "title": "Tenants didn't load",
+      "description": "We couldn't reach the tenant list just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to admin home"
+    },
+    "adminUsers": {
+      "title": "Users didn't load",
+      "description": "We couldn't reach the user list just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to admin home"
+    },
+    "adminSubscriptions": {
+      "title": "Subscriptions didn't load",
+      "description": "We couldn't reach subscription data just now. Billing is unaffected.",
+      "backLabel": "Go to admin home"
+    },
+    "adminBilling": {
+      "title": "Billing didn't load",
+      "description": "We couldn't reach platform billing just now. Stripe records are unaffected.",
+      "backLabel": "Go to admin home"
+    },
+    "adminAnalytics": {
+      "title": "Analytics didn't load",
+      "description": "We couldn't build platform analytics just now. Nothing was lost.",
+      "backLabel": "Go to admin home"
+    },
+    "adminNotifications": {
+      "title": "Notifications didn't load",
+      "description": "We couldn't reach platform notifications just now. Nothing was lost.",
+      "backLabel": "Go to admin home"
+    },
+    "adminAuditLogs": {
+      "title": "Audit logs didn't load",
+      "description": "We couldn't reach the audit log just now. Every entry is still recorded.",
+      "backLabel": "Go to admin home"
+    },
+    "adminSettings": {
+      "title": "Settings didn't load",
+      "description": "We couldn't open platform settings just now. Nothing has changed.",
+      "backLabel": "Go to admin home"
+    },
+    "adminAdmins": {
+      "title": "Admins didn't load",
+      "description": "We couldn't reach the admin list just now. Nothing was lost.",
+      "backLabel": "Go to admin home"
+    },
+    "portal": {
+      "title": "Portal didn't load",
+      "description": "We couldn't reach your workshop data just now. Nothing was lost — it's safe on the server.",
+      "backLabel": "Go to portal home"
+    },
+    "portalJobs": {
+      "title": "Jobs didn't load",
+      "description": "We couldn't reach your jobs just now. Nothing was lost — your workshop still has every detail.",
+      "backLabel": "Back to portal"
+    },
+    "portalQuotes": {
+      "title": "Quotes didn't load",
+      "description": "We couldn't reach your quotes just now. Nothing was lost — any approval you gave is recorded.",
+      "backLabel": "Back to portal"
+    },
+    "portalInvoices": {
+      "title": "Invoices didn't load",
+      "description": "We couldn't reach your invoices just now. Nothing was lost — they're safe with your workshop.",
+      "backLabel": "Back to portal"
+    },
+    "portalAppointments": {
+      "title": "Appointments didn't load",
+      "description": "We couldn't reach your appointments just now. Nothing was lost — your bookings still stand.",
+      "backLabel": "Back to portal"
+    },
+    "portalInspections": {
+      "title": "Inspections didn't load",
+      "description": "We couldn't open your inspection reports just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to portal"
+    },
+    "portalComplaints": {
+      "title": "Complaints didn't load",
+      "description": "We couldn't reach your complaints just now. Nothing was lost — every message you sent is saved.",
+      "backLabel": "Back to portal"
+    },
+    "portalDocuments": {
+      "title": "Documents didn't load",
+      "description": "We couldn't reach your documents just now. Nothing was lost — every file is safe in storage.",
+      "backLabel": "Back to portal"
+    },
+    "portalVehicles": {
+      "title": "Vehicles didn't load",
+      "description": "We couldn't reach your vehicles just now. Nothing was lost — your workshop still has every record.",
+      "backLabel": "Back to portal"
+    },
+    "portalFeedback": {
+      "title": "Feedback didn't load",
+      "description": "We couldn't open feedback just now. Nothing was lost — anything you already sent is saved.",
+      "backLabel": "Back to portal"
+    },
+    "portalMemberships": {
+      "title": "Memberships didn't load",
+      "description": "We couldn't reach your membership details just now. Your plan is unaffected.",
+      "backLabel": "Back to portal"
+    },
+    "portalSettings": {
+      "title": "Settings didn't load",
+      "description": "We couldn't open your settings just now. Nothing has changed — your preferences are intact.",
+      "backLabel": "Back to portal"
+    },
+    "portalAi": {
+      "title": "Health check didn't load",
+      "description": "We couldn't open the health check just now. Try again — your vehicle records are unaffected.",
+      "backLabel": "Back to portal"
+    },
+    "auth": {
+      "title": "Sign-in didn't load",
+      "description": "We couldn't open the sign-in screen just now. Your account is unaffected — refresh to try again.",
+      "backLabel": "Go to sign in"
+    },
+    "onboarding": {
+      "title": "Setup didn't load",
+      "description": "We couldn't open setup just now. Your progress so far is saved — try again to pick up where you left off.",
+      "backLabel": "Back to setup"
+    },
+    "legal": {
+      "title": "This page didn't load",
+      "description": "We couldn't open this document just now. Refresh to try again.",
+      "backLabel": "Go to home"
+    },
+    "share": {
+      "title": "This report didn't open",
+      "description": "We couldn't open the shared inspection just now. The report is safe — re-open the link to try again.",
+      "backLabel": ""
     }
   },
   "adminSettings": {
