@@ -64,6 +64,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
         <div className="grid gap-2">
           <Label htmlFor="req-workshop">{t("workshop")}</Label>
           <Select
+            name="draft_account"
             value={String(accountIndex)}
             onValueChange={(v) => {
               const idx = Number(v);
@@ -89,7 +90,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
       {branches.length > 1 && (
         <div className="grid gap-2">
           <Label htmlFor="req-branch">{t("branch")}</Label>
-          <Select value={branchId} onValueChange={(v) => setBranchId(v ?? "")}>
+          <Select name="draft_branch" value={branchId} onValueChange={(v) => setBranchId(v ?? "")}>
             <SelectTrigger id="req-branch">
               <SelectValue>{() => branches.find((b) => b.id === branchId)?.name}</SelectValue>
             </SelectTrigger>
@@ -107,7 +108,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
       {(account?.vehicles.length ?? 0) > 0 && (
         <div className="grid gap-2">
           <Label htmlFor="vehicle">{t("vehicle")}</Label>
-          <Select value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "")}>
+          <Select name="draft_vehicle" value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "")}>
             <SelectTrigger id="vehicle">
               <SelectValue placeholder={t("vehiclePlaceholder")}>
                 {() => account?.vehicles.find((v) => v.id === vehicleId)?.label}
@@ -129,6 +130,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
           <Label htmlFor="req-start">{t("start")}</Label>
           <Input
             id="req-start"
+            name="draft_start"
             type="datetime-local"
             value={start}
             onChange={(e) => setStart(e.target.value)}
@@ -139,6 +141,7 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
           <Label htmlFor="req-end">{t("end")}</Label>
           <Input
             id="req-end"
+            name="draft_end"
             type="datetime-local"
             value={end}
             onChange={(e) => setEnd(e.target.value)}

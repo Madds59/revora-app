@@ -46,6 +46,21 @@ function skipNamesFor(form: HTMLFormElement): Set<string> {
   return skip;
 }
 
+// Write through the prototype setter so React's value tracker sees a real
+// change (the same path browser autofill takes); Base UI's hidden Select
+// input listens for exactly this.
+function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: string) {
+  const proto = Object.getPrototypeOf(el) as object;
+  const desc = Object.getOwnPropertyDescriptor(proto, "value");
+  if (desc?.set) desc.set.call(el, value);
+  else el.value = value;
+}
+function setNativeChecked(el: HTMLInputElement, checked: boolean) {
+  const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "checked");
+  if (desc?.set) desc.set.call(el, checked);
+  else el.checked = checked;
+}
+
 function applyValues(form: HTMLFormElement, values: Record<string, string | string[]>) {
   for (const [name, value] of Object.entries(values)) {
     const controls = Array.from(form.elements).filter(
@@ -56,11 +71,11 @@ function applyValues(form: HTMLFormElement, values: Record<string, string | stri
     for (const control of controls) {
       const input = control as HTMLInputElement;
       if (input.type === "checkbox" || input.type === "radio") {
-        input.checked = wanted.includes(input.value);
+        setNativeChecked(input, wanted.includes(input.value));
       } else if (control instanceof HTMLSelectElement && control.multiple) {
         for (const option of Array.from(control.options)) option.selected = wanted.includes(option.value);
       } else {
-        control.value = wanted[0] ?? "";
+        setNativeValue(control, wanted[0] ?? "");
       }
       // Let native `onInput`/`onChange` listeners and React-controlled <select> handlers observe the restore.
       control.dispatchEvent(new Event("input", { bubbles: true }));
