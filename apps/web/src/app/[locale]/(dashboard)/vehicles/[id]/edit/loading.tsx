@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Edit vehicle"
       description="Loading the current vehicle and customer options..."
+      variant="form"
     />
   );
 }

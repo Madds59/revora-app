@@ -4,5 +4,5 @@ import { AppShellLoading } from "@/components/app-shell-loading";
 
 export default async function Loading() {
   const t = await getTranslations("portalInspections");
-  return <AppShellLoading title={t("title")} description={t("description")} />;
+  return <AppShellLoading variant="detail" title={t("title")} description={t("description")} />;
 }

@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Submit complaint"
       description="Loading complaint submission form..."
+      variant="form"
     />
   );
 }

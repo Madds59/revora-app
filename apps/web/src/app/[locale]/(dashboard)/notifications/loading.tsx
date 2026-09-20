@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Notifications"
       description="Loading tenant notifications..."
+      variant="list"
     />
   );
 }
