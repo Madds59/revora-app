@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireSuperAdmin } from "@/lib/auth";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 
 import { PromoteAdminForm, RevokeAdminButton } from "./promote-form";
@@ -26,7 +27,7 @@ export default async function AdminsPage() {
   const me = await requireSuperAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_list_super_admins");
-  if (error) console.error("AdminsPage failed to load", error);
+  if (error) reportError(error, { section: "adminAdmins" });
   const admins = (data ?? []) as unknown as AdminSuperAdminRow[];
 
   return (

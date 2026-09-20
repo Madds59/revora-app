@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
 import { formatDate } from "@/lib/formatters";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { PRIVATE_BUCKET } from "@/lib/storage";
 import { uploadDocument } from "@/lib/document-actions";
@@ -60,7 +61,7 @@ export default async function DocumentsPage() {
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
-  if (error) console.error("DocumentsPage failed to load", error);
+  if (error) reportError(error, { section: "documents", businessId: business.id });
 
   const rawRows = (data ?? []) as unknown as DocumentRow[];
   const rows: DocumentView[] = await Promise.all(

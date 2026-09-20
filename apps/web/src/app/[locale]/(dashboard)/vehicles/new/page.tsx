@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 
 import { createVehicle } from "../actions";
@@ -23,7 +24,7 @@ export default async function NewVehiclePage() {
     .eq("business_id", business.id)
     .is("deleted_at", null)
     .order("full_name", { ascending: true });
-  if (error) console.error("NewVehiclePage failed to load", error);
+  if (error) reportError(error, { section: "vehicleNew", businessId: business.id });
 
   const customers: VehicleCustomerOption[] = (customerRows ?? []).map((customer) => ({
     id: customer.id,

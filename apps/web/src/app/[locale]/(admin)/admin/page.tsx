@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { requireSuperAdmin } from "@/lib/auth";
 import type { PlatformMetrics } from "@/lib/admin-views";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminOverviewPage() {
@@ -17,7 +18,7 @@ export default async function AdminOverviewPage() {
   await requireSuperAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_platform_metrics");
-  if (error) console.error("AdminOverviewPage failed to load", error);
+  if (error) reportError(error, { section: "admin" });
   const m = data as unknown as PlatformMetrics | null;
 
   const stats: { label: string; value: number | string }[] = [

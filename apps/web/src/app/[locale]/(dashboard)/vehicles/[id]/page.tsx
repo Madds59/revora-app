@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers, canManageInspections } from "@/lib/permissions";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Complaint, Document, Job, Quotation, Vehicle } from "@/lib/database.types";
 import { JOB_STATUS_VARIANT, getJobStatusLabel } from "@/lib/jobs";
@@ -222,10 +223,10 @@ export default async function VehicleDetailPage({
       .eq("vehicle_id", vehicle.id)
       .order("created_at", { ascending: false }),
   ]);
-  if (jobError) console.error("VehicleDetailPage failed to load jobs", jobError);
-  if (quoteError) console.error("VehicleDetailPage failed to load quotes", quoteError);
-  if (complaintError) console.error("VehicleDetailPage failed to load complaints", complaintError);
-  if (documentError) console.error("VehicleDetailPage failed to load documents", documentError);
+  if (jobError) reportError(jobError, { section: "vehicleDetail", businessId: business.id, extra: { part: "jobs" } });
+  if (quoteError) reportError(quoteError, { section: "vehicleDetail", businessId: business.id, extra: { part: "quotes" } });
+  if (complaintError) reportError(complaintError, { section: "vehicleDetail", businessId: business.id, extra: { part: "complaints" } });
+  if (documentError) reportError(documentError, { section: "vehicleDetail", businessId: business.id, extra: { part: "documents" } });
 
   const jobs = (jobRows ?? []) as unknown as VehicleJobRow[];
   const quotes = (quoteRows ?? []) as unknown as VehicleQuoteRow[];

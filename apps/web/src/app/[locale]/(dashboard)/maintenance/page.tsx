@@ -15,6 +15,7 @@ import { canViewMaintenance } from "@/lib/permissions";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDate } from "@/lib/formatters";
 import { loadMaintenanceWorklist, type WorklistRow } from "@/lib/maintenance/worklist";
+import { reportError } from "@/lib/observability";
 
 type BadgeVariant = "default" | "secondary" | "outline" | "destructive";
 
@@ -77,7 +78,7 @@ export default async function MaintenancePage() {
     rows = await loadMaintenanceWorklist(business.id);
   } catch (error) {
     failed = true;
-    console.error("MaintenancePage failed to load", error);
+    reportError(error, { section: "maintenance", businessId: business.id });
   }
 
   return (

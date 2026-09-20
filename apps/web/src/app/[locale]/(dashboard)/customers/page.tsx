@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
 import { formatDate } from "@/lib/formatters";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Customer } from "@/lib/database.types";
 import { getTranslations } from "next-intl/server";
@@ -30,7 +31,7 @@ export default async function CustomersPage() {
     .eq("business_id", business.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
-  if (error) console.error("CustomersPage failed to load", error);
+  if (error) reportError(error, { section: "customers", businessId: business.id });
 
   return (
     <>

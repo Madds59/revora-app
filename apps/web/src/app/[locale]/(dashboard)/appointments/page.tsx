@@ -16,6 +16,7 @@ import { requireMembership } from "@/lib/auth";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDateTime } from "@/lib/formatters";
 import { getAppointmentStatusLabel, APPOINTMENT_STATUS_VARIANT } from "@/lib/appointments";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Appointment } from "@/lib/database.types";
 
@@ -38,7 +39,7 @@ export default async function AppointmentsPage() {
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
-  if (error) console.error("AppointmentsPage failed to load", error);
+  if (error) reportError(error, { section: "appointments", businessId: business.id });
   const appointments = (data ?? []) as unknown as Row[];
   const requestedCount = appointments.filter((a) => a.status === "requested").length;
 

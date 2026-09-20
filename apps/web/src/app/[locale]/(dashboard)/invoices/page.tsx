@@ -16,6 +16,7 @@ import { requireMembership } from "@/lib/auth";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/money";
 import { getInvoiceStatusLabel, INVOICE_STATUS_VARIANT } from "@/lib/invoices";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Invoice } from "@/lib/database.types";
 
@@ -38,7 +39,7 @@ export default async function InvoicesPage() {
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
-  if (error) console.error("InvoicesPage failed to load", error);
+  if (error) reportError(error, { section: "invoices", businessId: business.id });
   const invoices = (data ?? []) as unknown as Row[];
 
   return (

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/empty-state";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { requireCustomerPortal } from "@/lib/auth";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { signOwnedStorageObject } from "@/lib/storage";
 import { formatDate } from "@/lib/formatters";
@@ -58,7 +59,7 @@ export default async function PortalDocumentsPage() {
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
-  if (error) console.error("PortalDocumentsPage failed to load", error);
+  if (error) reportError(error, { section: "portalDocuments" });
 
   // Signing uses the service role, so each stored path is re-proved against the
   // document row's own business (and job, for the resource-bound job-photos

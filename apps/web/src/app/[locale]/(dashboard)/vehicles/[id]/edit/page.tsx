@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 
 import { updateVehicle } from "../../actions";
@@ -43,7 +44,7 @@ export default async function EditVehiclePage({
   if (vehicleError) {
     throw vehicleError;
   }
-  if (error) console.error("EditVehiclePage failed to load customers", error);
+  if (error) reportError(error, { section: "vehicleEdit", businessId: business.id });
   if (!vehicleRow) notFound();
   const vehicle = vehicleRow as unknown as {
     id: string;

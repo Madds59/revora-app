@@ -17,6 +17,7 @@ import { requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/money";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Quotation } from "@/lib/database.types";
 import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "./status";
@@ -41,7 +42,7 @@ export default async function QuotationsPage() {
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
-  if (error) console.error("QuotationsPage failed to load", error);
+  if (error) reportError(error, { section: "quotations", businessId: business.id });
   const quotes = (data ?? []) as unknown as Row[];
 
   return (

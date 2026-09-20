@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/empty-state";
 import { requireMembership } from "@/lib/auth";
 import { getLocale } from "next-intl/server";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { NotificationEvent } from "@/lib/database.types";
 import { canManageSettings } from "@/lib/permissions";
@@ -40,8 +41,8 @@ export default async function NotificationsPage() {
         .eq("business_id", business.id)
         .maybeSingle(),
     ]);
-  if (error) console.error("NotificationsPage failed to load notifications", error);
-  if (settingsError) console.error("NotificationsPage failed to load settings", settingsError);
+  if (error) reportError(error, { section: "notifications", businessId: business.id });
+  if (settingsError) reportError(settingsError, { section: "notifications", businessId: business.id });
 
   const notifications = (data ?? []) as unknown as NotificationRow[];
   const settings = (settingsData ?? null) as NotificationSettingsRow;

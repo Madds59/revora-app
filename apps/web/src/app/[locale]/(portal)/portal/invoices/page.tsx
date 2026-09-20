@@ -15,6 +15,7 @@ import {
 import { requireCustomerPortal } from "@/lib/auth";
 import { formatCurrency } from "@/lib/money";
 import { getInvoiceStatusLabel, INVOICE_STATUS_VARIANT } from "@/lib/invoices";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Invoice } from "@/lib/database.types";
@@ -36,7 +37,7 @@ export default async function PortalInvoicesPage() {
     .in("customer_id", customerIds.length > 0 ? customerIds : ["00000000-0000-0000-0000-000000000000"])
     .neq("status", "draft")
     .order("created_at", { ascending: false });
-  if (error) console.error("PortalInvoicesPage failed to load", error);
+  if (error) reportError(error, { section: "portalInvoices" });
   const invoices = (data ?? []) as unknown as Row[];
 
   return (

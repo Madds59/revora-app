@@ -16,6 +16,7 @@ import type {
 } from "@/lib/admin-views";
 import { parsePageParam } from "@/lib/filtering";
 import { parseAdminPageSize } from "@/lib/validation/admin";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { AdminSubscriptionsBrowser } from "./subscriptions-browser";
 
@@ -84,7 +85,7 @@ export default async function AdminSubscriptionsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
-  if (error) console.error("AdminSubscriptionsPage failed to load", error);
+  if (error) reportError(error, { section: "adminSubscriptions" });
   const result = (data ?? null) as unknown as PaginatedListResult<AdminSubscriptionFilteredRow> | null;
   const subscriptions = result?.rows ?? [];
   const totalCount = result?.total_count ?? subscriptions.length;

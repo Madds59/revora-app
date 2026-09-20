@@ -37,6 +37,7 @@ import {
 } from "@/lib/formatters";
 import { getLocale } from "next-intl/server";
 import { canManageBusiness } from "@/lib/permissions";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeBillingInvoices } from "@/lib/billing-summary";
 import {
@@ -181,7 +182,7 @@ export default async function BillingPage() {
     .select("*")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
-  if (error) console.error("BillingPage failed to load subscriptions", error);
+  if (error) reportError(error, { section: "billing", businessId: business.id });
 
   const subscriptions = (subRows ?? []) as Subscription[];
   const subscriptionIds = subscriptions.map((subscription) => subscription.id);
@@ -235,10 +236,10 @@ export default async function BillingPage() {
       .order("occurred_at", { ascending: false })
       .limit(10),
   ]);
-  if (planError) console.error("BillingPage failed to load plans", planError);
-  if (invoiceError) console.error("BillingPage failed to load invoice summary", invoiceError);
-  if (billingInvoiceRowsError) console.error("BillingPage failed to load invoice rows", billingInvoiceRowsError);
-  if (paymentEventError) console.error("BillingPage failed to load payment events", paymentEventError);
+  if (planError) reportError(planError, { section: "billing", businessId: business.id, extra: { part: "plans" } });
+  if (invoiceError) reportError(invoiceError, { section: "billing", businessId: business.id, extra: { part: "invoiceSummary" } });
+  if (billingInvoiceRowsError) reportError(billingInvoiceRowsError, { section: "billing", businessId: business.id, extra: { part: "invoiceRows" } });
+  if (paymentEventError) reportError(paymentEventError, { section: "billing", businessId: business.id, extra: { part: "paymentEvents" } });
 
   const plans = (planRows ?? []) as unknown as BillingPlanCatalogRow[];
   const paymentEvents = (paymentEventRows ?? []) as unknown as BillingPaymentEvent[];

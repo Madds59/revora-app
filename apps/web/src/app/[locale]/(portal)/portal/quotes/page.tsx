@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { requireCustomerPortal } from "@/lib/auth";
 import { formatCurrency } from "@/lib/money";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Quotation } from "@/lib/database.types";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -51,7 +52,7 @@ export default async function PortalQuotesPage({
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
-  if (error) console.error("PortalQuotesPage failed to load", error);
+  if (error) reportError(error, { section: "portalQuotes" });
   const quotes = (data ?? []) as unknown as Row[];
   const quoteStatus =
     params && typeof params === "object" && "quote_status" in params

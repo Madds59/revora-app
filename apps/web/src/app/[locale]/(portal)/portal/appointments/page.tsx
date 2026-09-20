@@ -16,6 +16,7 @@ import {
 import { requireCustomerPortal } from "@/lib/auth";
 import { formatDateTime } from "@/lib/formatters";
 import { getAppointmentStatusLabel, APPOINTMENT_STATUS_VARIANT } from "@/lib/appointments";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Appointment } from "@/lib/database.types";
@@ -37,7 +38,7 @@ export default async function PortalAppointmentsPage() {
     .select("id, status, requested_start, confirmed_start, business:businesses(name)")
     .in("customer_id", customerIds.length > 0 ? customerIds : ["00000000-0000-0000-0000-000000000000"])
     .order("created_at", { ascending: false });
-  if (error) console.error("PortalAppointmentsPage failed to load", error);
+  if (error) reportError(error, { section: "portalAppointments" });
   const appointments = (data ?? []) as unknown as Row[];
 
   return (
