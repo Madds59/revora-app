@@ -51,24 +51,18 @@ export default async function PortalQuoteDetailPage({
   const locale = await getLocale();
   const supabase = await createClient();
 
-  const [{ data }, { data: itemRows }, { data: approvalRows }] = await Promise.all([
-    supabase
-      .from("quotations")
-      .select("*, business:businesses(name)")
-      .eq("id", id)
-      .maybeSingle(),
-    supabase
-      .from("quotation_items")
-      .select("*")
-      .eq("quotation_id", id)
-      .order("created_at", { ascending: true }),
-    supabase.from("approvals").select("*").eq("quotation_id", id),
-  ]);
+  const { data } = await supabase
+    .from("quotations")
+    .select("*, business:businesses(name)")
+    .eq("id", id)
+    .maybeSingle();
   if (!data) notFound();
   const quote = data as unknown as QuoteWithBusiness;
 
   // Explicit code-level ownership check in addition to RLS (APPSEC-11),
-  // matching the portal complaint detail page's pattern.
+  // matching the portal complaint detail page's pattern. Runs before the
+  // remaining queries so a customer can never learn from response timing
+  // whether items/approvals exist for a quote they don't own.
   if (
     !accounts.some(
       (account) =>
@@ -78,6 +72,15 @@ export default async function PortalQuoteDetailPage({
   ) {
     notFound();
   }
+
+  const [{ data: itemRows }, { data: approvalRows }] = await Promise.all([
+    supabase
+      .from("quotation_items")
+      .select("*")
+      .eq("quotation_id", id)
+      .order("created_at", { ascending: true }),
+    supabase.from("approvals").select("*").eq("quotation_id", id),
+  ]);
 
   const items = (itemRows ?? []) as QuotationItem[];
   // Approvals are per quote version; pick the one for the current version.

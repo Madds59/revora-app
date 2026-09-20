@@ -13,6 +13,11 @@ const SAFETY_TIMEOUT_MS = 8000;
  * in-app navigation (so a progress bar is warranted).
  */
 function isInAppNavigationClick(event: MouseEvent): boolean {
+  // This listener runs in the capture phase (see addEventListener below), so
+  // `defaultPrevented` here only reflects calls to `preventDefault()` made by
+  // other capture-phase listeners higher in the tree that ran before this one
+  // — it cannot see a bubble-phase handler on the anchor itself, since those
+  // haven't run yet at this point in the dispatch.
   if (event.defaultPrevented || event.button !== 0) return false;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
   const target = event.target as Element | null;
@@ -22,6 +27,7 @@ function isInAppNavigationClick(event: MouseEvent): boolean {
   if (anchor.hasAttribute("download")) return false;
   const url = new URL(anchor.href, window.location.href);
   if (url.origin !== window.location.origin) return false;
+  if (url.pathname.startsWith("/api/")) return false; // file responses, not router navigations
   const samePage = url.pathname === window.location.pathname && url.search === window.location.search;
   if (samePage) return false; // hash-only or no-op
   return true;

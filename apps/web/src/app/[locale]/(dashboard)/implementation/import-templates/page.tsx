@@ -75,6 +75,7 @@ export default async function ImportTemplatesPage() {
 
                 <a
                   href={`/api/launch-ops/templates/${template.slug}`}
+                  download
                   className={buttonVariants({ className: "w-full" })}
                 >
                   {t("download")}
