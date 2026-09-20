@@ -2483,7 +2483,7 @@
     },
     "legal": {
       "title": "This page didn't load",
-      "description": "We couldn't open this document just now. Refresh to try again.",
+      "description": "We couldn't open this document just now. Nothing has changed on your side — refresh to try again.",
       "backLabel": "Go to home"
     },
     "share": {
