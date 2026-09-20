@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 
 import { routing, localeDirection } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/theme-provider";
+import { NavigationProgress } from "@/components/navigation-progress";
 import { Toaster } from "@/components/ui/sonner";
 
 export function generateStaticParams() {
@@ -28,6 +30,9 @@ export default async function LocaleLayout({
       <body className="antialiased">
         <NextIntlClientProvider>
           <ThemeProvider>
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
             {children}
             <Toaster />
           </ThemeProvider>
