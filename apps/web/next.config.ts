@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { withSentryConfig } from "@sentry/nextjs";
 
 /**
  * Baseline response security headers.
@@ -58,5 +59,17 @@ const nextConfig: NextConfig = {
 };
 
 const withNextIntl = createNextIntlPlugin();
+const configWithIntl = withNextIntl(nextConfig);
 
-export default withNextIntl(nextConfig);
+// Sentry's webpack plugin is only attached when a DSN exists at build time,
+// so a build without Sentry is byte-identical to one on main.
+const sentryDsnConfigured = !!(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+export default sentryDsnConfigured
+  ? withSentryConfig(configWithIntl, {
+      silent: true,
+      widenClientFileUpload: false,
+      sourcemaps: { disable: true },
+      telemetry: false,
+    })
+  : configWithIntl;

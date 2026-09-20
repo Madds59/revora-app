@@ -76,6 +76,15 @@ pnpm dev                             # http://localhost:3000
    "not configured" hint.
 5. `cd apps/web && pnpm install && pnpm dev`.
 
+### Error tracking (optional)
+
+Set `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` (same value for both) in
+`apps/web/.env.local` to send `reportError()` calls to Sentry, and
+`SENTRY_ENVIRONMENT` / `NEXT_PUBLIC_SENTRY_ENVIRONMENT` to label the
+reported environment (defaults to `VERCEL_ENV`, then `"development"`).
+Leave all four empty and Sentry is a no-op: `reportError` just logs to the
+console and the build's Sentry webpack plugin is never attached.
+
 ## Try it
 
 1. Sign up → you'll be sent to **/onboarding** → create a business (you become owner).
