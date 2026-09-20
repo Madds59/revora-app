@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { requestAppointment, type FormState } from "../actions";
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormDraft } from "@/hooks/use-form-draft";
 
 type AccountOption = {
   customerId: string;
@@ -39,12 +41,18 @@ export function RequestAppointmentForm({ accounts }: { accounts: AccountOption[]
   const [vehicleId, setVehicleId] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const draft = useFormDraft({
+    key: "appointment:request",
+    scope: accounts[0]?.customerId,
+    error: state.error,
+  });
 
   const account = accounts[accountIndex];
   const branches = useMemo(() => account?.branches ?? [], [account]);
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form ref={draft.ref} action={action} className="flex flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       <input type="hidden" name="customer_id" value={account?.customerId ?? ""} />
       <input type="hidden" name="business_id" value={account?.businessId ?? ""} />
       <input type="hidden" name="branch_id" value={branchId} />

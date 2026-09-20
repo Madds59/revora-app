@@ -60,7 +60,12 @@ export default async function NewVehiclePage() {
             }
           />
         ) : (
-          <VehicleForm action={createVehicle} submitLabel={t("submit")} customers={customers} />
+          <VehicleForm
+            action={createVehicle}
+            submitLabel={t("submit")}
+            customers={customers}
+            draftScope={business.id}
+          />
         )}
       </div>
     </>

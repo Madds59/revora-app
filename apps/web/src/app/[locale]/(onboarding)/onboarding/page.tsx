@@ -69,7 +69,7 @@ export default async function OnboardingPage() {
             {t("owner.subtitle")}
           </span>
         </div>
-        <OnboardingForm defaultName={defaultName} email={user.email ?? ""} />
+        <OnboardingForm defaultName={defaultName} email={user.email ?? ""} userId={user.id} />
       </div>
     );
   }

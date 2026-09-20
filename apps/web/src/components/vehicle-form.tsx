@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import type { Vehicle } from "@/lib/database.types";
 
 export type VehicleFormState = { error?: string; message?: string };
@@ -37,6 +39,7 @@ export function VehicleForm({
   vehicle,
   selectedCustomerId,
   lockCustomerSelection = false,
+  draftScope,
 }: {
   action: VehicleFormAction;
   customers: VehicleCustomerOption[];
@@ -44,10 +47,17 @@ export function VehicleForm({
   selectedCustomerId?: string;
   submitLabel: string;
   vehicle?: Pick<Vehicle, "id" | "customer_id" | "make" | "model" | "year" | "plate_number" | "vin" | "color">;
+  draftScope?: string;
 }) {
   const [state, formAction] = useActionState(action, initial);
   const t = useTranslations("forms.vehicle");
   const lastMessage = useRef<string | undefined>(undefined);
+  const draft = useFormDraft({
+    key: "vehicle:new",
+    scope: draftScope,
+    error: state.error,
+    enabled: !vehicle,
+  });
   const selectedCustomer = useMemo(
     () => customers.find((customer) => customer.id === (selectedCustomerId ?? vehicle?.customer_id)) ?? null,
     [customers, selectedCustomerId, vehicle?.customer_id],
@@ -68,7 +78,8 @@ export function VehicleForm({
   }, [state.error, state.message]);
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-4">
+    <form ref={draft.ref} action={formAction} className="flex max-w-2xl flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       {vehicle && <input type="hidden" name="id" value={vehicle.id} />}
       {selectedCustomerId && lockCustomerSelection && (
         <input type="hidden" name="customer_id" value={selectedCustomerId} />

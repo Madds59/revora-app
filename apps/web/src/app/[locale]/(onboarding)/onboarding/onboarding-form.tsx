@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 
 import { createBusiness, type OnboardingState } from "./actions";
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import {
   Card,
@@ -15,18 +16,22 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFormDraft } from "@/hooks/use-form-draft";
 
 const initial: OnboardingState = {};
 
 export function OnboardingForm({
   defaultName,
   email,
+  userId,
 }: {
   defaultName: string;
   email: string;
+  userId: string;
 }) {
   const t = useTranslations("onboarding.owner");
   const [state, action] = useActionState(createBusiness, initial);
+  const draft = useFormDraft({ key: "onboarding", scope: userId, error: state.error });
 
   return (
     <Card className="w-full max-w-xl">
@@ -35,7 +40,8 @@ export function OnboardingForm({
         <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={action} className="flex flex-col gap-4">
+        <form ref={draft.ref} action={action} className="flex flex-col gap-4">
+          {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
           <div className="grid gap-2">
             <Label htmlFor="name">{t("businessName")}</Label>
             <Input

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_SEVERITIES,
@@ -58,6 +60,15 @@ export function FeedbackSubmissionForm({
   const [browserInfo, setBrowserInfo] = useState("");
   const formRef = useRef<HTMLFormElement | null>(null);
   const lastMessage = useRef<string | undefined>(undefined);
+  const draft = useFormDraft({
+    key: "feedback:new",
+    scope: businessId ?? accounts?.[0]?.businessId,
+    error: state.error,
+  });
+  const setFormRef = (el: HTMLFormElement | null) => {
+    formRef.current = el;
+    draft.ref(el);
+  };
 
   const categoryOptions = useMemo(() => FEEDBACK_CATEGORIES, []);
   const severityOptions = useMemo(() => FEEDBACK_SEVERITIES, []);
@@ -87,7 +98,8 @@ export function FeedbackSubmissionForm({
   }, [accounts, state.error, state.message]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+    <form ref={setFormRef} action={formAction} className="flex flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="page_url" value={pageUrl} />

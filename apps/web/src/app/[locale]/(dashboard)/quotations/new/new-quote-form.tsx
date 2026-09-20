@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { createQuote, type FormState } from "../actions";
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormDraft } from "@/hooks/use-form-draft";
 
 export type CustomerOption = {
   id: string;
@@ -22,10 +24,17 @@ export type CustomerOption = {
 
 const initial: FormState = {};
 
-export function NewQuoteForm({ customers }: { customers: CustomerOption[] }) {
+export function NewQuoteForm({
+  customers,
+  businessId,
+}: {
+  customers: CustomerOption[];
+  businessId: string;
+}) {
   const [state, action] = useActionState(createQuote, initial);
   const t = useTranslations("forms.quote");
   const [customerId, setCustomerId] = useState<string>("");
+  const draft = useFormDraft({ key: "quote:new", scope: businessId, error: state.error });
 
   const vehicles = useMemo(
     () => customers.find((c) => c.id === customerId)?.vehicles ?? [],
@@ -33,7 +42,8 @@ export function NewQuoteForm({ customers }: { customers: CustomerOption[] }) {
   );
 
   return (
-    <form action={action} className="flex max-w-lg flex-col gap-4">
+    <form ref={draft.ref} action={action} className="flex max-w-lg flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       <div className="grid gap-2">
         <Label htmlFor="customer_id">{t("customer")}</Label>
         <Select

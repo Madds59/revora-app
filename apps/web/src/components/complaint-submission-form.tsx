@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import type { ComplaintSeverity } from "@/lib/database.types";
 import { getComplaintSeverityLabel } from "@/lib/complaints";
 
@@ -48,6 +50,11 @@ export function ComplaintSubmissionForm({
   const locale = useLocale();
   const [accountIndex, setAccountIndex] = useState(accounts[0]?.customer_id ?? "");
   const lastMessage = useRef<string | undefined>(undefined);
+  const draft = useFormDraft({
+    key: "complaint:new",
+    scope: accounts[0]?.customer_id,
+    error: state.error,
+  });
 
   const selectedAccount = useMemo(
     () => accounts.find((account) => account.customer_id === accountIndex),
@@ -66,7 +73,8 @@ export function ComplaintSubmissionForm({
   }, [state.error, state.message]);
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-4">
+    <form ref={draft.ref} action={formAction} className="flex max-w-2xl flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       <div className="grid gap-2">
         <Label htmlFor="customer_id">{t("businessAccount")}</Label>
         <Select
