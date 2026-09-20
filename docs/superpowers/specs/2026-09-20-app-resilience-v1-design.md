@@ -275,20 +275,28 @@ cutoff, malformed JSON), and key construction.
 
 **Files:**
 
-- `sentry.client.config.ts`, `sentry.server.config.ts`,
-  `sentry.edge.config.ts` — each calls `Sentry.init` only when a DSN is
-  present (`NEXT_PUBLIC_SENTRY_DSN` client-side, `SENTRY_DSN` server/edge);
-  `environment` from `SENTRY_ENVIRONMENT ?? VERCEL_ENV ?? "development"`;
-  `tracesSampleRate: 0` (errors only in V1); `sendDefaultPii: false`.
+- `src/instrumentation-client.ts` — browser init, the Next ≥15.3
+  bundler-agnostic convention (replaces the deprecated
+  `sentry.client.config.ts` webpack-only injection); calls `Sentry.init`
+  only when `NEXT_PUBLIC_SENTRY_DSN` is present, with `environment` from
+  `NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? NEXT_PUBLIC_VERCEL_ENV ??
+  "development"`; `tracesSampleRate: 0`; `sendDefaultPii: false`.
+- `sentry.server.config.ts`, `sentry.edge.config.ts` — each calls
+  `Sentry.init` only when `SENTRY_DSN` is present; `environment` from
+  `SENTRY_ENVIRONMENT ?? VERCEL_ENV ?? "development"`; `tracesSampleRate: 0`
+  (errors only in V1); `sendDefaultPii: false`.
 - `src/instrumentation.ts` — `register()` imports the server/edge config per
   runtime; `onRequestError = Sentry.captureRequestError` so Server Action and
   RSC render errors are captured with route context.
 - `next.config.ts` — wrapped with `withSentryConfig(config, { silent: true,
-  widenClientFileUpload: false, sourcemaps: { disable: true } })` **only when
-  `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` is set at build time**; otherwise
-  the current export is returned untouched. The SDK is never initialised or
-  loaded at runtime; the edge bundle still contains the inert SDK code because
-  the Edge bundler inlines dynamic imports (≈80 kB), which is accepted.
+  widenClientFileUpload: false, sourcemaps: { disable: true } })`, imported
+  from the `@sentry/nextjs/config` subpath (avoids the deprecated top-level
+  `@sentry/nextjs` import-path warning), **only when `SENTRY_DSN` or
+  `NEXT_PUBLIC_SENTRY_DSN` is set at build time**; otherwise the current
+  export is returned untouched. The SDK is never initialised or loaded at
+  runtime without a DSN; the edge bundle still carries the inert SDK code
+  because the Edge bundler inlines dynamic imports (≈80 kB) regardless of
+  whether they run, which is accepted.
 - `src/lib/observability.ts` — exports:
 
   ```ts
@@ -304,7 +312,9 @@ cutoff, malformed JSON), and key construction.
 - `beforeSend` (all three configs): drop events whose error is
   `NEXT_REDIRECT` / `NEXT_NOT_FOUND` / `NEXT_HTTP_ERROR_FALLBACK`; strip
   `request.data`, cookies and headers; drop breadcrumbs of category `console`
-  that contain an `@`.
+  that contain an `@`; scrubs `request.url` / `query_string` /
+  `contexts.nextjs.request_path` / navigation breadcrumbs (drops query
+  strings; redacts `/i/<token>` share paths).
 
 **Call sites:** every `error.tsx` + `global-error.tsx` (via
 `RouteErrorBoundary`), and the 26 page-level `console.error("XPage failed to

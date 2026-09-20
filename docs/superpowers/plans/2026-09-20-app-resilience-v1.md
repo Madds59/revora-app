@@ -33,7 +33,7 @@
 | File | Responsibility |
 |---|---|
 | `src/lib/observability.ts` | `reportError()` — the only Sentry touchpoint; console fallback without DSN |
-| `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` | DSN-gated `Sentry.init` per runtime with shared `beforeSend` scrubbing |
+| `src/instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` | DSN-gated `Sentry.init` per runtime with shared `beforeSend` scrubbing |
 | `src/lib/sentry-shared.ts` | `shouldDropEvent()` + `scrubEvent()` used by all three configs |
 | `src/instrumentation.ts` | `register()` + `onRequestError` (server action / RSC errors) |
 | `src/components/route-error-boundary.tsx` | Shared client boundary: copy lookup, `ErrorState`, `reportError` |
