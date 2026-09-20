@@ -1,27 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { RouteErrorBoundary, type RouteErrorProps } from "@/components/route-error-boundary";
 
-import { ErrorState } from "@/components/error-state";
-
-export default function VehiclesError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  const t = useTranslations("errorPages.vehicles");
-  return (
-    <div className="p-6">
-      <ErrorState
-        title={t("title")}
-        description={t("description")}
-        errorDigest={error.digest}
-        onRetry={reset}
-        backHref="/"
-        backLabel={t("backLabel")}
-      />
-    </div>
-  );
+export default function VehiclesError(props: RouteErrorProps) {
+  return <RouteErrorBoundary {...props} section="vehicles" backHref="/" />;
 }

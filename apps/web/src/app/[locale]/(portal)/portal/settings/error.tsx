@@ -1,25 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { RouteErrorBoundary, type RouteErrorProps } from "@/components/route-error-boundary";
 
-import { ErrorState } from "@/components/error-state";
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  const t = useTranslations("errorPages.portalSettings");
-  return (
-    <ErrorState
-      title={t("title")}
-      description={t("description")}
-      errorDigest={error.digest}
-      onRetry={reset}
-      backHref="/portal"
-      backLabel={t("backLabel")}
-    />
-  );
+export default function PortalSettingsError(props: RouteErrorProps) {
+  return <RouteErrorBoundary {...props} section="portalSettings" backHref="/portal" />;
 }
