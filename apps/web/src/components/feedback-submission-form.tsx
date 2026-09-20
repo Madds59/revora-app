@@ -65,12 +65,13 @@ export function FeedbackSubmissionForm({
     scope: businessId ?? accounts?.[0]?.businessId,
     error: state.error,
   });
+  const { ref: draftRef } = draft;
   const setFormRef = useCallback(
     (el: HTMLFormElement | null) => {
       formRef.current = el;
-      return draft.ref(el);
+      return draftRef(el);
     },
-    [draft.ref],
+    [draftRef],
   );
 
   const categoryOptions = useMemo(() => FEEDBACK_CATEGORIES, []);
