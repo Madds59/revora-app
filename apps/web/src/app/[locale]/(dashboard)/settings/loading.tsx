@@ -1,5 +1,5 @@
 import { AppShellLoading } from "@/components/app-shell-loading";
 
 export default function Loading() {
-  return <AppShellLoading title="Job" description="Loading job details..." variant="detail" />;
+  return <AppShellLoading variant="form" title="Settings" description="Loading settings..." />;
 }

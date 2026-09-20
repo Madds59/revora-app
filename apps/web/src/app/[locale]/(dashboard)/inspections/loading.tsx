@@ -7,5 +7,5 @@ import { AppShellLoading } from "@/components/app-shell-loading";
 // still a user-facing string.
 export default async function Loading() {
   const t = await getTranslations("dashboardInspections");
-  return <AppShellLoading title={t("title")} description={t("description")} />;
+  return <AppShellLoading variant="list" title={t("title")} description={t("description")} />;
 }
