@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { markBusinessNotificationRead, type NotificationActionState } from "./actions";
 
 const initial: NotificationActionState = {};
@@ -53,9 +53,9 @@ export function NotificationReadButton({
   return (
     <form action={formAction}>
       <input type="hidden" name="notification_id" value={notificationId} />
-      <Button type="submit" variant="outline" size="sm">
+      <SubmitButton variant="outline" size="sm">
         {label}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

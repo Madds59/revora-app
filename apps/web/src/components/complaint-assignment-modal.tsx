@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import {
   Dialog,
   DialogContent,
@@ -118,9 +119,9 @@ export function ComplaintAssignmentModal({
           )}
 
           <DialogFooter className={cn("px-0 pb-0 pt-2")}>
-            <Button type="submit" className="w-full sm:w-auto">
+            <SubmitButton className="w-full sm:w-auto">
               {t("submit")}
-            </Button>
+            </SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>

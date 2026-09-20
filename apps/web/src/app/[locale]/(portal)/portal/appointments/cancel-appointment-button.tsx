@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { cancelAppointmentPortal, type FormState } from "../actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 
 const initial: FormState = {};
 
@@ -27,9 +27,9 @@ export function CancelAppointmentButton({ id }: { id: string }) {
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
-      <Button type="submit" variant="outline">
+      <SubmitButton variant="outline">
         {t("cancel")}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }
