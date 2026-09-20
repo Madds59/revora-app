@@ -78,6 +78,21 @@ export function scrubUrl(value) {
 }
 
 /** Next.js control-flow "errors" that must never be reported. */
+/**
+ * Postgres constraint errors embed the offending row values:
+ *   `Key (phone)=(+9715…) already exists.`
+ *   `Key (business_id, plate_number)=(b1, A 12345) already exists.`
+ * The column list is diagnostic; the value tuple is customer data. Redact
+ * only the value half so the message stays useful.
+ *
+ * @param {string | undefined} message
+ * @returns {string | undefined}
+ */
+export function scrubConstraintValues(message) {
+  if (typeof message !== "string") return message;
+  return message.replace(/(Key \([^)]*\)=)\([^)]*\)/g, "$1([redacted])");
+}
+
 export const CONTROL_FLOW_DIGESTS = ["NEXT_REDIRECT", "NEXT_NOT_FOUND", "NEXT_HTTP_ERROR_FALLBACK"];
 
 /**

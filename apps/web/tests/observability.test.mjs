@@ -7,6 +7,7 @@ import {
   sanitizeExtra,
   isControlFlowError,
   scrubUrl,
+  scrubConstraintValues,
 } from "../src/lib/observability-context.js";
 
 test("buildReportTags maps context to snake_case tags and drops undefined", () => {
@@ -57,4 +58,21 @@ test("scrubUrl drops query/hash and redacts share tokens", () => {
   assert.equal(scrubUrl("https://app.example/en/admin/users?q=a@b.c"), "https://app.example/en/admin/users");
   assert.equal(scrubUrl("/en/jobs"), "/en/jobs");
   assert.equal(scrubUrl(undefined), undefined);
+});
+
+test("scrubConstraintValues redacts the value half of Postgres constraint messages", () => {
+  assert.equal(
+    scrubConstraintValues('duplicate key value violates unique constraint "customers_phone_key": Key (phone)=(+971501234567) already exists.'),
+    'duplicate key value violates unique constraint "customers_phone_key": Key (phone)=([redacted]) already exists.',
+  );
+  assert.equal(
+    scrubConstraintValues("Key (business_id, plate_number)=(b1, A 12345) already exists."),
+    "Key (business_id, plate_number)=([redacted]) already exists.",
+  );
+  assert.equal(
+    scrubConstraintValues("Key (vehicle_id)=(abc) is not present in table \"vehicles\"."),
+    "Key (vehicle_id)=([redacted]) is not present in table \"vehicles\".",
+  );
+  assert.equal(scrubConstraintValues("plain error"), "plain error");
+  assert.equal(scrubConstraintValues(undefined), undefined);
 });

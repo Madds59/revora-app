@@ -1,11 +1,12 @@
 import type { ErrorEvent, EventHint } from "@sentry/nextjs";
 
-import { isControlFlowError, scrubUrl } from "@/lib/observability-context.js";
+import { isControlFlowError, scrubConstraintValues, scrubUrl } from "@/lib/observability-context.js";
 
 /**
  * Drop control-flow errors, strip request bodies/cookies/headers, scrub
- * query strings and share tokens out of any URL/path the event carries, and
- * drop console breadcrumbs that look like they contain an email address.
+ * query strings and share tokens out of any URL/path the event carries,
+ * redact row values from Postgres constraint messages, and drop console
+ * breadcrumbs that look like they contain an email address.
  */
 export function beforeSend(event: ErrorEvent, hint: EventHint): ErrorEvent | null {
   if (isControlFlowError(hint.originalException)) return null;
@@ -18,6 +19,12 @@ export function beforeSend(event: ErrorEvent, hint: EventHint): ErrorEvent | nul
     event.request.url = scrubUrl(event.request.url);
   }
   event.user = undefined;
+
+  // Postgres/PostgREST constraint errors carry the offending row values.
+  if (typeof event.message === "string") event.message = scrubConstraintValues(event.message);
+  for (const exception of event.exception?.values ?? []) {
+    exception.value = scrubConstraintValues(exception.value);
+  }
 
   const nextjsContext = event.contexts?.nextjs;
   if (nextjsContext && typeof nextjsContext === "object") {
