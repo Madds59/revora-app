@@ -258,8 +258,9 @@ cutoff, malformed JSON), and key construction.
 - `next.config.ts` — wrapped with `withSentryConfig(config, { silent: true,
   widenClientFileUpload: false, sourcemaps: { disable: true } })` **only when
   `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` is set at build time**; otherwise
-  the current export is returned untouched so builds without Sentry are
-  byte-identical to today's.
+  the current export is returned untouched. The SDK is never initialised or
+  loaded at runtime; the edge bundle still contains the inert SDK code because
+  the Edge bundler inlines dynamic imports (≈80 kB), which is accepted.
 - `src/lib/observability.ts` — exports:
 
   ```ts
@@ -339,7 +340,7 @@ is independently revertible:
 |---|---|
 | Draft restore overwrites server-provided defaults on an edit form | Hook is only wired in create mode (`!customer`, `!vehicle`), enforced in the plan's per-form checklist. |
 | Draft leaks across tenants on a shared shop tablet | Scope key is tenant id; verified in browser test 4. |
-| `withSentryConfig` alters build output / bundle when DSN absent | Wrapper applied only when a DSN env var exists; no-DSN build compared to `main` in CI logs. |
+| `withSentryConfig` alters build output / bundle when DSN absent | Wrapper applied only when a DSN env var exists; when absent, the SDK is not initialised but the edge bundle contains inert SDK code due to Edge bundler dynamic import inlining (≈80 kB). |
 | PII reaches Sentry | `sendDefaultPii: false`, `beforeSend` scrubbing, `reportError` accepts ids only; reviewed in the security pass. |
 | `Promise.all` changes error semantics (one rejection fails all) | Supabase client returns `{ data, error }` and never rejects on query errors; only thrown auth errors reject, and those already abort the page. |
 | ~130 new small files bloat the tree | All are 3–5 line delegations to two shared components; no logic duplication. |

@@ -11,7 +11,15 @@ Links point to [Madds59/revora-app](https://github.com/Madds59/revora-app).
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+- Env-gated Sentry error tracking behind a single `reportError()` helper; no-op without a DSN.
+- Error boundary on every route segment with specific, reassuring copy (en/ar).
+- Loading skeleton on every route segment, skeleton variants, and a navigation progress bar.
+- Draft persistence for create forms (quote, customer, vehicle, complaint, feedback, appointment request, onboarding), scoped per tenant.
+
+### Changed
+- Dashboard layout and quote/job detail pages run independent queries in parallel; portal home streams its sections.
+- Every submit button shows a pending state.
 
 ## 2026-09-13 — Legal compliance, accessibility and RPC hardening ([#19])
 
