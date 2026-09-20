@@ -15,6 +15,12 @@
       "change": "تغيير",
       "remove": "إزالة"
     },
+    "draft": {
+      "restoredTitle": "استعدنا مسودتك غير المحفوظة",
+      "savedAgo": "حُفظت {when}. تابع، أو تجاهلها لتبدأ من جديد.",
+      "savedRecently": "حُفظت قبل لحظات. تابع، أو تجاهلها لتبدأ من جديد.",
+      "discard": "تجاهل المسودة"
+    },
     "filters": {
       "search": "بحث",
       "searchPlaceholder": "بحث",

@@ -15,6 +15,12 @@
       "change": "Change",
       "remove": "Remove"
     },
+    "draft": {
+      "restoredTitle": "Restored your unsaved draft",
+      "savedAgo": "Saved {when}. Keep going, or discard it to start fresh.",
+      "savedRecently": "Saved a moment ago. Keep going, or discard it to start fresh.",
+      "discard": "Discard draft"
+    },
     "filters": {
       "search": "Search",
       "searchPlaceholder": "Search",
