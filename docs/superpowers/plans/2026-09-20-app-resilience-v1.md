@@ -679,7 +679,7 @@ if (keys(en.errorPages)!==keys(ar.errorPages)) { console.error("errorPages key m
 for (const k of Object.keys(en.errorPages)) if (keys(en.errorPages[k])!==keys(ar.errorPages[k])) { console.error("mismatch in", k); process.exit(1); }
 console.log("ok", Object.keys(en.errorPages).length, "sections");'
 ```
-Expected: `ok 52 sections`
+Expected: `ok 50 sections`
 
 - [ ] **Step 5: Typecheck and commit**
 
