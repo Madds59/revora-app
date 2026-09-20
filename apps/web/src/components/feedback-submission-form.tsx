@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -65,10 +65,13 @@ export function FeedbackSubmissionForm({
     scope: businessId ?? accounts?.[0]?.businessId,
     error: state.error,
   });
-  const setFormRef = (el: HTMLFormElement | null) => {
-    formRef.current = el;
-    draft.ref(el);
-  };
+  const setFormRef = useCallback(
+    (el: HTMLFormElement | null) => {
+      formRef.current = el;
+      return draft.ref(el);
+    },
+    [draft.ref],
+  );
 
   const categoryOptions = useMemo(() => FEEDBACK_CATEGORIES, []);
   const severityOptions = useMemo(() => FEEDBACK_SEVERITIES, []);

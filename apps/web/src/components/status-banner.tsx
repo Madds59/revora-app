@@ -32,18 +32,21 @@ export function StatusBanner({
   children,
   icon,
   className,
+  role,
 }: {
   tone: Tone;
   title: React.ReactNode;
   children?: React.ReactNode;
   icon?: LucideIcon;
   className?: string;
+  role?: React.AriaRole;
 }) {
   const t = TONE[tone];
   const Icon = icon ?? t.icon;
 
   return (
     <div
+      role={role}
       className={cn(
         "flex items-start gap-3 rounded-lg border p-4",
         t.wrap,

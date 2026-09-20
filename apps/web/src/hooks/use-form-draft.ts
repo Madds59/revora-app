@@ -148,6 +148,7 @@ export function useFormDraft({
   const discard = useCallback(() => {
     if (timer.current) window.clearTimeout(timer.current);
     clear();
+    pendingRef.current = null;
     ignoreResetRef.current = true;
     formRef.current?.reset();
     setRestored(false);

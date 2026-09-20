@@ -18,7 +18,13 @@ export function DraftRestoredBanner({
   const t = useTranslations("common.draft");
   const format = useFormatter();
   return (
-    <StatusBanner tone="muted" icon={History} title={t("restoredTitle")} className={className}>
+    <StatusBanner
+      role="status"
+      tone="muted"
+      icon={History}
+      title={t("restoredTitle")}
+      className={className}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>{savedAt ? t("savedAgo", { when: format.relativeTime(savedAt) }) : t("savedRecently")}</span>
         <Button type="button" variant="ghost" size="sm" onClick={onDiscard}>
