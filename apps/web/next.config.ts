@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 /**
  * Baseline response security headers.
@@ -61,8 +61,11 @@ const nextConfig: NextConfig = {
 const withNextIntl = createNextIntlPlugin();
 const configWithIntl = withNextIntl(nextConfig);
 
-// Sentry's webpack plugin is only attached when a DSN exists at build time,
-// so a build without Sentry is byte-identical to one on main.
+// Sentry's webpack plugin is only attached when a DSN exists at build time.
+// Without a DSN, the SDK is never initialised or loaded at runtime (see
+// instrumentation.ts / instrumentation-client.ts) — though the edge bundle
+// still carries the inert SDK code, since the edge bundler inlines dynamic
+// imports regardless of whether they run.
 const sentryDsnConfigured = !!(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN);
 
 export default sentryDsnConfigured

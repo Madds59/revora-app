@@ -81,7 +81,9 @@ pnpm dev                             # http://localhost:3000
 Set `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` (same value for both) in
 `apps/web/.env.local` to send `reportError()` calls to Sentry, and
 `SENTRY_ENVIRONMENT` / `NEXT_PUBLIC_SENTRY_ENVIRONMENT` to label the
-reported environment (defaults to `VERCEL_ENV`, then `"development"`).
+reported environment: the server falls back to `SENTRY_ENVIRONMENT` →
+`VERCEL_ENV` → `"development"`, and the browser falls back to
+`NEXT_PUBLIC_SENTRY_ENVIRONMENT` → `NEXT_PUBLIC_VERCEL_ENV` → `"development"`.
 Leave all four empty and Sentry is a no-op: `reportError` just logs to the
 console and the build's Sentry webpack plugin is never attached.
 

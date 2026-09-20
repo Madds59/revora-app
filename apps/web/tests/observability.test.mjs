@@ -6,6 +6,7 @@ import {
   formatConsoleLine,
   sanitizeExtra,
   isControlFlowError,
+  scrubUrl,
 } from "../src/lib/observability-context.js";
 
 test("buildReportTags maps context to snake_case tags and drops undefined", () => {
@@ -49,4 +50,11 @@ test("isControlFlowError recognises Next redirect/notFound/http-fallback digests
   assert.equal(isControlFlowError(new Error("boom")), false);
   assert.equal(isControlFlowError(null), false);
   assert.equal(isControlFlowError("NEXT_REDIRECT"), false);
+});
+
+test("scrubUrl drops query/hash and redacts share tokens", () => {
+  assert.equal(scrubUrl("/en/i/abc123?x=1#f"), "/en/i/[redacted]");
+  assert.equal(scrubUrl("https://app.example/en/admin/users?q=a@b.c"), "https://app.example/en/admin/users");
+  assert.equal(scrubUrl("/en/jobs"), "/en/jobs");
+  assert.equal(scrubUrl(undefined), undefined);
 });

@@ -65,6 +65,18 @@ export function sanitizeExtra(extra) {
   return clean;
 }
 
+/**
+ * Strip query strings and redact share tokens from a URL or path.
+ *
+ * @param {string | undefined} value
+ * @returns {string | undefined}
+ */
+export function scrubUrl(value) {
+  if (typeof value !== "string") return value;
+  const noQuery = value.split(/[?#]/)[0];
+  return noQuery.replace(/\/i\/[^/]+/g, "/i/[redacted]");
+}
+
 /** Next.js control-flow "errors" that must never be reported. */
 export const CONTROL_FLOW_DIGESTS = ["NEXT_REDIRECT", "NEXT_NOT_FOUND", "NEXT_HTTP_ERROR_FALLBACK"];
 
