@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 import {
   decodeDraft,
@@ -62,7 +62,7 @@ function applyValues(form: HTMLFormElement, values: Record<string, string | stri
       } else {
         control.value = wanted[0] ?? "";
       }
-      // Let any React-observed state (controlled selects, char counters) catch up.
+      // Let native `onInput`/`onChange` listeners and React-controlled <select> handlers observe the restore.
       control.dispatchEvent(new Event("input", { bubbles: true }));
       control.dispatchEvent(new Event("change", { bubbles: true }));
     }
@@ -76,8 +76,19 @@ function applyValues(form: HTMLFormElement, values: Record<string, string | stri
  *
  * - Snapshot on input/change (debounced).
  * - Restore on mount; `restored` flips true so the caller can show a banner.
- * - Clear on submit; if `error` arrives afterwards, re-snapshot so the draft
- *   survives a failed submit + reload.
+ * - Clear optimistically on submit. Forms driven by `useActionState` reset
+ *   their uncontrolled fields via a native `reset` event fired in the same
+ *   commit that delivers the action result, before any passive effect can
+ *   run — so we can't reliably re-snapshot from an `error` effect after the
+ *   fact. Instead we capture the submitted values into `pendingRef` at
+ *   submit time, and on the form's `reset` event, defer to a macrotask (by
+ *   which point the latest `error` has landed in `errorRef` via a layout
+ *   effect) to check whether the action actually failed. If it did, we
+ *   restore both the DOM values and the persisted draft from what was
+ *   captured — including when the same error string is delivered twice in a
+ *   row. A successful submit's `reset` leaves storage cleared.
+ * - `discard()` cancels any pending debounced save and flags its own
+ *   `form.reset()` to be ignored by the `reset` listener above.
  */
 export function useFormDraft({
   key,
@@ -87,15 +98,22 @@ export function useFormDraft({
 }: {
   key: string;
   scope: string | null | undefined;
-  /** The action's current error message; a change re-saves the draft. */
+  /** The action's current error message; checked once the form's `reset` settles. */
   error?: string | null;
   enabled?: boolean;
 }) {
   const storageKey = scope && enabled ? draftStorageKey(scope, key) : null;
   const formRef = useRef<HTMLFormElement | null>(null);
   const timer = useRef<number | null>(null);
+  const errorRef = useRef(error);
+  const pendingRef = useRef<string | null>(null);
+  const ignoreResetRef = useRef(false);
   const [restored, setRestored] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  useLayoutEffect(() => {
+    errorRef.current = error;
+  });
 
   const snapshot = useCallback(() => {
     const form = formRef.current;
@@ -113,7 +131,9 @@ export function useFormDraft({
   }, [storageKey]);
 
   const discard = useCallback(() => {
+    if (timer.current) window.clearTimeout(timer.current);
     clear();
+    ignoreResetRef.current = true;
     formRef.current?.reset();
     setRestored(false);
     setSavedAt(null);
@@ -141,26 +161,43 @@ export function useFormDraft({
       };
       const onSubmit = () => {
         if (timer.current) window.clearTimeout(timer.current);
+        const values = serializeDraftEntries(new FormData(form).entries(), skipNamesFor(form));
+        pendingRef.current = Object.values(values).every((v) => (Array.isArray(v) ? v.length === 0 : v === ""))
+          ? null
+          : encodeDraft(values, Date.now());
         clear();
+      };
+      const onReset = () => {
+        if (ignoreResetRef.current) {
+          ignoreResetRef.current = false;
+          return;
+        }
+        const pending = pendingRef.current;
+        pendingRef.current = null;
+        if (pending === null) return;
+        window.setTimeout(() => {
+          if (!errorRef.current) return;
+          const decoded = decodeDraft(pending, Date.now());
+          const f = formRef.current;
+          if (!decoded || !f || !storageKey) return;
+          applyValues(f, decoded.values);
+          safeSet(storageKey, pending);
+        }, 0);
       };
       form.addEventListener("input", onEdit);
       form.addEventListener("change", onEdit);
       form.addEventListener("submit", onSubmit);
+      form.addEventListener("reset", onReset);
       return () => {
         form.removeEventListener("input", onEdit);
         form.removeEventListener("change", onEdit);
         form.removeEventListener("submit", onSubmit);
+        form.removeEventListener("reset", onReset);
         if (timer.current) window.clearTimeout(timer.current);
       };
     },
     [storageKey, snapshot, clear],
   );
-
-  // A failed submit cleared the draft on submit; put it back so a reload
-  // after the error still restores what was typed.
-  useEffect(() => {
-    if (error) snapshot();
-  }, [error, snapshot]);
 
   return { ref, restored, savedAt, discard, clear };
 }
