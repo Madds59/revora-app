@@ -38,3 +38,47 @@ export function formatConsoleLine(ctx) {
   const parts = Object.entries(buildReportTags(ctx)).map(([k, v]) => `${k}=${v}`);
   return parts.length ? `[revora:error] ${parts.join(" ")}` : "[revora:error]";
 }
+
+const MAX_EXTRA_STRING_LENGTH = 64;
+
+/**
+ * Keep only values shaped like ids/counts/flags — never PII. Drops objects,
+ * arrays, null/undefined, over-long strings, and strings that look like an
+ * email address.
+ *
+ * @param {Record<string, unknown> | undefined} extra
+ * @returns {Record<string, unknown>}
+ */
+export function sanitizeExtra(extra) {
+  /** @type {Record<string, unknown>} */
+  const clean = {};
+  if (!extra) return clean;
+  for (const [key, value] of Object.entries(extra)) {
+    if (typeof value === "number" || typeof value === "boolean") {
+      clean[key] = value;
+      continue;
+    }
+    if (typeof value === "string" && value.length <= MAX_EXTRA_STRING_LENGTH && !value.includes("@")) {
+      clean[key] = value;
+    }
+  }
+  return clean;
+}
+
+/** Next.js control-flow "errors" that must never be reported. */
+export const CONTROL_FLOW_DIGESTS = ["NEXT_REDIRECT", "NEXT_NOT_FOUND", "NEXT_HTTP_ERROR_FALLBACK"];
+
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
+export function isControlFlowError(error) {
+  if (!error || typeof error !== "object") return false;
+  const digest = /** @type {{ digest?: unknown }} */ (error).digest;
+  const message = /** @type {{ message?: unknown }} */ (error).message;
+  return CONTROL_FLOW_DIGESTS.some(
+    (code) =>
+      (typeof digest === "string" && digest.startsWith(code)) ||
+      (typeof message === "string" && message.startsWith(code)),
+  );
+}

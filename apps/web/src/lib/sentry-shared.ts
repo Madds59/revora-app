@@ -1,18 +1,6 @@
 import type { ErrorEvent, EventHint } from "@sentry/nextjs";
 
-/** Next.js control-flow "errors" that must never be reported. */
-const CONTROL_FLOW_DIGESTS = ["NEXT_REDIRECT", "NEXT_NOT_FOUND", "NEXT_HTTP_ERROR_FALLBACK"];
-
-export function isControlFlowError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const digest = (error as { digest?: unknown }).digest;
-  const message = (error as { message?: unknown }).message;
-  return CONTROL_FLOW_DIGESTS.some(
-    (code) =>
-      (typeof digest === "string" && digest.startsWith(code)) ||
-      (typeof message === "string" && message.startsWith(code)),
-  );
-}
+import { isControlFlowError } from "@/lib/observability-context.js";
 
 /**
  * Drop control-flow errors, strip request bodies/cookies/headers, and drop

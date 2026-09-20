@@ -1,4 +1,4 @@
-import { buildReportTags, formatConsoleLine } from "@/lib/observability-context.js";
+import { buildReportTags, formatConsoleLine, sanitizeExtra } from "@/lib/observability-context.js";
 
 export type ReportContext = {
   section?: string;
@@ -26,7 +26,7 @@ export function reportError(error: unknown, ctx?: ReportContext): void {
   void import("@sentry/nextjs").then((Sentry) => {
     Sentry.withScope((scope) => {
       scope.setTags(tags);
-      if (ctx?.extra) scope.setContext("extra", ctx.extra);
+      if (ctx?.extra) scope.setContext("extra", sanitizeExtra(ctx.extra));
       Sentry.captureException(error);
     });
   });
