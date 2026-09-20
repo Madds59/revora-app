@@ -59,38 +59,42 @@ export default async function QuoteBuilderPage({
   const { id } = await params;
   const { member, business } = await requireMembership();
   const isStaff = canManageQuotes(member.role);
-  const user = await getUser();
-  const locale = await getLocale();
-  const supabase = await createClient();
-  const t = await getTranslations("dashboardQuotations.detail");
+  const [user, locale, supabase, t] = await Promise.all([
+    getUser(),
+    getLocale(),
+    createClient(),
+    getTranslations("dashboardQuotations.detail"),
+  ]);
 
-  const { data } = await supabase
-    .from("quotations")
-    .select(
-      "*, customer:customers(full_name, app_user_id, preferred_language), vehicle:vehicles(make, model, plate_number)",
-    )
-    .eq("business_id", business.id)
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data }, { data: itemRows }, { data: approvalRows }] = await Promise.all([
+    supabase
+      .from("quotations")
+      .select(
+        "*, customer:customers(full_name, app_user_id, preferred_language), vehicle:vehicles(make, model, plate_number)",
+      )
+      .eq("business_id", business.id)
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("quotation_items")
+      .select("*")
+      .eq("business_id", business.id)
+      .eq("quotation_id", id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("approvals")
+      .select("*")
+      .eq("business_id", business.id)
+      .eq("quotation_id", id),
+  ]);
   if (!data) notFound();
   const quote = data as unknown as QuoteWithRelations;
-
-  const { data: itemRows } = await supabase
-    .from("quotation_items")
-    .select("*")
-    .eq("business_id", business.id)
-    .eq("quotation_id", id)
-    .order("created_at", { ascending: true });
   const items = (itemRows ?? []) as QuotationItem[];
-
-  const { data: approvalRow } = await supabase
-    .from("approvals")
-    .select("*")
-    .eq("business_id", business.id)
-    .eq("quotation_id", id)
-    .eq("quotation_version", quote.current_version)
-    .maybeSingle();
-  const approval = approvalRow as Approval | null;
+  // Approvals are per quote version; pick the one for the current version.
+  const approval =
+    ((approvalRows ?? []) as Approval[]).find(
+      (row) => row.quotation_version === quote.current_version,
+    ) ?? null;
 
   const isDraft = quote.status === "draft";
   const isSent = quote.status === "sent";

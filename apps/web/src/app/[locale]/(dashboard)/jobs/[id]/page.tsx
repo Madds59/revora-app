@@ -68,31 +68,30 @@ export default async function JobDetailPage({
   if (!data) notFound();
   const job = data as unknown as JobWithRelations;
 
-  const [{ data: taskRows }, { data: updateRows }] = await Promise.all([
-    supabase
-      .from("job_tasks")
-      .select("*")
-      .eq("business_id", business.id)
-      .eq("job_id", id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("job_updates")
-      .select("*")
-      .eq("business_id", business.id)
-      .eq("job_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: taskRows }, { data: updateRows }, { data: existingInvoice }, attachments] =
+    await Promise.all([
+      supabase
+        .from("job_tasks")
+        .select("*")
+        .eq("business_id", business.id)
+        .eq("job_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("job_updates")
+        .select("*")
+        .eq("business_id", business.id)
+        .eq("job_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("invoices")
+        .select("id, invoice_number, status")
+        .eq("business_id", business.id)
+        .eq("job_id", id)
+        .maybeSingle(),
+      loadJobAttachments(id, "staff"),
+    ]);
   const tasks = (taskRows ?? []) as JobTask[];
   const updates = (updateRows ?? []) as JobUpdate[];
-
-  const { data: existingInvoice } = await supabase
-    .from("invoices")
-    .select("id, invoice_number, status")
-    .eq("business_id", business.id)
-    .eq("job_id", id)
-    .maybeSingle();
-
-  const attachments = await loadJobAttachments(id, "staff");
   const v = job.quotation?.vehicle;
   const vehicleLabel = v
     ? [v.make, v.model].filter(Boolean).join(" ") +

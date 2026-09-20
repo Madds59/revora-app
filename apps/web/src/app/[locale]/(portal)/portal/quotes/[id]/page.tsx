@@ -51,11 +51,19 @@ export default async function PortalQuoteDetailPage({
   const locale = await getLocale();
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("quotations")
-    .select("*, business:businesses(name)")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data }, { data: itemRows }, { data: approvalRows }] = await Promise.all([
+    supabase
+      .from("quotations")
+      .select("*, business:businesses(name)")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("quotation_items")
+      .select("*")
+      .eq("quotation_id", id)
+      .order("created_at", { ascending: true }),
+    supabase.from("approvals").select("*").eq("quotation_id", id),
+  ]);
   if (!data) notFound();
   const quote = data as unknown as QuoteWithBusiness;
 
@@ -71,20 +79,12 @@ export default async function PortalQuoteDetailPage({
     notFound();
   }
 
-  const { data: itemRows } = await supabase
-    .from("quotation_items")
-    .select("*")
-    .eq("quotation_id", id)
-    .order("created_at", { ascending: true });
   const items = (itemRows ?? []) as QuotationItem[];
-
-  const { data: approvalRow } = await supabase
-    .from("approvals")
-    .select("*")
-    .eq("quotation_id", id)
-    .eq("quotation_version", quote.current_version)
-    .maybeSingle();
-  const approval = approvalRow as Approval | null;
+  // Approvals are per quote version; pick the one for the current version.
+  const approval =
+    ((approvalRows ?? []) as Approval[]).find(
+      (row) => row.quotation_version === quote.current_version,
+    ) ?? null;
 
   const isApproved = !!approval || quote.status === "approved";
   const isDeclined = quote.status === "declined";

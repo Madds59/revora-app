@@ -21,9 +21,11 @@ export default async function DashboardLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const t = await getTranslations("shell");
   const { member, business } = await requireMembership();
-  const user = await getUser();
-  const memberships = await getCurrentMemberships();
-  const superAdmin = await isSuperAdmin();
+  const [user, memberships, superAdmin] = await Promise.all([
+    getUser(),
+    getCurrentMemberships(),
+    isSuperAdmin(),
+  ]);
   const businessOptions: BusinessOption[] = memberships.map((membership) => {
     const role = membership.member.role as keyof typeof ROLE_LABELS;
     return {

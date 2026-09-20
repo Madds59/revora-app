@@ -54,9 +54,11 @@ export default async function PortalSettingsPage() {
   const t = await getTranslations("portalSettings");
   const tLegal = await getTranslations("legal");
   const { accounts } = await requireCustomerPortal();
-  const user = await getUser();
   const primary = accounts[0]?.business ?? null;
-  const preferenceAccounts = await loadPreferenceAccounts(accounts, t("fallback.workshop"));
+  const [user, preferenceAccounts] = await Promise.all([
+    getUser(),
+    loadPreferenceAccounts(accounts, t("fallback.workshop")),
+  ]);
 
   return (
     <>
