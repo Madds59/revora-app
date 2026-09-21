@@ -11,6 +11,9 @@ import {
 
 const DEBOUNCE_MS = 400;
 const NEVER_PERSIST_TYPES = new Set(["password", "file", "hidden"]);
+// How long after mount we keep trying to restore controls that render late
+// (e.g. a vehicle Select that only mounts once a customer is chosen).
+const LATE_RESTORE_WINDOW_MS = 5000;
 
 function safeGet(key: string): string | null {
   try {
@@ -61,12 +64,15 @@ function setNativeChecked(el: HTMLInputElement, checked: boolean) {
   else el.checked = checked;
 }
 
-function applyValues(form: HTMLFormElement, values: Record<string, string | string[]>) {
+/** Writes `values` into matching controls; returns the names it could apply. */
+function applyValues(form: HTMLFormElement, values: Record<string, string | string[]>): Set<string> {
+  const applied = new Set<string>();
   for (const [name, value] of Object.entries(values)) {
     const controls = Array.from(form.elements).filter(
       (el) => (el as HTMLInputElement).name === name,
     ) as (HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)[];
     if (controls.length === 0) continue;
+    applied.add(name);
     const wanted = Array.isArray(value) ? value : [value];
     for (const control of controls) {
       const input = control as HTMLInputElement;
@@ -82,6 +88,7 @@ function applyValues(form: HTMLFormElement, values: Record<string, string | stri
       control.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
+  return applied;
 }
 
 /**
@@ -89,8 +96,13 @@ function applyValues(form: HTMLFormElement, values: Record<string, string | stri
  * nav-away doesn't lose typed work. Scope by tenant id so shared devices
  * never leak drafts across businesses/customers.
  *
- * - Snapshot on input/change (debounced).
+ * - Snapshot on input/change (debounced). Composite widgets such as Base UI
+ *   <Select> keep a React-controlled hidden input and dispatch no native
+ *   event when an option is picked, so a MutationObserver on the form feeds
+ *   the same debounced snapshot whenever the subtree changes.
  * - Restore on mount; `restored` flips true so the caller can show a banner.
+ *   Controls that mount later (a dependent Select that appears once its
+ *   parent has a value) are restored by the same observer for a short window.
  * - Clear optimistically on submit. Forms driven by `useActionState` reset
  *   their uncontrolled fields via a native `reset` event fired in the same
  *   commit that delivers the action result, before any passive effect can
@@ -102,8 +114,9 @@ function applyValues(form: HTMLFormElement, values: Record<string, string | stri
  *   restore both the DOM values and the persisted draft from what was
  *   captured — including when the same error string is delivered twice in a
  *   row. A successful submit's `reset` leaves storage cleared.
- * - `discard()` cancels any pending debounced save and flags its own
- *   `form.reset()` to be ignored by the `reset` listener above.
+ * - `discard()` clears storage and reloads the page: `form.reset()` cannot
+ *   clear React-controlled widgets, and a reload is the one reliable way to
+ *   return every kind of field to its server-rendered default.
  */
 export function useFormDraft({
   key,
@@ -122,7 +135,7 @@ export function useFormDraft({
   const timer = useRef<number | null>(null);
   const errorRef = useRef(error);
   const pendingRef = useRef<string | null>(null);
-  const ignoreResetRef = useRef(false);
+  const discardingRef = useRef(false);
   const [restored, setRestored] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
 
@@ -132,7 +145,7 @@ export function useFormDraft({
 
   const snapshot = useCallback(() => {
     const form = formRef.current;
-    if (!form || !storageKey) return;
+    if (!form || !storageKey || discardingRef.current) return;
     const values = serializeDraftEntries(new FormData(form).entries(), skipNamesFor(form));
     if (Object.values(values).every((v) => (Array.isArray(v) ? v.length === 0 : v === ""))) {
       safeRemove(storageKey);
@@ -146,13 +159,13 @@ export function useFormDraft({
   }, [storageKey]);
 
   const discard = useCallback(() => {
+    discardingRef.current = true;
     if (timer.current) window.clearTimeout(timer.current);
-    clear();
     pendingRef.current = null;
-    ignoreResetRef.current = true;
-    formRef.current?.reset();
+    clear();
     setRestored(false);
     setSavedAt(null);
+    window.location.reload();
   }, [clear]);
 
   // React 19 ref callbacks may return a cleanup; it runs when the form
@@ -162,9 +175,16 @@ export function useFormDraft({
       formRef.current = form;
       if (!form || !storageKey) return;
 
+      // Values whose controls were not in the DOM at mount; retried below.
+      let lateValues: Record<string, string | string[]> = {};
+      const lateDeadline = Date.now() + LATE_RESTORE_WINDOW_MS;
+
       const draft = decodeDraft(safeGet(storageKey), Date.now());
       if (draft) {
-        applyValues(form, draft.values);
+        const applied = applyValues(form, draft.values);
+        lateValues = Object.fromEntries(
+          Object.entries(draft.values).filter(([name]) => !applied.has(name)),
+        );
         setRestored(true);
         setSavedAt(new Date(draft.savedAt));
       } else {
@@ -172,9 +192,30 @@ export function useFormDraft({
       }
 
       const onEdit = () => {
+        if (discardingRef.current) return;
         if (timer.current) window.clearTimeout(timer.current);
         timer.current = window.setTimeout(snapshot, DEBOUNCE_MS);
       };
+      // Event-less value changes (controlled Selects) and late-mounting
+      // controls both surface as DOM mutations inside the form.
+      const observer = new MutationObserver(() => {
+        if (Object.keys(lateValues).length > 0) {
+          if (Date.now() > lateDeadline) {
+            lateValues = {};
+          } else {
+            const applied = applyValues(form, lateValues);
+            for (const name of applied) delete lateValues[name];
+          }
+        }
+        onEdit();
+      });
+      observer.observe(form, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["value"],
+      });
       const onSubmit = () => {
         if (timer.current) window.clearTimeout(timer.current);
         const values = serializeDraftEntries(new FormData(form).entries(), skipNamesFor(form));
@@ -184,10 +225,6 @@ export function useFormDraft({
         clear();
       };
       const onReset = () => {
-        if (ignoreResetRef.current) {
-          ignoreResetRef.current = false;
-          return;
-        }
         const pending = pendingRef.current;
         pendingRef.current = null;
         if (pending === null) return;
@@ -205,6 +242,7 @@ export function useFormDraft({
       form.addEventListener("submit", onSubmit);
       form.addEventListener("reset", onReset);
       return () => {
+        observer.disconnect();
         form.removeEventListener("input", onEdit);
         form.removeEventListener("change", onEdit);
         form.removeEventListener("submit", onSubmit);

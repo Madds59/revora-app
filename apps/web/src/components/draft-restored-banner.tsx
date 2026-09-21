@@ -26,7 +26,7 @@ export function DraftRestoredBanner({
       className={className}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span>{savedAt ? t("savedAgo", { when: format.relativeTime(savedAt) }) : t("savedRecently")}</span>
+        <span>{savedAt ? t("savedAgo", { when: format.relativeTime(savedAt, new Date()) }) : t("savedRecently")}</span>
         <Button type="button" variant="ghost" size="sm" onClick={onDiscard}>
           {t("discard")}
         </Button>
