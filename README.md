@@ -87,6 +87,33 @@ reported environment: the server falls back to `SENTRY_ENVIRONMENT` →
 Leave all four empty and Sentry is a no-op: `reportError` just logs to the
 console and the build's Sentry webpack plugin is never attached.
 
+### Phase 1 feature flags
+
+Six optional modules are hidden in this phase 1 release: `vehicleIntelligence`,
+`retainerCalculator`, `membershipBundles`, `analytics`, `maintenance`, and
+`feedback`. Set `NEXT_PUBLIC_REVORA_FEATURES` in `apps/web/.env.local` to a
+comma-separated list of these keys to force them back on (for example
+`NEXT_PUBLIC_REVORA_FEATURES=analytics,maintenance`); leave it unset and every
+module keeps the phase 1 default of off.
+
+This variable **must be set before `pnpm build`**, not just before
+`next start`. Next only inlines `NEXT_PUBLIC_*` variables into the browser
+bundle via DefinePlugin at build time. The server-side route guard reads the
+real environment on every request, so it reacts immediately, but the
+client-rendered navigation only sees whatever value was baked in when the
+app was last built. Setting the variable and restarting `next start` against
+an already-built `.next` output enables the gated route without updating the
+sidebar that links to it, producing an SSR/hydration mismatch. A Vercel
+redeploy always rebuilds from source, so it's safe; restarting a self-hosted
+`next start` process without rebuilding is not — rebuild first.
+
+`MAINTENANCE_REMINDERS_ENABLED` is a separate switch from the `maintenance`
+feature key above: it gates the outbound maintenance-reminder scan at
+`/api/maintenance/reminders/scan`, which Vercel crons daily. Re-enabling the
+`maintenance` feature flag in a later phase restores the dashboard
+maintenance worklist UI, but does **not** resume outbound reminders — that
+still needs `MAINTENANCE_REMINDERS_ENABLED=true` set separately.
+
 ## Try it
 
 1. Sign up → you'll be sent to **/onboarding** → create a business (you become owner).
