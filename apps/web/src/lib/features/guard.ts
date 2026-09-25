@@ -16,6 +16,16 @@ import type { FeatureKey } from "@/lib/features/types";
  * Signature verified against next-intl 4.13.0: redirect({ href, locale }).
  * routing.ts defines no `pathnames`, so `href` accepts a plain
  * { pathname, query } object.
+ *
+ * IMPORTANT — NEXT_PUBLIC_REVORA_FEATURES is a build-time constant, not a
+ * live env read. Next only inlines NEXT_PUBLIC_* via DefinePlugin when the
+ * variable is set at build time; the process.env.NEXT_PUBLIC_REVORA_FEATURES
+ * reference below is a server-side read and always sees the real env at
+ * request time, but any *client* component reading the same variable was
+ * baked in (or baked in as `undefined`) at `pnpm build`. Setting the var and
+ * restarting `next start` changes what this guard does without changing
+ * what the client-rendered nav shows, producing an SSR/hydration mismatch.
+ * It must be set before `pnpm build` to affect both.
  */
 export async function requireFeature(
   key: FeatureKey,
