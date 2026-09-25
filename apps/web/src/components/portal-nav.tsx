@@ -52,7 +52,7 @@ export function PortalNav() {
         <div key={group.labelKey ?? `lead-${index}`} className="flex flex-col gap-0.5">
           {group.labelKey && (
             <p className="text-sidebar-foreground/50 px-3 pt-1 pb-1 text-[0.6875rem] font-semibold tracking-wider uppercase">
-              {t(`group.${group.labelKey}` as any)}
+              {t(`group.${group.labelKey}` as Parameters<typeof t>[0])}
             </p>
           )}
           {group.items.map((item) => {
@@ -84,7 +84,7 @@ export function PortalNav() {
                     )}
                   />
                 )}
-                <span>{t(item.labelKey as any)}</span>
+                <span>{t(item.labelKey as Parameters<typeof t>[0])}</span>
               </Link>
             );
           })}
