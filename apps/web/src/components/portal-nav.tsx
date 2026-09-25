@@ -48,13 +48,23 @@ export function PortalNav() {
 
   return (
     <nav className="flex flex-col gap-4 px-2">
-      {groups.map((group, index) => (
-        <div key={group.labelKey ?? `lead-${index}`} className="flex flex-col gap-0.5">
-          {group.labelKey && (
-            <p className="text-sidebar-foreground/50 px-3 pt-1 pb-1 text-[0.6875rem] font-semibold tracking-wider uppercase">
-              {t(`group.${group.labelKey}` as Parameters<typeof t>[0])}
-            </p>
-          )}
+      {groups.map((group, index) => {
+        const headingId = group.labelKey ? `nav-group-${group.labelKey}` : undefined;
+        return (
+          <div
+            key={group.labelKey ?? `lead-${index}`}
+            className="flex flex-col gap-0.5"
+            role={group.labelKey ? "group" : undefined}
+            aria-labelledby={headingId}
+          >
+            {group.labelKey && (
+              <p
+                id={headingId}
+                className="text-sidebar-foreground/50 px-3 pt-1 pb-1 text-[0.6875rem] font-semibold tracking-wider uppercase"
+              >
+                {t(`group.${group.labelKey}` as Parameters<typeof t>[0])}
+              </p>
+            )}
           {group.items.map((item) => {
             const active = isNavItemActive(pathname, item);
             const Icon = ICONS[item.icon];
@@ -88,8 +98,9 @@ export function PortalNav() {
               </Link>
             );
           })}
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </nav>
   );
 }
