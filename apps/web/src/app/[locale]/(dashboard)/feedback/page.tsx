@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { requireMembership } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatters";
 import {
@@ -73,6 +74,7 @@ export default async function FeedbackPage({
   const locale = (await getLocale()) === "ar" ? "ar" : "en";
   const t = await getTranslations("feedback");
   const { member, business } = await requireMembership();
+  await requireFeature("feedback");
   const canEdit = canManageSettings(member.role);
   const params = await searchParams;
 

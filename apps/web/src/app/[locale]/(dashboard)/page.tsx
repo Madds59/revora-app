@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StatusBanner } from "@/components/status-banner";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { requireMembership } from "@/lib/auth";
+import { disabledBannerKey } from "@/lib/features/flags";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_JOB_STATUSES } from "@/lib/jobs";
 
@@ -31,8 +33,15 @@ type Stat = {
   ready: boolean;
 };
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ disabled?: string | string[] }>;
+}) {
   const t = await getTranslations("dashboardHome");
+  const tf = await getTranslations("features");
+  const { disabled } = await searchParams;
+  const disabledKey = disabledBannerKey(disabled);
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -99,6 +108,11 @@ export default async function HomePage() {
         description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
+        {disabledKey && (
+          <StatusBanner tone="muted" role="status" title={tf("disabled.title")}>
+            <p>{tf("disabled.body")}</p>
+          </StatusBanner>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           {stats.map((s) => {
             const Icon = s.icon;

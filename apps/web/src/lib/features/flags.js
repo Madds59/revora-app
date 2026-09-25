@@ -71,3 +71,18 @@ export function isFeatureEnabled(flags, key) {
   if (key === undefined) return true;
   return flags[key] === true;
 }
+
+/**
+ * Narrow a `?disabled=` search param to a known feature key. Anything else
+ * yields null so the banner renders nothing rather than echoing user input.
+ *
+ * @param {unknown} rawParam string | string[] | undefined, as Next supplies it
+ * @returns {FeatureKey | null}
+ */
+export function disabledBannerKey(rawParam) {
+  const candidates = Array.isArray(rawParam) ? rawParam : [rawParam];
+  for (const candidate of candidates) {
+    if (isFeatureKey(candidate)) return candidate;
+  }
+  return null;
+}

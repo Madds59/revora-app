@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/page-header";
 import { AiAdvisoryNotice } from "@/components/ai-advisory-notice";
 import { requireCustomerPortal } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { createClient } from "@/lib/supabase/server";
 import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
@@ -24,6 +25,7 @@ export default async function PortalHealthCheckPage({
   const t = await getTranslations("vehicleIntelligence");
   const params = await searchParams;
   const { accounts } = await requireCustomerPortal();
+  await requireFeature("vehicleIntelligence", "portal");
   const supabase = await createClient();
   const vehicleIds = accounts.map((account) => account.id);
   const { data } = vehicleIds.length

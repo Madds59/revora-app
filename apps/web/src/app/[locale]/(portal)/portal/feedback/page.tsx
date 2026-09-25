@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUser, requireCustomerPortal } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatters";
 import {
@@ -43,6 +44,7 @@ export default async function PortalFeedbackPage() {
   const t = await getTranslations("feedback");
   const user = await getUser();
   const { accounts } = await requireCustomerPortal();
+  await requireFeature("feedback", "portal");
   const supabase = await createClient();
   const businessIds = accounts.map((account) => account.business_id);
   const customerIds = accounts.map((account) => account.id);

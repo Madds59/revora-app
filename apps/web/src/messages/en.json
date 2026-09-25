@@ -2576,5 +2576,11 @@
       "note": "You can update this later if your role changes.",
       "continue": "Continue"
     }
+  },
+  "features": {
+    "disabled": {
+      "title": "That module isn't enabled",
+      "body": "This workspace is running the phase 1 feature set. Ask your Revora contact if you need this module switched on."
+    }
   }
 }

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   FEATURE_KEYS,
   PHASE_1_DEFAULTS,
+  disabledBannerKey,
   isFeatureEnabled,
   isFeatureKey,
   parseFeatureOverrides,
@@ -76,4 +77,19 @@ test("resolveFeatures returns a fresh object each call", () => {
   const b = resolveFeatures(undefined);
   assert.equal(a.analytics, true);
   assert.equal(b.analytics, false);
+});
+
+test("the ?disabled= param only ever yields a known feature key", () => {
+  assert.equal(disabledBannerKey("analytics"), "analytics");
+  assert.equal(disabledBannerKey("nope"), null);
+  assert.equal(disabledBannerKey(""), null);
+  assert.equal(disabledBannerKey(undefined), null);
+  // A hostile value must never come back for rendering.
+  assert.equal(disabledBannerKey("<script>alert(1)</script>"), null);
+  assert.equal(disabledBannerKey("../../etc/passwd"), null);
+  assert.equal(disabledBannerKey("__proto__"), null);
+  // Next gives an array when the param repeats; take the first valid entry.
+  assert.equal(disabledBannerKey(["analytics", "nope"]), "analytics");
+  assert.equal(disabledBannerKey(["nope"]), null);
+  assert.equal(disabledBannerKey([]), null);
 });

@@ -6,6 +6,7 @@ import { Building2 } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionSkeleton } from "@/components/app-shell-loading";
+import { StatusBanner } from "@/components/status-banner";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -15,13 +16,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireCustomerPortal } from "@/lib/auth";
+import { disabledBannerKey } from "@/lib/features/flags";
 import { PendingQuotesSection } from "./_sections/pending-quotes-section";
 import { ActiveJobsSection } from "./_sections/active-jobs-section";
 import { ComplaintsSection } from "./_sections/complaints-section";
 
-export default async function PortalHomePage() {
+export default async function PortalHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ disabled?: string | string[] }>;
+}) {
   const t = await getTranslations("portalHome");
   const ai = await getTranslations("vehicleIntelligence");
+  const tf = await getTranslations("features");
+  const { disabled } = await searchParams;
+  const disabledKey = disabledBannerKey(disabled);
+  const banner = disabledKey && (
+    <StatusBanner tone="muted" role="status" title={tf("disabled.title")}>
+      <p>{tf("disabled.body")}</p>
+    </StatusBanner>
+  );
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
@@ -30,7 +44,8 @@ export default async function PortalHomePage() {
           title={t("title")}
           description={t("description")}
         />
-        <div className="p-6">
+        <div className="flex flex-col gap-6 p-6">
+          {banner}
           <EmptyState
             title={t("noLinkedAccountTitle")}
             description={t("noLinkedAccountDescription")}
@@ -54,6 +69,7 @@ export default async function PortalHomePage() {
         }
       />
       <div className="flex flex-col gap-6 p-6">
+        {banner}
         <div className="grid gap-4 md:grid-cols-2">
           {accounts.map((account) => (
             <Card key={account.id}>

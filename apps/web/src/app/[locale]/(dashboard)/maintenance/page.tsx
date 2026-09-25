@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { canViewMaintenance } from "@/lib/permissions";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatDate } from "@/lib/formatters";
@@ -58,6 +59,7 @@ export default async function MaintenancePage() {
   const tError = await getTranslations("error");
   const locale = await getLocale();
   const { member, business } = await requireMembership();
+  await requireFeature("maintenance");
 
   // Server-side gate in addition to RLS; the page never renders for a role that
   // should not see customer vehicle data.

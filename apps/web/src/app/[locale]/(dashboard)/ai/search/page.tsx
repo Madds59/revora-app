@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate } from "@/lib/formatters";
+import { requireFeature } from "@/lib/features/guard";
 import {
   searchVehicleIntelligence,
   type VehicleSearchResult,
@@ -136,6 +137,7 @@ export default async function VehicleIntelligenceSearchPage({
   params: Promise<{ locale: "en" | "ar" }>;
   searchParams: Promise<SearchParams>;
 }) {
+  await requireFeature("vehicleIntelligence");
   const [{ locale }, queryParams, t] = await Promise.all([
     params,
     searchParams,

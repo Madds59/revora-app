@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { requireFeature } from "@/lib/features/guard";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -21,6 +22,7 @@ export async function generateMetadata() {
 }
 
 export default async function VehicleIntelligenceHomePage() {
+  await requireFeature("vehicleIntelligence");
   const t = await getTranslations("vehicleIntelligence");
 
   return (

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
 import { requireCustomerPortal } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/database.types";
 import { MembershipPlans, type PortalBundle } from "@/components/membership-bundles/membership-plans";
@@ -29,6 +30,7 @@ type BundleRow = {
 export default async function PortalMembershipsPage() {
   const t = await getTranslations("bundles");
   const { accounts } = await requireCustomerPortal();
+  await requireFeature("membershipBundles", "portal");
   const businessNames = new Map(accounts.map((a) => [a.business_id, a.business?.name ?? ""]));
   const businessIds = [...businessNames.keys()];
 
