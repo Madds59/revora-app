@@ -2589,8 +2589,17 @@
   },
   "features": {
     "disabled": {
-      "title": "That module isn't enabled",
-      "body": "This workspace is running the phase 1 feature set. Ask your Revora contact if you need this module switched on."
+      "title": "{module} isn't enabled",
+      "body": "This workspace is running the phase 1 feature set. Ask your Revora contact if you need this module switched on.",
+      "portalBody": "This workspace is running the phase 1 feature set. Contact your garage if you need this module switched on."
+    },
+    "names": {
+      "vehicleIntelligence": "Vehicle Intelligence",
+      "retainerCalculator": "Retainer calculator",
+      "membershipBundles": "Membership bundles",
+      "analytics": "Analytics",
+      "maintenance": "Maintenance",
+      "feedback": "Feedback"
     }
   }
 }

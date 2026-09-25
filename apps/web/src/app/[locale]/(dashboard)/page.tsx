@@ -8,6 +8,7 @@ import {
   CarFront,
   ArrowRight,
   ClipboardCheck,
+  Lock,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -119,7 +120,14 @@ export default async function HomePage({
       />
       <div className="flex flex-col gap-6 p-6">
         {disabledKey && (
-          <StatusBanner tone="muted" role="status" title={tf("disabled.title")}>
+          <StatusBanner
+            tone="muted"
+            role="status"
+            icon={Lock}
+            title={tf("disabled.title", {
+              module: tf(`names.${disabledKey}` as Parameters<typeof tf>[0]),
+            })}
+          >
             <p>{tf("disabled.body")}</p>
           </StatusBanner>
         )}

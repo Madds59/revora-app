@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { Building2 } from "lucide-react";
+import { Building2, Lock } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -33,8 +33,15 @@ export default async function PortalHomePage({
   const { disabled } = await searchParams;
   const disabledKey = disabledBannerKey(disabled);
   const banner = disabledKey && (
-    <StatusBanner tone="muted" role="status" title={tf("disabled.title")}>
-      <p>{tf("disabled.body")}</p>
+    <StatusBanner
+      tone="muted"
+      role="status"
+      icon={Lock}
+      title={tf("disabled.title", {
+        module: tf(`names.${disabledKey}` as Parameters<typeof tf>[0]),
+      })}
+    >
+      <p>{tf("disabled.portalBody")}</p>
     </StatusBanner>
   );
   const { accounts } = await requireCustomerPortal();
