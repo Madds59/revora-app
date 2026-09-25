@@ -28,3 +28,20 @@ export async function requireFeature(
   const pathname = surface === "portal" ? "/portal" : "/";
   redirect({ href: { pathname, query: { disabled: key } }, locale });
 }
+
+/**
+ * Server-only synchronous check for gating in-context entry points (CTAs,
+ * cards, nav-adjacent buttons) that link into an optional module's routes,
+ * without a redirect. Use this where `requireFeature` doesn't fit — e.g. a
+ * button rendered on an always-visible page that merely links to a gated
+ * route; the route itself still calls `requireFeature`.
+ *
+ * Reads `process.env.NEXT_PUBLIC_REVORA_FEATURES` via the same static
+ * reference style as `requireFeature` on purpose — see the build-time-only
+ * warning above. This function is server-only, so it always sees the real
+ * env at request time; it is the client bundle's copy of this same variable
+ * that is frozen at build time.
+ */
+export function isFeatureOn(key: FeatureKey): boolean {
+  return resolveFeatures(process.env.NEXT_PUBLIC_REVORA_FEATURES)[key];
+}

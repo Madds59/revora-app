@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { requireCustomerPortal } from "@/lib/auth";
 import { disabledBannerKey } from "@/lib/features/flags";
+import { isFeatureOn } from "@/lib/features/guard";
 import { PendingQuotesSection } from "./_sections/pending-quotes-section";
 import { ActiveJobsSection } from "./_sections/active-jobs-section";
 import { ComplaintsSection } from "./_sections/complaints-section";
@@ -95,21 +96,23 @@ export default async function PortalHomePage({
           ))}
         </div>
 
-        <Card className="border-primary/20 overflow-hidden">
-          <div aria-hidden className="uae-flag-stripe h-1 w-full" />
-          <CardHeader>
-            <CardTitle>{ai("portal.vehiclesTitle")}</CardTitle>
-            <CardDescription>{ai("portal.vehiclesDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Link href="/portal/vehicles" className={buttonVariants({ variant: "secondary" })}>
-              {ai("portal.viewVehicle")}
-            </Link>
-            <Link href="/portal/ai/health-check" className={buttonVariants()}>
-              {ai("portal.healthCheckAction")}
-            </Link>
-          </CardContent>
-        </Card>
+        {isFeatureOn("vehicleIntelligence") && (
+          <Card className="border-primary/20 overflow-hidden">
+            <div aria-hidden className="uae-flag-stripe h-1 w-full" />
+            <CardHeader>
+              <CardTitle>{ai("portal.vehiclesTitle")}</CardTitle>
+              <CardDescription>{ai("portal.vehiclesDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <Link href="/portal/vehicles" className={buttonVariants({ variant: "secondary" })}>
+                {ai("portal.viewVehicle")}
+              </Link>
+              <Link href="/portal/ai/health-check" className={buttonVariants()}>
+                {ai("portal.healthCheckAction")}
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         <Suspense fallback={<SectionSkeleton rows={2} />}>
           <PendingQuotesSection customerIds={customerIds} />

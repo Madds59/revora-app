@@ -25,9 +25,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireMembership } from "@/lib/auth";
+import { isFeatureOn } from "@/lib/features/guard";
 import { canManageCustomers, canManageInspections } from "@/lib/permissions";
 import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 import type { Complaint, Document, Job, Quotation, Vehicle } from "@/lib/database.types";
 import { JOB_STATUS_VARIANT, getJobStatusLabel } from "@/lib/jobs";
 import { COMPLAINT_STATUS_VARIANT, getComplaintSeverityLabel, getComplaintStatusLabel } from "@/lib/complaints";
@@ -140,6 +142,7 @@ export default async function VehicleDetailPage({
   const tInspections = await getTranslations("dashboardInspections");
   const canManage = canManageCustomers(member.role);
   const canInspect = canManageInspections(member.role);
+  const vehicleIntelligenceOn = isFeatureOn("vehicleIntelligence");
   const supabase = await createClient();
 
   const { data: vehicleRow, error: vehicleError } = await supabase
@@ -491,69 +494,71 @@ export default async function VehicleDetailPage({
           </Card>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("intelligence.title")}</CardTitle>
-              <CardDescription>{t("intelligence.description")}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {diagnostic ? (
-                <VehicleDiagnosticCard
-                  aiUsed={diagnostic.model != null}
-                  advisorSummary={diagnostic.advisor_summary}
-                  customerExplanation={diagnostic.customer_explanation}
-                  diagnostic={diagnostic.diagnosis_json as VehicleDiagnosticJson}
-                  maintenancePlan={
-                    maintenance
-                          ? {
-                          title: t("intelligence.planTitle"),
-                          summary: t("intelligence.planSummary"),
-                          items: maintenancePlanItems,
-                          nextServiceDate: maintenance.next_service_date,
-                          nextServiceMileage: maintenance.next_service_mileage,
-                          advisorReviewRequired: true,
-                        }
-                      : null
-                  }
-                  quoteDraftEligible={diagnostic.quote_draft_eligible}
-                  action={
-                    <div className="flex flex-wrap gap-2">
+        <div className={cn("grid gap-4", vehicleIntelligenceOn && "xl:grid-cols-2")}>
+          {vehicleIntelligenceOn && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("intelligence.title")}</CardTitle>
+                <CardDescription>{t("intelligence.description")}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                {diagnostic ? (
+                  <VehicleDiagnosticCard
+                    aiUsed={diagnostic.model != null}
+                    advisorSummary={diagnostic.advisor_summary}
+                    customerExplanation={diagnostic.customer_explanation}
+                    diagnostic={diagnostic.diagnosis_json as VehicleDiagnosticJson}
+                    maintenancePlan={
+                      maintenance
+                            ? {
+                            title: t("intelligence.planTitle"),
+                            summary: t("intelligence.planSummary"),
+                            items: maintenancePlanItems,
+                            nextServiceDate: maintenance.next_service_date,
+                            nextServiceMileage: maintenance.next_service_mileage,
+                            advisorReviewRequired: true,
+                          }
+                        : null
+                    }
+                    quoteDraftEligible={diagnostic.quote_draft_eligible}
+                    action={
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
+                          className={buttonVariants({ variant: "outline" })}
+                        >
+                          {t("intelligence.open")}
+                        </Link>
+                      </div>
+                    }
+                  />
+                ) : (
+                  <EmptyState
+                    title={t("intelligence.emptyTitle")}
+                    description={t("intelligence.emptyDescription")}
+                    action={
                       <Link
                         href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
-                        className={buttonVariants({ variant: "outline" })}
+                        className={buttonVariants()}
                       >
                         {t("intelligence.open")}
                       </Link>
-                    </div>
-                  }
-                />
-              ) : (
-                <EmptyState
-                  title={t("intelligence.emptyTitle")}
-                  description={t("intelligence.emptyDescription")}
-                  action={
-                    <Link
-                      href={`/ai/vehicle-diagnosis?vehicle_id=${vehicle.id}`}
-                      className={buttonVariants()}
-                    >
-                      {t("intelligence.open")}
-                    </Link>
-                  }
-                />
-              )}
+                    }
+                  />
+                )}
 
-              {symptom && (
-                <div className="rounded-lg border bg-muted/20 p-4 text-sm">
-                  <div className="font-medium">{t("intelligence.latestSymptom")}</div>
-                  <p className="text-muted-foreground mt-2 leading-6">{symptom.symptoms}</p>
-                  <div className="text-muted-foreground mt-2 text-xs">
-                    {formatDateTime(symptom.created_at, undefined, locale)}
+                {symptom && (
+                  <div className="rounded-lg border bg-muted/20 p-4 text-sm">
+                    <div className="font-medium">{t("intelligence.latestSymptom")}</div>
+                    <p className="text-muted-foreground mt-2 leading-6">{symptom.symptoms}</p>
+                    <div className="text-muted-foreground mt-2 text-xs">
+                      {formatDateTime(symptom.created_at, undefined, locale)}
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
