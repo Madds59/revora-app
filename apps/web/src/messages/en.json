@@ -740,12 +740,22 @@
       "live": "Live",
       "laterRelease": "Available in a later release"
     },
+    "pipeline": {
+      "title": "Your service pipeline",
+      "inspectionsToQuote": "Inspections to quote",
+      "inspectionsToQuoteHint": "Completed inspections with no quote yet",
+      "quotesAwaitingApproval": "Quotes awaiting approval",
+      "quotesAwaitingApprovalHint": "Sent to the customer, not yet answered",
+      "jobsInProgress": "Jobs in progress",
+      "jobsInProgressHint": "Active work on the floor"
+    },
     "getStarted": {
       "title": "Get started",
       "description": "The foundation is ready. Add your customers and configure your business profile.",
       "addCustomer": "Add a customer",
       "manageVehicles": "Manage vehicles",
-      "businessSettings": "Business settings"
+      "businessSettings": "Business settings",
+      "startInspection": "Start an inspection"
     }
   },
   "portalHome": {

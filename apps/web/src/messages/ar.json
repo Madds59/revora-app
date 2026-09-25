@@ -740,12 +740,22 @@
       "live": "مباشر",
       "laterRelease": "متاح في إصدار لاحق"
     },
+    "pipeline": {
+      "title": "مسار الخدمة لديك",
+      "inspectionsToQuote": "فحوصات بانتظار التسعير",
+      "inspectionsToQuoteHint": "فحوصات مكتملة بلا عرض سعر بعد",
+      "quotesAwaitingApproval": "عروض الأسعار بانتظار الموافقة",
+      "quotesAwaitingApprovalHint": "أُرسلت إلى العميل ولم يُرد عليها بعد",
+      "jobsInProgress": "مهام قيد التنفيذ",
+      "jobsInProgressHint": "أعمال جارية في الورشة"
+    },
     "getStarted": {
       "title": "ابدأ الآن",
       "description": "الأساس جاهز. أضف عملاءك واضبط ملف نشاطك.",
       "addCustomer": "إضافة عميل",
       "manageVehicles": "إدارة المركبات",
-      "businessSettings": "إعدادات النشاط"
+      "businessSettings": "إعدادات النشاط",
+      "startInspection": "ابدأ فحصًا"
     }
   },
   "portalHome": {
