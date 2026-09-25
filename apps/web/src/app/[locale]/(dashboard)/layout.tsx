@@ -35,7 +35,7 @@ export default async function DashboardLayout({
     };
   });
   const memberRole = member.role as keyof typeof ROLE_LABELS;
-  const showRetainerCalculator = canManagePricingTools(member.role) || superAdmin;
+  const pricingTools = canManagePricingTools(member.role) || superAdmin;
   const accountLinks: ShellMenuLink[] = [
     { href: "/settings", label: t("businessSettings"), icon: "settings" as const },
     { href: "/billing", label: t("billing"), icon: "billing" as const },
@@ -48,7 +48,7 @@ export default async function DashboardLayout({
     <ResponsiveSidebarShell
       brandTitle="Revora"
       brandSubtitle={business.name}
-      nav={<DashboardNav showRetainerCalculator={showRetainerCalculator} />}
+      nav={<DashboardNav permissions={{ pricingTools }} />}
       mobileHeaderEnd={
         user ? (
           <ShellAccountMenu
