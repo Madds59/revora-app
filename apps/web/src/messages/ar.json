@@ -333,7 +333,16 @@
     "appointments": "المواعيد",
     "invoices": "الفواتير",
     "maintenance": "الصيانة",
-    "inspections": "الفحوصات"
+    "inspections": "الفحوصات",
+    "group": {
+      "work": "العمل",
+      "records": "السجلات",
+      "business": "الأعمال",
+      "myVehicles": "مركباتي",
+      "service": "الخدمة",
+      "support": "الدعم",
+      "tools": "الأدوات"
+    }
   },
   "shell": {
     "openNavigation": "فتح التنقّل",

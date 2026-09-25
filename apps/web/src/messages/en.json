@@ -333,7 +333,16 @@
     "appointments": "Appointments",
     "invoices": "Invoices",
     "maintenance": "Maintenance",
-    "inspections": "Inspections"
+    "inspections": "Inspections",
+    "group": {
+      "work": "Work",
+      "records": "Records",
+      "business": "Business",
+      "myVehicles": "My vehicles",
+      "service": "Service",
+      "support": "Support",
+      "tools": "Tools"
+    }
   },
   "shell": {
     "openNavigation": "Open navigation",
