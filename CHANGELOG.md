@@ -16,10 +16,14 @@ Links point to [Madds59/revora-app](https://github.com/Madds59/revora-app).
 - Error boundary on every route segment with specific, reassuring copy (en/ar).
 - Loading skeleton on every route segment, skeleton variants, and a navigation progress bar.
 - Draft persistence for create forms (quote, customer, vehicle, complaint, feedback, appointment request, onboarding), scoped per tenant.
+- Phase 1 feature registry (`NEXT_PUBLIC_REVORA_FEATURES`) with a server-side route gate for optional modules.
+- Grouped navigation in the business dashboard and customer portal.
 
 ### Changed
 - Dashboard layout and quote/job detail pages run independent queries in parallel; portal home streams its sections.
 - Every submit button shows a pending state.
+- The dashboard home now leads with the inspect → quote → approve → job pipeline instead of flat counters.
+- Vehicle Intelligence, the retainer calculator, membership bundles, analytics, maintenance reminders and feedback are hidden in phase 1. No code was removed; re-enable them through `NEXT_PUBLIC_REVORA_FEATURES`.
 
 ## 2026-09-13 — Legal compliance, accessibility and RPC hardening ([#19])
 
