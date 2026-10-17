@@ -167,6 +167,27 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|TENANT_)' || true
           echo "$out" | grep -q 'TENANT_INTEGRITY_OK'
 
+      # Same discipline for the financial invariants: prove the suite fails
+      # against schema 0040, where header totals drift, balance_due goes
+      # negative and credit notes are uncapped.
+      - name: Positive control (pre-fix finance schema must drift)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:finance:positive-control)"
+          echo "$out" | grep -E '^(cases=|INVOICE_)' || true
+          if ! echo "$out" | grep -q 'INVOICE_INTEGRITY_FAILED'; then
+            echo "::error::Finance positive control did not fail at schema 0040"
+            exit 1
+          fi
+          echo "positive control OK: the finance harness can fail"
+
+      - name: Invoice financial integrity suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:finance)"
+          echo "$out" | grep -E '^(CASE|cases=|INVOICE_)' || true
+          echo "$out" | grep -q 'INVOICE_INTEGRITY_OK'
+
       - name: Existing DVI database security suite
         run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
 

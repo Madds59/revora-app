@@ -249,3 +249,58 @@ test("APPSEC-19: exactly one approval write path exists", () => {
   assert.match(rpc.sql, /status not in \('sent', 'revised'\)/);
   assert.match(rpc.sql, /already been approved/);
 });
+
+// --- APPSEC-20: invoice financial invariants
+//
+// Behavioural proof: supabase/tests/invoice_financial_integrity_tests.sql
+// (`pnpm test:db:finance`). At schema 0040 that suite reports 21 failures --
+// header totals stay at 0 after a line is added, balance_due reaches -1230,
+// and 700 is credited against a 630 invoice -- which is what establishes these
+// guards are protecting a real fix rather than restating an intention.
+
+test("APPSEC-20: invoice header totals are database-owned", () => {
+  const m = allMigrations.find((x) =>
+    /create or replace function public\.recompute_invoice_totals/.test(x.sql));
+  assert.ok(m, "a migration must define recompute_invoice_totals()");
+
+  // Triggers on all three mutation verbs: a DELETE-only gap would let a
+  // removed line leave the header overstated.
+  assert.match(m.sql, /after insert or update or delete on public\.invoice_items/);
+  // The line total is derived, never taken from the client.
+  assert.match(m.sql, /before insert or update on public\.invoice_items/);
+  assert.match(m.sql, /new\.total := public\.invoice_line_total/);
+
+  // The arithmetic must match apps/web/src/lib/money.ts: tax applies to the
+  // post-discount net, and total = subtotal - discount + tax.
+  assert.match(m.sql, /quantity \* unit_price - discount_amount\) \* tax_rate \/ 100/);
+  assert.match(m.sql, /subtotal - t\.discount_total \+ t\.tax_total/);
+});
+
+test("APPSEC-20: overpayment and over-crediting are refused", () => {
+  const m = allMigrations.find((x) =>
+    /enforce_invoice_payment_ceiling/.test(x.sql));
+  assert.ok(m, "a migration must define the payment ceiling");
+
+  // BEFORE, so the row is refused rather than recorded then compensated.
+  assert.match(m.sql, /before insert or update on public\.invoice_payments/);
+  // The invoice row is locked, so two concurrent valid payments cannot
+  // jointly overpay.
+  assert.match(m.sql, /from public\.invoices where id = new\.invoice_id for update/);
+  assert.match(m.sql, /overpayment is not supported/);
+  // A stored amount_paid above total is unrepresentable too.
+  assert.match(m.sql, /amount_paid >= 0 and amount_paid <= total/);
+  // Credit notes are capped against the invoice total.
+  assert.match(m.sql, /would exceed the invoice total/);
+});
+
+test("APPSEC-20: an issued invoice's lines are immutable", () => {
+  const m = allMigrations.find((x) =>
+    /enforce_invoice_items_draft_only/.test(x.sql));
+  assert.ok(m, "a migration must enforce draft-only invoice lines");
+  assert.match(m.sql, /before insert or update or delete on public\.invoice_items/);
+  assert.match(m.sql, /issue a credit note instead/);
+  // The application already enforced this rule; the point is that the database
+  // now does too, so PostgREST cannot step around it.
+  const actions = read("app/[locale]/(dashboard)/invoices/actions.ts");
+  assert.match(actions, /Only draft invoices can be edited/);
+});
