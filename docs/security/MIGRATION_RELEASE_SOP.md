@@ -141,3 +141,77 @@ preference:
 
 Because every migration in this repository is additive, option 1 is normally
 sufficient.
+
+## 9. Deferred: tightening `is_super_admin()` to require MFA (aal2)
+
+Migration `0045_admin_mfa_assurance_helpers.sql` ships the assurance predicates
+but **deliberately does not** tighten `is_super_admin()`. This section is the
+rest of that change, held back because applying it today is an outage.
+
+### The gap it closes
+
+The MFA gate in middleware is a **routing** control: it stops an aal1 admin
+reaching `/admin` in a browser. It does nothing about a stolen admin credential
+used to `POST /rest/v1/rpc/admin_list_users` directly at PostgREST with an aal1
+token. That is the admin **data** surface, and it is open.
+
+### Why it is not applied
+
+Measured against production:
+
+| | |
+|---|---|
+| `platform_admins` | 2 |
+| verified MFA factors | **0** |
+| admins who could reach aal2 | **0** |
+
+Applying it now revokes admin data access from **both** platform admins, with
+no enrolled factor to recover through.
+
+### Preconditions
+
+1. Enable MFA on the Supabase project (Authentication → providers).
+2. Every platform admin enrols and **verifies** a TOTP factor.
+3. Confirm readiness — every row must read `t`:
+
+   ```sql
+   select * from public.admin_aal2_readiness();
+   ```
+
+   An `unverified` factor does not count; the function only credits `verified`.
+
+### The change, as a new migration
+
+```sql
+create or replace function public.is_super_admin()
+returns boolean language sql stable security definer set search_path to 'public'
+as $$ select public.has_admin_aal2(); $$;
+
+comment on function public.is_super_admin() is
+  'Platform-admin authority: platform_admins membership AND aal2 (MFA), enforced at the database boundary independently of Next.js middleware.';
+```
+
+It covers **17** privileged functions, not the 14 matching `admin\_%`: three
+more (`get_business_revenue_summary`, `get_business_revenue_trend`,
+`list_business_billing_invoices`) reach admin authority through
+`is_super_admin()` as an `OR` branch. Tightening the helper covers every
+present and future caller at one point.
+
+Ordinary business users are unaffected: tenant-scoped functions are guarded as
+`if not is_business_member(...) and not is_super_admin()`, so a member passes on
+the first branch regardless of assurance level. No RLS policy references
+`is_super_admin`, so no read path changes.
+
+### Rollback
+
+```sql
+create or replace function public.is_super_admin()
+returns boolean language sql stable security definer set search_path to 'public'
+as $$ select exists (select 1 from public.platform_admins pa where pa.user_id = auth.uid()); $$;
+```
+
+This is the correct emergency action if admins are locked out. It reopens the
+aal1 PostgREST bypass, so treat it as temporary and re-apply once enrolment is
+possible. Update the comment on `is_super_admin()` either way — the
+`auth_hardening_tests.sql` case `is_super_admin_residual_is_documented` asserts
+the comment matches reality, and will fail if the two drift apart.

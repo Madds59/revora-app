@@ -153,8 +153,31 @@ as $$
   select nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email';
 $$;
 
+-- MFA factors. Shape mirrors hosted Supabase; factor_type and status are
+-- enums there, modelled as text with a CHECK so the shim needs no extra types.
+-- Required because the admin assurance helpers (0045) read this table to
+-- report MFA enrolment readiness.
+create table if not exists auth.mfa_factors (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  friendly_name text,
+  factor_type text not null default 'totp'
+    check (factor_type in ('totp', 'phone', 'webauthn')),
+  status text not null default 'unverified'
+    check (status in ('unverified', 'verified')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  secret text,
+  phone text,
+  last_challenged_at timestamptz,
+  web_authn_credential jsonb,
+  web_authn_aaguid uuid,
+  last_webauthn_challenge_data jsonb
+);
+
 grant usage on schema auth to anon, authenticated, service_role;
 grant select on auth.users to anon, authenticated, service_role;
+grant select on auth.mfa_factors to authenticated, service_role;
 grant execute on all functions in schema auth to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------

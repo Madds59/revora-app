@@ -426,3 +426,76 @@ test("TRUST-01: new tenant references inherit the APPSEC-18 invariant", () => {
   assert.match(m.sql, /refusing to add integrity constraints over corrupt data/);
   assert.match(m.sql, /select public\.apply_tenant_parent_integrity\(\) into result/);
 });
+
+// --- APPSEC-10 (ported): auth rate limiting and MFA assurance
+//
+// Behavioural proof: supabase/tests/auth_hardening_tests.sql
+// (`pnpm test:db:auth`), 26 cases against a real database.
+
+test("APPSEC-10: the rate limiter is reachable only by service_role", () => {
+  const m = allMigrations.find((x) => /consume_rate_limit/.test(x.sql));
+  assert.ok(m, "a migration must define consume_rate_limit()");
+
+  // Postgres grants EXECUTE to PUBLIC on every new function, AND 0003's
+  // ALTER DEFAULT PRIVILEGES grants it to anon/authenticated directly. Both
+  // are independent grants, so revoking only from PUBLIC is a silent no-op --
+  // a mistake already made once on the source branch.
+  for (const role of ["public", "anon", "authenticated"]) {
+    assert.match(
+      m.sql,
+      new RegExp(`revoke all on function public\\.consume_rate_limit\\(text, text\\) from ${role}`, "i"),
+      `consume_rate_limit must be revoked from ${role}`,
+    );
+  }
+  assert.match(m.sql, /grant execute on function public\.consume_rate_limit\(text, text\) to service_role/i);
+
+  // The table itself is reachable only through the RPC.
+  assert.match(m.sql, /revoke all on public\.auth_rate_limits from anon, authenticated/i);
+
+  // Limits live inside the function; a caller must not be able to request a
+  // more generous one, and an unknown scope must fail closed.
+  assert.match(m.sql, /raise exception 'consume_rate_limit: unknown scope %', scope/);
+  assert.match(m.sql, /encode\(digest\(lower\(identifier\), 'sha256'\), 'hex'\)/);
+});
+
+test("APPSEC-10: the ported rate-limit migration is idempotent", () => {
+  const m = allMigrations.find((x) => /auth_rate_limits/.test(x.sql) && /create table/i.test(x.sql));
+  assert.ok(m, "a migration must create auth_rate_limits");
+  // A developer database already applied the original under its old number, so
+  // re-running the renumbered file must converge rather than abort.
+  assert.match(m.sql, /create table if not exists public\.auth_rate_limits/i);
+  assert.match(m.sql, /create index if not exists auth_rate_limits_window_start_idx/i);
+  // Renumbered above the applied 0034-0043, never reusing 0031/0032.
+  assert.ok(/^004[4-9]|^00[5-9]/.test(m.name), `expected a 0044+ file, got ${m.name}`);
+});
+
+test("APPSEC-10: MFA assurance predicates exist and fail closed", () => {
+  const m = allMigrations.find((x) => /has_admin_aal2/.test(x.sql));
+  assert.ok(m, "a migration must define has_admin_aal2()");
+  // A missing or empty claim resolves to aal1, never to something permissive.
+  assert.match(m.sql, /coalesce\(nullif\(auth\.jwt\(\) ->> 'aal', ''\), 'aal1'\)/);
+  // Admin-ness AND assurance, not either.
+  assert.match(m.sql, /platform_admins pa where pa\.user_id = auth\.uid\(\)[\s\S]{0,120}current_assurance_level\(\) = 'aal2'/);
+  // The raising form must not let a caller distinguish the two failures.
+  assert.match(m.sql, /raise exception 'forbidden' using errcode = '42501'/);
+});
+
+test("APPSEC-10: the aal2 switch is deferred, not silently applied", () => {
+  const m = allMigrations.find((x) => /has_admin_aal2/.test(x.sql));
+  // Production has 2 platform admins and 0 verified factors: redefining
+  // is_super_admin() to require aal2 would lock both out with no way back.
+  // The migration must NOT make that switch.
+  assert.doesNotMatch(
+    m.sql,
+    /create or replace function public\.is_super_admin\(\)[\s\S]{0,400}has_admin_aal2\(\)\s*;?\s*\$\$/,
+    "is_super_admin() must not be tightened until every platform admin has enrolled",
+  );
+  // It must ship the readiness check and say so in the schema itself.
+  assert.match(m.sql, /create or replace function public\.admin_aal2_readiness\(\)/);
+  assert.match(m.sql, /Does NOT require aal2/);
+
+  // And the owner-facing procedure must be written down, not left implicit.
+  const sop = readFileSync(`${repoRoot}/docs/security/MIGRATION_RELEASE_SOP.md`, "utf8");
+  assert.match(sop, /tightening `is_super_admin\(\)` to require MFA/i);
+  assert.match(sop, /admin_aal2_readiness\(\)/);
+});

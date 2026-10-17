@@ -80,8 +80,23 @@ for (const rel of files) {
   }
   // A DELETE against a tenant table. Fixture cleanup belongs in tests, and a
   // data repair belongs in a reviewed, separately-documented step.
-  if (/\bdelete\s+from\s+public\./i.test(code)) {
-    findings.push(`${rel}: DELETE FROM public.*`);
+  //
+  // The allowlist is narrow and justified per entry, NOT a way to quiet the
+  // gate: a table qualifies only if it holds no tenant data (no business_id)
+  // and deleting from it is the table's designed behaviour. Everything else is
+  // still flagged, including inside a DO block -- so `do $$ begin delete from
+  // public.jobs; end $$;` is caught.
+  const DELETE_ALLOWED = new Set([
+    // Ephemeral rate-limit counters. consume_rate_limit()'s opportunistic
+    // reaper deletes buckets whose window closed over a day ago; that is the
+    // documented lifecycle for the table, and it carries no tenant rows.
+    "auth_rate_limits",
+  ]);
+  for (const m of code.matchAll(/\bdelete\s+from\s+public\.([a-z0-9_"]+)/gi)) {
+    const table = m[1].replace(/"/g, "").toLowerCase();
+    if (!DELETE_ALLOWED.has(table)) {
+      findings.push(`${rel}: DELETE FROM public.${table}`);
+    }
   }
 }
 

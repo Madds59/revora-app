@@ -230,6 +230,13 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|TRUSTED_)' || true
           echo "$out" | grep -q 'TRUSTED_RECORD_OK'
 
+      - name: Auth hardening suite (rate limits, MFA assurance)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:auth)"
+          echo "$out" | grep -E '^(CASE|cases=|AUTH_HARDENING)' || true
+          echo "$out" | grep -q 'AUTH_HARDENING_OK'
+
       - name: Existing DVI database security suite
         run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
 
