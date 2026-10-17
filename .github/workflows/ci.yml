@@ -237,6 +237,26 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|AUTH_HARDENING)' || true
           echo "$out" | grep -q 'AUTH_HARDENING_OK'
 
+      # At 0045 an unverified signup claims the victim's customer record AND
+      # accepts a pending staff invitation. Require that control to fail.
+      - name: Positive control (pre-fix email takeover must succeed)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:claims:positive-control)"
+          echo "$out" | grep -E '^(cases=|VERIFIED_EMAIL)' || true
+          if ! echo "$out" | grep -q 'VERIFIED_EMAIL_FAILED'; then
+            echo "::error::Email-claim positive control did not fail at schema 0045"
+            exit 1
+          fi
+          echo "positive control OK: the takeover is reproducible pre-fix"
+
+      - name: Verified-email claim guard suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:claims)"
+          echo "$out" | grep -E '^(CASE|cases=|VERIFIED_EMAIL)' || true
+          echo "$out" | grep -q 'VERIFIED_EMAIL_OK'
+
       - name: Existing DVI database security suite
         run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
 

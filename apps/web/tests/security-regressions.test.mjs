@@ -499,3 +499,39 @@ test("APPSEC-10: the aal2 switch is deferred, not silently applied", () => {
   assert.match(sop, /tightening `is_super_admin\(\)` to require MFA/i);
   assert.match(sop, /admin_aal2_readiness\(\)/);
 });
+
+// --- APPSEC-22: identity-claiming flows require a verified email
+//
+// Behavioural proof: supabase/tests/verified_email_claim_tests.sql
+// (`pnpm test:db:claims`). At schema 0045 an unverified signup claims the
+// victim's customer record, reaches their vehicle, accepts a pending staff
+// invitation and consumes it -- 6 failing cases.
+
+test("APPSEC-22: both claim flows require a verified email", () => {
+  const m = allMigrations.find((x) => /current_email_is_verified/.test(x.sql));
+  assert.ok(m, "a migration must define current_email_is_verified()");
+
+  // Read from the server-side column GoTrue writes, not from a JWT claim.
+  // Compared against CODE only: the migration's own comment explains why
+  // auth.jwt() -> 'email_verified' is the wrong source, and matching prose
+  // would fail the assertion for saying the right thing.
+  const code = m.sql.split("\n").filter((l) => !/^\s*--/.test(l)).join("\n");
+  assert.match(code, /from auth\.users u[\s\S]{0,120}email_confirmed_at is not null/);
+  assert.doesNotMatch(code, /email_verified/);
+
+  // Both claim functions must be gated.
+  for (const fn of ["claim_customer_records", "claim_business_invitations"]) {
+    const re = new RegExp(
+      `create or replace function public\\.${fn}\\(\\)[\\s\\S]*?not public\\.current_email_is_verified\\(\\)`,
+    );
+    assert.match(m.sql, re, `${fn} must check current_email_is_verified()`);
+  }
+
+  // The invitation guard must run BEFORE the loop, so a refused attempt does
+  // not consume the invitation and lock out the legitimate invitee.
+  const invBody = m.sql.slice(m.sql.indexOf("function public.claim_business_invitations"));
+  const guardAt = invBody.indexOf("current_email_is_verified");
+  const loopAt = invBody.indexOf("for inv in");
+  assert.ok(guardAt > -1 && loopAt > -1 && guardAt < loopAt,
+    "the verified-email guard must precede the invitation loop");
+});
