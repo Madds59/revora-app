@@ -264,6 +264,12 @@ from (
 
 -- ===========================================================================
 -- E. Redaction strips credentials, keeps business fields.
+--
+-- audit_redact() matches on the COLUMN NAME, never the value, so the values
+-- below are deliberately inert placeholders. An earlier draft used a string
+-- shaped like a live Stripe key, which CI's secret scan flagged -- correctly:
+-- a credential-shaped literal does not belong in the repository even as test
+-- data, and it proved nothing the placeholder does not.
 -- ===========================================================================
 insert into public._aud_results (name, expectation, detail, passed)
 select 'redaction_strips_credentials', 'stripped',
@@ -273,7 +279,7 @@ select 'redaction_strips_credentials', 'stripped',
        and not (r ? 'encrypted_password') and not (r ? 'reset_secret')
 from (select public.audit_redact(jsonb_build_object(
         'id', 'x', 'full_name', 'Jane', 'share_token_hash', 'deadbeef',
-        'api_key', 'sk_live_123', 'encrypted_password', 'hash',
+        'api_key', 'REDACT_ME', 'encrypted_password', 'REDACT_ME',
         'reset_secret', 'nope')) as r) t;
 
 insert into public._aud_results (name, expectation, detail, passed)
@@ -281,7 +287,7 @@ select 'redaction_keeps_business_fields', 'kept',
        'full_name present=' || (r ? 'full_name')::text,
        (r ? 'full_name') and (r ? 'id')
 from (select public.audit_redact(jsonb_build_object(
-        'id', 'x', 'full_name', 'Jane', 'api_key', 'sk_live_123')) as r) t;
+        'id', 'x', 'full_name', 'Jane', 'api_key', 'REDACT_ME')) as r) t;
 
 -- ===========================================================================
 -- F. Audit rows do not leak across tenants.
