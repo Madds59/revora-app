@@ -257,6 +257,13 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|VERIFIED_EMAIL)' || true
           echo "$out" | grep -q 'VERIFIED_EMAIL_OK'
 
+      - name: Customer portal authorization matrix
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:portal)"
+          echo "$out" | grep -E '^(CASE|cases=|PORTAL_MATRIX)' || true
+          echo "$out" | grep -q 'PORTAL_MATRIX_OK'
+
       - name: Existing DVI database security suite
         run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
 
