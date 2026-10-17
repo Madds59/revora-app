@@ -188,6 +188,27 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|INVOICE_)' || true
           echo "$out" | grep -q 'INVOICE_INTEGRITY_OK'
 
+      # TRUNCATE is a table-level privilege that RLS cannot govern, so the
+      # pre-fix schema really does let `anon` erase every table. Require that
+      # control to fail before trusting the suite.
+      - name: Positive control (pre-fix privileges must allow TRUNCATE)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:audit:positive-control)"
+          echo "$out" | grep -E '^(cases=|AUDIT_)' || true
+          if ! echo "$out" | grep -q 'AUDIT_PRIVILEGE_FAILED'; then
+            echo "::error::Audit/privilege positive control did not fail at schema 0041"
+            exit 1
+          fi
+          echo "positive control OK: the audit harness can fail"
+
+      - name: Audit coverage and least-privilege suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:audit)"
+          echo "$out" | grep -E '^(CASE|cases=|AUDIT_)' || true
+          echo "$out" | grep -q 'AUDIT_PRIVILEGE_OK'
+
       - name: Existing DVI database security suite
         run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
 

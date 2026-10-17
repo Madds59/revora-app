@@ -304,3 +304,58 @@ test("APPSEC-20: an issued invoice's lines are immutable", () => {
   const actions = read("app/[locale]/(dashboard)/invoices/actions.ts");
   assert.match(actions, /Only draft invoices can be edited/);
 });
+
+// --- APPSEC-21: audit coverage and API-role least privilege
+//
+// Behavioural proof: supabase/tests/audit_and_privilege_tests.sql
+// (`pnpm test:db:audit`). At schema 0041 that suite shows `anon` -- with no
+// session at all -- successfully running TRUNCATE against every public table,
+// and the entire financial lifecycle producing zero audit rows.
+
+test("APPSEC-21: privileges RLS cannot govern are revoked from the API roles", () => {
+  const m = allMigrations.find((x) =>
+    /revoke truncate[^;]*on all tables in schema public/i.test(x.sql));
+  assert.ok(m, "a migration must revoke TRUNCATE from the API roles");
+
+  // RLS does not apply to TRUNCATE, so holding it defeats every policy.
+  assert.match(m.sql, /revoke truncate, trigger, references on all tables in schema public\s*\n?\s*from anon, authenticated/i);
+
+  // 0003 set ALTER DEFAULT PRIVILEGES to grant ALL on future tables, which
+  // would hand TRUNCATE straight back to the next table created.
+  assert.match(
+    m.sql,
+    /alter default privileges in schema public\s*\n?\s*revoke truncate, trigger, references on tables from anon, authenticated/i,
+  );
+
+  // audit_events must be append-only for the API roles.
+  assert.match(m.sql, /revoke insert, update, delete on public\.audit_events from anon, authenticated/i);
+
+  // service_role is the trusted server-side key and must NOT be stripped.
+  assert.doesNotMatch(m.sql, /revoke[^;]*from[^;]*service_role/i);
+});
+
+test("APPSEC-21: the financial and inspection layers are audited", () => {
+  const m = allMigrations.find((x) => /audited_tables\(\)/.test(x.sql));
+  assert.ok(m, "a migration must expose audited_tables()");
+  for (const t of [
+    "invoices", "invoice_items", "invoice_payments", "invoice_credit_notes",
+    "appointments", "vehicles", "complaint_evidence", "approval_events",
+    "vehicle_inspections", "inspection_items",
+  ]) {
+    assert.ok(
+      m.sql.includes(`'${t}'`),
+      `${t} must be added to the audit trigger set`,
+    );
+  }
+});
+
+test("APPSEC-21: audit payloads drop credentials but keep business fields", () => {
+  const m = allMigrations.find((x) => /audit_redact/.test(x.sql));
+  assert.ok(m, "a migration must define audit_redact()");
+  assert.match(m.sql, /token\|secret\|password\|encrypted/);
+  // Both payload sides go through the filter.
+  assert.match(m.sql, /public\.audit_redact\(to_jsonb\(old\)\)/);
+  assert.match(m.sql, /public\.audit_redact\(to_jsonb\(new\)\)/);
+  // The claim must stay accurate: tamper-RESISTANT, not tamper-proof.
+  assert.match(m.sql, /not cryptographically immutable/i);
+});

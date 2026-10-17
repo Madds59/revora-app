@@ -17,6 +17,8 @@
     "test:db:positive-control": "node scripts/db-test.mjs --reset --up-to 0038 --run ../../supabase/tests/tenant_parent_integrity_tests.sql",
     "test:db:finance": "node scripts/db-test.mjs --reset --run ../../supabase/tests/invoice_financial_integrity_tests.sql",
     "test:db:finance:positive-control": "node scripts/db-test.mjs --reset --up-to 0040 --run ../../supabase/tests/invoice_financial_integrity_tests.sql",
+    "test:db:audit": "node scripts/db-test.mjs --reset --run ../../supabase/tests/audit_and_privilege_tests.sql",
+    "test:db:audit:positive-control": "node scripts/db-test.mjs --reset --up-to 0041 --run ../../supabase/tests/audit_and_privilege_tests.sql",
     "audit:tenant-fks": "node scripts/audit-tenant-fks.mjs",
     "audit:approval-path": "node scripts/audit-approval-path.mjs",
     "audit:migrations": "node scripts/audit-migration-collisions.mjs && node scripts/audit-migration-safety.mjs",
