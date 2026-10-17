@@ -322,7 +322,6 @@ export async function approveQuote(
   formData: FormData,
 ): Promise<FormState> {
   const { accounts } = await requireCustomerPortal();
-  const user = await getUser();
 
   const parsed = approveQuoteSchema.safeParse({
     quotationId: formData.get("quotation_id"),
@@ -344,8 +343,8 @@ export async function approveQuote(
     return { error: "Please acknowledge the parts, pricing, and terms." };
 
   // Explicit ownership + state check before mutation (APPSEC-11): the quotation
-  // must belong to this session's customer account and still be approvable. RLS
-  // (`approvals_customer_insert`) remains the enforcement backstop.
+  // must belong to this session's customer account and still be approvable.
+  // Enforcement itself lives in submit_quote_approval() below.
   const supabase = await createClient();
   const { data: quoteRow, error: quoteError } = await supabase
     .from("quotations")
@@ -371,20 +370,23 @@ export async function approveQuote(
     };
 
   const headerList = await headers();
-  const { error } = await supabase.from("approvals").insert({
-    // Identity fields come from the session-verified quotation row.
-    business_id: quoteRow.business_id,
-    quotation_id: quoteRow.id,
-    customer_id: quoteRow.customer_id,
-    quotation_version: quoteRow.current_version,
-    language: v.language,
-    acknowledgement_text: `I, ${v.signature}, acknowledge the parts, pricing, and terms of this quotation.`,
-    user_agent: headerList.get("user-agent"),
-    device_data: {
-      signed_name: v.signature,
-      signed_by: user?.id ?? null,
-      customer_note: v.customerNote,
-    },
+  // The write goes through submit_quote_approval(), the one canonical approval
+  // path (APPSEC-19): `public.approvals` has no INSERT grant for
+  // `authenticated`, so there is no direct-insert alternative to drift from.
+  //
+  // The checks above are kept for the specific, translatable error messages a
+  // customer should see ("this quotation has been updated", "can no longer be
+  // approved"). They are UX, not the boundary: the RPC re-derives tenant and
+  // customer from the quotation and re-enforces state and version itself, so a
+  // caller skipping this action entirely gets the same answer.
+  const { error } = await supabase.rpc("submit_quote_approval", {
+    p_quotation_id: quoteRow.id,
+    p_quotation_version: quoteRow.current_version,
+    p_language: v.language,
+    p_acknowledgement_text: `I, ${v.signature}, acknowledge the parts, pricing, and terms of this quotation.`,
+    p_signed_name: v.signature,
+    p_customer_note: v.customerNote ?? undefined,
+    p_user_agent: headerList.get("user-agent") ?? undefined,
   });
   if (error) {
     console.error("approveQuote failed", error);

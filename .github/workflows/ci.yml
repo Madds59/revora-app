@@ -112,6 +112,73 @@ jobs:
           fi
           echo "secret scan clean (no key-like values in added lines)"
 
+  db-security:
+    name: Database security (RLS / tenant integrity)
+    # The cross-tenant integrity guarantees (APPSEC-18/19) are enforced by
+    # PostgreSQL, so asserting them needs a real database -- the offline suite
+    # in `validate` cannot exercise an RLS policy or a foreign key. This job
+    # provisions a disposable postgres:17 container (Docker is available on the
+    # runner; no Supabase stack is required) and applies every migration from
+    # zero before running the policy tests.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout (full history for migration-collision check)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # Proves the suite can FAIL before trusting it to pass. At schema 0038
+      # every cross-tenant injection is accepted, so this step REQUIRES
+      # TENANT_INTEGRITY_FAILED. Without it, a suite that silently stopped
+      # exercising the policies would look identical to a suite that passes.
+      - name: Positive control (pre-fix schema must be exploitable)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:positive-control)"
+          echo "$out" | grep -E '^(CASE|cases=|TENANT_)' || true
+          if ! echo "$out" | grep -q 'TENANT_INTEGRITY_FAILED'; then
+            echo "::error::Positive control did not fail at schema 0038 -- the RLS suite is not exercising the policies"
+            exit 1
+          fi
+          echo "positive control OK: the harness can fail"
+
+      - name: Cross-tenant integrity suite (all migrations)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db)"
+          echo "$out" | grep -E '^(CASE|cases=|TENANT_)' || true
+          echo "$out" | grep -q 'TENANT_INTEGRITY_OK'
+
+      - name: Existing DVI database security suite
+        run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
+
+      - name: Systematic tenant parent/child FK audit
+        run: pnpm -s audit:tenant-fks | tail -40
+
+      - name: Canonical approval path audit
+        run: pnpm -s audit:approval-path
+
+      - name: Migration numbering and safety audit
+        run: pnpm -s audit:migrations
+
   smoke:
     name: Production route smoke (read-only)
     # Prod-dependent and read-only: run on main pushes and manual dispatch, not on

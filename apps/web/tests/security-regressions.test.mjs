@@ -179,3 +179,73 @@ test("platform_admins: self-elevation and self-removal safeguards remain present
     "platform admin grants must never be derived from account_intent",
   );
 });
+
+// --- APPSEC-18 / APPSEC-19: cross-tenant parent integrity and one approval path
+//
+// The behavioural proof for these lives in
+// supabase/tests/tenant_parent_integrity_tests.sql, which exercises the
+// policies against a real PostgreSQL (`node scripts/db-test.mjs --reset --run
+// ../../supabase/tests/tenant_parent_integrity_tests.sql`). These static guards
+// exist so a reintroduced write path fails in `pnpm test` during review,
+// before anyone needs a database to notice.
+
+const migrationsDir = path.join(repoRoot, "supabase/migrations");
+const allMigrations = readdirSync(migrationsDir)
+  .filter((f) => /^\d{4}.*\.sql$/.test(f))
+  .map((f) => ({ name: f, sql: readFileSync(path.join(migrationsDir, f), "utf8") }));
+
+test("APPSEC-18: the tenant parent/child invariant is enforced structurally", () => {
+  const sql = allMigrations.map((m) => m.sql).join("\n");
+  // The relation set is derived from the catalog, so a table added later
+  // inherits the invariant instead of silently reintroducing the class.
+  assert.match(sql, /create or replace function public\.tenant_parent_child_relations\(\)/);
+  // Composite FK (fk_column, business_id) -> parent (id, business_id).
+  assert.match(sql, /foreign key \(%I, business_id\)/);
+  assert.match(sql, /references public\.%I \(id, business_id\)/);
+  // The census must refuse to constrain corrupt data rather than delete it.
+  assert.match(sql, /refusing to add integrity constraints over corrupt data/);
+  assert.doesNotMatch(sql, /delete from public\.\w+ where business_id is distinct from/i);
+});
+
+test("APPSEC-18: handle_quote_approved validates its own tenant invariant", () => {
+  const m = allMigrations.find((x) => /handle_quote_approved/.test(x.sql)
+    && /tenant mismatch/.test(x.sql));
+  assert.ok(m, "a migration must redefine handle_quote_approved with a tenant check");
+  // The privileged trigger must compare the approval against the quotation it
+  // loaded, and fail closed -- not return NEW on a mismatch.
+  assert.match(m.sql, /q\.business_id is distinct from new\.business_id/);
+  assert.match(m.sql, /q\.customer_id is distinct from new\.customer_id/);
+  assert.match(m.sql, /raise exception[\s\S]{0,200}tenant mismatch/);
+});
+
+test("APPSEC-19: exactly one approval write path exists", () => {
+  const portal = read("app/[locale]/(portal)/portal/actions.ts");
+  const dashboard = read("app/[locale]/(dashboard)/quotations/actions.ts");
+
+  // Both approval entry points go through the canonical RPC...
+  assert.match(portal, /rpc\("submit_quote_approval"/);
+  assert.match(dashboard, /rpc\("submit_quote_approval"/);
+
+  // ...and neither writes the table directly.
+  for (const [label, src] of [["portal", portal], ["dashboard", dashboard]]) {
+    assert.doesNotMatch(
+      src,
+      /from\(\s*["']approvals["']\s*\)\s*\.\s*(insert|upsert|update|delete)/,
+      `${label} must not write public.approvals directly`,
+    );
+  }
+
+  // The privilege layer, not developer discipline, keeps the second door shut.
+  const revoke = allMigrations.find((m) =>
+    /revoke\s+insert[^;]*on\s+public\.approvals/i.test(m.sql));
+  assert.ok(revoke, "a migration must revoke INSERT on public.approvals");
+
+  // The RPC must enforce the state machine the direct insert used to own,
+  // otherwise moving onto it would have lost those checks.
+  const rpc = allMigrations.find((m) =>
+    /create or replace function public\.submit_quote_approval/.test(m.sql)
+    && /version mismatch/.test(m.sql));
+  assert.ok(rpc, "submit_quote_approval must enforce quote version");
+  assert.match(rpc.sql, /status not in \('sent', 'revised'\)/);
+  assert.match(rpc.sql, /already been approved/);
+});

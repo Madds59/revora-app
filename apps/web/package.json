@@ -12,6 +12,12 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "smoke:routes": "node scripts/e2e.mjs",
+    "test:db": "node scripts/db-test.mjs --reset --run ../../supabase/tests/tenant_parent_integrity_tests.sql",
+    "test:db:dvi": "node scripts/db-test.mjs --run ../../supabase/tests/dvi_security_tests.sql",
+    "test:db:positive-control": "node scripts/db-test.mjs --reset --up-to 0038 --run ../../supabase/tests/tenant_parent_integrity_tests.sql",
+    "audit:tenant-fks": "node scripts/audit-tenant-fks.mjs",
+    "audit:approval-path": "node scripts/audit-approval-path.mjs",
+    "audit:migrations": "node scripts/audit-migration-collisions.mjs && node scripts/audit-migration-safety.mjs",
     "diagnose:billing": "node scripts/diagnose-billing-env.mjs"
   },
   "dependencies": {

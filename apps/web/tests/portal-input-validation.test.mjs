@@ -196,11 +196,20 @@ test("security: mutations use session-derived identity, not raw client ids", () 
   // Complaint insert uses the resolved session account row.
   assert.match(portalActions, /business_id:\s*account\.business_id/);
   assert.match(portalActions, /customer_id:\s*account\.id/);
-  // Reply + approval identity comes from the ownership-verified row.
+  // Reply identity comes from the ownership-verified row.
   assert.match(portalActions, /business_id:\s*complaintRow\.business_id/);
-  assert.match(portalActions, /business_id:\s*quoteRow\.business_id/);
-  assert.match(portalActions, /customer_id:\s*quoteRow\.customer_id/);
   assert.match(portalActions, /target_customer_id:\s*account\.id/);
+
+  // Approval no longer writes identity at all. Since APPSEC-19 it goes through
+  // submit_quote_approval(), which derives business_id and customer_id FROM the
+  // quotation server-side -- a stronger guarantee than passing a
+  // session-verified value, because there is no identity parameter to get
+  // wrong and `public.approvals` has no INSERT grant for `authenticated`.
+  assert.match(portalActions, /rpc\("submit_quote_approval"/);
+  assert.doesNotMatch(portalActions, /from\("approvals"\)\s*\.insert/);
+  // The RPC must not be handed tenant/customer ids by the caller.
+  assert.doesNotMatch(portalActions, /p_business_id/);
+  assert.doesNotMatch(portalActions, /p_customer_id/);
   // Raw client ids must not be written to mutations.
   assert.doesNotMatch(portalActions, /business_id:\s*businessId\b/);
   assert.doesNotMatch(portalActions, /customer_id:\s*customerId\b/);
