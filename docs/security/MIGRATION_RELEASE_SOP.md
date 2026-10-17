@@ -69,6 +69,34 @@ pnpm audit:tenant-fks        # TENANT_FK_AUDIT_OK
 pnpm audit:approval-path     # APPROVAL_PATH_CANONICAL
 ```
 
+## 5b. Regenerate the database types when app code will use the change
+
+`apps/web/src/lib/database.types.ts` is generated. A migration that only adds
+schema does not require it — nothing references the new entities yet and
+`pnpm typecheck` passes — but the first code that touches them does.
+
+Generate from a freshly reset test database, not from production (production is
+one or more migrations behind by definition at this point):
+
+```bash
+cd apps/web
+node scripts/db-test.mjs --reset
+cd ..
+npx supabase@<the version the team pins> gen types typescript \
+  --db-url 'postgresql://postgres:postgres@127.0.0.1:54322/revora_sec_test' \
+  > apps/web/src/lib/database.types.ts
+```
+
+Reset first: the SQL harnesses create `_sec_results` / `_fin_results` /
+`_aud_results` / `_trr_results` tables, and generating after a test run emits
+types for them.
+
+Pin the CLI version. The committed file was produced by an older CLI that
+emitted formatted output; 2.121.0 emits compact output and no formatter is
+installed in this workspace, so generating with a newer CLI rewrites all ~5000
+lines and buries the real change. Match the version that produced the file in
+tree, or format the result the same way, before committing it.
+
 ## 6. Deploy schema and code together
 
 Some migrations change the privilege surface the application depends on.

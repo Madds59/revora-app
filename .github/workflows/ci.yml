@@ -209,6 +209,27 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|AUDIT_)' || true
           echo "$out" | grep -q 'AUDIT_PRIVILEGE_OK'
 
+      # The whole point of Phase 1: one journey, reconstructable end to end with
+      # the vehicle linked throughout. Before 0043 the chain cannot even be
+      # built -- jobs have no vehicle_id and neither performed work nor
+      # warranties exist -- so the control asserts that refusal.
+      - name: Positive control (trusted record unbuildable before 0043)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:lifecycle:positive-control 2>&1 || true)"
+          if ! echo "$out" | grep -q 'trusted-record schema missing'; then
+            echo "::error::Lifecycle positive control did not refuse at schema 0042"
+            exit 1
+          fi
+          echo "positive control OK: the chain is unbuildable before 0043"
+
+      - name: Trusted-record lifecycle suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:lifecycle)"
+          echo "$out" | grep -E '^(CASE|cases=|TRUSTED_)' || true
+          echo "$out" | grep -q 'TRUSTED_RECORD_OK'
+
       - name: Existing DVI database security suite
         run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
 

@@ -359,3 +359,70 @@ test("APPSEC-21: audit payloads drop credentials but keep business fields", () =
   // The claim must stay accurate: tamper-RESISTANT, not tamper-proof.
   assert.match(m.sql, /not cryptographically immutable/i);
 });
+
+// --- TRUST-01: Phase 1 trusted-record completion
+//
+// Behavioural proof: supabase/tests/trusted_record_lifecycle_tests.sql
+// (`pnpm test:db:lifecycle`), which builds one journey from customer to
+// complaint resolution and reconstructs it in a single join, asserting tenant,
+// customer and vehicle agreement at every hop. Before 0043 that file refuses to
+// run at all, because the schema cannot represent the chain.
+
+test("TRUST-01: a job can be traced to a vehicle", () => {
+  const m = allMigrations.find((x) => /alter table public\.jobs add column if not exists vehicle_id/.test(x.sql));
+  assert.ok(m, "a migration must add jobs.vehicle_id");
+
+  // Backfilled from the quotation, scoped to the same tenant -- a backfill that
+  // crossed tenants would fabricate service history.
+  assert.match(m.sql, /set vehicle_id = q\.vehicle_id/);
+  assert.match(m.sql, /q\.business_id = j\.business_id/);
+
+  // Nullable on purpose, with the unresolved rows surfaced rather than guessed.
+  assert.match(m.sql, /create or replace view public\.jobs_missing_vehicle/);
+  assert.doesNotMatch(m.sql, /alter table public\.jobs[^;]*alter column vehicle_id set not null/i);
+});
+
+test("TRUST-01: performed work is distinguishable from quoted work", () => {
+  const m = allMigrations.find((x) => /create table if not exists public\.job_performed_items/.test(x.sql));
+  assert.ok(m, "a migration must create job_performed_items");
+  // The link back to the quote is what makes extra and omitted work visible.
+  assert.match(m.sql, /source_quotation_item_id uuid references public\.quotation_items/);
+  assert.match(m.sql, /quantity numeric\(12,2\) not null default 1 check \(quantity > 0\)/);
+  // Customer-facing exposure must not be widened silently: the portal gets
+  // warranties, not internal workshop detail.
+  assert.doesNotMatch(m.sql, /job_performed_items[\s\S]{0,400}is_customer_for_business/);
+});
+
+test("TRUST-01: a warranty is a coverage record, not wording", () => {
+  const m = allMigrations.find((x) => /create table if not exists public\.warranties/.test(x.sql));
+  assert.ok(m, "a migration must create warranties");
+  for (const col of [
+    "customer_id", "vehicle_id", "job_id", "invoice_id", "performed_item_id",
+    "coverage_start", "coverage_end", "coverage_months", "coverage_mileage",
+    "invoked_at", "complaint_id",
+  ]) {
+    assert.ok(m.sql.includes(col), `warranties must record ${col}`);
+  }
+  // A row must commit to something measurable, or it is free text again.
+  assert.match(m.sql, /constraint warranties_has_duration/);
+  assert.match(m.sql, /constraint warranties_claimed_has_invocation/);
+});
+
+test("TRUST-01: complaints can reach their originating context", () => {
+  const m = allMigrations.find((x) => /complaint_category/.test(x.sql));
+  assert.ok(m, "a migration must add the complaint category");
+  assert.match(m.sql, /alter table public\.complaints add column if not exists vehicle_id/);
+  assert.match(m.sql, /alter table public\.complaints add column if not exists invoice_id/);
+  // Category is left NULL rather than guessed: a fabricated category corrupts
+  // the grouping it exists to enable.
+  assert.doesNotMatch(m.sql, /set category = '/);
+});
+
+test("TRUST-01: new tenant references inherit the APPSEC-18 invariant", () => {
+  const m = allMigrations.find((x) => /apply_tenant_parent_integrity/.test(x.sql));
+  assert.ok(m, "a migration must expose apply_tenant_parent_integrity()");
+  // Idempotent, census-first, and actually invoked -- defining it without
+  // calling it would leave the new references uncovered.
+  assert.match(m.sql, /refusing to add integrity constraints over corrupt data/);
+  assert.match(m.sql, /select public\.apply_tenant_parent_integrity\(\) into result/);
+});
