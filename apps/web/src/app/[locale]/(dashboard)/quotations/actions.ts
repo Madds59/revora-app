@@ -252,9 +252,19 @@ export async function sendQuote(
 }
 
 /**
- * Records a customer's digital approval of the current quote version. Allowed
- * by RLS only when the signed-in user IS the linked customer
- * (customers.app_user_id = auth.uid()), per `approvals_customer_insert`.
+ * Records a customer's digital approval of the current quote version.
+ *
+ * Goes through `submit_quote_approval()`, the one canonical approval path
+ * (APPSEC-19). `public.approvals` has no INSERT grant for `authenticated`, so
+ * this is not a stylistic preference -- it is the only door.
+ *
+ * This function previously inserted `business_id`, `quotation_id` and
+ * `customer_id` straight from the submitted form and relied entirely on
+ * `approvals_customer_insert` to catch a mismatch. That policy never compared
+ * the quotation's tenant with the row's, which made this the primary P0
+ * forgery vector. The RPC derives tenant and customer FROM the quotation and
+ * verifies the caller is that customer, so the form can no longer choose whose
+ * approval it is -- and the identity fields it posts are now ignored.
  */
 export async function approveQuote(
   _prev: FormState,
@@ -280,15 +290,17 @@ export async function approveQuote(
 
   const headerList = await headers();
   const supabase = await createClient();
-  const { error } = await supabase.from("approvals").insert({
-    business_id: v.businessId,
-    quotation_id: v.quotationId,
-    customer_id: v.customerId,
-    quotation_version: v.quotationVersion,
-    language: v.language,
-    acknowledgement_text: `I, ${v.signature}, acknowledge the parts, pricing, and terms of this quotation.`,
-    user_agent: headerList.get("user-agent"),
-    device_data: { signed_name: v.signature, customer_note: v.customerNote },
+  // v.businessId / v.customerId are deliberately NOT passed: the RPC reads
+  // both from the quotation. It also enforces quote state, version match and
+  // one approval per version, which this action never checked.
+  const { error } = await supabase.rpc("submit_quote_approval", {
+    p_quotation_id: v.quotationId,
+    p_quotation_version: v.quotationVersion,
+    p_language: v.language,
+    p_acknowledgement_text: `I, ${v.signature}, acknowledge the parts, pricing, and terms of this quotation.`,
+    p_signed_name: v.signature,
+    p_customer_note: v.customerNote ?? undefined,
+    p_user_agent: headerList.get("user-agent") ?? undefined,
   });
   if (error) {
     console.error("approveQuote failed", error);
