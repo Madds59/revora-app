@@ -270,6 +270,28 @@ jobs:
       - name: Systematic tenant parent/child FK audit
         run: pnpm -s audit:tenant-fks | tail -40
 
+      # Positive control for the view audit below. It builds one deliberately
+      # bad view (owner rights + write grants for anon) and one correct view,
+      # and REQUIRES the detector to flag the first on both counts and clear
+      # the second. An absence check that was never shown failing proves
+      # nothing -- this is how we know the step below is still looking.
+      - name: Positive control (the view audit must be able to fail and to pass)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:views:self-test)"
+          echo "$out"
+          if ! echo "$out" | grep -q 'VIEW_SECURITY_SELFTEST_OK'; then
+            echo "::error::View-security detector failed its own positive control"
+            exit 1
+          fi
+
+      # The class that 0043 shipped: a view without `security_invoker = true`
+      # runs as its owner, so RLS is never applied to the caller, and
+      # 0003's default privileges hand new views write grants as well. The 210
+      # database test cases all assert against tables and cannot see this.
+      - name: View security audit (RLS evaluated as caller, no public writes)
+        run: pnpm -s audit:views
+
       - name: Canonical approval path audit
         run: pnpm -s audit:approval-path
 
