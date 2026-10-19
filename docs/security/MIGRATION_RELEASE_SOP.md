@@ -176,7 +176,12 @@ window, because the two-minute mismatch is unavoidable.
 ### Immediately before merge
 
 * Re-read the diff. The migration you reviewed is the one that will apply.
-* `pnpm audit:migrations` is green on the merge commit, not just on your branch.
+* `pnpm audit:migrations` is green on your branch. It is also meaningful after
+  the merge: on `main` itself the safety half audits what the merge brought in
+  along its first parent (`HEAD^1..HEAD`), rather than diffing `main` against
+  itself and finding nothing. A change that adds no migration reports
+  `MIGRATION_SAFETY_NOT_APPLICABLE` and passes; only an unresolvable base
+  reports `MIGRATION_SAFETY_UNAVAILABLE` and fails.
 * The Supabase integration check on the PR has passed. Keep it as a GitHub
   **required check**: Supabase recommends it precisely so a failing migration
   cannot be merged.
