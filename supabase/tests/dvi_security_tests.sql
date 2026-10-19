@@ -537,27 +537,132 @@ select 'ANON_ITEM_SELECT_ROWS=' || count(*)::text from public.inspection_items;
 select 'ANON_TEMPLATE_SELECT_ROWS=' || count(*)::text from public.inspection_templates;
 
 \echo '-- no DVI function is executable by anon except the two resolvers --'
--- Supabase DEFAULT PRIVILEGES grant EXECUTE on every new public function to the
--- anon ROLE, so `revoke ... from public` alone does nothing. This asserts the
--- EXACT allowlist rather than merely listing it: adding a DVI function without
--- an explicit `revoke ... from public, anon` fails this case.
+-- REPAIRED (0047). The previous version of this check asked whether the ACL
+-- TEXT contained 'anon=X':
+--
+--   array_to_string(proacl, ' ') like '%anon=X%'
+--
+-- which is exactly the wrong question. PostgreSQL grants EXECUTE on every new
+-- function to PUBLIC by default, and anon is a member of PUBLIC, so the
+-- offending grant never names anon at all -- the ACL reads '=X/postgres'.
+-- Seven SECURITY DEFINER functions created after 0038 were anon-callable that
+-- way and this assertion reported the schema clean. It was also scoped to
+-- names matching '%inspection%', and it only SELECTed a boolean, so nothing
+-- could fail. It now uses has_function_privilege, which resolves direct
+-- grants, PUBLIC and role inheritance together, and it feeds the verdict below.
 reset role;
+
 select 'ANON_EXECUTABLE_DVI_FUNCTIONS=' ||
-       coalesce(string_agg(proname, ',' order by proname), 'NONE')
-from pg_proc
-where pronamespace = 'public'::regnamespace
-  and (proname like '%inspection%')
-  and array_to_string(proacl, ' ') like '%anon=X%';
+       coalesce(string_agg(p.proname, ',' order by p.proname), 'NONE')
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname like '%inspection%'
+  and has_function_privilege('anon', p.oid, 'EXECUTE');
 
 select 'ANON_FUNCTION_ALLOWLIST_EXACT=' || (
-  coalesce((select string_agg(proname, ',' order by proname)
-            from pg_proc
-            where pronamespace = 'public'::regnamespace
-              and proname like '%inspection%'
-              and array_to_string(proacl, ' ') like '%anon=X%'), 'NONE')
+  coalesce((select string_agg(p.proname, ',' order by p.proname)
+            from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public'
+              and p.proname like '%inspection%'
+              and has_function_privilege('anon', p.oid, 'EXECUTE')), 'NONE')
   = 'resolve_inspection_share,resolve_inspection_share_items')::text;
 
 reset role;
 
-\echo ''
+-- ============================================================================
+-- VERDICT
+--
+-- WHY THIS EXISTS
+-- Every other harness in this directory ends with a success token that CI
+-- asserts with `grep -q`. This one did not, so its CI step was written as
+--     pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
+-- where the pipe discards the suite's status and `|| true` guarantees a green
+-- job. The step could not fail, which is how the broken allowlist assertion
+-- above survived.
+--
+-- WHAT THE TOKEN COVERS
+-- The anon authorization boundary -- this suite's core security claim -- plus
+-- the harness completing. It deliberately does NOT aggregate every KEY=value
+-- line above: those assertion names are cited by name from docs/security/ and
+-- are a stable public contract, so they are left exactly as they were. Read
+-- the KEY=value output for the behavioural detail; the token is the gate.
+-- ============================================================================
+drop table if exists public._dvi_verdict;
+create table public._dvi_verdict (
+  seq serial primary key, claim text not null, observed text, passed boolean not null
+);
+-- The ensure_rls event trigger (0043) enables RLS on every new public table,
+-- including this scratch table. It is harness bookkeeping, not tenant data.
+alter table public._dvi_verdict disable row level security;
+
+do $verdict$
+declare
+  v_bad text;
+  n bigint;
+begin
+  -- 1. The anonymous SECURITY DEFINER allowlist is exact, schema-wide.
+  select string_agg(p.oid::regprocedure::text, ', ' order by p.oid::regprocedure::text)
+    into v_bad
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef
+     and has_function_privilege('anon', p.oid, 'EXECUTE')
+     and p.proname not in ('resolve_inspection_share', 'resolve_inspection_share_items');
+  insert into public._dvi_verdict (claim, observed, passed)
+  values ('anon executes no SECURITY DEFINER function outside the two resolvers',
+          coalesce(v_bad, 'none'), v_bad is null);
+
+  -- 2. Both share resolvers remain anon-callable: closing the hole by breaking
+  --    the public share link would not be a fix.
+  insert into public._dvi_verdict (claim, observed, passed)
+  values ('resolve_inspection_share is still anon-executable',
+          has_function_privilege('anon', 'public.resolve_inspection_share(bytea)', 'EXECUTE')::text,
+          has_function_privilege('anon', 'public.resolve_inspection_share(bytea)', 'EXECUTE'));
+  insert into public._dvi_verdict (claim, observed, passed)
+  values ('resolve_inspection_share_items is still anon-executable',
+          has_function_privilege('anon', 'public.resolve_inspection_share_items(bytea)', 'EXECUTE')::text,
+          has_function_privilege('anon', 'public.resolve_inspection_share_items(bytea)', 'EXECUTE'));
+
+  -- 3. anon reads no inspection data directly. Counts are gathered under the
+  --    anon role and recorded AFTER resetting it: writing to a scratch table
+  --    while impersonating anon would test the scratch table, not the schema.
+  declare
+    n_items bigint;
+    n_templates bigint;
+  begin
+    execute 'set local role anon';
+    begin
+      execute 'select count(*) from public.inspection_items' into n_items;
+    exception when others then n_items := 0;
+    end;
+    begin
+      execute 'select count(*) from public.inspection_templates' into n_templates;
+    exception when others then n_templates := 0;
+    end;
+    execute 'reset role';
+
+    insert into public._dvi_verdict (claim, observed, passed)
+    values ('anon sees no inspection_items rows', coalesce(n_items, 0)::text, coalesce(n_items, 0) = 0);
+    insert into public._dvi_verdict (claim, observed, passed)
+    values ('anon sees no inspection_templates rows', coalesce(n_templates, 0)::text, coalesce(n_templates, 0) = 0);
+  end;
+end
+$verdict$;
+
+\pset format unaligned
+\pset tuples_only on
+
+select format('DVI_CLAIM %s = %s (observed %s)',
+              claim, case when passed then 'PASS' else 'FAIL' end, coalesce(observed, 'n/a'))
+from public._dvi_verdict where not passed order by seq;
+
+select format('dvi_claims=%s passed=%s failed=%s',
+              count(*), count(*) filter (where passed), count(*) filter (where not passed))
+from public._dvi_verdict;
+
+select case when count(*) filter (where not passed) = 0
+            then 'DVI_SECURITY_OK' else 'DVI_SECURITY_FAILED' end
+from public._dvi_verdict;
+
 \echo '################ DONE ################'
