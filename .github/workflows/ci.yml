@@ -264,8 +264,22 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|PORTAL_MATRIX)' || true
           echo "$out" | grep -q 'PORTAL_MATRIX_OK'
 
+      # This step used to read `pnpm -s test:db:dvi | grep -E 'ERROR|=' || true`.
+      # The pipe handed grep's status to the shell and `|| true` discarded even
+      # that, so the step could not fail -- which is how a broken allowlist
+      # assertion inside the suite survived. The suite now ends in a verdict
+      # token like every other harness here, and `:strict` resets the schema
+      # first so the result does not depend on step order.
       - name: Existing DVI database security suite
-        run: pnpm -s test:db:dvi | grep -E 'ERROR|=' || true
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:dvi:strict)"
+          echo "$out" | grep -E '^( ?ANON_|DVI_CLAIM|dvi_claims=|DVI_SECURITY)' || true
+          if echo "$out" | grep -q 'DB_HARNESS_FAILED'; then
+            echo "::error::DVI harness failed to run"
+            exit 1
+          fi
+          echo "$out" | grep -q 'DVI_SECURITY_OK'
 
       - name: Systematic tenant parent/child FK audit
         run: pnpm -s audit:tenant-fks | tail -40
@@ -291,6 +305,50 @@ jobs:
       # database test cases all assert against tables and cannot see this.
       - name: View security audit (RLS evaluated as caller, no public writes)
         run: pnpm -s audit:views
+
+      # The view audit reads the catalog. This suite proves the BEHAVIOUR, and
+      # at schema 0046 it must fail: anon really could read, UPDATE and DELETE
+      # through jobs_missing_vehicle, and two tenants could see each other's
+      # rows. Require that control to fail before trusting the suite to pass.
+      - name: Positive control (pre-fix view must leak across tenants)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:views:positive-control)"
+          echo "$out" | grep -E '^(CASE|cases=|VIEW_PRIVILEGE)' || true
+          if ! echo "$out" | grep -q 'VIEW_PRIVILEGE_FAILED'; then
+            echo "::error::View-privilege positive control did not fail at schema 0046"
+            exit 1
+          fi
+          echo "positive control OK: the view leak is reproducible pre-fix"
+
+      - name: View and function privilege matrix
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:views)"
+          echo "$out" | grep -E '^(CASE|cases=|VIEW_PRIVILEGE)' || true
+          echo "$out" | grep -q 'VIEW_PRIVILEGE_OK'
+
+      # Positive control for the function audit below. PostgreSQL grants
+      # EXECUTE to PUBLIC on every new function, and anon is a member of
+      # PUBLIC, so the offending grant never names anon -- which is why the
+      # previous ACL-text check reported a clean schema. This control builds a
+      # SECURITY DEFINER function reachable ONLY through PUBLIC and requires
+      # the detector to catch it, plus a direct grant, a correctly closed
+      # function, and a missing allowlist entry.
+      - name: Positive control (the function audit must see the PUBLIC route)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:functions:self-test)"
+          echo "$out"
+          if ! echo "$out" | grep -q 'FUNCTION_PRIVILEGE_SELFTEST_OK'; then
+            echo "::error::Function-privilege detector failed its own positive control"
+            exit 1
+          fi
+
+      # The invariant 0038 believed it had: anon executes exactly the two
+      # token-gated inspection-share resolvers and nothing else.
+      - name: Anonymous SECURITY DEFINER allowlist audit
+        run: pnpm -s audit:functions
 
       - name: Canonical approval path audit
         run: pnpm -s audit:approval-path

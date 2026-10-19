@@ -62,12 +62,32 @@ clean).
 
 ## 5. Run the full gate set
 
+Run these sequentially. `pretypecheck` runs `next typegen`, so `typecheck` and
+`build` race over generated state if run concurrently.
+
 ```bash
 cd apps/web
 pnpm lint && pnpm typecheck && pnpm build && pnpm test
-pnpm audit:tenant-fks        # TENANT_FK_AUDIT_OK
-pnpm audit:approval-path     # APPROVAL_PATH_CANONICAL
+pnpm audit:migrations            # MIGRATION_NUMBERING_OK + MIGRATION_SAFETY_*
+pnpm audit:tenant-fks            # TENANT_FK_AUDIT_OK
+pnpm audit:approval-path         # APPROVAL_PATH_CANONICAL
+
+# Privilege detectors. Run each self-test FIRST: it is the positive control
+# that proves the detector can still fail. A detector that has only ever
+# printed OK has proved nothing.
+pnpm audit:views:self-test       # VIEW_SECURITY_SELFTEST_OK
+pnpm audit:views                 # VIEW_SECURITY_AUDIT_OK
+pnpm audit:functions:self-test   # FUNCTION_PRIVILEGE_SELFTEST_OK
+pnpm audit:functions             # FUNCTION_PRIVILEGE_AUDIT_OK
+
+pnpm test:db:all                 # every suite, then both audits
 ```
+
+If the migration adds a VIEW, or any function, read `0047`'s header before
+writing it: a view runs as its OWNER unless `security_invoker = true` is set,
+and PostgreSQL grants `EXECUTE` on every new function to `PUBLIC`. Both defaults
+are open, both have shipped as live holes here, and both detectors above exist
+because the 210 table-shaped test cases cannot see either one.
 
 ## 5b. Regenerate the database types when app code will use the change
 
@@ -97,19 +117,87 @@ installed in this workspace, so generating with a newer CLI rewrites all ~5000
 lines and buries the real change. Match the version that produced the file in
 tree, or format the result the same way, before committing it.
 
-## 6. Deploy schema and code together
+## 6. Merging is the deployment. Order what you can, then verify.
 
-Some migrations change the privilege surface the application depends on.
-`0040_canonical_approval_path.sql` revokes `INSERT` on `public.approvals` from
-`authenticated`, so the matching application commit — which routes approvals
-through `submit_quote_approval()` — **must** ship with it.
+**Merging a migration PR to `main` is itself production authorization.** Treat
+the merge button as the apply step, because it is.
 
-> Never leave production schema ahead of production code, or code ahead of
-> schema. For a coupled change, merge the PR, let the Vercel deployment for
-> that commit go green, and apply the migration in the same maintenance step.
+### What the merge triggers, with no further action
 
-Verify alignment afterwards: the deployed commit and the applied migration
-version must both be the ones you intended.
+The Supabase GitHub integration is configured to deploy from `main`. Supabase
+documents the behaviour: *"changes pushed to `main` are automatically
+deployed"*, and for the GitHub integration, *"automatically deploy changes when
+you push or merge to production branch... New migrations are applied."*
+Observed on the 0039-0046 release: the migrations were applied roughly 37
+seconds after the merge, while the matching Vercel deployment did not report
+READY until about 2m09s after it.
+
+So, on merge:
+
+* New migrations are applied to **production**, directly. This project is on
+  the **free** plan, so Supabase Branching is unavailable and there is no
+  preview environment between the PR and production.
+* Edge Functions and storage buckets declared in `config.toml` are deployed.
+* Vercel builds and promotes the matching application commit **afterwards**.
+
+This has a consequence the previous version of this section got wrong: it
+instructed the operator to merge, wait for the Vercel deployment to go green,
+and then apply the migration in the same maintenance step. That sequence is not
+available. The schema is already changed before the deployment is ready, and for
+a window of roughly two minutes **production schema is ahead of production
+code**. You cannot order those two events from here; you can only decide whether
+that window is safe, and verify both ends afterwards.
+
+### Classify the change before you merge
+
+**Schema-only, privilege-reducing** (for example `0047`, which sets
+`security_invoker` and revokes grants): the window is safe in one direction.
+Reducing a privilege the deployed code never used cannot break the running
+application. Confirm that claim explicitly — grep the app for every object whose
+privileges change, and confirm the roles that keep access are the ones the code
+actually uses — then merge on its own.
+
+**Schema/application coupled** (for example
+`0040_canonical_approval_path.sql`, which revokes `INSERT` on
+`public.approvals` from `authenticated` and requires the commit that routes
+approvals through `submit_quote_approval()`): the window is **not** safe. The
+old code is live against the new schema for about two minutes and will fail.
+Make the change tolerate both states instead of trying to sequence it:
+
+1. Ship the code first, in its own PR, written to work against the old schema
+   **and** the new one.
+2. Let that deployment go READY.
+3. Merge the migration PR second.
+
+An expand/contract pair is two PRs, not one maintenance step. If a change
+genuinely cannot be split, say so on the PR and schedule it as an announced
+window, because the two-minute mismatch is unavoidable.
+
+### Immediately before merge
+
+* Re-read the diff. The migration you reviewed is the one that will apply.
+* `pnpm audit:migrations` is green on the merge commit, not just on your branch.
+* The Supabase integration check on the PR has passed. Keep it as a GitHub
+  **required check**: Supabase recommends it precisely so a failing migration
+  cannot be merged.
+* You have decided which class the change is, and are merging in that order.
+
+### Immediately after merge
+
+```bash
+# 1. The applied schema version is the one you merged.
+#    (supabase_migrations.schema_migrations has no timestamp column, so check
+#    the version, not a time.)
+# 2. The deployed Vercel commit is the one you merged.
+# 3. Re-run the privilege detectors against production's advisors:
+#      Supabase Dashboard -> Advisors -> Security
+# 4. Smoke the routes the change touches.
+```
+
+Both ends must be the versions you intended. If the migration applied and the
+deployment failed, you are left with schema ahead of code and must either fix
+forward or revert the application commit — see section 8. There is no PITR to
+fall back on.
 
 ## 7. If the APPSEC-18 census refuses to apply
 
@@ -135,12 +223,23 @@ Forward-only means there is no `down` migration. Recovery options, in order of
 preference:
 
 1. A new migration that reverses the change (preferred).
-2. Supabase Point-in-Time Recovery / the automatic daily backup, for a
-   destructive mistake. **Confirm the project's backup tier covers the window
-   you need before relying on this** — PITR is not available on every plan.
+2. The automatic daily backup, for a destructive mistake. Note the limits:
+   this organization is on the **free** plan (verified), so there is **no
+   point-in-time recovery**. A daily backup is the only restore point, and
+   restoring it discards everything written since it was taken.
 
-Because every migration in this repository is additive, option 1 is normally
-sufficient.
+**Plan as if recovery is forward-only, because in practice it is.** That is why
+no migration in this repository deletes, truncates or rewrites data, and why
+`0039`'s census raises on corrupt rows instead of repairing them. A migration
+that needs a rollback plan beyond "write the inverse migration" needs the
+owner's sign-off before it is merged, not after.
+
+Because every migration in this repository is additive or privilege-reducing,
+option 1 is normally sufficient. For a privilege reduction the inverse is the
+matching `grant`; for `0047` specifically it is `alter view ... set
+(security_invoker = false)` plus the grants it revoked, which should only ever
+be written with the owner's explicit decision, since it reopens a proven
+cross-tenant hole.
 
 ## 9. Deferred: tightening `is_super_admin()` to require MFA (aal2)
 
