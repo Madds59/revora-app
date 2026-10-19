@@ -353,6 +353,11 @@ jobs:
       - name: Canonical approval path audit
         run: pnpm -s audit:approval-path
 
+      # Runs on every event. The safety half picks its own subject: the
+      # migrations a branch adds against origin/main, or -- on `main`, where
+      # that range is empty by definition -- the ones the merge brought in
+      # along its first parent. A change that adds no migration passes as
+      # NOT_APPLICABLE; an unresolvable base still fails as UNAVAILABLE.
       - name: Migration numbering and safety audit
         run: pnpm -s audit:migrations
 

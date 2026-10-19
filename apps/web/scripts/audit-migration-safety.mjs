@@ -14,12 +14,39 @@ const REPO = resolve(import.meta.dirname, "../../..");
 const git = (args) =>
   execFileSync("git", ["-C", REPO, ...args], { encoding: "utf8" });
 
-let added;
-try {
-  added = git(["diff", "--name-only", "--diff-filter=A", "origin/main...HEAD", "--", "supabase/migrations/"])
+// SUBJECT SELECTION. Three contexts have to work. Two of them used to exit 1
+// with nothing actually wrong:
+//
+//   * a branch or pull request -- audit the migrations it adds against
+//     origin/main. This is the case that always worked.
+//   * a push to `main` -- HEAD *is* origin/main, so that range is empty by
+//     definition and the gate failed on every single merge. Audit what the
+//     merge brought in, along the first parent, so there is still a real
+//     subject on this side of the merge.
+//   * a change that adds no migration at all -- docs, CI, application code.
+//     Having nothing to audit is not the same as failing to audit.
+//
+// The guard that matters is kept: if the base cannot be resolved at all -- a
+// shallow clone, a missing origin/main, a root commit with no parent -- that
+// is UNAVAILABLE and still fails, because then a migration really could slip
+// past unchecked.
+const rev = (ref) => git(["rev-parse", ref]).trim();
+const addedIn = (range) =>
+  git(["diff", "--name-only", "--diff-filter=A", ...range, "--", "supabase/migrations/"])
     .split("\n").filter(Boolean);
+
+let added;
+let subject;
+try {
+  if (rev("HEAD") === rev("origin/main")) {
+    added = addedIn(["HEAD^1", "HEAD"]);
+    subject = "merge onto main (HEAD^1..HEAD)";
+  } else {
+    added = addedIn(["origin/main...HEAD"]);
+    subject = "branch vs origin/main";
+  }
 } catch (err) {
-  process.stderr.write(`cannot diff against origin/main: ${err.message}\n`);
+  process.stderr.write(`cannot resolve the audit base: ${err.message}\n`);
   process.stdout.write("MIGRATION_SAFETY_UNAVAILABLE\n");
   process.exit(1);
 }
@@ -101,14 +128,14 @@ for (const rel of files) {
 }
 
 process.stdout.write(
-  `migrations_checked=${files.length} findings=${findings.length}\n`,
+  `migrations_checked=${files.length} subject="${subject}" findings=${findings.length}\n`,
 );
 if (files.length === 0) {
-  process.stderr.write(
-    "no new migrations found -- this gate would pass without checking anything\n",
-  );
-  process.stdout.write("MIGRATION_SAFETY_NO_SUBJECT\n");
-  process.exit(1);
+  // The base resolved and this change introduces no migration, so there is
+  // nothing for this gate to say. Printing the resolved subject above is what
+  // keeps the pass honest: a reader can see what was examined.
+  process.stdout.write("MIGRATION_SAFETY_NOT_APPLICABLE\n");
+  process.exit(0);
 }
 if (findings.length) {
   process.stdout.write(findings.map((f) => `  - ${f}`).join("\n") + "\n");
