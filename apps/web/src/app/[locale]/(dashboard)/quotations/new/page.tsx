@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { requireMembership } from "@/lib/auth";
 import { canManageQuotes } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 import { NewQuoteForm, type CustomerOption } from "./new-quote-form";
 
@@ -47,12 +48,18 @@ export default async function NewQuotePage() {
   if (!canManageQuotes(member.role)) redirect("/quotations");
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("customers")
-    .select("id, full_name, vehicles(id, make, model, plate_number)")
+    .select(
+      "id, full_name, vehicles!vehicles_customer_id_fkey(id, make, model, plate_number)",
+    )
     .is("deleted_at", null)
     .order("full_name");
-  const rows = (data ?? []) as unknown as CustomerRow[];
+  // A failed query must not read as "this business has no customers".
+  const rows = unwrapRows(
+    { data, error },
+    "quotations.new.customers",
+  ) as unknown as CustomerRow[];
 
   const t = await getTranslations("dashboardQuotations.new");
   const tFallback = await getTranslations("dashboardQuotations.fallback");

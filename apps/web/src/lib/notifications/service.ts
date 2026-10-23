@@ -655,7 +655,7 @@ export async function enqueueQuoteSentNotification(quotationId: string) {
     const admin = createAdminClient();
     const { data } = await admin
       .from("quotations")
-      .select("id, business_id, customer_id, quote_number, customer:customers(full_name), business:businesses(name)")
+      .select("id, business_id, customer_id, quote_number, customer:customers!quotations_customer_id_fkey(full_name), business:businesses(name)")
       .eq("id", quotationId)
       .maybeSingle();
     const quote = data as

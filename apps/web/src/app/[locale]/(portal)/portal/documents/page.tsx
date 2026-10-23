@@ -55,7 +55,7 @@ export default async function PortalDocumentsPage() {
   const { data, error } = await supabase
     .from("documents")
     .select(
-      "id, title, document_type, created_at, business_id, job_id, customer_id, customer:customers(full_name), quotation:quotations(quote_number), complaint:complaints(subject), job:jobs(title), media:media_assets(bucket, object_path, file_name, mime_type, visibility)",
+      "id, title, document_type, created_at, business_id, job_id, customer_id, customer:customers!documents_customer_id_fkey(full_name), quotation:quotations!documents_quotation_id_fkey(quote_number), complaint:complaints!documents_complaint_id_fkey(subject), job:jobs!documents_job_id_fkey(title), media:media_assets!documents_media_asset_id_fkey(bucket, object_path, file_name, mime_type, visibility)",
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });

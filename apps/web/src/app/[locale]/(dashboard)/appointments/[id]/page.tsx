@@ -41,7 +41,7 @@ export default async function AppointmentDetailPage({
   const { data } = await supabase
     .from("appointments")
     .select(
-      "*, customer:customers(full_name, phone), vehicle:vehicles(make, model, plate_number), branch:branches(name)",
+      "*, customer:customers!appointments_customer_id_fkey(full_name, phone), vehicle:vehicles!appointments_vehicle_id_fkey(make, model, plate_number), branch:branches!appointments_branch_id_fkey(name)",
     )
     .eq("business_id", business.id)
     .eq("id", id)

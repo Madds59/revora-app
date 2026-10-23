@@ -41,7 +41,7 @@ export default async function VehicleDiagnosisPage({
   const supabase = await createClient();
   const { data: vehicleRows } = await supabase
     .from("vehicles")
-    .select("id, customer_id, make, model, year, plate_number, vin, customer:customers(full_name, email)")
+    .select("id, customer_id, make, model, year, plate_number, vin, customer:customers!vehicles_customer_id_fkey(full_name, email)")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
 

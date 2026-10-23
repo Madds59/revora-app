@@ -42,7 +42,7 @@ export default async function PortalInvoiceDetailPage({
 
   const { data } = await supabase
     .from("invoices")
-    .select("*, business:businesses(name, trn), vehicle:vehicles(make, model, plate_number)")
+    .select("*, business:businesses(name, trn), vehicle:vehicles!invoices_vehicle_id_fkey(make, model, plate_number)")
     .in("customer_id", customerIds.length > 0 ? customerIds : ["00000000-0000-0000-0000-000000000000"])
     .neq("status", "draft")
     .eq("id", id)

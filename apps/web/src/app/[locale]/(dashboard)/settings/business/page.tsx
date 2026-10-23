@@ -70,7 +70,7 @@ export default async function BusinessSettingsPage() {
   const [{ data: memberRows }, { data: inviteRows }] = await Promise.all([
     supabase
       .from("business_members")
-      .select("id, role, user_id, profile:profiles(full_name)")
+      .select("id, role, user_id, profile:profiles!business_members_user_id_fkey(full_name)")
       .eq("business_id", business.id)
       .eq("is_active", true)
       .order("created_at", { ascending: true }),

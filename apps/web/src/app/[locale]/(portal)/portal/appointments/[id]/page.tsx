@@ -33,7 +33,7 @@ export default async function PortalAppointmentDetailPage({
 
   const { data } = await supabase
     .from("appointments")
-    .select("*, business:businesses(name), vehicle:vehicles(make, model, plate_number)")
+    .select("*, business:businesses(name), vehicle:vehicles!appointments_vehicle_id_fkey(make, model, plate_number)")
     .in("customer_id", customerIds.length > 0 ? customerIds : ["00000000-0000-0000-0000-000000000000"])
     .eq("id", id)
     .maybeSingle();

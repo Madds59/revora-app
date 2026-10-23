@@ -41,7 +41,7 @@ export default async function DtcDecoderPage({
   const supabase = await createClient();
   const { data } = await supabase
     .from("vehicles")
-    .select("id, make, model, year, plate_number, vin, customer:customers(full_name)")
+    .select("id, make, model, year, plate_number, vin, customer:customers!vehicles_customer_id_fkey(full_name)")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
 

@@ -307,7 +307,7 @@ export async function loadVehicleBusinessContext(vehicleId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("vehicles")
-    .select("id, business_id, customer_id, make, model, year, plate_number, vin, color, metadata, business:businesses(name), customer:customers(full_name, email)")
+    .select("id, business_id, customer_id, make, model, year, plate_number, vin, color, metadata, business:businesses(name), customer:customers!vehicles_customer_id_fkey(full_name, email)")
     .eq("id", vehicleId)
     .maybeSingle();
 

@@ -63,7 +63,7 @@ export default async function InvoiceDetailPage({
 
   const { data } = await supabase
     .from("invoices")
-    .select("*, customer:customers(full_name), vehicle:vehicles(make, model, plate_number)")
+    .select("*, customer:customers!invoices_customer_id_fkey(full_name), vehicle:vehicles!invoices_vehicle_id_fkey(make, model, plate_number)")
     .eq("business_id", business.id)
     .eq("id", id)
     .maybeSingle();

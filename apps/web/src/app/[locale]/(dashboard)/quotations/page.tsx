@@ -38,7 +38,7 @@ export default async function QuotationsPage() {
   const { data, error } = await supabase
     .from("quotations")
     .select(
-      "id, quote_number, status, total, currency, created_at, customer:customers(full_name)",
+      "id, quote_number, status, total, currency, created_at, customer:customers!quotations_customer_id_fkey(full_name)",
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });

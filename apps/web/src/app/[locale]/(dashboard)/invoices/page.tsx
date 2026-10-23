@@ -35,7 +35,7 @@ export default async function InvoicesPage() {
   const { data, error } = await supabase
     .from("invoices")
     .select(
-      "id, invoice_number, status, total, amount_paid, currency, created_at, customer:customers(full_name)",
+      "id, invoice_number, status, total, amount_paid, currency, created_at, customer:customers!invoices_customer_id_fkey(full_name)",
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });

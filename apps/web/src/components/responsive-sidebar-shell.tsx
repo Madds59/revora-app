@@ -51,10 +51,21 @@ export function ResponsiveSidebarShell({
   );
 
   return (
-    <div className="min-h-dvh bg-background md:grid md:grid-cols-[280px_1fr]">
-      {/* Desktop sidebar */}
-      <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border hidden flex-col border-e md:flex">
-        {sidebarBody()}
+    <div className="min-h-dvh bg-background md:grid md:grid-cols-[304px_1fr]">
+      {/* Desktop sidebar: a detached panel, pinned so it holds position while
+          the page scrolls. The 12px inset lives inside this column (304px =
+          280px panel + p-3 on both sides), leaving the content column's
+          geometry untouched. `min-h-0` on the panel is load-bearing: without
+          it the flex child refuses to shrink below its content, the nav's
+          overflow-y-auto never engages, and the panel grows past h-dvh and
+          scrolls away. A ring replaces the old `border-e` — it has no side to
+          get wrong under RTL, and it carries the panel edge in dark mode,
+          where --sidebar and --background sit 0.02 lightness apart and the
+          shadow is effectively invisible. */}
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:p-3">
+        <div className="bg-sidebar text-sidebar-foreground ring-sidebar-border flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-lg ring-1">
+          {sidebarBody()}
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-col">

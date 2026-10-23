@@ -60,7 +60,7 @@ export default async function JobDetailPage({
   const { data } = await supabase
     .from("jobs")
     .select(
-      "*, customer:customers(full_name), quotation:quotations(quote_number, vehicle:vehicles(make, model, plate_number))",
+      "*, customer:customers!jobs_customer_id_fkey(full_name), quotation:quotations!jobs_quotation_id_fkey(quote_number, vehicle:vehicles!quotations_vehicle_id_fkey(make, model, plate_number))",
     )
     .eq("business_id", business.id)
     .eq("id", id)
