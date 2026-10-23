@@ -1,22 +1,7 @@
 "use client";
 
-import { ErrorState } from "@/components/error-state";
+import { RouteErrorBoundary, type RouteErrorProps } from "@/components/route-error-boundary";
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  return (
-    <ErrorState
-      title="Analytics failed to load"
-      description="The tenant analytics screen could not finish loading. Retry or return to the dashboard."
-      errorDigest={error.digest}
-      onRetry={reset}
-      backHref="/"
-      backLabel="Back to dashboard"
-    />
-  );
+export default function AnalyticsError(props: RouteErrorProps) {
+  return <RouteErrorBoundary {...props} section="analytics" backHref="/" />;
 }

@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
-import { FilterToolbar } from "@/components/filter-toolbar";
+import { FilterToolbar, useDateRangeOptions } from "@/components/filter-toolbar";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import {
   Table,
@@ -26,22 +27,7 @@ import {
 } from "@/lib/filtering";
 import type { AdminAuditLogRow } from "@/lib/admin-views";
 
-const DATE_OPTIONS = [
-  { label: "All time", value: "all" },
-  { label: "Today", value: "today" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-  { label: "Last 90 days", value: "90d" },
-  { label: "Last year", value: "1y" },
-];
-
-const ACTION_OPTIONS = [
-  { label: "All actions", value: "all" },
-  { label: "Create", value: "create" },
-  { label: "Update", value: "update" },
-  { label: "Delete", value: "delete" },
-  { label: "Other", value: "other" },
-];
+const ACTION_VALUES = ["all", "create", "update", "delete", "other"] as const;
 
 function actionGroup(action: string) {
   const normalized = action.toLowerCase();
@@ -60,6 +46,9 @@ export function AdminAuditLogsBrowser({
   logs: AdminAuditLogRow[];
   totalCount?: number;
 }) {
+  const t = useTranslations("adminAuditLogs.browser");
+  const tFilters = useTranslations("common.filters");
+  const dateOptions = useDateRangeOptions();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -97,7 +86,7 @@ export function AdminAuditLogsBrowser({
   return (
     <div className="flex flex-col gap-6">
       <FilterToolbar
-        searchPlaceholder="Search actor, action, or table"
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={search}
         onSearchValueChange={(value) => {
           setSearch(value);
@@ -108,7 +97,7 @@ export function AdminAuditLogsBrowser({
           setActionFilter(value);
           pushQuery({ action: value === "all" ? null : value, page: null });
         }}
-        statusOptions={ACTION_OPTIONS}
+        statusOptions={ACTION_VALUES.map((value) => ({ label: t(`actions.${value}`), value }))}
         dateValue={dateRange}
         onDateValueChange={(value) => {
           const next = value as DateRange;
@@ -121,10 +110,10 @@ export function AdminAuditLogsBrowser({
             page: null,
           });
         }}
-        dateOptions={DATE_OPTIONS}
+        dateOptions={dateOptions}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{filtered.length} visible</Badge>
+            <Badge variant="secondary">{tFilters("visibleCount", { count: filtered.length })}</Badge>
             <Button
               type="button"
               variant="ghost"
@@ -137,7 +126,7 @@ export function AdminAuditLogsBrowser({
               }}
               disabled={search.length === 0 && dateRange === "all" && actionFilter === "all"}
             >
-              Reset filters
+              {tFilters("reset")}
             </Button>
           </div>
         }
@@ -147,15 +136,15 @@ export function AdminAuditLogsBrowser({
         <CardContent className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">
-              Showing {filtered.length} of {totalCount ?? logs.length} events
+              {t("showing", { shown: filtered.length, total: totalCount ?? logs.length })}
             </span>
             <span className="text-muted-foreground">Actor / action / table</span>
           </div>
 
           {filtered.length === 0 ? (
             <EmptyState
-              title="No audit events match"
-              description="Try a different search or reset the filters."
+              title={t("noMatch")}
+              description={tFilters("noMatchDescription")}
             />
           ) : (
             <>
@@ -166,7 +155,7 @@ export function AdminAuditLogsBrowser({
                 renderItem={(log) => (
                   <MobileDataCard
                     title={log.table_name}
-                    subtitle={log.business_name ?? "Platform"}
+                    subtitle={log.business_name ?? t("platform")}
                     meta={
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline">{log.action}</Badge>
@@ -181,11 +170,11 @@ export function AdminAuditLogsBrowser({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>When</TableHead>
-                      <TableHead>Business</TableHead>
-                      <TableHead>Actor</TableHead>
-                      <TableHead>Table</TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead>{t("table.when")}</TableHead>
+                      <TableHead>{t("table.business")}</TableHead>
+                      <TableHead>{t("table.actor")}</TableHead>
+                      <TableHead>{t("table.table")}</TableHead>
+                      <TableHead>{t("table.action")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -195,7 +184,7 @@ export function AdminAuditLogsBrowser({
                           {new Date(log.created_at).toLocaleString()}
                         </TableCell>
                         <TableCell className="font-medium">
-                          {log.business_name ?? "Platform"}
+                          {log.business_name ?? t("platform")}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {log.actor_email ?? log.actor_name ?? "—"}

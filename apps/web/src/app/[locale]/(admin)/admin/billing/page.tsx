@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { requireSuperAdmin } from "@/lib/auth";
 import type { AdminSubscriptionRow, PlatformMetrics } from "@/lib/admin-views";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -43,7 +44,7 @@ export default async function AdminBillingPage() {
     supabase.rpc("admin_platform_metrics"),
     supabase.rpc("admin_list_subscriptions"),
   ]);
-  if (error) console.error("AdminBillingPage failed to load", error);
+  if (error) reportError(error, { section: "adminBilling" });
 
   const metrics = metricsData as unknown as PlatformMetrics | null;
   const subscriptions = (subRows ?? []) as unknown as AdminSubscriptionRow[];

@@ -179,3 +179,359 @@ test("platform_admins: self-elevation and self-removal safeguards remain present
     "platform admin grants must never be derived from account_intent",
   );
 });
+
+// --- APPSEC-18 / APPSEC-19: cross-tenant parent integrity and one approval path
+//
+// The behavioural proof for these lives in
+// supabase/tests/tenant_parent_integrity_tests.sql, which exercises the
+// policies against a real PostgreSQL (`node scripts/db-test.mjs --reset --run
+// ../../supabase/tests/tenant_parent_integrity_tests.sql`). These static guards
+// exist so a reintroduced write path fails in `pnpm test` during review,
+// before anyone needs a database to notice.
+
+const migrationsDir = path.join(repoRoot, "supabase/migrations");
+const allMigrations = readdirSync(migrationsDir)
+  .filter((f) => /^\d{4}.*\.sql$/.test(f))
+  .map((f) => ({ name: f, sql: readFileSync(path.join(migrationsDir, f), "utf8") }));
+
+test("APPSEC-18: the tenant parent/child invariant is enforced structurally", () => {
+  const sql = allMigrations.map((m) => m.sql).join("\n");
+  // The relation set is derived from the catalog, so a table added later
+  // inherits the invariant instead of silently reintroducing the class.
+  assert.match(sql, /create or replace function public\.tenant_parent_child_relations\(\)/);
+  // Composite FK (fk_column, business_id) -> parent (id, business_id).
+  assert.match(sql, /foreign key \(%I, business_id\)/);
+  assert.match(sql, /references public\.%I \(id, business_id\)/);
+  // The census must refuse to constrain corrupt data rather than delete it.
+  assert.match(sql, /refusing to add integrity constraints over corrupt data/);
+  assert.doesNotMatch(sql, /delete from public\.\w+ where business_id is distinct from/i);
+});
+
+test("APPSEC-18: handle_quote_approved validates its own tenant invariant", () => {
+  const m = allMigrations.find((x) => /handle_quote_approved/.test(x.sql)
+    && /tenant mismatch/.test(x.sql));
+  assert.ok(m, "a migration must redefine handle_quote_approved with a tenant check");
+  // The privileged trigger must compare the approval against the quotation it
+  // loaded, and fail closed -- not return NEW on a mismatch.
+  assert.match(m.sql, /q\.business_id is distinct from new\.business_id/);
+  assert.match(m.sql, /q\.customer_id is distinct from new\.customer_id/);
+  assert.match(m.sql, /raise exception[\s\S]{0,200}tenant mismatch/);
+});
+
+test("APPSEC-19: exactly one approval write path exists", () => {
+  const portal = read("app/[locale]/(portal)/portal/actions.ts");
+  const dashboard = read("app/[locale]/(dashboard)/quotations/actions.ts");
+
+  // Both approval entry points go through the canonical RPC...
+  assert.match(portal, /rpc\("submit_quote_approval"/);
+  assert.match(dashboard, /rpc\("submit_quote_approval"/);
+
+  // ...and neither writes the table directly.
+  for (const [label, src] of [["portal", portal], ["dashboard", dashboard]]) {
+    assert.doesNotMatch(
+      src,
+      /from\(\s*["']approvals["']\s*\)\s*\.\s*(insert|upsert|update|delete)/,
+      `${label} must not write public.approvals directly`,
+    );
+  }
+
+  // The privilege layer, not developer discipline, keeps the second door shut.
+  const revoke = allMigrations.find((m) =>
+    /revoke\s+insert[^;]*on\s+public\.approvals/i.test(m.sql));
+  assert.ok(revoke, "a migration must revoke INSERT on public.approvals");
+
+  // The RPC must enforce the state machine the direct insert used to own,
+  // otherwise moving onto it would have lost those checks.
+  const rpc = allMigrations.find((m) =>
+    /create or replace function public\.submit_quote_approval/.test(m.sql)
+    && /version mismatch/.test(m.sql));
+  assert.ok(rpc, "submit_quote_approval must enforce quote version");
+  assert.match(rpc.sql, /status not in \('sent', 'revised'\)/);
+  assert.match(rpc.sql, /already been approved/);
+});
+
+// --- APPSEC-20: invoice financial invariants
+//
+// Behavioural proof: supabase/tests/invoice_financial_integrity_tests.sql
+// (`pnpm test:db:finance`). At schema 0040 that suite reports 21 failures --
+// header totals stay at 0 after a line is added, balance_due reaches -1230,
+// and 700 is credited against a 630 invoice -- which is what establishes these
+// guards are protecting a real fix rather than restating an intention.
+
+test("APPSEC-20: invoice header totals are database-owned", () => {
+  const m = allMigrations.find((x) =>
+    /create or replace function public\.recompute_invoice_totals/.test(x.sql));
+  assert.ok(m, "a migration must define recompute_invoice_totals()");
+
+  // Triggers on all three mutation verbs: a DELETE-only gap would let a
+  // removed line leave the header overstated.
+  assert.match(m.sql, /after insert or update or delete on public\.invoice_items/);
+  // The line total is derived, never taken from the client.
+  assert.match(m.sql, /before insert or update on public\.invoice_items/);
+  assert.match(m.sql, /new\.total := public\.invoice_line_total/);
+
+  // The arithmetic must match apps/web/src/lib/money.ts: tax applies to the
+  // post-discount net, and total = subtotal - discount + tax.
+  assert.match(m.sql, /quantity \* unit_price - discount_amount\) \* tax_rate \/ 100/);
+  assert.match(m.sql, /subtotal - t\.discount_total \+ t\.tax_total/);
+});
+
+test("APPSEC-20: overpayment and over-crediting are refused", () => {
+  const m = allMigrations.find((x) =>
+    /enforce_invoice_payment_ceiling/.test(x.sql));
+  assert.ok(m, "a migration must define the payment ceiling");
+
+  // BEFORE, so the row is refused rather than recorded then compensated.
+  assert.match(m.sql, /before insert or update on public\.invoice_payments/);
+  // The invoice row is locked, so two concurrent valid payments cannot
+  // jointly overpay.
+  assert.match(m.sql, /from public\.invoices where id = new\.invoice_id for update/);
+  assert.match(m.sql, /overpayment is not supported/);
+  // A stored amount_paid above total is unrepresentable too.
+  assert.match(m.sql, /amount_paid >= 0 and amount_paid <= total/);
+  // Credit notes are capped against the invoice total.
+  assert.match(m.sql, /would exceed the invoice total/);
+});
+
+test("APPSEC-20: an issued invoice's lines are immutable", () => {
+  const m = allMigrations.find((x) =>
+    /enforce_invoice_items_draft_only/.test(x.sql));
+  assert.ok(m, "a migration must enforce draft-only invoice lines");
+  assert.match(m.sql, /before insert or update or delete on public\.invoice_items/);
+  assert.match(m.sql, /issue a credit note instead/);
+  // The application already enforced this rule; the point is that the database
+  // now does too, so PostgREST cannot step around it.
+  const actions = read("app/[locale]/(dashboard)/invoices/actions.ts");
+  assert.match(actions, /Only draft invoices can be edited/);
+});
+
+// --- APPSEC-21: audit coverage and API-role least privilege
+//
+// Behavioural proof: supabase/tests/audit_and_privilege_tests.sql
+// (`pnpm test:db:audit`). At schema 0041 that suite shows `anon` -- with no
+// session at all -- successfully running TRUNCATE against every public table,
+// and the entire financial lifecycle producing zero audit rows.
+
+test("APPSEC-21: privileges RLS cannot govern are revoked from the API roles", () => {
+  const m = allMigrations.find((x) =>
+    /revoke truncate[^;]*on all tables in schema public/i.test(x.sql));
+  assert.ok(m, "a migration must revoke TRUNCATE from the API roles");
+
+  // RLS does not apply to TRUNCATE, so holding it defeats every policy.
+  assert.match(m.sql, /revoke truncate, trigger, references on all tables in schema public\s*\n?\s*from anon, authenticated/i);
+
+  // 0003 set ALTER DEFAULT PRIVILEGES to grant ALL on future tables, which
+  // would hand TRUNCATE straight back to the next table created.
+  assert.match(
+    m.sql,
+    /alter default privileges in schema public\s*\n?\s*revoke truncate, trigger, references on tables from anon, authenticated/i,
+  );
+
+  // audit_events must be append-only for the API roles.
+  assert.match(m.sql, /revoke insert, update, delete on public\.audit_events from anon, authenticated/i);
+
+  // service_role is the trusted server-side key and must NOT be stripped.
+  assert.doesNotMatch(m.sql, /revoke[^;]*from[^;]*service_role/i);
+});
+
+test("APPSEC-21: the financial and inspection layers are audited", () => {
+  const m = allMigrations.find((x) => /audited_tables\(\)/.test(x.sql));
+  assert.ok(m, "a migration must expose audited_tables()");
+  for (const t of [
+    "invoices", "invoice_items", "invoice_payments", "invoice_credit_notes",
+    "appointments", "vehicles", "complaint_evidence", "approval_events",
+    "vehicle_inspections", "inspection_items",
+  ]) {
+    assert.ok(
+      m.sql.includes(`'${t}'`),
+      `${t} must be added to the audit trigger set`,
+    );
+  }
+});
+
+test("APPSEC-21: audit payloads drop credentials but keep business fields", () => {
+  const m = allMigrations.find((x) => /audit_redact/.test(x.sql));
+  assert.ok(m, "a migration must define audit_redact()");
+  assert.match(m.sql, /token\|secret\|password\|encrypted/);
+  // Both payload sides go through the filter.
+  assert.match(m.sql, /public\.audit_redact\(to_jsonb\(old\)\)/);
+  assert.match(m.sql, /public\.audit_redact\(to_jsonb\(new\)\)/);
+  // The claim must stay accurate: tamper-RESISTANT, not tamper-proof.
+  assert.match(m.sql, /not cryptographically immutable/i);
+});
+
+// --- TRUST-01: Phase 1 trusted-record completion
+//
+// Behavioural proof: supabase/tests/trusted_record_lifecycle_tests.sql
+// (`pnpm test:db:lifecycle`), which builds one journey from customer to
+// complaint resolution and reconstructs it in a single join, asserting tenant,
+// customer and vehicle agreement at every hop. Before 0043 that file refuses to
+// run at all, because the schema cannot represent the chain.
+
+test("TRUST-01: a job can be traced to a vehicle", () => {
+  const m = allMigrations.find((x) => /alter table public\.jobs add column if not exists vehicle_id/.test(x.sql));
+  assert.ok(m, "a migration must add jobs.vehicle_id");
+
+  // Backfilled from the quotation, scoped to the same tenant -- a backfill that
+  // crossed tenants would fabricate service history.
+  assert.match(m.sql, /set vehicle_id = q\.vehicle_id/);
+  assert.match(m.sql, /q\.business_id = j\.business_id/);
+
+  // Nullable on purpose, with the unresolved rows surfaced rather than guessed.
+  assert.match(m.sql, /create or replace view public\.jobs_missing_vehicle/);
+  assert.doesNotMatch(m.sql, /alter table public\.jobs[^;]*alter column vehicle_id set not null/i);
+});
+
+test("TRUST-01: performed work is distinguishable from quoted work", () => {
+  const m = allMigrations.find((x) => /create table if not exists public\.job_performed_items/.test(x.sql));
+  assert.ok(m, "a migration must create job_performed_items");
+  // The link back to the quote is what makes extra and omitted work visible.
+  assert.match(m.sql, /source_quotation_item_id uuid references public\.quotation_items/);
+  assert.match(m.sql, /quantity numeric\(12,2\) not null default 1 check \(quantity > 0\)/);
+  // Customer-facing exposure must not be widened silently: the portal gets
+  // warranties, not internal workshop detail.
+  assert.doesNotMatch(m.sql, /job_performed_items[\s\S]{0,400}is_customer_for_business/);
+});
+
+test("TRUST-01: a warranty is a coverage record, not wording", () => {
+  const m = allMigrations.find((x) => /create table if not exists public\.warranties/.test(x.sql));
+  assert.ok(m, "a migration must create warranties");
+  for (const col of [
+    "customer_id", "vehicle_id", "job_id", "invoice_id", "performed_item_id",
+    "coverage_start", "coverage_end", "coverage_months", "coverage_mileage",
+    "invoked_at", "complaint_id",
+  ]) {
+    assert.ok(m.sql.includes(col), `warranties must record ${col}`);
+  }
+  // A row must commit to something measurable, or it is free text again.
+  assert.match(m.sql, /constraint warranties_has_duration/);
+  assert.match(m.sql, /constraint warranties_claimed_has_invocation/);
+});
+
+test("TRUST-01: complaints can reach their originating context", () => {
+  const m = allMigrations.find((x) => /complaint_category/.test(x.sql));
+  assert.ok(m, "a migration must add the complaint category");
+  assert.match(m.sql, /alter table public\.complaints add column if not exists vehicle_id/);
+  assert.match(m.sql, /alter table public\.complaints add column if not exists invoice_id/);
+  // Category is left NULL rather than guessed: a fabricated category corrupts
+  // the grouping it exists to enable.
+  assert.doesNotMatch(m.sql, /set category = '/);
+});
+
+test("TRUST-01: new tenant references inherit the APPSEC-18 invariant", () => {
+  const m = allMigrations.find((x) => /apply_tenant_parent_integrity/.test(x.sql));
+  assert.ok(m, "a migration must expose apply_tenant_parent_integrity()");
+  // Idempotent, census-first, and actually invoked -- defining it without
+  // calling it would leave the new references uncovered.
+  assert.match(m.sql, /refusing to add integrity constraints over corrupt data/);
+  assert.match(m.sql, /select public\.apply_tenant_parent_integrity\(\) into result/);
+});
+
+// --- APPSEC-10 (ported): auth rate limiting and MFA assurance
+//
+// Behavioural proof: supabase/tests/auth_hardening_tests.sql
+// (`pnpm test:db:auth`), 26 cases against a real database.
+
+test("APPSEC-10: the rate limiter is reachable only by service_role", () => {
+  const m = allMigrations.find((x) => /consume_rate_limit/.test(x.sql));
+  assert.ok(m, "a migration must define consume_rate_limit()");
+
+  // Postgres grants EXECUTE to PUBLIC on every new function, AND 0003's
+  // ALTER DEFAULT PRIVILEGES grants it to anon/authenticated directly. Both
+  // are independent grants, so revoking only from PUBLIC is a silent no-op --
+  // a mistake already made once on the source branch.
+  for (const role of ["public", "anon", "authenticated"]) {
+    assert.match(
+      m.sql,
+      new RegExp(`revoke all on function public\\.consume_rate_limit\\(text, text\\) from ${role}`, "i"),
+      `consume_rate_limit must be revoked from ${role}`,
+    );
+  }
+  assert.match(m.sql, /grant execute on function public\.consume_rate_limit\(text, text\) to service_role/i);
+
+  // The table itself is reachable only through the RPC.
+  assert.match(m.sql, /revoke all on public\.auth_rate_limits from anon, authenticated/i);
+
+  // Limits live inside the function; a caller must not be able to request a
+  // more generous one, and an unknown scope must fail closed.
+  assert.match(m.sql, /raise exception 'consume_rate_limit: unknown scope %', scope/);
+  assert.match(m.sql, /encode\(digest\(lower\(identifier\), 'sha256'\), 'hex'\)/);
+});
+
+test("APPSEC-10: the ported rate-limit migration is idempotent", () => {
+  const m = allMigrations.find((x) => /auth_rate_limits/.test(x.sql) && /create table/i.test(x.sql));
+  assert.ok(m, "a migration must create auth_rate_limits");
+  // A developer database already applied the original under its old number, so
+  // re-running the renumbered file must converge rather than abort.
+  assert.match(m.sql, /create table if not exists public\.auth_rate_limits/i);
+  assert.match(m.sql, /create index if not exists auth_rate_limits_window_start_idx/i);
+  // Renumbered above the applied 0034-0043, never reusing 0031/0032.
+  assert.ok(/^004[4-9]|^00[5-9]/.test(m.name), `expected a 0044+ file, got ${m.name}`);
+});
+
+test("APPSEC-10: MFA assurance predicates exist and fail closed", () => {
+  const m = allMigrations.find((x) => /has_admin_aal2/.test(x.sql));
+  assert.ok(m, "a migration must define has_admin_aal2()");
+  // A missing or empty claim resolves to aal1, never to something permissive.
+  assert.match(m.sql, /coalesce\(nullif\(auth\.jwt\(\) ->> 'aal', ''\), 'aal1'\)/);
+  // Admin-ness AND assurance, not either.
+  assert.match(m.sql, /platform_admins pa where pa\.user_id = auth\.uid\(\)[\s\S]{0,120}current_assurance_level\(\) = 'aal2'/);
+  // The raising form must not let a caller distinguish the two failures.
+  assert.match(m.sql, /raise exception 'forbidden' using errcode = '42501'/);
+});
+
+test("APPSEC-10: the aal2 switch is deferred, not silently applied", () => {
+  const m = allMigrations.find((x) => /has_admin_aal2/.test(x.sql));
+  // Production has 2 platform admins and 0 verified factors: redefining
+  // is_super_admin() to require aal2 would lock both out with no way back.
+  // The migration must NOT make that switch.
+  assert.doesNotMatch(
+    m.sql,
+    /create or replace function public\.is_super_admin\(\)[\s\S]{0,400}has_admin_aal2\(\)\s*;?\s*\$\$/,
+    "is_super_admin() must not be tightened until every platform admin has enrolled",
+  );
+  // It must ship the readiness check and say so in the schema itself.
+  assert.match(m.sql, /create or replace function public\.admin_aal2_readiness\(\)/);
+  assert.match(m.sql, /Does NOT require aal2/);
+
+  // And the owner-facing procedure must be written down, not left implicit.
+  const sop = readFileSync(`${repoRoot}/docs/security/MIGRATION_RELEASE_SOP.md`, "utf8");
+  assert.match(sop, /tightening `is_super_admin\(\)` to require MFA/i);
+  assert.match(sop, /admin_aal2_readiness\(\)/);
+});
+
+// --- APPSEC-22: identity-claiming flows require a verified email
+//
+// Behavioural proof: supabase/tests/verified_email_claim_tests.sql
+// (`pnpm test:db:claims`). At schema 0045 an unverified signup claims the
+// victim's customer record, reaches their vehicle, accepts a pending staff
+// invitation and consumes it -- 6 failing cases.
+
+test("APPSEC-22: both claim flows require a verified email", () => {
+  const m = allMigrations.find((x) => /current_email_is_verified/.test(x.sql));
+  assert.ok(m, "a migration must define current_email_is_verified()");
+
+  // Read from the server-side column GoTrue writes, not from a JWT claim.
+  // Compared against CODE only: the migration's own comment explains why
+  // auth.jwt() -> 'email_verified' is the wrong source, and matching prose
+  // would fail the assertion for saying the right thing.
+  const code = m.sql.split("\n").filter((l) => !/^\s*--/.test(l)).join("\n");
+  assert.match(code, /from auth\.users u[\s\S]{0,120}email_confirmed_at is not null/);
+  assert.doesNotMatch(code, /email_verified/);
+
+  // Both claim functions must be gated.
+  for (const fn of ["claim_customer_records", "claim_business_invitations"]) {
+    const re = new RegExp(
+      `create or replace function public\\.${fn}\\(\\)[\\s\\S]*?not public\\.current_email_is_verified\\(\\)`,
+    );
+    assert.match(m.sql, re, `${fn} must check current_email_is_verified()`);
+  }
+
+  // The invitation guard must run BEFORE the loop, so a refused attempt does
+  // not consume the invitation and lock out the legitimate invitee.
+  const invBody = m.sql.slice(m.sql.indexOf("function public.claim_business_invitations"));
+  const guardAt = invBody.indexOf("current_email_is_verified");
+  const loopAt = invBody.indexOf("for inv in");
+  assert.ok(guardAt > -1 && loopAt > -1 && guardAt < loopAt,
+    "the verified-email guard must precede the invitation loop");
+});

@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
-import { FilterToolbar } from "@/components/filter-toolbar";
+import { FilterToolbar, useDateRangeOptions } from "@/components/filter-toolbar";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import {
   Table,
@@ -26,24 +27,7 @@ import {
 } from "@/lib/filtering";
 import type { AdminSubscriptionRow } from "@/lib/admin-views";
 
-const DATE_OPTIONS = [
-  { label: "All time", value: "all" },
-  { label: "Today", value: "today" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-  { label: "Last 90 days", value: "90d" },
-  { label: "Last year", value: "1y" },
-];
-
-const STATUS_OPTIONS = [
-  { label: "All statuses", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Trialing", value: "trialing" },
-  { label: "Past due", value: "past_due" },
-  { label: "Canceled", value: "canceled" },
-  { label: "Unpaid", value: "unpaid" },
-  { label: "Incomplete", value: "incomplete" },
-];
+const STATUS_VALUES = ["all", "active", "trialing", "past_due", "canceled", "unpaid", "incomplete"] as const;
 
 export function AdminSubscriptionsBrowser({
   footer,
@@ -54,6 +38,9 @@ export function AdminSubscriptionsBrowser({
   subscriptions: AdminSubscriptionRow[];
   totalCount?: number;
 }) {
+  const t = useTranslations("adminSubscriptions.browser");
+  const tFilters = useTranslations("common.filters");
+  const dateOptions = useDateRangeOptions();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -93,7 +80,7 @@ export function AdminSubscriptionsBrowser({
   return (
     <div className="flex flex-col gap-6">
       <FilterToolbar
-        searchPlaceholder="Search business or plan"
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={search}
         onSearchValueChange={(value) => {
           setSearch(value);
@@ -104,7 +91,7 @@ export function AdminSubscriptionsBrowser({
           setStatus(value);
           pushQuery({ status: value === "all" ? null : value, page: null });
         }}
-        statusOptions={STATUS_OPTIONS}
+        statusOptions={STATUS_VALUES.map((value) => ({ label: t(`statuses.${value}`), value }))}
         dateValue={dateRange}
         onDateValueChange={(value) => {
           const next = value as DateRange;
@@ -117,10 +104,10 @@ export function AdminSubscriptionsBrowser({
             page: null,
           });
         }}
-        dateOptions={DATE_OPTIONS}
+        dateOptions={dateOptions}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{filtered.length} visible</Badge>
+            <Badge variant="secondary">{tFilters("visibleCount", { count: filtered.length })}</Badge>
             <Button
               type="button"
               variant="ghost"
@@ -133,7 +120,7 @@ export function AdminSubscriptionsBrowser({
               }}
               disabled={search.length === 0 && status === "all" && dateRange === "all"}
             >
-              Reset filters
+              {tFilters("reset")}
             </Button>
           </div>
         }
@@ -143,15 +130,15 @@ export function AdminSubscriptionsBrowser({
         <CardContent className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">
-              Showing {filtered.length} of {totalCount ?? subscriptions.length} subscriptions
+              {t("showing", { shown: filtered.length, total: totalCount ?? subscriptions.length })}
             </span>
             <span className="text-muted-foreground">Plan / status / renewal</span>
           </div>
 
           {filtered.length === 0 ? (
             <EmptyState
-              title="No subscriptions match"
-              description="Try a different search or reset the filters."
+              title={t("noMatch")}
+              description={tFilters("noMatchDescription")}
             />
           ) : (
             <>
@@ -171,7 +158,7 @@ export function AdminSubscriptionsBrowser({
                         <span>
                           {subscription.current_period_end
                             ? new Date(subscription.current_period_end).toLocaleDateString()
-                            : "No renewal date"}
+                            : t("noRenewalDate")}
                         </span>
                       </div>
                     }
@@ -183,12 +170,12 @@ export function AdminSubscriptionsBrowser({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Business</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Period start</TableHead>
-                      <TableHead>Renewal</TableHead>
-                      <TableHead>Auto-renew</TableHead>
+                      <TableHead>{t("table.business")}</TableHead>
+                      <TableHead>{t("table.plan")}</TableHead>
+                      <TableHead>{t("table.status")}</TableHead>
+                      <TableHead>{t("table.periodStart")}</TableHead>
+                      <TableHead>{t("table.renewal")}</TableHead>
+                      <TableHead>{t("table.autoRenew")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -212,7 +199,7 @@ export function AdminSubscriptionsBrowser({
                             : "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {sub.cancel_at_period_end ? "Cancel at period end" : "Auto-renew"}
+                          {sub.cancel_at_period_end ? t("cancelAtPeriodEnd") : t("autoRenew")}
                         </TableCell>
                       </TableRow>
                     ))}

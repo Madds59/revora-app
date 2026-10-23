@@ -63,3 +63,60 @@ export function canManageComplaints(
 ): boolean {
   return hasRole(role, ["business_owner", "manager", "employee"]);
 }
+
+/**
+ * Maintenance worklist and odometer readings. Employees are included because
+ * they are the staff physically handling vehicles at check-in, matching
+ * vehicle_odometer_readings_staff_manage in 0036.
+ */
+export function canViewMaintenance(role: MemberRole | null | undefined): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}
+
+/** Invoices, payments, void, credit notes (owner + manager per RLS invoices_staff_manage). */
+export function canManageInvoices(role: MemberRole | null | undefined): boolean {
+  return hasRole(role, ["business_owner", "manager"]);
+}
+
+/** Appointments: confirm/decline/cancel (owner + manager + employee per RLS appointments_staff_manage). */
+export function canManageAppointments(
+  role: MemberRole | null | undefined,
+): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}
+
+/**
+ * Digital vehicle inspections: create, record results, attach photos, complete
+ * (owner + manager + employee per RLS vehicle_inspections_manage_staff in 0037).
+ * Employees are included because they are the technicians physically working the
+ * checklist in the bay.
+ */
+export function canManageInspections(
+  role: MemberRole | null | undefined,
+): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}
+
+/**
+ * Inspection checklist templates (owner + manager per RLS
+ * inspection_templates_manage). Deliberately narrower than canManageInspections:
+ * a template edit changes what every future inspection asks, so it matches
+ * canManageSettings rather than the shop-floor gate.
+ */
+export function canManageInspectionTemplates(
+  role: MemberRole | null | undefined,
+): boolean {
+  return hasRole(role, ["business_owner", "manager"]);
+}
+
+/**
+ * Public share links for a completed inspection: generate, rotate, revoke
+ * (owner + manager -- mirrors the has_business_role check inside
+ * set_inspection_share / revoke_inspection_share). Employees may complete an
+ * inspection but may not publish it outside the tenant.
+ */
+export function canShareInspections(
+  role: MemberRole | null | undefined,
+): boolean {
+  return hasRole(role, ["business_owner", "manager"]);
+}

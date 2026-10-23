@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { markNotificationRead, type AdminFormState } from "@/app/[locale]/(admin)/admin/actions";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 
 const initial: AdminFormState = {};
 
@@ -51,9 +51,9 @@ export function NotificationReadButton({
   return (
     <form action={formAction}>
       <input type="hidden" name="notification_id" value={notificationId} />
-      <Button type="submit" variant="outline" size="sm">
+      <SubmitButton variant="outline" size="sm">
         {resolvedLabel}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

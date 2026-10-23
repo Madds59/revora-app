@@ -7,9 +7,10 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/empty-state";
-import { FilterToolbar } from "@/components/filter-toolbar";
+import { FilterToolbar, useDateRangeOptions } from "@/components/filter-toolbar";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,17 +32,8 @@ import {
 } from "@/lib/filtering";
 import type { AdminBusinessRow } from "@/lib/admin-views";
 
-const DATE_OPTIONS = [
-  { label: "All time", value: "all" },
-  { label: "Today", value: "today" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-  { label: "Last 90 days", value: "90d" },
-  { label: "Last year", value: "1y" },
-];
-
-function businessHealth(business: AdminBusinessRow) {
-  return business.owner_email ? "Owned" : "No owner email";
+function businessHealth(business: AdminBusinessRow, owned: string, noOwner: string) {
+  return business.owner_email ? owned : noOwner;
 }
 
 export function AdminTenantsBrowser({
@@ -53,6 +45,9 @@ export function AdminTenantsBrowser({
   footer?: ReactNode;
   totalCount?: number;
 }) {
+  const t = useTranslations("adminTenants.browser");
+  const tFilters = useTranslations("common.filters");
+  const dateOptions = useDateRangeOptions();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -80,7 +75,7 @@ export function AdminTenantsBrowser({
           business.name,
           business.owner_email,
           business.id,
-          businessHealth(business),
+          businessHealth(business, t("owned"), t("noOwnerEmail")),
         ],
         search,
       );
@@ -91,12 +86,12 @@ export function AdminTenantsBrowser({
         (ownerFilter === "without_owner" && !business.owner_email);
       return matchesSearch && matchesDate && matchesOwner;
     });
-  }, [businesses, dateRange, ownerFilter, search]);
+  }, [businesses, dateRange, ownerFilter, search, t]);
 
   return (
     <div className="flex flex-col gap-6">
       <FilterToolbar
-        searchPlaceholder="Search businesses or owner email"
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={search}
         onSearchValueChange={(value) => {
           setSearch(value);
@@ -109,9 +104,10 @@ export function AdminTenantsBrowser({
           pushQuery({ owner: next === "all" ? null : next, page: null });
         }}
         statusOptions={[
-          { label: "All owners", value: "all" },
-          { label: "With owner email", value: "with_owner" },
-          { label: "Without owner email", value: "without_owner" },
+          ...(["all", "with_owner", "without_owner"] as const).map((value) => ({
+            label: t(`owners.${value}`),
+            value,
+          })),
         ]}
         dateValue={dateRange}
         onDateValueChange={(value) => {
@@ -125,10 +121,10 @@ export function AdminTenantsBrowser({
             page: null,
           });
         }}
-        dateOptions={DATE_OPTIONS}
+        dateOptions={dateOptions}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{filtered.length} visible</Badge>
+            <Badge variant="secondary">{tFilters("visibleCount", { count: filtered.length })}</Badge>
             <Button
               type="button"
               variant="ghost"
@@ -141,7 +137,7 @@ export function AdminTenantsBrowser({
               }}
               disabled={search.length === 0 && dateRange === "all" && ownerFilter === "all"}
             >
-              Reset filters
+              {tFilters("reset")}
             </Button>
           </div>
         }
@@ -151,15 +147,15 @@ export function AdminTenantsBrowser({
         <CardContent className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">
-              Showing {filtered.length} of {totalCount ?? businesses.length} tenants
+              {t("showing", { shown: filtered.length, total: totalCount ?? businesses.length })}
             </span>
             <span className="text-muted-foreground">Business / owner / activity</span>
           </div>
 
           {filtered.length === 0 ? (
             <EmptyState
-              title="No tenants match"
-              description="Try a different search or reset the filters."
+              title={t("noMatch")}
+              description={tFilters("noMatchDescription")}
             />
           ) : (
             <>
@@ -170,7 +166,7 @@ export function AdminTenantsBrowser({
                 renderItem={(business) => (
                   <MobileDataCard
                     title={business.name}
-                    subtitle={business.owner_email ?? "No owner email"}
+                    subtitle={business.owner_email ?? t("noOwnerEmail")}
                     meta={
                       <div className="flex flex-wrap gap-2">
                         <span>{new Date(business.created_at).toLocaleDateString()}</span>
@@ -186,14 +182,14 @@ export function AdminTenantsBrowser({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Business</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-end">Members</TableHead>
-                      <TableHead className="text-end">Customers</TableHead>
-                      <TableHead className="text-end">Quotes</TableHead>
-                      <TableHead className="text-end">Complaints</TableHead>
-                      <TableHead>Created</TableHead>
+                      <TableHead>{t("table.business")}</TableHead>
+                      <TableHead>{t("table.owner")}</TableHead>
+                      <TableHead>{t("table.status")}</TableHead>
+                      <TableHead className="text-end">{t("table.members")}</TableHead>
+                      <TableHead className="text-end">{t("table.customers")}</TableHead>
+                      <TableHead className="text-end">{t("table.quotes")}</TableHead>
+                      <TableHead className="text-end">{t("table.complaints")}</TableHead>
+                      <TableHead>{t("table.created")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -205,7 +201,7 @@ export function AdminTenantsBrowser({
                         </TableCell>
                         <TableCell>
                           <Badge variant={business.owner_email ? "default" : "outline"}>
-                            {businessHealth(business)}
+                            {businessHealth(business, t("owned"), t("noOwnerEmail"))}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-end tabular-nums">

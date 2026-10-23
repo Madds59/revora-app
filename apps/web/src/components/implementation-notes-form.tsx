@@ -85,7 +85,7 @@ export function ImplementationNotesForm({
         />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div className="flex justify-end">
         <SubmitButton disabled={disabled}>{t("save")}</SubmitButton>
       </div>

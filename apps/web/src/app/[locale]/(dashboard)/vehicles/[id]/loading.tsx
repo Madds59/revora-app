@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Vehicle"
       description="Loading the vehicle profile and related history..."
+      variant="detail"
     />
   );
 }

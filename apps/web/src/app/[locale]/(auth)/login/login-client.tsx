@@ -24,9 +24,9 @@ const initial: AuthState = {};
 
 function FormMessage({ state }: { state: AuthState }) {
   if (state.error)
-    return <p className="text-destructive text-sm">{state.error}</p>;
+    return <p role="alert" className="text-destructive text-sm">{state.error}</p>;
   if (state.message)
-    return <p className="text-sm text-emerald-600">{state.message}</p>;
+    return <p role="status" className="text-primary text-sm">{state.message}</p>;
   return null;
 }
 
@@ -48,7 +48,7 @@ export function LoginClient({
       </CardHeader>
       <CardContent>
         {passwordResetSuccess && (
-          <p className="text-sm text-emerald-600">{t("passwordResetSuccess")}</p>
+          <p role="status" className="text-primary text-sm">{t("passwordResetSuccess")}</p>
         )}
         <Tabs defaultValue="password" className="w-full">
           <TabsList className="w-full">

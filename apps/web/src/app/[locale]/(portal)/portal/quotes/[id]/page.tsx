@@ -60,7 +60,9 @@ export default async function PortalQuoteDetailPage({
   const quote = data as unknown as QuoteWithBusiness;
 
   // Explicit code-level ownership check in addition to RLS (APPSEC-11),
-  // matching the portal complaint detail page's pattern.
+  // matching the portal complaint detail page's pattern. Runs before the
+  // remaining queries so a customer can never learn from response timing
+  // whether items/approvals exist for a quote they don't own.
   if (
     !accounts.some(
       (account) =>
@@ -71,20 +73,21 @@ export default async function PortalQuoteDetailPage({
     notFound();
   }
 
-  const { data: itemRows } = await supabase
-    .from("quotation_items")
-    .select("*")
-    .eq("quotation_id", id)
-    .order("created_at", { ascending: true });
-  const items = (itemRows ?? []) as QuotationItem[];
+  const [{ data: itemRows }, { data: approvalRows }] = await Promise.all([
+    supabase
+      .from("quotation_items")
+      .select("*")
+      .eq("quotation_id", id)
+      .order("created_at", { ascending: true }),
+    supabase.from("approvals").select("*").eq("quotation_id", id),
+  ]);
 
-  const { data: approvalRow } = await supabase
-    .from("approvals")
-    .select("*")
-    .eq("quotation_id", id)
-    .eq("quotation_version", quote.current_version)
-    .maybeSingle();
-  const approval = approvalRow as Approval | null;
+  const items = (itemRows ?? []) as QuotationItem[];
+  // Approvals are per quote version; pick the one for the current version.
+  const approval =
+    ((approvalRows ?? []) as Approval[]).find(
+      (row) => row.quotation_version === quote.current_version,
+    ) ?? null;
 
   const isApproved = !!approval || quote.status === "approved";
   const isDeclined = quote.status === "declined";

@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { requireMembership } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Branch, Customer, Job } from "@/lib/database.types";
 
@@ -44,7 +45,7 @@ export default async function JobsPage() {
         .is("deleted_at", null),
       supabase.from("branches").select("id, name").eq("business_id", business.id),
     ]);
-  if (error) console.error("JobsPage failed to load", error);
+  if (error) reportError(error, { section: "jobs", businessId: business.id });
 
   const jobs = (jobRows ?? []) as JobLookup[];
   const customerMap = new Map(

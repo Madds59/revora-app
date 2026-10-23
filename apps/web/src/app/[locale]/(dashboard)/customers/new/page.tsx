@@ -9,7 +9,7 @@ import { createCustomer } from "../actions";
 import { CustomerForm } from "../customer-form";
 
 export default async function NewCustomerPage() {
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   if (!canManageCustomers(member.role)) redirect("/customers");
 
   const t = await getTranslations("dashboardCustomers.new");
@@ -21,7 +21,11 @@ export default async function NewCustomerPage() {
         description={t("description")}
       />
       <div className="p-6">
-        <CustomerForm action={createCustomer} submitLabel={t("submit")} />
+        <CustomerForm
+          action={createCustomer}
+          submitLabel={t("submit")}
+          draftScope={business.id}
+        />
       </div>
     </>
   );

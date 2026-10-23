@@ -57,6 +57,13 @@ export const TEMPLATE_SOURCES = {
   complaint_status_changed: { table: "complaints", payloadKey: "complaint_id" },
   feedback_submitted: { table: null, payloadKey: null },
   vehicle_safety_critical: { table: null, payloadKey: null },
+  appointment_confirmed: { table: "appointments", payloadKey: "appointment_id" },
+  appointment_declined: { table: "appointments", payloadKey: "appointment_id" },
+  invoice_issued: { table: "invoices", payloadKey: "invoice_id" },
+  // Maintenance reminders are addressed about a vehicle, so the vehicle is the
+  // resource whose tenancy must be proven before the message goes out.
+  maintenance_reminder_upcoming: { table: "vehicles", payloadKey: "vehicle_id" },
+  maintenance_reminder_due: { table: "vehicles", payloadKey: "vehicle_id" },
 };
 
 export function isDispatchableChannel(value) {
@@ -154,6 +161,15 @@ export const persistablePayloadSchema = z.object({
   complaint_id: z.string().regex(UUID_RE).optional(),
   subject: boundedText(200).optional(),
   status: boundedText(64).optional(),
+  // Resource ids for the invoicing and appointment templates. These must
+  // survive the allowlist: TEMPLATE_SOURCES reads them back at dispatch to
+  // prove the resource belongs to the event's business, so stripping them
+  // would make that check fail closed on every send.
+  invoice_id: z.string().regex(UUID_RE).optional(),
+  invoice_number: boundedText(64).optional(),
+  appointment_id: z.string().regex(UUID_RE).optional(),
+  vehicle_id: z.string().regex(UUID_RE).optional(),
+  maintenance_plan_id: z.string().regex(UUID_RE).optional(),
   business_name: boundedText(200).optional(),
   customer_name: boundedText(200).optional(),
   template_variables: templateVariables.optional(),
@@ -329,4 +345,40 @@ export const SKIPPED_STATUSES = [
  */
 export function isClaimedProcessingStatus(status) {
   return status === "processing";
+}
+
+// ---------------------------------------------------------------------------
+// Portal self-service preferences (legal-compliance V1).
+//
+// A customer may switch each dispatchable channel on or off for one of THEIR
+// linked customer accounts. The action re-checks that (business_id, customer_id)
+// belongs to the session's linked accounts before touching a row, and RLS
+// (`notification_preferences_customer_manage_own`) enforces it again.
+// ---------------------------------------------------------------------------
+
+/** One checkbox per dispatchable channel, keyed `<channel>_enabled`. */
+export const portalNotificationPreferencesSchema = z.object({
+  businessId: z.string().regex(UUID_RE, "Please select a valid workshop."),
+  customerId: z.string().regex(UUID_RE, "Please select a valid account."),
+  emailEnabled: z.preprocess((v) => v === "on" || v === true, z.boolean()),
+  smsEnabled: z.preprocess((v) => v === "on" || v === true, z.boolean()),
+});
+
+/**
+ * Rows to upsert for one account: one per dispatchable channel, template-wide
+ * (`template_key` null). `opted_out_at` is stamped only when a channel is off
+ * so the audit trail shows when the customer withdrew.
+ * @param {{ businessId: string, customerId: string, emailEnabled: boolean, smsEnabled: boolean }} input
+ * @param {string} [now]
+ */
+export function buildPortalPreferenceRows(input, now = new Date().toISOString()) {
+  const wanted = { email: input.emailEnabled, sms: input.smsEnabled };
+  return DISPATCHABLE_CHANNELS.map((channel) => ({
+    business_id: input.businessId,
+    customer_id: input.customerId,
+    channel,
+    template_key: null,
+    enabled: wanted[channel],
+    opted_out_at: wanted[channel] ? null : now,
+  }));
 }

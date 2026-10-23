@@ -1,22 +1,7 @@
 "use client";
 
-import { ErrorState } from "@/components/error-state";
+import { RouteErrorBoundary, type RouteErrorProps } from "@/components/route-error-boundary";
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  return (
-    <ErrorState
-      title="Notifications failed to load"
-      description="The tenant notification center could not finish loading. Retry or go back to the dashboard."
-      errorDigest={error.digest}
-      onRetry={reset}
-      backHref="/"
-      backLabel="Back to dashboard"
-    />
-  );
+export default function NotificationsError(props: RouteErrorProps) {
+  return <RouteErrorBoundary {...props} section="notifications" backHref="/" />;
 }

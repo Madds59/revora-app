@@ -31,3 +31,15 @@ export const openAiEnv = {
   apiKey: process.env.OPENAI_API_KEY ?? null,
   model: process.env.OPENAI_MODEL ?? null,
 };
+
+/**
+ * Sentry is opt-in: with no DSN every capture is a console fallback and the
+ * build is unchanged. `publicDsn` is the browser DSN (NEXT_PUBLIC_), `dsn`
+ * is server/edge. Both usually hold the same value.
+ */
+export const sentryEnv = {
+  dsn: process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN ?? null,
+  publicDsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? null,
+  environment:
+    process.env.SENTRY_ENVIRONMENT ?? process.env.VERCEL_ENV ?? "development",
+};

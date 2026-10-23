@@ -7,6 +7,7 @@ import { RotateCcw } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { BrandState } from "@/components/brand-state";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { reportError } from "@/lib/observability";
 
 export default function Error({
   error,
@@ -18,8 +19,7 @@ export default function Error({
   const t = useTranslations("error");
 
   useEffect(() => {
-    // Surface for diagnostics; replace with Sentry/PostHog capture later.
-    console.error(error);
+    reportError(error, { section: "locale-root", digest: error.digest });
   }, [error]);
 
   return (

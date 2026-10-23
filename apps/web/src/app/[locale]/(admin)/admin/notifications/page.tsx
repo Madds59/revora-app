@@ -16,6 +16,7 @@ import type {
 } from "@/lib/admin-views";
 import { parsePageParam } from "@/lib/filtering";
 import { parseAdminPageSize } from "@/lib/validation/admin";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { AdminNotificationsBrowser } from "./notifications-browser";
 
@@ -79,7 +80,7 @@ export default async function AdminNotificationsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
-  if (error) console.error("AdminNotificationsPage failed to load", error);
+  if (error) reportError(error, { section: "adminNotifications" });
   const result = (data ?? null) as unknown as PaginatedListResult<AdminNotificationFilteredRow> | null;
   const notifications = result?.rows ?? [];
   const totalCount = result?.total_count ?? notifications.length;

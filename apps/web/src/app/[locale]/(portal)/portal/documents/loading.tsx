@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Documents"
       description="Loading customer documents..."
+      variant="list"
     />
   );
 }

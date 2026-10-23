@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { requireMembership } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime } from "@/lib/formatters";
 import {
@@ -73,6 +74,7 @@ export default async function FeedbackPage({
   const locale = (await getLocale()) === "ar" ? "ar" : "en";
   const t = await getTranslations("feedback");
   const { member, business } = await requireMembership();
+  await requireFeature("feedback");
   const canEdit = canManageSettings(member.role);
   const params = await searchParams;
 
@@ -146,7 +148,7 @@ export default async function FeedbackPage({
                   <input
                     name="q"
                     defaultValue={query}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     placeholder={t("filters.searchPlaceholder")}
                   />
                 </label>
@@ -156,7 +158,7 @@ export default async function FeedbackPage({
                   <select
                     name="category"
                     defaultValue={category}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <option value="all">{t("filters.all")}</option>
                     {FEEDBACK_CATEGORIES.map((value) => (
@@ -172,7 +174,7 @@ export default async function FeedbackPage({
                   <select
                     name="status"
                     defaultValue={status}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <option value="all">{t("filters.all")}</option>
                     {FEEDBACK_STATUSES.map((value) => (
@@ -188,7 +190,7 @@ export default async function FeedbackPage({
                   <select
                     name="severity"
                     defaultValue={severity}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <option value="all">{t("filters.all")}</option>
                     {FEEDBACK_SEVERITIES.map((value) => (
@@ -204,7 +206,7 @@ export default async function FeedbackPage({
                   <select
                     name="priority"
                     defaultValue={priority}
-                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none"
+                    className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <option value="all">{t("filters.all")}</option>
                     {FEEDBACK_PRIORITIES.map((value) => (
@@ -233,7 +235,7 @@ export default async function FeedbackPage({
             </div>
 
             {error ? (
-              <p className="text-destructive text-sm">{t("inbox.error")}</p>
+              <p role="alert" className="text-destructive text-sm">{t("inbox.error")}</p>
             ) : reports.length === 0 ? (
               <EmptyState
                 title={t("inbox.empty.title")}

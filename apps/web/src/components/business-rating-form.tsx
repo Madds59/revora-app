@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,7 +57,7 @@ export function BusinessRatingForm({
               name="rating"
               required
               defaultValue=""
-              className="bg-background border-input h-10 rounded-md border px-3 text-sm shadow-sm outline-none"
+              className="bg-background border-input h-10 rounded-md border px-3 text-sm shadow-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <option value="" disabled>
                 {t("form.ratingPlaceholder")}
@@ -82,9 +82,9 @@ export function BusinessRatingForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Button type="submit" className="w-fit">
+            <SubmitButton className="w-fit">
               {t("form.submit")}
-            </Button>
+            </SubmitButton>
             <p className="text-muted-foreground text-xs">{t("form.editableNote")}</p>
           </div>
         </form>

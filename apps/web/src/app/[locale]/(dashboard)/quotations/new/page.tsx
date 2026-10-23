@@ -43,7 +43,7 @@ function formatVehicleLabel(
 }
 
 export default async function NewQuotePage() {
-  const { member } = await requireMembership();
+  const { member, business } = await requireMembership();
   if (!canManageQuotes(member.role)) redirect("/quotations");
   const supabase = await createClient();
 
@@ -82,7 +82,7 @@ export default async function NewQuotePage() {
             .
           </div>
         ) : (
-          <NewQuoteForm customers={customers} />
+          <NewQuoteForm customers={customers} businessId={business.id} />
         )}
       </div>
     </>

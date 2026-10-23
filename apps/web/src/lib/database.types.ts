@@ -955,6 +955,7 @@ export type Database = {
           stripe_customer_id: string | null
           supported_languages: string[]
           tagline: string | null
+          trn: string | null
           updated_at: string
         }
         Insert: {
@@ -971,6 +972,7 @@ export type Database = {
           stripe_customer_id?: string | null
           supported_languages?: string[]
           tagline?: string | null
+          trn?: string | null
           updated_at?: string
         }
         Update: {
@@ -987,6 +989,7 @@ export type Database = {
           stripe_customer_id?: string | null
           supported_languages?: string[]
           tagline?: string | null
+          trn?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1593,6 +1596,547 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          branch_id: string
+          business_id: string
+          cancelled_by: string | null
+          confirmed_end: string | null
+          confirmed_start: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          decline_reason: string | null
+          id: string
+          notes: string | null
+          quotation_id: string | null
+          requested_end: string
+          requested_start: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          cancelled_by?: string | null
+          confirmed_end?: string | null
+          confirmed_start?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          decline_reason?: string | null
+          id?: string
+          notes?: string | null
+          quotation_id?: string | null
+          requested_end: string
+          requested_start: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          cancelled_by?: string | null
+          confirmed_end?: string | null
+          confirmed_start?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          decline_reason?: string | null
+          id?: string
+          notes?: string | null
+          quotation_id?: string | null
+          requested_end?: string
+          requested_start?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_maintenance_settings: {
+        Row: {
+          assumed_annual_km: number | null
+          business_id: string
+          created_at: string
+          created_by: string | null
+          first_reminder_days: number
+          id: string
+          reminders_enabled: boolean
+          second_reminder_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assumed_annual_km?: number | null
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          first_reminder_days?: number
+          id?: string
+          reminders_enabled?: boolean
+          second_reminder_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assumed_annual_km?: number | null
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          first_reminder_days?: number
+          id?: string
+          reminders_enabled?: boolean
+          second_reminder_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_maintenance_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_odometer_readings: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          mileage: number
+          quality: string
+          quality_reason: string | null
+          recorded_at: string
+          recorded_by: string | null
+          source: string
+          source_appointment_id: string | null
+          source_symptom_report_id: string | null
+          unit: string
+          vehicle_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          mileage: number
+          quality?: string
+          quality_reason?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          source: string
+          source_appointment_id?: string | null
+          source_symptom_report_id?: string | null
+          unit?: string
+          vehicle_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          mileage?: number
+          quality?: string
+          quality_reason?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          source?: string
+          source_appointment_id?: string | null
+          source_symptom_report_id?: string | null
+          unit?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_odometer_readings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_odometer_readings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_odometer_readings_source_appointment_id_fkey"
+            columns: ["source_appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_odometer_readings_source_symptom_report_id_fkey"
+            columns: ["source_symptom_report_id"]
+            isOneToOne: true
+            referencedRelation: "vehicle_symptom_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_appointment_settings: {
+        Row: {
+          branch_id: string
+          business_id: string
+          created_at: string
+          id: string
+          max_concurrent: number
+          slot_duration_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          business_id: string
+          created_at?: string
+          id?: string
+          max_concurrent?: number
+          slot_duration_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          max_concurrent?: number
+          slot_duration_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_appointment_settings_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: true
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_appointment_settings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          balance_due: number
+          branch_id: string | null
+          business_id: string
+          business_trn: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_id: string
+          discount_total: number
+          due_at: string | null
+          id: string
+          invoice_number: string | null
+          issued_at: string | null
+          job_id: string | null
+          language: string
+          notes: string | null
+          quotation_id: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal: number
+          tax_total: number
+          total: number
+          updated_at: string
+          vehicle_id: string | null
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          amount_paid?: number
+          branch_id?: string | null
+          business_id: string
+          business_trn?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id: string
+          discount_total?: number
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          job_id?: string | null
+          language?: string
+          notes?: string | null
+          quotation_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          branch_id?: string | null
+          business_id?: string
+          business_trn?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_id?: string
+          discount_total?: number
+          due_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          issued_at?: string | null
+          job_id?: string | null
+          language?: string
+          notes?: string | null
+          quotation_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          description: string | null
+          discount_amount: number
+          id: string
+          invoice_id: string
+          kind: Database["public"]["Enums"]["item_kind"]
+          name: string
+          position: number
+          product_category: Database["public"]["Enums"]["product_category"] | null
+          product_id: string | null
+          quantity: number
+          tax_rate: number
+          total: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          id?: string
+          invoice_id: string
+          kind: Database["public"]["Enums"]["item_kind"]
+          name: string
+          position?: number
+          product_category?: Database["public"]["Enums"]["product_category"] | null
+          product_id?: string | null
+          quantity?: number
+          tax_rate?: number
+          total?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          discount_amount?: number
+          id?: string
+          invoice_id?: string
+          kind?: Database["public"]["Enums"]["item_kind"]
+          name?: string
+          position?: number
+          product_category?: Database["public"]["Enums"]["product_category"] | null
+          product_id?: string | null
+          quantity?: number
+          tax_rate?: number
+          total?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_payments: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["invoice_payment_method"]
+          notes: string | null
+          paid_at: string
+          provider: string | null
+          provider_payment_id: string | null
+          provider_status: string | null
+          recorded_by: string | null
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          method: Database["public"]["Enums"]["invoice_payment_method"]
+          notes?: string | null
+          paid_at?: string
+          provider?: string | null
+          provider_payment_id?: string | null
+          provider_status?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          method?: Database["public"]["Enums"]["invoice_payment_method"]
+          notes?: string | null
+          paid_at?: string
+          provider?: string | null
+          provider_payment_id?: string | null
+          provider_status?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_credit_notes: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          created_by: string | null
+          credit_note_number: string | null
+          id: string
+          invoice_id: string
+          reason: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          credit_note_number?: string | null
+          id?: string
+          invoice_id: string
+          reason: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          credit_note_number?: string | null
+          id?: string
+          invoice_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -2305,6 +2849,7 @@ export type Database = {
           product_id: string | null
           quantity: number
           quotation_id: string
+          source_inspection_item_id: string | null
           tax_rate: number
           time_estimate_minutes: number | null
           total: number
@@ -2327,6 +2872,7 @@ export type Database = {
           product_id?: string | null
           quantity?: number
           quotation_id: string
+          source_inspection_item_id?: string | null
           tax_rate?: number
           time_estimate_minutes?: number | null
           total?: number
@@ -2349,6 +2895,7 @@ export type Database = {
           product_id?: string | null
           quantity?: number
           quotation_id?: string
+          source_inspection_item_id?: string | null
           tax_rate?: number
           time_estimate_minutes?: number | null
           total?: number
@@ -2376,6 +2923,13 @@ export type Database = {
             columns: ["quotation_id"]
             isOneToOne: false
             referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotation_items_source_inspection_item_id_fkey"
+            columns: ["source_inspection_item_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_items"
             referencedColumns: ["id"]
           },
         ]
@@ -3303,6 +3857,337 @@ export type Database = {
           },
         ]
       }
+      inspection_templates: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_templates_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_template_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          position: number
+          section: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          position?: number
+          section: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          position?: number
+          section?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_template_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_inspections: {
+        Row: {
+          appointment_id: string | null
+          business_id: string
+          completed_at: string | null
+          completed_by: string | null
+          context: Database["public"]["Enums"]["inspection_context"]
+          created_at: string
+          customer_id: string
+          id: string
+          job_id: string | null
+          odometer_reading: number | null
+          performed_by: string | null
+          quotation_id: string | null
+          share_created_at: string | null
+          share_expires_at: string | null
+          share_revoked_at: string | null
+          /**
+           * SHA-256 of the share token, never the token itself. Read back only
+           * to answer "is a link currently active"; the plaintext is shown once
+           * at generation and is not recoverable from this row.
+           */
+          share_token_hash: string | null
+          status: Database["public"]["Enums"]["inspection_status"]
+          summary: string | null
+          template_id: string | null
+          title: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          business_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          context: Database["public"]["Enums"]["inspection_context"]
+          created_at?: string
+          customer_id: string
+          id?: string
+          job_id?: string | null
+          odometer_reading?: number | null
+          performed_by?: string | null
+          quotation_id?: string | null
+          share_created_at?: string | null
+          share_expires_at?: string | null
+          share_revoked_at?: string | null
+          share_token_hash?: string | null
+          status?: Database["public"]["Enums"]["inspection_status"]
+          summary?: string | null
+          template_id?: string | null
+          title?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          business_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          context?: Database["public"]["Enums"]["inspection_context"]
+          created_at?: string
+          customer_id?: string
+          id?: string
+          job_id?: string | null
+          odometer_reading?: number | null
+          performed_by?: string | null
+          quotation_id?: string | null
+          share_created_at?: string | null
+          share_expires_at?: string | null
+          share_revoked_at?: string | null
+          share_token_hash?: string | null
+          status?: Database["public"]["Enums"]["inspection_status"]
+          summary?: string | null
+          template_id?: string | null
+          title?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_inspections_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_inspections_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_items: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          inspection_id: string
+          label: string
+          note: string | null
+          position: number
+          result: Database["public"]["Enums"]["inspection_result"]
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          inspection_id: string
+          label: string
+          note?: string | null
+          position?: number
+          result?: Database["public"]["Enums"]["inspection_result"]
+          section: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          inspection_id?: string
+          label?: string
+          note?: string | null
+          position?: number
+          result?: Database["public"]["Enums"]["inspection_result"]
+          section?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_items_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_item_media: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          inspection_item_id: string
+          media_asset_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inspection_item_id: string
+          media_asset_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inspection_item_id?: string
+          media_asset_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_item_media_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_item_media_inspection_item_id_fkey"
+            columns: ["inspection_item_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_item_media_media_asset_id_fkey"
+            columns: ["media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -3400,6 +4285,93 @@ export type Database = {
           target_vehicle_id?: string
         }
         Returns: string
+      }
+      create_inspection: {
+        Args: {
+          target_appointment_id?: string
+          target_business_id: string
+          target_context: Database["public"]["Enums"]["inspection_context"]
+          target_customer_id: string
+          target_job_id?: string
+          target_odometer?: number
+          target_template_id?: string
+          target_vehicle_id: string
+        }
+        Returns: string
+      }
+      complete_inspection: {
+        Args: { target_inspection_id: string; target_summary?: string }
+        Returns: Database["public"]["Tables"]["vehicle_inspections"]["Row"]
+      }
+      set_inspection_share: {
+        Args: {
+          target_expires_at: string
+          target_inspection_id: string
+          /** SHA-256 digest as a Postgres bytea hex literal (`\x…`). */
+          target_token_hash: string
+        }
+        Returns: string
+      }
+      revoke_inspection_share: {
+        Args: { target_inspection_id: string }
+        Returns: undefined
+      }
+      resolve_inspection_share: {
+        Args: { target_token_hash: string }
+        Returns: {
+          business_name: string
+          completed_at: string
+          inspection_id: string
+          summary: string | null
+          vehicle_label: string
+        }[]
+      }
+      resolve_inspection_share_items: {
+        Args: { target_token_hash: string }
+        Returns: {
+          item_id: string
+          item_position: number
+          label: string
+          note: string | null
+          result: Database["public"]["Enums"]["inspection_result"]
+          section: string
+        }[]
+      }
+      create_quotation_from_inspection: {
+        Args: { target_inspection_id: string; target_item_ids: string[] }
+        Returns: string
+      }
+      cancel_appointment: {
+        Args: { target_appointment_id: string }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+      }
+      confirm_appointment: {
+        Args: {
+          new_end: string
+          new_start: string
+          target_appointment_id: string
+        }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+      }
+      convert_appointment_to_quotation: {
+        Args: { target_appointment_id: string }
+        Returns: string
+      }
+      create_invoice_credit_note: {
+        Args: { amount: number; reason: string; target_invoice_id: string }
+        Returns: Database["public"]["Tables"]["invoice_credit_notes"]["Row"]
+      }
+      decline_appointment: {
+        Args: { reason: string; target_appointment_id: string }
+        Returns: Database["public"]["Tables"]["appointments"]["Row"]
+      }
+      issue_invoice: {
+        Args: { target_invoice_id: string }
+        Returns: Database["public"]["Tables"]["invoices"]["Row"]
+      }
+      void_invoice: {
+        Args: { reason: string; target_invoice_id: string }
+        Returns: Database["public"]["Tables"]["invoices"]["Row"]
       }
       customer_reject_quote: {
         Args: {
@@ -3531,6 +4503,13 @@ export type Database = {
       }
     }
     Enums: {
+      appointment_status:
+        | "requested"
+        | "confirmed"
+        | "declined"
+        | "cancelled"
+        | "completed"
+        | "no_show"
       complaint_severity: "low" | "medium" | "high" | "critical"
       complaint_status:
         | "open"
@@ -3540,6 +4519,16 @@ export type Database = {
         | "escalated"
         | "resolved"
         | "closed"
+      invoice_payment_method:
+        | "cash"
+        | "card_in_shop"
+        | "bank_transfer"
+        | "online_card"
+        | "other"
+      inspection_context: "pre_quote" | "in_job"
+      inspection_result: "pass" | "attention" | "fail" | "not_checked"
+      inspection_status: "draft" | "completed"
+      invoice_status: "draft" | "issued" | "partially_paid" | "paid" | "void"
       item_kind: "service" | "labor" | "product" | "part"
       job_status:
         | "pending"
@@ -3725,6 +4714,9 @@ export const Constants = {
         "resolved",
         "closed",
       ],
+      inspection_context: ["pre_quote", "in_job"],
+      inspection_result: ["pass", "attention", "fail", "not_checked"],
+      inspection_status: ["draft", "completed"],
       item_kind: ["service", "labor", "product", "part"],
       job_status: [
         "pending",
@@ -3842,6 +4834,51 @@ export type Document = AppTables["documents"]["Row"];
 export type DocumentInsert = AppTables["documents"]["Insert"];
 export type DocumentUpdate = AppTables["documents"]["Update"];
 
+export type Appointment = AppTables["appointments"]["Row"];
+export type AppointmentInsert = AppTables["appointments"]["Insert"];
+export type AppointmentUpdate = AppTables["appointments"]["Update"];
+export type AppointmentStatus = AppEnums["appointment_status"];
+
+export type BusinessMaintenanceSettings =
+  AppTables["business_maintenance_settings"]["Row"];
+export type BusinessMaintenanceSettingsInsert =
+  AppTables["business_maintenance_settings"]["Insert"];
+export type BusinessMaintenanceSettingsUpdate =
+  AppTables["business_maintenance_settings"]["Update"];
+
+export type VehicleOdometerReading = AppTables["vehicle_odometer_readings"]["Row"];
+export type VehicleOdometerReadingInsert =
+  AppTables["vehicle_odometer_readings"]["Insert"];
+export type VehicleOdometerReadingUpdate =
+  AppTables["vehicle_odometer_readings"]["Update"];
+
+export type BranchAppointmentSettings =
+  AppTables["branch_appointment_settings"]["Row"];
+export type BranchAppointmentSettingsInsert =
+  AppTables["branch_appointment_settings"]["Insert"];
+export type BranchAppointmentSettingsUpdate =
+  AppTables["branch_appointment_settings"]["Update"];
+
+export type Invoice = AppTables["invoices"]["Row"];
+export type InvoiceInsert = AppTables["invoices"]["Insert"];
+export type InvoiceUpdate = AppTables["invoices"]["Update"];
+export type InvoiceStatus = AppEnums["invoice_status"];
+
+export type InvoiceItem = AppTables["invoice_items"]["Row"];
+export type InvoiceItemInsert = AppTables["invoice_items"]["Insert"];
+export type InvoiceItemUpdate = AppTables["invoice_items"]["Update"];
+
+export type InvoicePayment = AppTables["invoice_payments"]["Row"];
+export type InvoicePaymentInsert = AppTables["invoice_payments"]["Insert"];
+export type InvoicePaymentUpdate = AppTables["invoice_payments"]["Update"];
+export type InvoicePaymentMethod = AppEnums["invoice_payment_method"];
+
+export type InvoiceCreditNote = AppTables["invoice_credit_notes"]["Row"];
+export type InvoiceCreditNoteInsert =
+  AppTables["invoice_credit_notes"]["Insert"];
+export type InvoiceCreditNoteUpdate =
+  AppTables["invoice_credit_notes"]["Update"];
+
 export type Job = AppTables["jobs"]["Row"];
 export type JobInsert = AppTables["jobs"]["Insert"];
 export type JobUpdate = AppTables["job_updates"]["Row"];
@@ -3917,3 +4954,38 @@ export type SubscriptionStatus = AppEnums["subscription_status"];
 export type Vehicle = AppTables["vehicles"]["Row"];
 export type VehicleInsert = AppTables["vehicles"]["Insert"];
 export type VehicleUpdate = AppTables["vehicles"]["Update"];
+
+// --- Digital vehicle inspection (0037) --------------------------------------
+
+export type InspectionTemplate = AppTables["inspection_templates"]["Row"];
+export type InspectionTemplateInsert =
+  AppTables["inspection_templates"]["Insert"];
+export type InspectionTemplateUpdate =
+  AppTables["inspection_templates"]["Update"];
+
+export type InspectionTemplateItem =
+  AppTables["inspection_template_items"]["Row"];
+export type InspectionTemplateItemInsert =
+  AppTables["inspection_template_items"]["Insert"];
+export type InspectionTemplateItemUpdate =
+  AppTables["inspection_template_items"]["Update"];
+
+export type VehicleInspection = AppTables["vehicle_inspections"]["Row"];
+export type VehicleInspectionInsert =
+  AppTables["vehicle_inspections"]["Insert"];
+export type VehicleInspectionUpdate =
+  AppTables["vehicle_inspections"]["Update"];
+
+export type InspectionItem = AppTables["inspection_items"]["Row"];
+export type InspectionItemInsert = AppTables["inspection_items"]["Insert"];
+export type InspectionItemUpdate = AppTables["inspection_items"]["Update"];
+
+export type InspectionItemMedia = AppTables["inspection_item_media"]["Row"];
+export type InspectionItemMediaInsert =
+  AppTables["inspection_item_media"]["Insert"];
+export type InspectionItemMediaUpdate =
+  AppTables["inspection_item_media"]["Update"];
+
+export type InspectionContext = AppEnums["inspection_context"];
+export type InspectionResult = AppEnums["inspection_result"];
+export type InspectionStatus = AppEnums["inspection_status"];

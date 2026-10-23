@@ -195,3 +195,10 @@ export function firstValidationMessage(
   }
   return fallback;
 }
+
+/**
+ * HTML checkbox parsed from FormData: "on" (or true) -> true, absent/other ->
+ * false. Never throws — an unchecked box simply isn't in the payload.
+ */
+export const checkbox = () =>
+  z.preprocess((v) => v === "on" || v === true || v === "true", z.boolean());

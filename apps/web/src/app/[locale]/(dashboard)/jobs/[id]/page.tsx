@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireMembership } from "@/lib/auth";
-import { canManageJobs } from "@/lib/permissions";
-import { getLocale } from "next-intl/server";
+import { canManageInspections, canManageJobs } from "@/lib/permissions";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getJobStatusLabel } from "@/lib/jobs";
 import { loadJobAttachments } from "@/lib/documents";
@@ -30,6 +30,7 @@ import {
   PostUpdateForm,
   ToggleTaskButton,
 } from "../job-controls";
+import { CreateInvoiceFromJobButton } from "../../invoices/create-invoice-button";
 
 type JobWithRelations = Job & {
   customer: { full_name: string } | null;
@@ -51,6 +52,8 @@ export default async function JobDetailPage({
   const { id } = await params;
   const { member, business } = await requireMembership();
   const canManage = canManageJobs(member.role);
+  const canInspect = canManageInspections(member.role);
+  const tInspections = await getTranslations("dashboardInspections");
   const locale = await getLocale();
   const supabase = await createClient();
 
@@ -65,24 +68,30 @@ export default async function JobDetailPage({
   if (!data) notFound();
   const job = data as unknown as JobWithRelations;
 
-  const [{ data: taskRows }, { data: updateRows }] = await Promise.all([
-    supabase
-      .from("job_tasks")
-      .select("*")
-      .eq("business_id", business.id)
-      .eq("job_id", id)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("job_updates")
-      .select("*")
-      .eq("business_id", business.id)
-      .eq("job_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: taskRows }, { data: updateRows }, { data: existingInvoice }, attachments] =
+    await Promise.all([
+      supabase
+        .from("job_tasks")
+        .select("*")
+        .eq("business_id", business.id)
+        .eq("job_id", id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("job_updates")
+        .select("*")
+        .eq("business_id", business.id)
+        .eq("job_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("invoices")
+        .select("id, invoice_number, status")
+        .eq("business_id", business.id)
+        .eq("job_id", id)
+        .maybeSingle(),
+      loadJobAttachments(id, "staff"),
+    ]);
   const tasks = (taskRows ?? []) as JobTask[];
   const updates = (updateRows ?? []) as JobUpdate[];
-
-  const attachments = await loadJobAttachments(id, "staff");
   const v = job.quotation?.vehicle;
   const vehicleLabel = v
     ? [v.make, v.model].filter(Boolean).join(" ") +
@@ -100,9 +109,21 @@ export default async function JobDetailPage({
         }
         description={[job.customer?.full_name, vehicleLabel].filter(Boolean).join(" · ")}
         action={
-          <Link href={`/${locale}/jobs`} className={buttonVariants({ variant: "outline" })}>
-            {locale === "ar" ? "العودة إلى المهام" : "Back to jobs"}
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {/* In-job entry point (spec journey J2): additional work found
+                mid-repair becomes its own inspection, anchored to this job. */}
+            {canInspect && (
+              <Link
+                href={`/inspections/new?job=${job.id}`}
+                className={buttonVariants({ variant: "secondary" })}
+              >
+                {tInspections("start.fromJob")}
+              </Link>
+            )}
+            <Link href={`/${locale}/jobs`} className={buttonVariants({ variant: "outline" })}>
+              {locale === "ar" ? "العودة إلى المهام" : "Back to jobs"}
+            </Link>
+          </div>
         }
       />
 
@@ -154,6 +175,23 @@ export default async function JobDetailPage({
             {canManage && <AddTaskForm jobId={job.id} />}
           </CardContent>
         </Card>
+
+        {canManage && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{locale === "ar" ? "الفاتورة" : "Invoice"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {existingInvoice ? (
+                <Link href={`/${locale}/invoices/${existingInvoice.id}`} className="underline text-sm">
+                  {existingInvoice.invoice_number ?? (locale === "ar" ? "عرض المسودة" : "View draft")}
+                </Link>
+              ) : (
+                <CreateInvoiceFromJobButton jobId={job.id} />
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

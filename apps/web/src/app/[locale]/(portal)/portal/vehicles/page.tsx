@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { buttonVariants } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/formatters";
 import { requireCustomerPortal } from "@/lib/auth";
+import { isFeatureOn } from "@/lib/features/guard";
 import { getVehiclePortalSnapshot } from "@/lib/vehicle-intelligence/service";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,7 @@ export async function generateMetadata() {
 
 export default async function PortalVehiclesPage() {
   const t = await getTranslations("vehicleIntelligence");
+  const vehicleIntelligenceOn = isFeatureOn("vehicleIntelligence");
   const { accounts } = await requireCustomerPortal();
   if (accounts.length === 0) {
     return (
@@ -30,9 +32,11 @@ export default async function PortalVehiclesPage() {
             title={t("portal.noLinkedVehiclesTitle")}
             description={t("portal.noLinkedVehiclesDescription")}
             action={
-              <Link href="/portal/ai/health-check" className={buttonVariants({ variant: "outline" })}>
-                {t("portal.healthCheckAction")}
-              </Link>
+              vehicleIntelligenceOn ? (
+                <Link href="/portal/ai/health-check" className={buttonVariants({ variant: "outline" })}>
+                  {t("portal.healthCheckAction")}
+                </Link>
+              ) : undefined
             }
           />
         </div>
@@ -62,9 +66,11 @@ export default async function PortalVehiclesPage() {
         title={t("portal.vehiclesTitle")}
         description={t("portal.vehiclesDescription")}
         action={
-          <Link href="/portal/ai/health-check" className={buttonVariants()}>
-            {t("portal.healthCheckAction")}
-          </Link>
+          vehicleIntelligenceOn ? (
+            <Link href="/portal/ai/health-check" className={buttonVariants()}>
+              {t("portal.healthCheckAction")}
+            </Link>
+          ) : undefined
         }
       />
       <div className="grid gap-4 p-6 md:grid-cols-2">

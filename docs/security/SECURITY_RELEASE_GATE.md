@@ -30,8 +30,54 @@ notifications, or platform admin (see
       `requireSuperAdmin()` guards are still present on every route that needs them
 - [ ] No new route under `(dashboard)`, `(portal)`, or `(admin)` was added without a
       corresponding layout-level or page-level guard
+- [ ] No new route was added **outside** those three groups. A route outside them is
+      not covered by the check above and is unauthenticated unless something else
+      stops it — if the diff adds one, the public-route section below is mandatory
+- [ ] Any change to `isPublicPath()` in `apps/web/src/lib/supabase/middleware.ts` is
+      reviewed as a dedicated finding — that function is the allowlist for the entire
+      unauthenticated surface
 - [ ] `account_intent` is not used as an authorization check anywhere in the diff —
       routing/UI only
+
+## If the diff touches a public / unauthenticated route
+
+Applies to any route reachable without a session — today that is the DVI inspection
+share link `/[locale]/i/<token>` (see
+[THREAT_MODEL.md](THREAT_MODEL.md) §4 "Public inspection share link"). Treat every
+box here as mandatory, not lightweight: this is the one surface where RLS is not the
+backstop, because there is no authenticated identity for it to act on.
+
+- [ ] The middleware exemption in `isPublicPath()` matches an **exact** shape, not a
+      directory prefix — no `startsWith()` exemption for a path segment
+- [ ] The route serves a **fixed, explicitly-columned** payload. Confirm by reading
+      the query or RPC definition, not the component: a field that is never selected
+      cannot leak, one that is selected-then-hidden can
+- [ ] The payload contains no customer identity or contact detail, no other
+      customer/vehicle/record, no pricing or billing data, no internal notes, no
+      staff identity, no raw storage path, and no tenant identifier usable for
+      enumeration
+- [ ] Any bearer token is **≥256 bits** of CSPRNG output, is stored **hashed only**,
+      and is never logged, never placed in an error message, and never sent to
+      analytics
+- [ ] Unknown, expired and revoked credentials produce an **indistinguishable**
+      response — no existence oracle. Any deliberate asymmetry (e.g. malformed input
+      handled by the auth gate) is documented in code with its justification
+- [ ] The resource is in a terminal/publishable state (for DVI: `status = 'completed'`);
+      drafts and in-progress records are unreachable
+- [ ] Expiry and revocation both exist and both actually invalidate access
+- [ ] Response headers set `Cache-Control: private, no-store`,
+      `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex, nofollow`
+- [ ] Signed URLs for any media are minted **after** the credential validates, never
+      before, and are scoped to that resource's own assets
+- [ ] `select proname, array_to_string(proacl,' ') from pg_proc where pronamespace =
+      'public'::regnamespace and array_to_string(proacl,' ') like '%anon=X%'` returns
+      **only** the functions intended to be public. Supabase `DEFAULT PRIVILEGES`
+      grant `EXECUTE` to `anon` on every new `public` function, and
+      `revoke ... from public` does **not** remove it — the revoke must name `anon`
+- [ ] The `Unauthenticated` column of
+      [AUTHORIZATION_MATRIX.md](AUTHORIZATION_MATRIX.md) has been updated to match
+- [ ] Rate limiting considered and either applied or **recorded as an accepted risk**
+      in [SECURITY_RISK_REGISTER.md](SECURITY_RISK_REGISTER.md) — not silently skipped
 
 ## If the diff touches RLS / migrations
 

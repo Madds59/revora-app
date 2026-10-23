@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_SEVERITIES,
@@ -58,6 +60,19 @@ export function FeedbackSubmissionForm({
   const [browserInfo, setBrowserInfo] = useState("");
   const formRef = useRef<HTMLFormElement | null>(null);
   const lastMessage = useRef<string | undefined>(undefined);
+  const draft = useFormDraft({
+    key: "feedback:new",
+    scope: businessId ?? accounts?.[0]?.businessId,
+    error: state.error,
+  });
+  const { ref: draftRef } = draft;
+  const setFormRef = useCallback(
+    (el: HTMLFormElement | null) => {
+      formRef.current = el;
+      return draftRef(el);
+    },
+    [draftRef],
+  );
 
   const categoryOptions = useMemo(() => FEEDBACK_CATEGORIES, []);
   const severityOptions = useMemo(() => FEEDBACK_SEVERITIES, []);
@@ -87,7 +102,8 @@ export function FeedbackSubmissionForm({
   }, [accounts, state.error, state.message]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+    <form ref={setFormRef} action={formAction} className="flex flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="page_url" value={pageUrl} />
@@ -182,7 +198,7 @@ export function FeedbackSubmissionForm({
         <Textarea id="description" name="description" rows={6} required />
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton>{submitLabel}</SubmitButton>
       </div>

@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json } from "@/lib/database.types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { buildReminderDedupeKey } from "@/lib/maintenance/due-state.js";
 
 import { canAttemptLiveSend } from "./provider.js";
 import {
@@ -379,8 +380,14 @@ async function sourceResourceMatches(
       : source.table === "jobs"
         ? admin.from("jobs").select("id, business_id, customer_id")
         : source.table === "complaints"
-          ? admin.from("complaints").select("id, business_id, customer_id")
-          : null;
+        ? admin.from("complaints").select("id, business_id, customer_id")
+        : source.table === "invoices"
+          ? admin.from("invoices").select("id, business_id, customer_id")
+          : source.table === "appointments"
+            ? admin.from("appointments").select("id, business_id, customer_id")
+            : source.table === "vehicles"
+              ? admin.from("vehicles").select("id, business_id, customer_id")
+              : null;
   if (!query) return false;
 
   const { data } = await query
@@ -776,6 +783,135 @@ export async function enqueueJobStatusNotification({
         jobTitle: job.title,
         statusLabel,
       },
+    });
+  } catch {
+    return { inserted: 0, skipped: true };
+  }
+}
+
+export async function enqueueAppointmentDecisionNotification({
+  appointmentId,
+  declineReason,
+  slotLabel,
+  status,
+}: {
+  appointmentId: string;
+  declineReason?: string;
+  slotLabel?: string;
+  status: "confirmed" | "declined";
+}) {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("appointments")
+      .select("id, business_id, customer_id")
+      .eq("id", appointmentId)
+      .maybeSingle();
+    const appointment = data as
+      | { business_id: string; customer_id: string; id: string }
+      | null;
+    if (!appointment) return { inserted: 0, skipped: true };
+
+    const templateKey = status === "confirmed" ? "appointment_confirmed" : "appointment_declined";
+    return queueCustomerNotification({
+      businessId: appointment.business_id,
+      customerId: appointment.customer_id,
+      dedupeKey: `appointment_${status}:${appointment.id}`,
+      payload: {
+        appointment_id: appointment.id,
+        decline_reason: declineReason ?? null,
+        type: templateKey,
+      },
+      templateKey,
+      variables: {
+        slotLabel: slotLabel ?? "",
+      },
+    });
+  } catch {
+    return { inserted: 0, skipped: true };
+  }
+}
+
+export async function enqueueInvoiceIssuedNotification(invoiceId: string) {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("invoices")
+      .select("id, business_id, customer_id, invoice_number, total, currency")
+      .eq("id", invoiceId)
+      .maybeSingle();
+    const invoice = data as
+      | {
+          business_id: string;
+          currency: string;
+          customer_id: string;
+          id: string;
+          invoice_number: string | null;
+          total: number;
+        }
+      | null;
+    if (!invoice?.invoice_number) return { inserted: 0, skipped: true };
+    return queueCustomerNotification({
+      businessId: invoice.business_id,
+      customerId: invoice.customer_id,
+      dedupeKey: `invoice_issued:${invoice.id}`,
+      payload: {
+        invoice_id: invoice.id,
+        invoice_number: invoice.invoice_number,
+        type: "invoice_issued",
+      },
+      templateKey: "invoice_issued",
+      variables: {
+        currency: invoice.currency,
+        invoiceNumber: invoice.invoice_number,
+        total: invoice.total.toFixed(2),
+      },
+    });
+  } catch {
+    return { inserted: 0, skipped: true };
+  }
+}
+
+/**
+ * Queue one maintenance reminder stage.
+ *
+ * The caller (the scanner) has already resolved due state and suppression; this
+ * only translates that decision into the existing queue. Identity is the plan
+ * and stage, never the projected date, so a drifting mileage estimate cannot
+ * re-notify the customer -- the unique index on (business_id, dedupe_key) turns
+ * a repeated or concurrent scan into a no-op.
+ */
+export async function enqueueMaintenanceReminderNotification({
+  businessId,
+  customerId,
+  vehicleId,
+  planId,
+  stage,
+  vehicleLabel,
+  dueDateLabel,
+}: {
+  businessId: string;
+  customerId: string;
+  dueDateLabel: string;
+  planId: string;
+  stage: "first" | "second";
+  vehicleId: string;
+  vehicleLabel: string;
+}) {
+  try {
+    const templateKey =
+      stage === "first" ? "maintenance_reminder_upcoming" : "maintenance_reminder_due";
+    return await queueCustomerNotification({
+      businessId,
+      customerId,
+      dedupeKey: buildReminderDedupeKey({ planId, stage }),
+      payload: {
+        maintenance_plan_id: planId,
+        type: templateKey,
+        vehicle_id: vehicleId,
+      },
+      templateKey,
+      variables: { dueDateLabel, vehicleLabel },
     });
   } catch {
     return { inserted: 0, skipped: true };

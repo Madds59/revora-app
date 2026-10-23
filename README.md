@@ -70,7 +70,49 @@ pnpm dev                             # http://localhost:3000
 2. In the SQL editor, run `supabase/migrations/0001_core_schema.sql` then
    `0002_rls_policies.sql` (and `supabase/policies/storage-policies.sql`).
 3. Put the project URL + anon key in `apps/web/.env.local`.
-4. `cd apps/web && pnpm install && pnpm dev`.
+4. Set the legal-entity variables (`NEXT_PUBLIC_LEGAL_ENTITY_NAME`, `_ADDRESS`,
+   `_EMAIL`, optional `_LICENSE`, `_JURISDICTION`) — see `docs/legal/README.md`.
+   Without them the `/legal/*` pages and auth footer show a visible
+   "not configured" hint.
+5. `cd apps/web && pnpm install && pnpm dev`.
+
+### Error tracking (optional)
+
+Set `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` (same value for both) in
+`apps/web/.env.local` to send `reportError()` calls to Sentry, and
+`SENTRY_ENVIRONMENT` / `NEXT_PUBLIC_SENTRY_ENVIRONMENT` to label the
+reported environment: the server falls back to `SENTRY_ENVIRONMENT` →
+`VERCEL_ENV` → `"development"`, and the browser falls back to
+`NEXT_PUBLIC_SENTRY_ENVIRONMENT` → `NEXT_PUBLIC_VERCEL_ENV` → `"development"`.
+Leave all four empty and Sentry is a no-op: `reportError` just logs to the
+console and the build's Sentry webpack plugin is never attached.
+
+### Phase 1 feature flags
+
+Six optional modules are hidden in this phase 1 release: `vehicleIntelligence`,
+`retainerCalculator`, `membershipBundles`, `analytics`, `maintenance`, and
+`feedback`. Set `NEXT_PUBLIC_REVORA_FEATURES` in `apps/web/.env.local` to a
+comma-separated list of these keys to force them back on (for example
+`NEXT_PUBLIC_REVORA_FEATURES=analytics,maintenance`); leave it unset and every
+module keeps the phase 1 default of off.
+
+This variable **must be set before `pnpm build`**, not just before
+`next start`. Next only inlines `NEXT_PUBLIC_*` variables into the browser
+bundle via DefinePlugin at build time. The server-side route guard reads the
+real environment on every request, so it reacts immediately, but the
+client-rendered navigation only sees whatever value was baked in when the
+app was last built. Setting the variable and restarting `next start` against
+an already-built `.next` output enables the gated route without updating the
+sidebar that links to it, producing an SSR/hydration mismatch. A Vercel
+redeploy always rebuilds from source, so it's safe; restarting a self-hosted
+`next start` process without rebuilding is not — rebuild first.
+
+`MAINTENANCE_REMINDERS_ENABLED` is a separate switch from the `maintenance`
+feature key above: it gates the outbound maintenance-reminder scan at
+`/api/maintenance/reminders/scan`, which Vercel crons daily. Re-enabling the
+`maintenance` feature flag in a later phase restores the dashboard
+maintenance worklist UI, but does **not** resume outbound reminders — that
+still needs `MAINTENANCE_REMINDERS_ENABLED=true` set separately.
 
 ## Try it
 
@@ -84,7 +126,34 @@ pnpm dev                             # http://localhost:3000
 
 ```bash
 cd apps/web
+pnpm lint
 pnpm typecheck
 pnpm build
+pnpm test
 ```
+
+## Database security tests
+
+Behavioural tests for tenant isolation and the DVI authorization boundary. They
+run against the local Supabase Postgres, need only the migrations applied, and
+seed every tenant, user and record they use.
+
+```bash
+# from the repo root, with the local stack running
+docker exec -i supabase_db_Revora-app psql -U postgres \
+  -f - < supabase/tests/dvi_security_tests.sql
+```
+
+Reading the output:
+
+- `KEY=value` lines are assertions — compare them against
+  `docs/security/MULTI_TENANT_TEST_MATRIX.md` (cases 15–26), which says what
+  each one proves.
+- `ERROR:` lines next to a `-- must be REJECTED/DENIED --` banner are **passes**:
+  the database refused something it should refuse. An error anywhere else is a
+  real failure.
+- A failure during fixture setup aborts immediately rather than cascading.
+
+Never point this at production — it runs as `postgres` with RLS bypassed and
+deletes rows (scoped to the two fixture tenants it creates and owns).
 # revora-app

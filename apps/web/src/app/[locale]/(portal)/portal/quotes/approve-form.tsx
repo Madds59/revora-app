@@ -73,7 +73,7 @@ export function ApproveForm({
           placeholder={t("noteForWorkshop")}
         />
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div className="flex flex-col gap-2">
         <SubmitButton size="lg">
           <ShieldCheck />

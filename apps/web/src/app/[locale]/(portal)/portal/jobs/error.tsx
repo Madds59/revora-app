@@ -1,22 +1,7 @@
 "use client";
 
-import { ErrorState } from "@/components/error-state";
+import { RouteErrorBoundary, type RouteErrorProps } from "@/components/route-error-boundary";
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  return (
-    <ErrorState
-      title="Jobs failed to load"
-      description="The portal jobs list could not finish loading. Retry or return to the portal home."
-      errorDigest={error.digest}
-      onRetry={reset}
-      backHref="/portal"
-      backLabel="Back to portal"
-    />
-  );
+export default function PortalJobsError(props: RouteErrorProps) {
+  return <RouteErrorBoundary {...props} section="portalJobs" backHref="/portal" />;
 }

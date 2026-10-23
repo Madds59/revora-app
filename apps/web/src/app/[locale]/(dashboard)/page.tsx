@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import {
   Users,
   FileCheck2,
@@ -7,10 +7,12 @@ import {
   Wrench,
   CarFront,
   ArrowRight,
-  type LucideIcon,
+  ClipboardCheck,
+  Lock,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { StatusBanner } from "@/components/status-banner";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -21,18 +23,20 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { requireMembership } from "@/lib/auth";
+import { disabledBannerKey } from "@/lib/features/flags";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_JOB_STATUSES } from "@/lib/jobs";
+import { formatNumber } from "@/lib/formatters";
 
-type Stat = {
-  label: string;
-  value: number | string;
-  icon: LucideIcon;
-  ready: boolean;
-};
-
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ disabled?: string | string[] }>;
+}) {
   const t = await getTranslations("dashboardHome");
+  const tf = await getTranslations("features");
+  const { disabled } = await searchParams;
+  const disabledKey = disabledBannerKey(disabled);
   const { business } = await requireMembership();
   const supabase = await createClient();
 
@@ -42,6 +46,7 @@ export default async function HomePage() {
     { count: pendingQuoteCount },
     { count: openComplaintCount },
     { count: activeJobCount },
+    { count: inspectionsToQuoteCount },
   ] = await Promise.all([
     supabase
       .from("customers")
@@ -67,29 +72,44 @@ export default async function HomePage() {
       .select("id", { count: "exact", head: true })
       .eq("business_id", business.id)
       .in("status", ACTIVE_JOB_STATUSES),
+    supabase
+      .from("vehicle_inspections")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", business.id)
+      .eq("status", "completed")
+      .is("quotation_id", null),
   ]);
 
-  const stats: Stat[] = [
-    { label: t("stats.customers"), value: customerCount ?? 0, icon: Users, ready: true },
-    { label: t("stats.vehicles"), value: vehicleCount ?? 0, icon: CarFront, ready: true },
+  const locale = (await getLocale()) === "ar" ? "ar" : "en";
+
+  const pipeline = [
     {
-      label: t("stats.quotesAwaitingApproval"),
+      label: t("pipeline.inspectionsToQuote"),
+      hint: t("pipeline.inspectionsToQuoteHint"),
+      value: inspectionsToQuoteCount ?? 0,
+      icon: ClipboardCheck,
+      href: "/inspections",
+    },
+    {
+      label: t("pipeline.quotesAwaitingApproval"),
+      hint: t("pipeline.quotesAwaitingApprovalHint"),
       value: pendingQuoteCount ?? 0,
       icon: FileCheck2,
-      ready: true,
+      href: "/quotes",
     },
     {
-      label: t("stats.openComplaints"),
-      value: openComplaintCount ?? 0,
-      icon: MessageSquareWarning,
-      ready: true,
-    },
-    {
-      label: t("stats.activeJobs"),
+      label: t("pipeline.jobsInProgress"),
+      hint: t("pipeline.jobsInProgressHint"),
       value: activeJobCount ?? 0,
       icon: Wrench,
-      ready: true,
+      href: "/jobs",
     },
+  ];
+
+  const secondary = [
+    { label: t("stats.customers"), value: customerCount ?? 0, icon: Users },
+    { label: t("stats.vehicles"), value: vehicleCount ?? 0, icon: CarFront },
+    { label: t("stats.openComplaints"), value: openComplaintCount ?? 0, icon: MessageSquareWarning },
   ];
 
   return (
@@ -99,39 +119,63 @@ export default async function HomePage() {
         description={t("description")}
       />
       <div className="flex flex-col gap-6 p-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          {stats.map((s) => {
+        {disabledKey && (
+          <StatusBanner
+            tone="muted"
+            role="status"
+            icon={Lock}
+            title={tf("disabled.title", {
+              module: tf(`names.${disabledKey}` as Parameters<typeof tf>[0]),
+            })}
+          >
+            <p>{tf("disabled.body")}</p>
+          </StatusBanner>
+        )}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-muted-foreground text-sm font-medium">{t("pipeline.title")}</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {pipeline.map((stage) => {
+              const Icon = stage.icon;
+              return (
+                <Link key={stage.href} href={stage.href} className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Card className="h-full transition-colors group-hover:border-primary/40">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <CardDescription>{stage.label}</CardDescription>
+                        <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
+                          <Icon className="size-4" />
+                        </span>
+                      </div>
+                      <CardTitle className="text-4xl tabular-nums">
+                        {formatNumber(stage.value, undefined, locale)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <span className="text-muted-foreground text-xs">{stage.hint}</span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {secondary.map((s) => {
             const Icon = s.icon;
             return (
               <Card key={s.label}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between gap-2">
                     <CardDescription>{s.label}</CardDescription>
-                    <span
-                      className={cn(
-                        "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                        s.ready
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground",
-                      )}
-                    >
+                    <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
                       <Icon className="size-4" />
                     </span>
                   </div>
-                  <CardTitle
-                    className={cn(
-                      "text-3xl tabular-nums",
-                      !s.ready && "text-muted-foreground/50",
-                    )}
-                  >
-                    {s.value}
+                  <CardTitle className="text-3xl tabular-nums">
+                    {formatNumber(s.value, undefined, locale)}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <span className="text-muted-foreground text-xs">
-                    {s.ready ? t("status.live") : t("status.laterRelease")}
-                  </span>
-                </CardContent>
               </Card>
             );
           })}
@@ -145,23 +189,20 @@ export default async function HomePage() {
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
             <Link
-              href="/customers/new"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "w-full justify-center",
-              )}
+              href="/inspections/new"
+              className={cn(buttonVariants({ size: "lg" }), "w-full justify-center")}
             >
-              {t("getStarted.addCustomer")}
+              {t("getStarted.startInspection")}
               <ArrowRight className="rtl:rotate-180" />
             </Link>
             <Link
-              href="/vehicles"
+              href="/customers/new"
               className={cn(
                 buttonVariants({ variant: "secondary", size: "lg" }),
                 "w-full justify-center",
               )}
             >
-              {t("getStarted.manageVehicles")}
+              {t("getStarted.addCustomer")}
             </Link>
             <Link
               href="/settings/business"

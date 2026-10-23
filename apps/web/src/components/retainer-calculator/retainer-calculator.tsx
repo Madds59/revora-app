@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, Eye, FileOutput, Plus, RotateCcw, Save, Scale, Sparkles, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -398,10 +398,12 @@ function DraftNumberInput({
   step?: string;
   min?: number;
 }) {
+  const id = useId();
   return (
     <div className="grid gap-2">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}</Label>
       <Input
+        id={id}
         value={Number.isFinite(value) ? String(value) : "0"}
         inputMode="decimal"
         step={step}
@@ -951,42 +953,42 @@ export function RetainerCalculator({
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-2 md:col-span-2">
-                    <Label>{t("context.title")}</Label>
-                    <Input value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} />
+                    <Label htmlFor="retainer-title">{t("context.title")}</Label>
+                    <Input id="retainer-title" value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} />
                   </div>
                   <div className="grid gap-2 md:col-span-2">
-                    <Label>{t("context.description")}</Label>
-                    <Textarea value={draft.description ?? ""} onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))} rows={3} />
+                    <Label htmlFor="retainer-description">{t("context.description")}</Label>
+                    <Textarea id="retainer-description" value={draft.description ?? ""} onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))} rows={3} />
                   </div>
                   <div className="grid gap-2">
-                    <Label>{t("context.customerType")}</Label>
+                    <Label htmlFor="retainer-customer-type">{t("context.customerType")}</Label>
                     <Select value={draft.customerType} onValueChange={(value) => setDraft((prev) => ({ ...prev, customerType: value as RetainerScenarioInput["customerType"] }))}>
-                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(customerTypeOptions, value)}</SelectValue></SelectTrigger>
+                      <SelectTrigger id="retainer-customer-type" className="w-full"><SelectValue>{(value) => selectedOptionLabel(customerTypeOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>
                         {customerTypeOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label>{t("context.serviceCategory")}</Label>
+                    <Label htmlFor="retainer-service-category">{t("context.serviceCategory")}</Label>
                     <Select value={draft.serviceCategory} onValueChange={(value) => setDraft((prev) => ({ ...prev, serviceCategory: value as RetainerScenarioInput["serviceCategory"] }))}>
-                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(presetOptions, value)}</SelectValue></SelectTrigger>
+                      <SelectTrigger id="retainer-service-category" className="w-full"><SelectValue>{(value) => selectedOptionLabel(presetOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>
                         {presetOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label>{t("context.currency")}</Label>
+                    <Label htmlFor="retainer-currency">{t("context.currency")}</Label>
                     <Select value={draft.input.currency} onValueChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, currency: value as Currency } }))}>
-                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(currencyOptions, value)}</SelectValue></SelectTrigger>
+                      <SelectTrigger id="retainer-currency" className="w-full"><SelectValue>{(value) => selectedOptionLabel(currencyOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>{currencyOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label>{t("context.billingCycle")}</Label>
+                    <Label htmlFor="retainer-billing-cycle">{t("context.billingCycle")}</Label>
                     <Select value={draft.input.billingCycle} onValueChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, billingCycle: value as BillingCycle } }))}>
-                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(billingCycleOptions, value)}</SelectValue></SelectTrigger>
+                      <SelectTrigger id="retainer-billing-cycle" className="w-full"><SelectValue>{(value) => selectedOptionLabel(billingCycleOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>{billingCycleOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
@@ -994,14 +996,14 @@ export function RetainerCalculator({
                   <DraftNumberInput label={t("context.vehicles")} value={draft.input.numberOfVehicles} min={1} step="1" onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, numberOfVehicles: Math.max(1, Math.floor(Number.isFinite(value) ? value : 1)) } }))} />
                   <DraftNumberInput label={t("context.visits")} value={draft.input.expectedMonthlyVisits} min={0} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, expectedMonthlyVisits: Math.max(0, Number.isFinite(value) ? value : 0) } }))} />
                   <div className="grid gap-2">
-                    <Label>{t("context.sla")}</Label>
+                    <Label htmlFor="retainer-sla">{t("context.sla")}</Label>
                     <Select value={draft.input.slaLevel} onValueChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, slaLevel: value as SlaLevel } }))}>
-                      <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(slaOptions, value)}</SelectValue></SelectTrigger>
+                      <SelectTrigger id="retainer-sla" className="w-full"><SelectValue>{(value) => selectedOptionLabel(slaOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>{slaOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2 md:col-span-2">
-                    <Label>{t("context.attachCustomer")}</Label>
+                    <Label htmlFor="retainer-customer">{t("context.attachCustomer")}</Label>
                     <Select
                       value={draft.customerId ?? "__none__"}
                       onValueChange={(value) => {
@@ -1012,7 +1014,7 @@ export function RetainerCalculator({
                         setDraft((prev) => ({ ...prev, customerId: nextCustomerId }));
                       }}
                     >
-                    <SelectTrigger className="w-full"><SelectValue>{(value) => {
+                    <SelectTrigger id="retainer-customer" className="w-full"><SelectValue>{(value) => {
                       if (!value || value === "__none__") return labels.common.none;
                       const customer = customers.find((item) => item.id === value);
                       return customer ? `${customer.fullName} · ${customer.detail}` : null;
@@ -1041,12 +1043,12 @@ export function RetainerCalculator({
                   {draft.input.laborItems.map((item, index) => (
                     <div key={item.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-6">
                       <div className="grid gap-2 md:col-span-2">
-                        <Label>{t("labor.role")}</Label>
-                        <Input value={item.role} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, laborItems: updateArrayItem(prev.input.laborItems, index, (current) => ({ ...current, role: event.target.value })) } }))} />
+                        <Label htmlFor={`${item.id}-role`}>{t("labor.role")}</Label>
+                        <Input id={`${item.id}-role`} value={item.role} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, laborItems: updateArrayItem(prev.input.laborItems, index, (current) => ({ ...current, role: event.target.value })) } }))} />
                       </div>
                       <div className="grid gap-2">
-                        <Label>{t("labor.department")}</Label>
-                        <Input value={item.department ?? ""} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, laborItems: updateArrayItem(prev.input.laborItems, index, (current) => ({ ...current, department: event.target.value })) } }))} />
+                        <Label htmlFor={`${item.id}-department`}>{t("labor.department")}</Label>
+                        <Input id={`${item.id}-department`} value={item.department ?? ""} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, laborItems: updateArrayItem(prev.input.laborItems, index, (current) => ({ ...current, department: event.target.value })) } }))} />
                       </div>
                       <DraftNumberInput label={t("labor.hourlyCost")} value={item.hourlyCost} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, laborItems: updateArrayItem(prev.input.laborItems, index, (current) => ({ ...current, hourlyCost: Number.isFinite(value) ? value : 0 })) } }))} />
                       <DraftNumberInput label={t("labor.hours")} value={item.estimatedHours} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, laborItems: updateArrayItem(prev.input.laborItems, index, (current) => ({ ...current, estimatedHours: Number.isFinite(value) ? value : 0 })) } }))} />
@@ -1075,8 +1077,8 @@ export function RetainerCalculator({
                   {draft.input.partsItems.map((item, index) => (
                     <div key={item.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-5">
                       <div className="grid gap-2 md:col-span-2">
-                        <Label>{t("parts.item")}</Label>
-                        <Input value={item.name} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, partsItems: updateArrayItem(prev.input.partsItems, index, (current) => ({ ...current, name: event.target.value })) } }))} />
+                        <Label htmlFor={`${item.id}-name`}>{t("parts.item")}</Label>
+                        <Input id={`${item.id}-name`} value={item.name} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, partsItems: updateArrayItem(prev.input.partsItems, index, (current) => ({ ...current, name: event.target.value })) } }))} />
                       </div>
                       <DraftNumberInput label={t("parts.unitCost")} value={item.unitCost} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, partsItems: updateArrayItem(prev.input.partsItems, index, (current) => ({ ...current, unitCost: Number.isFinite(value) ? value : 0 })) } }))} />
                       <DraftNumberInput label={t("parts.quantity")} value={item.quantity} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, partsItems: updateArrayItem(prev.input.partsItems, index, (current) => ({ ...current, quantity: Number.isFinite(value) ? value : 0 })) } }))} />
@@ -1104,8 +1106,8 @@ export function RetainerCalculator({
                   {draft.input.toolItems.map((item, index) => (
                     <div key={item.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-4">
                       <div className="grid gap-2 md:col-span-2">
-                        <Label>{t("tools.name")}</Label>
-                        <Input value={item.name} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, toolItems: updateArrayItem(prev.input.toolItems, index, (current) => ({ ...current, name: event.target.value })) } }))} />
+                        <Label htmlFor={`${item.id}-name`}>{t("tools.name")}</Label>
+                        <Input id={`${item.id}-name`} value={item.name} onChange={(event) => setDraft((prev) => ({ ...prev, input: { ...prev.input, toolItems: updateArrayItem(prev.input.toolItems, index, (current) => ({ ...current, name: event.target.value })) } }))} />
                       </div>
                       <DraftNumberInput label={t("tools.monthlyCost")} value={item.monthlyCost} onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, toolItems: updateArrayItem(prev.input.toolItems, index, (current) => ({ ...current, monthlyCost: Number.isFinite(value) ? value : 0 })) } }))} />
                       <DraftNumberInput label={t("tools.allocation")} value={item.allocation} step="0.01" onChange={(value) => setDraft((prev) => ({ ...prev, input: { ...prev.input, toolItems: updateArrayItem(prev.input.toolItems, index, (current) => ({ ...current, allocation: Number.isFinite(value) ? value : 0 })) } }))} />
@@ -1209,7 +1211,7 @@ export function RetainerCalculator({
                     );
                   })}
                   <div className="grid gap-2">
-                    <Label>{t("pricing.rounding")}</Label>
+                    <Label htmlFor="retainer-rounding">{t("pricing.rounding")}</Label>
                     <Select
                       value={draft.input.pricing.rounding}
                       onValueChange={(value) =>
@@ -1225,7 +1227,7 @@ export function RetainerCalculator({
                         }))
                       }
                       >
-                        <SelectTrigger className="w-full"><SelectValue>{(value) => selectedOptionLabel(roundingOptions, value)}</SelectValue></SelectTrigger>
+                        <SelectTrigger id="retainer-rounding" className="w-full"><SelectValue>{(value) => selectedOptionLabel(roundingOptions, value)}</SelectValue></SelectTrigger>
                       <SelectContent>
                         {roundingOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>

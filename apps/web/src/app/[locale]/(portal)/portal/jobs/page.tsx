@@ -9,6 +9,7 @@ import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { requireCustomerPortal } from "@/lib/auth";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getJobStatusLabel, JOB_STATUS_VARIANT } from "@/lib/jobs";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/formatters";
 import type { Job } from "@/lib/database.types";
@@ -55,7 +56,7 @@ export default async function PortalJobsPage() {
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
-  if (error) console.error("PortalJobsPage failed to load", error);
+  if (error) reportError(error, { section: "portalJobs" });
 
   const jobs = (data ?? []) as unknown as JobRow[];
   const activeJobs = jobs.filter((job) =>
@@ -96,7 +97,7 @@ export default async function PortalJobsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {error ? (
-              <p className="text-destructive text-sm">{tError("description")}</p>
+              <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
             ) : jobs.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

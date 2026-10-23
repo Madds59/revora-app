@@ -1,8 +1,10 @@
 import { getTranslations } from "next-intl/server";
 
 import { PageHeader } from "@/components/page-header";
+import { AiAdvisoryNotice } from "@/components/ai-advisory-notice";
 import { createClient } from "@/lib/supabase/server";
 import { requireMembership } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { canManageCustomers } from "@/lib/permissions";
 import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
@@ -24,6 +26,7 @@ export default async function VehicleDiagnosisPage({
   const t = await getTranslations("vehicleIntelligence");
   const params = await searchParams;
   const { member, business } = await requireMembership();
+  await requireFeature("vehicleIntelligence");
   if (!canManageCustomers(member.role)) {
     return (
       <>
@@ -53,7 +56,8 @@ export default async function VehicleDiagnosisPage({
   return (
     <>
       <PageHeader title={t("diagnosis.title")} description={t("diagnosis.description")} />
-      <div className="p-6">
+      <div className="flex flex-col gap-6 p-6">
+        <AiAdvisoryNotice />
         <VehicleDiagnosisForm
           initialVehicleId={params.vehicle_id ?? ""}
           vehicles={vehicles}

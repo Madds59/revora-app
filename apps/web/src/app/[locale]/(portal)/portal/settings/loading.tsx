@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Settings"
       description="Loading portal account details..."
+      variant="form"
     />
   );
 }

@@ -9,6 +9,7 @@ import { DetailSummaryCard } from "@/components/detail-summary-card";
 import { MobileDataCard, MobileDataList } from "@/components/mobile-data-list";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMembership } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import type {
   BillingInvoiceSummaryRow,
   BillingRevenueSummary,
@@ -269,6 +270,7 @@ export default async function AnalyticsPage({
 }) {
   const locale = await getLocale();
   const { member, business } = await requireMembership();
+  await requireFeature("analytics");
   const supabase = await createClient();
   const canSeeBilling = canManageBusiness(member.role);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;

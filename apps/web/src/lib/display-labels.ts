@@ -1,6 +1,8 @@
 import type {
+  AppointmentStatus,
   ComplaintSeverity,
   ComplaintStatus,
+  InvoiceStatus,
   JobStatus,
   QuoteStatus,
 } from "@/lib/database.types";
@@ -56,6 +58,42 @@ const QUOTE_STATUS_LABELS: LabelMap<QuoteStatus> = {
     declined: "مرفوض",
     expired: "منتهي الصلاحية",
     cancelled: "ملغى",
+  },
+};
+
+const INVOICE_STATUS_LABELS: LabelMap<InvoiceStatus> = {
+  en: {
+    draft: "Draft",
+    issued: "Issued",
+    partially_paid: "Partially paid",
+    paid: "Paid",
+    void: "Void",
+  },
+  ar: {
+    draft: "مسودة",
+    issued: "صادرة",
+    partially_paid: "مدفوعة جزئياً",
+    paid: "مدفوعة",
+    void: "ملغاة",
+  },
+};
+
+const APPOINTMENT_STATUS_LABELS: LabelMap<AppointmentStatus> = {
+  en: {
+    requested: "Requested",
+    confirmed: "Confirmed",
+    declined: "Declined",
+    cancelled: "Cancelled",
+    completed: "Completed",
+    no_show: "No-show",
+  },
+  ar: {
+    requested: "بانتظار التأكيد",
+    confirmed: "مؤكد",
+    declined: "مرفوض",
+    cancelled: "ملغى",
+    completed: "مكتمل",
+    no_show: "لم يحضر",
   },
 };
 
@@ -417,6 +455,17 @@ export function getJobStatusLabel(status: JobStatus, locale: AppLocale = "en"): 
 
 export function getQuoteStatusLabel(status: QuoteStatus, locale: AppLocale = "en"): string {
   return getLabel(QUOTE_STATUS_LABELS, status, locale);
+}
+
+export function getInvoiceStatusLabel(status: InvoiceStatus, locale: AppLocale = "en"): string {
+  return getLabel(INVOICE_STATUS_LABELS, status, locale);
+}
+
+export function getAppointmentStatusLabel(
+  status: AppointmentStatus,
+  locale: AppLocale = "en",
+): string {
+  return getLabel(APPOINTMENT_STATUS_LABELS, status, locale);
 }
 
 export function getComplaintStatusLabel(

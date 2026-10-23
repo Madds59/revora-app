@@ -64,7 +64,7 @@ export function BusinessSwitcher({
 
     return (
       <div className="border-sidebar-border bg-sidebar-accent/40 grid gap-1 rounded-lg border p-3">
-        <p className="text-sidebar-foreground/50 text-[10px] font-medium uppercase tracking-wide">
+        <p className="text-sidebar-foreground/60 text-[10px] font-medium uppercase tracking-wide">
           {t("activeBusiness")}
         </p>
         <p className="text-sidebar-foreground text-sm font-medium">

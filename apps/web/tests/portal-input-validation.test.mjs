@@ -196,11 +196,20 @@ test("security: mutations use session-derived identity, not raw client ids", () 
   // Complaint insert uses the resolved session account row.
   assert.match(portalActions, /business_id:\s*account\.business_id/);
   assert.match(portalActions, /customer_id:\s*account\.id/);
-  // Reply + approval identity comes from the ownership-verified row.
+  // Reply identity comes from the ownership-verified row.
   assert.match(portalActions, /business_id:\s*complaintRow\.business_id/);
-  assert.match(portalActions, /business_id:\s*quoteRow\.business_id/);
-  assert.match(portalActions, /customer_id:\s*quoteRow\.customer_id/);
   assert.match(portalActions, /target_customer_id:\s*account\.id/);
+
+  // Approval no longer writes identity at all. Since APPSEC-19 it goes through
+  // submit_quote_approval(), which derives business_id and customer_id FROM the
+  // quotation server-side -- a stronger guarantee than passing a
+  // session-verified value, because there is no identity parameter to get
+  // wrong and `public.approvals` has no INSERT grant for `authenticated`.
+  assert.match(portalActions, /rpc\("submit_quote_approval"/);
+  assert.doesNotMatch(portalActions, /from\("approvals"\)\s*\.insert/);
+  // The RPC must not be handed tenant/customer ids by the caller.
+  assert.doesNotMatch(portalActions, /p_business_id/);
+  assert.doesNotMatch(portalActions, /p_customer_id/);
   // Raw client ids must not be written to mutations.
   assert.doesNotMatch(portalActions, /business_id:\s*businessId\b/);
   assert.doesNotMatch(portalActions, /customer_id:\s*customerId\b/);
@@ -234,4 +243,60 @@ test("security: quote detail page performs an explicit ownership check (APPSEC-1
   assert.match(quoteDetailPage, /accounts\.some\(/);
   assert.match(quoteDetailPage, /account\.id === quote\.customer_id/);
   assert.match(quoteDetailPage, /account\.business_id === quote\.business_id/);
+});
+
+// ---------------------------------------------------------------------------
+// Portal self-service notification preferences (legal-compliance V1)
+// ---------------------------------------------------------------------------
+
+import {
+  buildPortalPreferenceRows,
+  portalNotificationPreferencesSchema,
+} from "../src/lib/validation/notifications.js";
+
+const BUSINESS = "11111111-1111-4111-8111-111111111111";
+const CUSTOMER = "22222222-2222-4222-8222-222222222222";
+
+test("portal preferences: checkboxes parse and ids are validated", () => {
+  const ok = portalNotificationPreferencesSchema.safeParse({
+    businessId: BUSINESS,
+    customerId: CUSTOMER,
+    emailEnabled: "on",
+    smsEnabled: null,
+  });
+  assert.equal(ok.success, true);
+  assert.deepEqual(
+    { email: ok.data.emailEnabled, sms: ok.data.smsEnabled },
+    { email: true, sms: false },
+  );
+
+  const bad = portalNotificationPreferencesSchema.safeParse({
+    businessId: "not-a-uuid",
+    customerId: CUSTOMER,
+  });
+  assert.equal(bad.success, false);
+});
+
+test("portal preferences: rows cover exactly the dispatchable channels, template-wide", () => {
+  const now = "2026-09-12T10:00:00.000Z";
+  const rows = buildPortalPreferenceRows(
+    { businessId: BUSINESS, customerId: CUSTOMER, emailEnabled: true, smsEnabled: false },
+    now,
+  );
+  assert.deepEqual(
+    rows.map((r) => r.channel).sort(),
+    ["email", "sms"],
+    "push and social channels must never be written from the portal",
+  );
+  for (const row of rows) {
+    assert.equal(row.business_id, BUSINESS);
+    assert.equal(row.customer_id, CUSTOMER);
+    assert.equal(row.template_key, null, "portal preferences are template-wide");
+  }
+  const email = rows.find((r) => r.channel === "email");
+  const sms = rows.find((r) => r.channel === "sms");
+  assert.equal(email.enabled, true);
+  assert.equal(email.opted_out_at, null);
+  assert.equal(sms.enabled, false);
+  assert.equal(sms.opted_out_at, now, "opt-out time is recorded when a channel is switched off");
 });

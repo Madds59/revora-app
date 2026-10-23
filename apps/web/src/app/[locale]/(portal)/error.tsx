@@ -1,24 +1,7 @@
 "use client";
 
-import { ErrorState } from "@/components/error-state";
+import { RouteErrorBoundary, type RouteErrorProps } from "@/components/route-error-boundary";
 
-export default function PortalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  return (
-    <div className="p-6">
-      <ErrorState
-        title="Portal error"
-        description="The customer portal failed to load. Try again or return to the portal home."
-        errorDigest={error.digest}
-        onRetry={reset}
-        backHref="/portal"
-        backLabel="Go to portal home"
-      />
-    </div>
-  );
+export default function PortalError(props: RouteErrorProps) {
+  return <RouteErrorBoundary {...props} section="portal" backHref="/portal" />;
 }

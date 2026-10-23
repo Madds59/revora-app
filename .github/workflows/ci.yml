@@ -112,6 +112,255 @@ jobs:
           fi
           echo "secret scan clean (no key-like values in added lines)"
 
+  db-security:
+    name: Database security (RLS / tenant integrity)
+    # The cross-tenant integrity guarantees (APPSEC-18/19) are enforced by
+    # PostgreSQL, so asserting them needs a real database -- the offline suite
+    # in `validate` cannot exercise an RLS policy or a foreign key. This job
+    # provisions a disposable postgres:17 container (Docker is available on the
+    # runner; no Supabase stack is required) and applies every migration from
+    # zero before running the policy tests.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout (full history for migration-collision check)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.6.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # Proves the suite can FAIL before trusting it to pass. At schema 0038
+      # every cross-tenant injection is accepted, so this step REQUIRES
+      # TENANT_INTEGRITY_FAILED. Without it, a suite that silently stopped
+      # exercising the policies would look identical to a suite that passes.
+      - name: Positive control (pre-fix schema must be exploitable)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:positive-control)"
+          echo "$out" | grep -E '^(CASE|cases=|TENANT_)' || true
+          if ! echo "$out" | grep -q 'TENANT_INTEGRITY_FAILED'; then
+            echo "::error::Positive control did not fail at schema 0038 -- the RLS suite is not exercising the policies"
+            exit 1
+          fi
+          echo "positive control OK: the harness can fail"
+
+      - name: Cross-tenant integrity suite (all migrations)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db)"
+          echo "$out" | grep -E '^(CASE|cases=|TENANT_)' || true
+          echo "$out" | grep -q 'TENANT_INTEGRITY_OK'
+
+      # Same discipline for the financial invariants: prove the suite fails
+      # against schema 0040, where header totals drift, balance_due goes
+      # negative and credit notes are uncapped.
+      - name: Positive control (pre-fix finance schema must drift)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:finance:positive-control)"
+          echo "$out" | grep -E '^(cases=|INVOICE_)' || true
+          if ! echo "$out" | grep -q 'INVOICE_INTEGRITY_FAILED'; then
+            echo "::error::Finance positive control did not fail at schema 0040"
+            exit 1
+          fi
+          echo "positive control OK: the finance harness can fail"
+
+      - name: Invoice financial integrity suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:finance)"
+          echo "$out" | grep -E '^(CASE|cases=|INVOICE_)' || true
+          echo "$out" | grep -q 'INVOICE_INTEGRITY_OK'
+
+      # TRUNCATE is a table-level privilege that RLS cannot govern, so the
+      # pre-fix schema really does let `anon` erase every table. Require that
+      # control to fail before trusting the suite.
+      - name: Positive control (pre-fix privileges must allow TRUNCATE)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:audit:positive-control)"
+          echo "$out" | grep -E '^(cases=|AUDIT_)' || true
+          if ! echo "$out" | grep -q 'AUDIT_PRIVILEGE_FAILED'; then
+            echo "::error::Audit/privilege positive control did not fail at schema 0041"
+            exit 1
+          fi
+          echo "positive control OK: the audit harness can fail"
+
+      - name: Audit coverage and least-privilege suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:audit)"
+          echo "$out" | grep -E '^(CASE|cases=|AUDIT_)' || true
+          echo "$out" | grep -q 'AUDIT_PRIVILEGE_OK'
+
+      # The whole point of Phase 1: one journey, reconstructable end to end with
+      # the vehicle linked throughout. Before 0043 the chain cannot even be
+      # built -- jobs have no vehicle_id and neither performed work nor
+      # warranties exist -- so the control asserts that refusal.
+      - name: Positive control (trusted record unbuildable before 0043)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:lifecycle:positive-control 2>&1 || true)"
+          if ! echo "$out" | grep -q 'trusted-record schema missing'; then
+            echo "::error::Lifecycle positive control did not refuse at schema 0042"
+            exit 1
+          fi
+          echo "positive control OK: the chain is unbuildable before 0043"
+
+      - name: Trusted-record lifecycle suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:lifecycle)"
+          echo "$out" | grep -E '^(CASE|cases=|TRUSTED_)' || true
+          echo "$out" | grep -q 'TRUSTED_RECORD_OK'
+
+      - name: Auth hardening suite (rate limits, MFA assurance)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:auth)"
+          echo "$out" | grep -E '^(CASE|cases=|AUTH_HARDENING)' || true
+          echo "$out" | grep -q 'AUTH_HARDENING_OK'
+
+      # At 0045 an unverified signup claims the victim's customer record AND
+      # accepts a pending staff invitation. Require that control to fail.
+      - name: Positive control (pre-fix email takeover must succeed)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:claims:positive-control)"
+          echo "$out" | grep -E '^(cases=|VERIFIED_EMAIL)' || true
+          if ! echo "$out" | grep -q 'VERIFIED_EMAIL_FAILED'; then
+            echo "::error::Email-claim positive control did not fail at schema 0045"
+            exit 1
+          fi
+          echo "positive control OK: the takeover is reproducible pre-fix"
+
+      - name: Verified-email claim guard suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:claims)"
+          echo "$out" | grep -E '^(CASE|cases=|VERIFIED_EMAIL)' || true
+          echo "$out" | grep -q 'VERIFIED_EMAIL_OK'
+
+      - name: Customer portal authorization matrix
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:portal)"
+          echo "$out" | grep -E '^(CASE|cases=|PORTAL_MATRIX)' || true
+          echo "$out" | grep -q 'PORTAL_MATRIX_OK'
+
+      # This step used to read `pnpm -s test:db:dvi | grep -E 'ERROR|=' || true`.
+      # The pipe handed grep's status to the shell and `|| true` discarded even
+      # that, so the step could not fail -- which is how a broken allowlist
+      # assertion inside the suite survived. The suite now ends in a verdict
+      # token like every other harness here, and `:strict` resets the schema
+      # first so the result does not depend on step order.
+      - name: Existing DVI database security suite
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:dvi:strict)"
+          echo "$out" | grep -E '^( ?ANON_|DVI_CLAIM|dvi_claims=|DVI_SECURITY)' || true
+          if echo "$out" | grep -q 'DB_HARNESS_FAILED'; then
+            echo "::error::DVI harness failed to run"
+            exit 1
+          fi
+          echo "$out" | grep -q 'DVI_SECURITY_OK'
+
+      - name: Systematic tenant parent/child FK audit
+        run: pnpm -s audit:tenant-fks | tail -40
+
+      # Positive control for the view audit below. It builds one deliberately
+      # bad view (owner rights + write grants for anon) and one correct view,
+      # and REQUIRES the detector to flag the first on both counts and clear
+      # the second. An absence check that was never shown failing proves
+      # nothing -- this is how we know the step below is still looking.
+      - name: Positive control (the view audit must be able to fail and to pass)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:views:self-test)"
+          echo "$out"
+          if ! echo "$out" | grep -q 'VIEW_SECURITY_SELFTEST_OK'; then
+            echo "::error::View-security detector failed its own positive control"
+            exit 1
+          fi
+
+      # The class that 0043 shipped: a view without `security_invoker = true`
+      # runs as its owner, so RLS is never applied to the caller, and
+      # 0003's default privileges hand new views write grants as well. The 210
+      # database test cases all assert against tables and cannot see this.
+      - name: View security audit (RLS evaluated as caller, no public writes)
+        run: pnpm -s audit:views
+
+      # The view audit reads the catalog. This suite proves the BEHAVIOUR, and
+      # at schema 0046 it must fail: anon really could read, UPDATE and DELETE
+      # through jobs_missing_vehicle, and two tenants could see each other's
+      # rows. Require that control to fail before trusting the suite to pass.
+      - name: Positive control (pre-fix view must leak across tenants)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:views:positive-control)"
+          echo "$out" | grep -E '^(CASE|cases=|VIEW_PRIVILEGE)' || true
+          if ! echo "$out" | grep -q 'VIEW_PRIVILEGE_FAILED'; then
+            echo "::error::View-privilege positive control did not fail at schema 0046"
+            exit 1
+          fi
+          echo "positive control OK: the view leak is reproducible pre-fix"
+
+      - name: View and function privilege matrix
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:views)"
+          echo "$out" | grep -E '^(CASE|cases=|VIEW_PRIVILEGE)' || true
+          echo "$out" | grep -q 'VIEW_PRIVILEGE_OK'
+
+      # Positive control for the function audit below. PostgreSQL grants
+      # EXECUTE to PUBLIC on every new function, and anon is a member of
+      # PUBLIC, so the offending grant never names anon -- which is why the
+      # previous ACL-text check reported a clean schema. This control builds a
+      # SECURITY DEFINER function reachable ONLY through PUBLIC and requires
+      # the detector to catch it, plus a direct grant, a correctly closed
+      # function, and a missing allowlist entry.
+      - name: Positive control (the function audit must see the PUBLIC route)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:functions:self-test)"
+          echo "$out"
+          if ! echo "$out" | grep -q 'FUNCTION_PRIVILEGE_SELFTEST_OK'; then
+            echo "::error::Function-privilege detector failed its own positive control"
+            exit 1
+          fi
+
+      # The invariant 0038 believed it had: anon executes exactly the two
+      # token-gated inspection-share resolvers and nothing else.
+      - name: Anonymous SECURITY DEFINER allowlist audit
+        run: pnpm -s audit:functions
+
+      - name: Canonical approval path audit
+        run: pnpm -s audit:approval-path
+
+      # Runs on every event. The safety half picks its own subject: the
+      # migrations a branch adds against origin/main, or -- on `main`, where
+      # that range is empty by definition -- the ones the merge brought in
+      # along its first parent. A change that adds no migration passes as
+      # NOT_APPLICABLE; an unresolvable base still fails as UNAVAILABLE.
+      - name: Migration numbering and safety audit
+        run: pnpm -s audit:migrations
+
   smoke:
     name: Production route smoke (read-only)
     # Prod-dependent and read-only: run on main pushes and manual dispatch, not on

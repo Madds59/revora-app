@@ -15,11 +15,20 @@
       "change": "Change",
       "remove": "Remove"
     },
+    "draft": {
+      "restoredTitle": "Restored your unsaved draft",
+      "savedAgo": "Saved {when}. Keep going, or discard it to start fresh.",
+      "savedRecently": "Saved a moment ago. Keep going, or discard it to start fresh.",
+      "discard": "Discard draft"
+    },
     "filters": {
       "search": "Search",
       "searchPlaceholder": "Search",
       "status": "Status",
-      "dateRange": "Date range"
+      "dateRange": "Date range",
+      "visibleCount": "{count} visible",
+      "reset": "Reset filters",
+      "noMatchDescription": "Try a different search or reset the filters."
     },
     "pagination": {
       "total": "{count} total",
@@ -30,8 +39,16 @@
     "states": {
       "errorRetry": "Try again",
       "errorBack": "Go back",
-      "errorReference": "Reference: {digest}",
+      "errorReference": "Send us reference {digest} and we'll fix it fast.",
       "noEvidence": "No evidence uploaded yet."
+    },
+    "dateRanges": {
+      "all": "All time",
+      "today": "Today",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "1y": "Last year"
     }
   },
   "bundles": {
@@ -113,7 +130,9 @@
       "email": "Email",
       "preferredLanguage": "Preferred language",
       "languageEnglish": "English",
-      "languageArabic": "Arabic"
+      "languageArabic": "Arabic",
+      "marketingConsent": "Customer has consented to marketing messages",
+      "marketingConsentHint": "Only tick this if the customer explicitly agreed to receive promotional email or SMS from your workshop. Transactional notifications (quotes, jobs, invoices) do not need this."
     },
     "vehicle": {
       "customer": "Customer",
@@ -176,10 +195,18 @@
       "optionalNote": "Optional note",
       "noteForWorkshop": "Add a note for the workshop",
       "approve": "Approve quotation",
-      "approvalRecorded": "Your approval is recorded with a secure timestamp and digital signature.",
+      "approvalRecorded": "Your approval is recorded with a timestamp and your typed electronic signature.",
       "optionalReason": "Optional reason",
       "rejectPlaceholder": "Tell the workshop what you would like changed",
-      "decline": "Decline quotation"
+      "decline": "Decline quotation",
+      "kinds": {
+        "service": "Service",
+        "labor": "Labor",
+        "product": "Product",
+        "part": "Part"
+      },
+      "namePlaceholder": "Brake pads",
+      "originPlaceholder": "Japan"
     }
   },
   "complaints": {
@@ -248,19 +275,23 @@
       "country": "Country",
       "defaultLanguage": "Default language",
       "save": "Save changes",
-      "ownersOnly": "Only owners can edit business details."
+      "ownersOnly": "Only owners can edit business details.",
+      "trn": "Tax Registration Number (TRN)",
+      "trnHint": "15-digit UAE TRN, required before invoices can be issued."
     },
     "branch": {
       "name": "Name",
       "phone": "Phone",
       "email": "Email",
-      "add": "Add branch"
+      "add": "Add branch",
+      "namePlaceholder": "Main"
     },
     "service": {
       "name": "Name",
       "defaultPrice": "Default price (AED)",
       "description": "Description",
-      "add": "Add service"
+      "add": "Add service",
+      "namePlaceholder": "Oil change"
     }
   },
   "team": {
@@ -298,7 +329,20 @@
     "users": "Users",
     "subscriptions": "Subscriptions",
     "auditLogs": "Audit logs",
-    "superAdmins": "Super admins"
+    "superAdmins": "Super admins",
+    "appointments": "Appointments",
+    "invoices": "Invoices",
+    "maintenance": "Maintenance",
+    "inspections": "Inspections",
+    "group": {
+      "work": "Work",
+      "records": "Records",
+      "business": "Business",
+      "myVehicles": "My vehicles",
+      "service": "Service",
+      "support": "Support",
+      "tools": "Tools"
+    }
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -335,7 +379,7 @@
       "trustBuilt": "Built on trust",
       "trustBuiltBody": "Transparent quotes and a verifiable record customers can rely on.",
       "digitalApprovals": "Digital approvals",
-      "digitalApprovalsBody": "Signed, audited sign-off on every job - no more disputes.",
+      "digitalApprovalsBody": "Signed, audited sign-off on every job, so there is a clear record if a question comes up.",
       "resolveWithCare": "Resolve with care",
       "resolveWithCareBody": "Complaints handled in the open, start to finish.",
       "madeForUAE": "Made for UAE service businesses",
@@ -349,7 +393,8 @@
       "chooseAccountType": "Choose an account type to continue.",
       "checkEmail": "Check your email to confirm your account, then sign in.",
       "magicLinkSent": "Magic link sent. Check your email to sign in.",
-      "passwordResetSent": "If an account exists, a reset link was sent."
+      "passwordResetSent": "If an account exists, a reset link was sent.",
+      "termsRequired": "Please accept the Terms of Service and Privacy Policy to continue."
     },
     "login": {
       "title": "Sign in",
@@ -400,7 +445,12 @@
         "staffTitle": "I was invited as staff",
         "staffDescription": "Join a business team using an invitation from an owner or manager.",
         "invitationRequired": "Invitation required"
-      }
+      },
+      "acceptTermsPrefix": "I have read and agree to the",
+      "acceptTermsAnd": "and the",
+      "termsLink": "Terms of Service",
+      "privacyLink": "Privacy Policy",
+      "ageNote": "You must be 18 or older to create an account."
     }
   },
   "notFound": {
@@ -411,12 +461,12 @@
     "goToPortal": "Go to portal"
   },
   "error": {
-    "code": "Something went wrong",
-    "title": "That didn't work as expected",
-    "description": "An unexpected error occurred. You can try again, or head back to safety. If it keeps happening, please let the team know.",
+    "code": "Page didn't load",
+    "title": "This page didn't load",
+    "description": "We couldn't finish loading this screen. Nothing was lost — your data is safe on the server.",
     "tryAgain": "Try again",
     "backToDashboard": "Back to dashboard",
-    "reference": "Reference: {id}"
+    "reference": "Send us reference {id} and we'll fix it fast."
   },
   "globalError": {
     "code": "Critical error",
@@ -671,7 +721,11 @@
       "structuredInterpretation": "Structured interpretation of each diagnostic code.",
       "stopDriving": "Stop driving"
     },
-    "unknownVehicle": "Unknown vehicle"
+    "unknownVehicle": "Unknown vehicle",
+    "advisoryNotice": {
+      "title": "AI-assisted guidance is advisory only",
+      "body": "Results are generated with the help of an AI model and public vehicle data. They may be incomplete or wrong, are not a professional inspection, and must be reviewed by a qualified workshop or service advisor. If a result indicates a safety-critical condition, stop driving and contact a workshop."
+    }
   },
   "dashboardHome": {
     "title": "Welcome to {businessName}",
@@ -687,12 +741,22 @@
       "live": "Live",
       "laterRelease": "Available in a later release"
     },
+    "pipeline": {
+      "title": "Your service pipeline",
+      "inspectionsToQuote": "Inspections to quote",
+      "inspectionsToQuoteHint": "Completed inspections with no quote yet",
+      "quotesAwaitingApproval": "Quotes awaiting approval",
+      "quotesAwaitingApprovalHint": "Sent to the customer, not yet answered",
+      "jobsInProgress": "Jobs in progress",
+      "jobsInProgressHint": "Active work on the floor"
+    },
     "getStarted": {
       "title": "Get started",
       "description": "The foundation is ready. Add your customers and configure your business profile.",
       "addCustomer": "Add a customer",
       "manageVehicles": "Manage vehicles",
-      "businessSettings": "Business settings"
+      "businessSettings": "Business settings",
+      "startInspection": "Start an inspection"
     }
   },
   "portalHome": {
@@ -758,7 +822,9 @@
     },
     "detail": {
       "editSubmit": "Save changes",
-      "addVehicleSubmit": "Add vehicle"
+      "addVehicleSubmit": "Add vehicle",
+      "addVehicleTitle": "Add a vehicle",
+      "customerDetailsTitle": "Customer details"
     }
   },
   "retainerCalculator": {
@@ -807,14 +873,13 @@
     },
     "context": {
       "heading": "Scenario context",
-      "vehicles": "Set the customer, vehicle count, and contract shape.",
+      "vehicles": "Vehicles covered",
       "title": "Scenario title",
       "customerType": "Customer type",
       "serviceCategory": "Service category",
       "currency": "Currency",
       "billingCycle": "Billing cycle",
       "contractLength": "Contract length (months)",
-      "vehicles": "Vehicles covered",
       "vehiclesLabel": "Vehicles covered",
       "visits": "Expected monthly visits",
       "sla": "SLA level",
@@ -1013,6 +1078,81 @@
       "emptyTitle": "No customers yet",
       "emptyDescription": "Create or restore a customer before editing vehicle ownership.",
       "emptyAction": "Add customer"
+    },
+    "detail": {
+      "fallbackDescription": "Vehicle details",
+      "back": "Back to vehicles",
+      "summaryTitle": "Vehicle summary",
+      "summaryDescription": "Core vehicle profile and ownership details.",
+      "rows": {
+        "customer": "Customer",
+        "make": "Make",
+        "model": "Model",
+        "year": "Year",
+        "plate": "Plate",
+        "vin": "VIN",
+        "color": "Color",
+        "created": "Created",
+        "updated": "Updated"
+      },
+      "unlinked": "Unlinked",
+      "linked": "Linked",
+      "viewCustomer": "View customer",
+      "editVehicle": "Edit vehicle",
+      "history": {
+        "title": "Service history",
+        "description": "Jobs recorded against the linked customer.",
+        "error": "We could not load the service history right now.",
+        "emptyTitle": "No jobs yet",
+        "emptyDescription": "Jobs for this customer will appear here once they are created.",
+        "noQuote": "No quote",
+        "job": "Job",
+        "status": "Status",
+        "quote": "Quote",
+        "due": "Due"
+      },
+      "quotes": {
+        "title": "Related quotes",
+        "description": "Quotes that reference this vehicle.",
+        "error": "We could not load related quotes right now.",
+        "emptyTitle": "No quotes yet",
+        "emptyDescription": "Quotes will appear here when they are linked to this vehicle.",
+        "quote": "Quote",
+        "status": "Status",
+        "total": "Total",
+        "created": "Created"
+      },
+      "intelligence": {
+        "title": "Vehicle intelligence",
+        "description": "Safety triage, diagnostics, and maintenance follow-up.",
+        "planTitle": "Maintenance plan",
+        "planSummary": "Latest maintenance plan generated for this vehicle.",
+        "open": "Open diagnosis workspace",
+        "emptyTitle": "No diagnostic result yet",
+        "emptyDescription": "Run a diagnosis to generate a structured AI summary, maintenance plan, and workshop review.",
+        "latestSymptom": "Latest symptom report"
+      },
+      "media": {
+        "title": "Vehicle media",
+        "description": "Attach photos, videos, and documents to this vehicle.",
+        "emptyTitle": "No media yet",
+        "emptyDescription": "Uploaded files will appear here once they are recorded against this vehicle."
+      },
+      "complaints": {
+        "title": "Related complaints",
+        "description": "Complaints filed by the linked customer.",
+        "error": "We could not load related complaints right now.",
+        "emptyTitle": "No complaints yet",
+        "emptyDescription": "Complaints from the same customer will appear here."
+      },
+      "documents": {
+        "title": "Related documents",
+        "description": "Files linked to the customer, jobs, or quotes.",
+        "error": "We could not load related documents right now.",
+        "emptyTitle": "No documents yet",
+        "emptyDescription": "Documents will appear here when they are linked to this vehicle's customer or related records.",
+        "linkedRecord": "Linked record"
+      }
     }
   },
   "dashboardJobsPage": {
@@ -1048,6 +1188,20 @@
       "branch": "Branch",
       "status": "Status",
       "due": "Due"
+    },
+    "searchLabel": "Search jobs",
+    "controls": {
+      "status": "Status",
+      "save": "Save",
+      "update": "Update",
+      "updatePlaceholder": "e.g. Parts arrived, work resuming today.",
+      "visibleToCustomer": "Visible to customer",
+      "postUpdate": "Post update",
+      "newTask": "New task",
+      "taskPlaceholder": "e.g. Bleed brakes",
+      "add": "Add",
+      "reopen": "Reopen",
+      "complete": "Complete"
     }
   },
   "dashboardQuotations": {
@@ -1257,6 +1411,11 @@
     "fallback": {
       "workshop": "Workshop",
       "none": "—"
+    },
+    "new": {
+      "title": "Submit complaint",
+      "description": "Send a new complaint to the business team.",
+      "cardTitle": "Complaint details"
     }
   },
   "portalDocuments": {
@@ -1317,11 +1476,21 @@
     "security": {
       "title": "Security and communication",
       "description": "Portal access is linked to your signed-in email. Editable customer settings are not enabled yet.",
-      "body": "Communication preferences, delivery channels, and account edits are managed by the workshop for now."
+      "body": "Portal access is linked to your signed-in email. To change your name, phone or email on a workshop's record, contact that workshop. To request a copy or deletion of your data, see the Privacy Policy."
     },
     "fallback": {
       "noEmail": "No email",
       "workshop": "Workshop"
+    },
+    "preferences": {
+      "title": "Communication preferences",
+      "description": "Choose how each workshop may notify you about quotes, jobs, appointments, invoices and reminders. Your choices apply immediately.",
+      "email": "Email notifications",
+      "sms": "SMS notifications",
+      "save": "Save preferences",
+      "saved": "Preferences saved.",
+      "error": "Could not save your preferences. Please try again.",
+      "note": "Turning a channel off stops all notifications from that workshop on that channel, including reminders. The workshop can still reach you directly."
     }
   },
   "adminTenants": {
@@ -1332,6 +1501,28 @@
     "empty": {
       "title": "No businesses yet",
       "description": "Tenant records will appear here once a business signs up and creates its workspace."
+    },
+    "browser": {
+      "searchPlaceholder": "Search businesses or owner email",
+      "owners": {
+        "all": "All owners",
+        "with_owner": "With owner email",
+        "without_owner": "Without owner email"
+      },
+      "owned": "Owned",
+      "noOwnerEmail": "No owner email",
+      "showing": "Showing {shown} of {total} tenants",
+      "noMatch": "No tenants match",
+      "table": {
+        "business": "Business",
+        "owner": "Owner",
+        "status": "Status",
+        "members": "Members",
+        "customers": "Customers",
+        "quotes": "Quotes",
+        "complaints": "Complaints",
+        "created": "Created"
+      }
     }
   },
   "adminUsers": {
@@ -1348,6 +1539,29 @@
     "empty": {
       "title": "No users yet",
       "description": "Users will appear here once the platform starts collecting signups and memberships."
+    },
+    "browser": {
+      "searchPlaceholder": "Search users by name or email",
+      "roles": {
+        "all": "All users",
+        "super_admin": "Super admins",
+        "user": "Regular users"
+      },
+      "showing": "Showing {shown} of {total} users",
+      "subtitle": "Platform signups and roles",
+      "noMatch": "No users match",
+      "noEmail": "No email",
+      "noName": "No name",
+      "superAdmin": "Super admin",
+      "user": "User",
+      "table": {
+        "email": "Email",
+        "name": "Name",
+        "status": "Status",
+        "memberships": "Memberships",
+        "linkedCustomers": "Linked customers",
+        "created": "Created"
+      }
     }
   },
   "adminSubscriptions": {
@@ -1364,6 +1578,31 @@
     "empty": {
       "title": "No subscriptions yet",
       "description": "Stripe-backed subscription records will appear here once tenants are billed."
+    },
+    "browser": {
+      "searchPlaceholder": "Search business or plan",
+      "statuses": {
+        "all": "All statuses",
+        "active": "Active",
+        "trialing": "Trialing",
+        "past_due": "Past due",
+        "canceled": "Canceled",
+        "unpaid": "Unpaid",
+        "incomplete": "Incomplete"
+      },
+      "showing": "Showing {shown} of {total} subscriptions",
+      "noMatch": "No subscriptions match",
+      "noRenewalDate": "No renewal date",
+      "cancelAtPeriodEnd": "Cancel at period end",
+      "autoRenew": "Auto-renew",
+      "table": {
+        "business": "Business",
+        "plan": "Plan",
+        "status": "Status",
+        "periodStart": "Period start",
+        "renewal": "Renewal",
+        "autoRenew": "Auto-renew"
+      }
     }
   },
   "adminBilling": {
@@ -1404,6 +1643,26 @@
     "empty": {
       "title": "No audit events yet",
       "description": "Administrative activity will appear here once tenants and platform operators start making changes."
+    },
+    "browser": {
+      "searchPlaceholder": "Search actor, action, or table",
+      "actions": {
+        "all": "All actions",
+        "create": "Create",
+        "update": "Update",
+        "delete": "Delete",
+        "other": "Other"
+      },
+      "showing": "Showing {shown} of {total} events",
+      "noMatch": "No audit events match",
+      "platform": "Platform",
+      "table": {
+        "when": "When",
+        "business": "Business",
+        "actor": "Actor",
+        "table": "Table",
+        "action": "Action"
+      }
     }
   },
   "adminNotifications": {
@@ -1420,6 +1679,41 @@
     "empty": {
       "title": "No notifications yet",
       "description": "Queued and delivered notifications will appear here once the platform sends activity."
+    },
+    "browser": {
+      "searchPlaceholder": "Search notifications or recipients",
+      "typePlaceholder": "Notification type",
+      "statuses": {
+        "all": "All statuses",
+        "unread": "Unread",
+        "read": "Read",
+        "queued": "Queued",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "types": {
+        "all": "All types",
+        "quote": "Quote",
+        "complaint": "Complaint",
+        "job": "Job",
+        "billing": "Billing",
+        "system": "System"
+      },
+      "showing": "Showing {shown} of {total} notifications",
+      "noMatch": "No notifications match",
+      "read": "Read",
+      "unread": "Unread",
+      "systemUpdate": "System update",
+      "table": {
+        "business": "Business",
+        "type": "Type",
+        "channel": "Channel",
+        "status": "Status",
+        "state": "State",
+        "customer": "Customer",
+        "created": "Created",
+        "action": "Action"
+      }
     }
   },
   "adminAnalytics": {
@@ -1590,5 +1884,723 @@
       "title": "Download tips"
     },
     "download": "Download CSV"
+  },
+  "dashboardInvoices": {
+    "title": "Invoices",
+    "description": "Invoices issued to customers, payments, and credit notes.",
+    "empty": {
+      "title": "No invoices yet",
+      "description": "Create an invoice from a job once work is approved."
+    },
+    "table": {
+      "invoice": "Invoice",
+      "customer": "Customer",
+      "status": "Status",
+      "total": "Total",
+      "balance": "Balance due"
+    },
+    "fallback": {
+      "draft": "Draft",
+      "none": "—"
+    },
+    "complianceNotice": {
+      "title": "Tax invoice responsibility",
+      "body": "Revora structures invoices with your TRN, sequential numbering and per-line VAT, but does not certify them as FTA-compliant tax invoices. Confirm mandatory contents (supplier and recipient details, date of supply, VAT rate and amount in AED) against current Federal Tax Authority requirements before relying on them as your tax record."
+    },
+    "controls": {
+      "voidReason": "Reason for voiding",
+      "voidSubmit": "Void invoice",
+      "type": "Type",
+      "name": "Name",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "taxPercent": "Tax %",
+      "addItem": "Add item",
+      "issueInvoice": "Issue invoice",
+      "method": "Method",
+      "amount": "Amount",
+      "reference": "Reference",
+      "recordPayment": "Record payment",
+      "reason": "Reason",
+      "issueCreditNote": "Issue credit note",
+      "createInvoice": "Create invoice"
+    },
+    "draftInvoice": "Draft invoice",
+    "back": "Back to invoices",
+    "detail": {
+      "lineItems": "Line items",
+      "noItems": "No items yet.",
+      "item": "Item",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "tax": "Tax",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "paid": "Paid",
+      "balanceDue": "Balance due",
+      "issueTitle": "Issue this invoice",
+      "issueDescription": "Assigns the sequential invoice number and freezes the business TRN onto the document. Requires a TRN set in business settings.",
+      "recordPayment": "Record a payment",
+      "payments": "Payments",
+      "creditNotes": "Credit notes",
+      "voidTitle": "Void this invoice",
+      "creditNoteTitle": "Issue a credit note",
+      "creditNoteDescription": "This invoice has payments recorded, so it can no longer be voided. A credit note is the correct way to reduce its net revenue while keeping the original document intact for the audit trail.",
+      "voidReason": "Void reason"
+    }
+  },
+  "dashboardAppointments": {
+    "title": "Appointments",
+    "description": "Booking requests from customers and your own schedule.",
+    "empty": {
+      "title": "No appointments yet",
+      "description": "Customer booking requests will appear here."
+    },
+    "table": {
+      "customer": "Customer",
+      "window": "When",
+      "status": "Status"
+    },
+    "fallback": {
+      "none": "—",
+      "appointment": "Appointment"
+    },
+    "controls": {
+      "declineReason": "Reason for declining",
+      "declineSubmit": "Decline",
+      "start": "Start (Dubai time)",
+      "end": "End (Dubai time)",
+      "confirmSubmit": "Confirm appointment",
+      "cancel": "Cancel appointment",
+      "convert": "Create quotation from this appointment"
+    },
+    "back": "Back to appointments",
+    "detail": {
+      "title": "Details",
+      "requestedWindow": "Requested window",
+      "confirmed": "Confirmed",
+      "phone": "Phone",
+      "notes": "Notes",
+      "declineReason": "Decline reason",
+      "confirmTitle": "Confirm this appointment",
+      "declineTitle": "Decline this appointment",
+      "readyTitle": "Ready for the appointment",
+      "viewQuotation": "View the quotation created from this appointment"
+    }
+  },
+  "dashboardMaintenance": {
+    "title": "Maintenance",
+    "description": "Vehicles estimated to be due for a service, soonest first.",
+    "empty": {
+      "title": "Nothing due yet",
+      "description": "Vehicles appear here once a maintenance plan gives them a service date or mileage."
+    },
+    "restricted": {
+      "title": "No access",
+      "description": "The maintenance worklist is restricted to staff roles."
+    },
+    "table": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "due": "Estimated due",
+      "basis": "Based on",
+      "lastMileage": "Last mileage",
+      "status": "Status"
+    },
+    "badges": {
+      "booked": "Already booked"
+    },
+    "estimateNote": "Estimated dates are derived from the maintenance plan and any recorded mileage. They are guidance, not a manufacturer-specified service interval."
+  },
+  "inspections": {
+    "result": {
+      "pass": "Pass",
+      "attention": "Needs attention",
+      "fail": "Fail",
+      "notChecked": "Not checked"
+    },
+    "resultHint": {
+      "pass": "Checked and in good condition",
+      "attention": "Wearing or borderline — worth planning for",
+      "fail": "Needs work now",
+      "notChecked": "This item was not inspected"
+    },
+    "context": {
+      "preQuote": "Pre-quote",
+      "inJob": "During the job"
+    },
+    "status": {
+      "draft": "Draft",
+      "completed": "Completed"
+    },
+    "notAStandard": "This is the workshop's own checklist, not a manufacturer or government inspection standard."
+  },
+  "dashboardInspections": {
+    "title": "Inspections",
+    "description": "Photo-backed vehicle inspections you can show the customer.",
+    "empty": {
+      "title": "No inspections yet",
+      "description": "Start one from a vehicle or from an active job."
+    },
+    "new": {
+      "title": "Start an inspection",
+      "description": "Choose the vehicle and the checklist to work through.",
+      "customer": "Customer",
+      "vehicle": "Vehicle",
+      "selectVehicle": "Select a vehicle",
+      "template": "Checklist",
+      "templateDefault": "Default checklist",
+      "odometer": "Odometer (km)",
+      "odometerHint": "Optional.",
+      "contextLabel": "Type",
+      "submit": "Start inspection",
+      "noVehicles": "Add a vehicle for this customer first.",
+      "noPermission": "You don't have permission to start inspections."
+    },
+    "list": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "started": "Started",
+      "status": "Status",
+      "open": "Open",
+      "quoted": "Quoted"
+    },
+    "editor": {
+      "progress": "{checked} of {total} items checked",
+      "noteLabel": "Note for the customer",
+      "notePlaceholder": "Optional note the customer will see",
+      "saveItem": "Save",
+      "addPhoto": "Add photo",
+      "removePhoto": "Remove photo",
+      "photoAlt": "Photo for {label}",
+      "resultLegend": "Result for {label}",
+      "readOnly": "This report is complete and can no longer be edited.",
+      "sectionCount": "{count} items"
+    },
+    "complete": {
+      "title": "Complete this inspection",
+      "description": "Once completed, the report is locked and can be shared with the customer. A correction needs a new inspection.",
+      "summaryLabel": "Summary for the customer",
+      "summaryPlaceholder": "Optional. A short, plain-language summary.",
+      "submit": "Complete inspection",
+      "unchecked": "{count} items are still marked as not checked. They will be recorded that way."
+    },
+    "findings": {
+      "title": "Findings",
+      "description": "Choose what to quote. Prices are left blank for you to fill in.",
+      "none": "Nothing was marked as needing attention or failing.",
+      "selectAll": "Select all",
+      "submit": "Create draft quotation",
+      "priceNote": "Lines are created with no price. Revora never infers an amount from a checklist.",
+      "alreadyQuoted": "A quotation has already been created from this inspection.",
+      "viewQuotation": "View quotation"
+    },
+    "share": {
+      "title": "Share with the customer",
+      "description": "Creates a private link the customer can open without signing in.",
+      "generate": "Create link",
+      "rotate": "Replace link",
+      "revoke": "Revoke link",
+      "durationLabel": "Link valid for",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "activeUntil": "Active until {date}",
+      "noLink": "No active link.",
+      "revoked": "The previous link was revoked.",
+      "expired": "The link has expired.",
+      "showOnce": "Copy this link now — it is shown once and cannot be retrieved later.",
+      "copy": "Copy link",
+      "copied": "Link copied.",
+      "rotateWarning": "Creating a new link immediately stops the old one working.",
+      "draftOnly": "Complete the inspection before sharing it.",
+      "noPermission": "Only owners and managers can manage share links."
+    },
+    "detail": {
+      "vehicle": "Vehicle",
+      "customer": "Customer",
+      "started": "Started",
+      "completedOn": "Completed",
+      "odometer": "Odometer",
+      "summary": "Summary",
+      "notFound": "Inspection not found.",
+      "back": "All inspections",
+      "kmSuffix": "km",
+      "noPhotos": "No photos."
+    },
+    "start": {
+      "fromVehicle": "Start inspection",
+      "fromJob": "Inspect vehicle"
+    }
+  },
+  "portalInspections": {
+    "title": "Inspections",
+    "description": "Photo-backed reports from your workshop.",
+    "empty": {
+      "title": "No inspection reports yet",
+      "description": "Completed inspections from your workshop will appear here."
+    },
+    "completedOn": "Completed {date}",
+    "view": "View report",
+    "workshop": "Workshop",
+    "vehicle": "Vehicle",
+    "summary": "Summary",
+    "odometer": "Odometer",
+    "notFound": "That report is not available.",
+    "back": "All reports",
+    "photoAlt": "Photo for {label}"
+  },
+  "publicInspection": {
+    "title": "Vehicle inspection report",
+    "workshop": "Workshop",
+    "vehicle": "Vehicle",
+    "completedOn": "Completed",
+    "summary": "Summary",
+    "photoAlt": "Photo for {label}",
+    "unavailable": {
+      "title": "This report is not available",
+      "description": "The link may have expired, been replaced, or been turned off. Ask the workshop for a new one."
+    },
+    "privacyNote": "This page shows the inspection only. It contains no personal or pricing information."
+  },
+  "legal": {
+    "nav": {
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "refunds": "Refund Policy"
+    },
+    "page": {
+      "lastUpdated": "Last updated {date}",
+      "draftTitle": "Draft — pending legal review",
+      "draftBody": "This document was prepared from Revora's actual data flows and has not yet been reviewed by qualified UAE counsel. It is published so you can see how your data is handled; wording may change after review.",
+      "backToSignIn": "Back to sign in",
+      "backToApp": "Back to Revora"
+    },
+    "footer": {
+      "operatedBy": "Operated by {entityName}",
+      "license": "Trade licence {license}",
+      "contact": "Contact",
+      "notConfigured": "Business details are not configured yet. Set the NEXT_PUBLIC_LEGAL_* environment variables before going live.",
+      "rights": "© {year} {entityName}. All rights reserved.",
+      "jurisdiction": {
+        "mainland": "United Arab Emirates",
+        "difc": "Dubai International Financial Centre, UAE",
+        "adgm": "Abu Dhabi Global Market, UAE"
+      }
+    }
+  },
+  "portalInvoices": {
+    "complianceNotice": {
+      "title": "About this invoice",
+      "body": "This invoice was issued by the workshop named on it. The workshop is responsible for its contents, tax details and any refund. Revora provides the platform only."
+    },
+    "title": "Invoices",
+    "description": "Invoices issued to you by your workshops.",
+    "empty": "No invoices yet.",
+    "back": "Back",
+    "table": {
+      "invoice": "Invoice",
+      "workshop": "Workshop",
+      "status": "Status",
+      "total": "Total"
+    },
+    "fallback": {
+      "workshop": "Workshop"
+    },
+    "detail": {
+      "lineItems": "Line items",
+      "item": "Item",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "paid": "Paid",
+      "balanceDue": "Balance due",
+      "taxDetails": "Tax details",
+      "businessTrn": "Business TRN",
+      "issued": "Issued"
+    }
+  },
+  "portalAppointments": {
+    "title": "Appointments",
+    "description": "Request a service slot and track your upcoming appointments.",
+    "request": "Request appointment",
+    "empty": "No appointments yet.",
+    "back": "Back",
+    "backToPortal": "Back to portal",
+    "fallback": {
+      "workshop": "Workshop",
+      "appointment": "Appointment"
+    },
+    "table": {
+      "workshop": "Workshop",
+      "when": "When",
+      "status": "Status"
+    },
+    "detail": {
+      "title": "Details",
+      "requested": "Requested",
+      "confirmed": "Confirmed",
+      "notes": "Notes",
+      "declined": "The workshop declined",
+      "cancel": "Cancel appointment"
+    },
+    "new": {
+      "title": "Request an appointment",
+      "description": "Pick a time and we'll confirm it.",
+      "cardTitle": "Appointment details",
+      "noBranch": "No linked workshop with an available branch was found for your account."
+    },
+    "form": {
+      "workshop": "Workshop",
+      "branch": "Branch",
+      "vehicle": "Vehicle (optional)",
+      "vehiclePlaceholder": "Not sure yet",
+      "start": "Preferred start (workshop time, UAE)",
+      "end": "Preferred end",
+      "notes": "What do you need? (optional)",
+      "notesPlaceholder": "e.g. brake noise, oil change",
+      "submit": "Request appointment"
+    }
+  },
+  "errorPages": {
+    "generic": {
+      "title": "This page didn't load",
+      "description": "We couldn't finish loading this screen. Nothing was lost — your data is safe. Try again in a moment.",
+      "backLabel": "Go back"
+    },
+    "dashboard": {
+      "title": "Dashboard didn't load",
+      "description": "We couldn't reach your business data just now. Nothing was lost — everything is safe on the server.",
+      "backLabel": "Go to dashboard"
+    },
+    "customers": {
+      "title": "Customers didn't load",
+      "description": "We couldn't reach your customer records just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to customers"
+    },
+    "vehicles": {
+      "title": "Vehicles didn't load",
+      "description": "We couldn't reach your vehicle records just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to vehicles"
+    },
+    "vehicleDetail": {
+      "title": "This vehicle didn't load",
+      "description": "We couldn't open this vehicle's record just now. Nothing was lost — it's safe on the server.",
+      "backLabel": "Back to vehicles"
+    },
+    "vehicleNew": {
+      "title": "Add vehicle didn't load",
+      "description": "The form didn't open just now. Nothing was lost — try again and your entry will go through.",
+      "backLabel": "Back to vehicles"
+    },
+    "vehicleEdit": {
+      "title": "Edit vehicle didn't load",
+      "description": "The form didn't open just now. Nothing was lost — the vehicle record is unchanged.",
+      "backLabel": "Back to vehicles"
+    },
+    "jobs": {
+      "title": "Jobs didn't load",
+      "description": "We couldn't reach your jobs list just now. Nothing was lost — every job is safe on the server.",
+      "backLabel": "Back to jobs"
+    },
+    "quotations": {
+      "title": "Quotes didn't load",
+      "description": "We couldn't reach your quotes just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to quotes"
+    },
+    "invoices": {
+      "title": "Invoices didn't load",
+      "description": "We couldn't reach your invoices just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to invoices"
+    },
+    "appointments": {
+      "title": "Appointments didn't load",
+      "description": "We couldn't reach your appointments just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to appointments"
+    },
+    "inspections": {
+      "title": "Inspections didn't load",
+      "description": "We couldn't reach your inspections just now. Nothing was lost — every saved result is on the server.",
+      "backLabel": "Back to inspections"
+    },
+    "complaints": {
+      "title": "Complaints didn't load",
+      "description": "We couldn't reach your complaints just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to complaints"
+    },
+    "documents": {
+      "title": "Documents didn't load",
+      "description": "We couldn't reach your documents just now. Nothing was lost — every file is safe in storage.",
+      "backLabel": "Go to dashboard"
+    },
+    "billing": {
+      "title": "Billing didn't load",
+      "description": "We couldn't reach your billing details just now. Your subscription is unaffected.",
+      "backLabel": "Go to dashboard"
+    },
+    "analytics": {
+      "title": "Analytics didn't load",
+      "description": "We couldn't build your analytics just now. Nothing was lost — the underlying records are safe.",
+      "backLabel": "Go to dashboard"
+    },
+    "notifications": {
+      "title": "Notifications didn't load",
+      "description": "We couldn't reach your notifications just now. Nothing was lost — they're waiting on the server.",
+      "backLabel": "Go to dashboard"
+    },
+    "settings": {
+      "title": "Settings didn't load",
+      "description": "We couldn't open your business settings just now. Nothing has changed — your settings are intact.",
+      "backLabel": "Go to dashboard"
+    },
+    "ai": {
+      "title": "AI tools didn't load",
+      "description": "We couldn't open this tool just now. Try again — your vehicles and records are unaffected.",
+      "backLabel": "Go to dashboard"
+    },
+    "tools": {
+      "title": "This tool didn't load",
+      "description": "We couldn't open this tool just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to dashboard"
+    },
+    "implementation": {
+      "title": "Implementation didn't load",
+      "description": "We couldn't open your implementation workspace just now. Nothing was lost — your notes are safe.",
+      "backLabel": "Go to dashboard"
+    },
+    "maintenance": {
+      "title": "Maintenance didn't load",
+      "description": "We couldn't reach your maintenance reminders just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Go to dashboard"
+    },
+    "feedback": {
+      "title": "Feedback didn't load",
+      "description": "We couldn't open feedback just now. Nothing was lost — every submission is safe.",
+      "backLabel": "Go to dashboard"
+    },
+    "admin": {
+      "title": "Admin didn't load",
+      "description": "We couldn't reach platform data just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to admin home"
+    },
+    "adminTenants": {
+      "title": "Tenants didn't load",
+      "description": "We couldn't reach the tenant list just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to admin home"
+    },
+    "adminUsers": {
+      "title": "Users didn't load",
+      "description": "We couldn't reach the user list just now. Nothing was lost — try again in a moment.",
+      "backLabel": "Go to admin home"
+    },
+    "adminSubscriptions": {
+      "title": "Subscriptions didn't load",
+      "description": "We couldn't reach subscription data just now. Billing is unaffected.",
+      "backLabel": "Go to admin home"
+    },
+    "adminBilling": {
+      "title": "Billing didn't load",
+      "description": "We couldn't reach platform billing just now. Stripe records are unaffected.",
+      "backLabel": "Go to admin home"
+    },
+    "adminAnalytics": {
+      "title": "Analytics didn't load",
+      "description": "We couldn't build platform analytics just now. Nothing was lost.",
+      "backLabel": "Go to admin home"
+    },
+    "adminNotifications": {
+      "title": "Notifications didn't load",
+      "description": "We couldn't reach platform notifications just now. Nothing was lost.",
+      "backLabel": "Go to admin home"
+    },
+    "adminAuditLogs": {
+      "title": "Audit logs didn't load",
+      "description": "We couldn't reach the audit log just now. Every entry is still recorded.",
+      "backLabel": "Go to admin home"
+    },
+    "adminSettings": {
+      "title": "Settings didn't load",
+      "description": "We couldn't open platform settings just now. Nothing has changed.",
+      "backLabel": "Go to admin home"
+    },
+    "adminAdmins": {
+      "title": "Admins didn't load",
+      "description": "We couldn't reach the admin list just now. Nothing was lost.",
+      "backLabel": "Go to admin home"
+    },
+    "portal": {
+      "title": "Portal didn't load",
+      "description": "We couldn't reach your workshop data just now. Nothing was lost — it's safe on the server.",
+      "backLabel": "Go to portal home"
+    },
+    "portalJobs": {
+      "title": "Jobs didn't load",
+      "description": "We couldn't reach your jobs just now. Nothing was lost — your workshop still has every detail.",
+      "backLabel": "Back to portal"
+    },
+    "portalQuotes": {
+      "title": "Quotes didn't load",
+      "description": "We couldn't reach your quotes just now. Nothing was lost — any approval you gave is recorded.",
+      "backLabel": "Back to portal"
+    },
+    "portalInvoices": {
+      "title": "Invoices didn't load",
+      "description": "We couldn't reach your invoices just now. Nothing was lost — they're safe with your workshop.",
+      "backLabel": "Back to portal"
+    },
+    "portalAppointments": {
+      "title": "Appointments didn't load",
+      "description": "We couldn't reach your appointments just now. Nothing was lost — your bookings still stand.",
+      "backLabel": "Back to portal"
+    },
+    "portalInspections": {
+      "title": "Inspections didn't load",
+      "description": "We couldn't open your inspection reports just now. Nothing was lost — they're safe on the server.",
+      "backLabel": "Back to portal"
+    },
+    "portalComplaints": {
+      "title": "Complaints didn't load",
+      "description": "We couldn't reach your complaints just now. Nothing was lost — every message you sent is saved.",
+      "backLabel": "Back to portal"
+    },
+    "portalDocuments": {
+      "title": "Documents didn't load",
+      "description": "We couldn't reach your documents just now. Nothing was lost — every file is safe in storage.",
+      "backLabel": "Back to portal"
+    },
+    "portalVehicles": {
+      "title": "Vehicles didn't load",
+      "description": "We couldn't reach your vehicles just now. Nothing was lost — your workshop still has every record.",
+      "backLabel": "Back to portal"
+    },
+    "portalFeedback": {
+      "title": "Feedback didn't load",
+      "description": "We couldn't open feedback just now. Nothing was lost — anything you already sent is saved.",
+      "backLabel": "Back to portal"
+    },
+    "portalMemberships": {
+      "title": "Memberships didn't load",
+      "description": "We couldn't reach your membership details just now. Your plan is unaffected.",
+      "backLabel": "Back to portal"
+    },
+    "portalSettings": {
+      "title": "Settings didn't load",
+      "description": "We couldn't open your settings just now. Nothing has changed — your preferences are intact.",
+      "backLabel": "Back to portal"
+    },
+    "portalAi": {
+      "title": "Health check didn't load",
+      "description": "We couldn't open the health check just now. Try again — your vehicle records are unaffected.",
+      "backLabel": "Back to portal"
+    },
+    "auth": {
+      "title": "Sign-in didn't load",
+      "description": "We couldn't open the sign-in screen just now. Your account is unaffected — refresh to try again.",
+      "backLabel": "Go to sign in"
+    },
+    "onboarding": {
+      "title": "Setup didn't load",
+      "description": "We couldn't open setup just now. Your progress so far is saved — try again to pick up where you left off.",
+      "backLabel": "Back to setup"
+    },
+    "legal": {
+      "title": "This page didn't load",
+      "description": "We couldn't open this document just now. Nothing has changed on your side — refresh to try again.",
+      "backLabel": "Go to home"
+    },
+    "share": {
+      "title": "This report didn't open",
+      "description": "We couldn't open the shared inspection just now. The report is safe — re-open the link to try again.",
+      "backLabel": ""
+    }
+  },
+  "adminSettings": {
+    "title": "Settings",
+    "description": "Platform-level controls and operational context.",
+    "currentAdmin": {
+      "title": "Current admin",
+      "description": "Signed-in platform operator.",
+      "note": "Platform access is governed by `platform_admins`."
+    },
+    "isolation": {
+      "title": "Tenant isolation",
+      "description": "RLS and security-definer boundaries.",
+      "body": "Customer and business data stay tenant-scoped. Cross-tenant access happens only through admin RPCs."
+    },
+    "surfaces": {
+      "title": "Admin surfaces",
+      "description": "Manage platform access and visibility.",
+      "superAdmins": "Super admins",
+      "tenants": "Tenants",
+      "auditLogs": "Audit logs"
+    },
+    "state": {
+      "title": "Settings state",
+      "description": "Platform configuration tables are not modeled yet, so this screen is informational instead of editable.",
+      "body": "Editable root-platform settings will need a dedicated backend table or RPC surface before we add form controls here."
+    }
+  },
+  "adminAdmins": {
+    "title": "Super admins",
+    "description": "Platform administrators with cross-tenant access.",
+    "currentTitle": "Current super admins ({count})",
+    "currentDescription": "These accounts can see and manage every tenant.",
+    "loadError": "We could not load this data right now.",
+    "table": {
+      "email": "Email",
+      "name": "Name",
+      "since": "Since"
+    },
+    "addTitle": "Add a super admin",
+    "addDescription": "Grant platform access to an existing user by email.",
+    "form": {
+      "email": "User email",
+      "grant": "Grant super admin",
+      "revoke": "Revoke"
+    }
+  },
+  "onboarding": {
+    "staff": {
+      "title": "Join your business",
+      "description": "An owner or manager must invite your email before you can access the dashboard.",
+      "emptyTitle": "Invitation required",
+      "emptyDescription": "We couldn't find a pending business invitation for this account yet. Ask the business owner or manager to invite the same email address you used to sign up."
+    },
+    "owner": {
+      "subtitle": "Set up your business workspace.",
+      "title": "Create your business",
+      "description": "Set up your workshop, service center, or operations team as the business owner.",
+      "businessName": "Business name",
+      "businessNamePlaceholder": "Al Mansoori Auto Workshop",
+      "yourName": "Your name",
+      "signedInAs": "Signed in as {email}",
+      "submit": "Create business & continue"
+    },
+    "intent": {
+      "title": "Choose your account type",
+      "description": "Tell us how you plan to use Revora so we can send you to the right place.",
+      "cardDescription": "This keeps business owners, customers, and invited staff on the right path.",
+      "note": "You can update this later if your role changes.",
+      "continue": "Continue"
+    }
+  },
+  "features": {
+    "disabled": {
+      "title": "{module} isn't enabled",
+      "body": "This workspace is running the phase 1 feature set. Ask your Revora contact if you need this module switched on.",
+      "portalBody": "This workspace is running the phase 1 feature set. Contact your garage if you need this module switched on."
+    },
+    "names": {
+      "vehicleIntelligence": "Vehicle Intelligence",
+      "retainerCalculator": "Retainer calculator",
+      "membershipBundles": "Membership bundles",
+      "analytics": "Analytics",
+      "maintenance": "Maintenance",
+      "feedback": "Feedback"
+    }
   }
 }

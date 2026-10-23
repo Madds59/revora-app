@@ -116,7 +116,7 @@ export function ApproveForm({
           placeholder={t("noteForWorkshop")}
         />
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
         <SubmitButton>{t("approve")}</SubmitButton>
       </div>

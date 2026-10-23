@@ -13,6 +13,7 @@ import { requireSuperAdmin } from "@/lib/auth";
 import type { AdminBusinessFilteredRow, PaginatedListResult } from "@/lib/admin-views";
 import { parsePageParam } from "@/lib/filtering";
 import { parseAdminPageSize } from "@/lib/validation/admin";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { AdminTenantsBrowser } from "./tenants-browser";
 
@@ -73,7 +74,7 @@ export default async function AdminTenantsPage({
     p_limit: pageSize,
     p_offset: (page - 1) * pageSize,
   });
-  if (error) console.error("AdminTenantsPage failed to load", error);
+  if (error) reportError(error, { section: "adminTenants" });
 
   const result = (data ?? null) as unknown as PaginatedListResult<AdminBusinessFilteredRow> | null;
   const businesses = result?.rows ?? [];
@@ -94,7 +95,7 @@ export default async function AdminTenantsPage({
           </CardHeader>
           <CardContent>
             {error ? (
-              <p className="text-destructive text-sm">{tError("description")}</p>
+              <p role="alert" className="text-destructive text-sm">{tError("description")}</p>
             ) : businesses.length === 0 ? (
               <EmptyState
                 title={t("empty.title")}

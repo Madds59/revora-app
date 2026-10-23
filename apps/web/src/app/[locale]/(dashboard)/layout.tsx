@@ -21,9 +21,11 @@ export default async function DashboardLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const t = await getTranslations("shell");
   const { member, business } = await requireMembership();
-  const user = await getUser();
-  const memberships = await getCurrentMemberships();
-  const superAdmin = await isSuperAdmin();
+  const [user, memberships, superAdmin] = await Promise.all([
+    getUser(),
+    getCurrentMemberships(),
+    isSuperAdmin(),
+  ]);
   const businessOptions: BusinessOption[] = memberships.map((membership) => {
     const role = membership.member.role as keyof typeof ROLE_LABELS;
     return {
@@ -33,7 +35,7 @@ export default async function DashboardLayout({
     };
   });
   const memberRole = member.role as keyof typeof ROLE_LABELS;
-  const showRetainerCalculator = canManagePricingTools(member.role) || superAdmin;
+  const pricingTools = canManagePricingTools(member.role) || superAdmin;
   const accountLinks: ShellMenuLink[] = [
     { href: "/settings", label: t("businessSettings"), icon: "settings" as const },
     { href: "/billing", label: t("billing"), icon: "billing" as const },
@@ -46,7 +48,7 @@ export default async function DashboardLayout({
     <ResponsiveSidebarShell
       brandTitle="Revora"
       brandSubtitle={business.name}
-      nav={<DashboardNav showRetainerCalculator={showRetainerCalculator} />}
+      nav={<DashboardNav permissions={{ pricingTools }} />}
       mobileHeaderEnd={
         user ? (
           <ShellAccountMenu

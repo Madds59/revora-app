@@ -10,6 +10,7 @@ import {
   buildResetPasswordPath,
 } from "@/lib/auth-links";
 import { createClient } from "@/lib/supabase/server";
+import { LEGAL_VERSION } from "@/lib/legal/index.js";
 
 export type AuthState = { error?: string; message?: string };
 
@@ -51,6 +52,10 @@ export async function signUp(
   if (!email || !password) return { error: t("emailRequired") };
   if (password.length < 8) return { error: t("passwordMin") };
   if (!accountIntent) return { error: t("chooseAccountType") };
+  // Terms/privacy acceptance is a server-side gate, not just a required
+  // checkbox: the version accepted is recorded so a later LEGAL_VERSION bump
+  // can identify who still needs to re-accept.
+  if (formData.get("accept_terms") !== "on") return { error: t("termsRequired") };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -60,7 +65,12 @@ export async function signUp(
       emailRedirectTo: await callbackUrl(
         accountIntent === "customer" ? "/portal" : "/onboarding",
       ),
-      data: { full_name: fullName, account_intent: accountIntent },
+      data: {
+        full_name: fullName,
+        account_intent: accountIntent,
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: LEGAL_VERSION,
+      },
     },
   });
   if (error) return { error: error.message };

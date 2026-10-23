@@ -10,6 +10,11 @@ export const NOTIFICATION_TEMPLATE_KEYS = [
   "complaint_status_changed",
   "feedback_submitted",
   "vehicle_safety_critical",
+  "appointment_confirmed",
+  "appointment_declined",
+  "invoice_issued",
+  "maintenance_reminder_upcoming",
+  "maintenance_reminder_due",
 ];
 
 const UUID_PATTERN =
@@ -146,6 +151,88 @@ const TEMPLATES = {
         "مرحباً {{customerName}}، سجل {{businessName}} تحذير سلامة حرج للمركبة {{vehicleLabel}}. لا تتجاهل تحذيرات السلامة وتواصل مع الورشة.",
       sms:
         "سجل {{businessName}} تحذير سلامة حرج للمركبة {{vehicleLabel}}. تواصل مع الورشة.",
+    },
+  },
+  appointment_confirmed: {
+    en: {
+      subject: "Appointment confirmed",
+      body:
+        "Hello {{customerName}}, {{businessName}} confirmed your appointment for {{slotLabel}}. See you then.",
+      sms: "{{businessName}} confirmed your appointment for {{slotLabel}}.",
+    },
+    ar: {
+      subject: "تم تأكيد الموعد",
+      body:
+        "مرحباً {{customerName}}، أكّد {{businessName}} موعدك في {{slotLabel}}. نراك حينها.",
+      sms: "أكّد {{businessName}} موعدك في {{slotLabel}}.",
+    },
+  },
+  appointment_declined: {
+    en: {
+      subject: "Appointment request declined",
+      body:
+        "Hello {{customerName}}, {{businessName}} could not accommodate your requested appointment. Please request another time in your Revora portal.",
+      sms: "{{businessName}} could not accommodate your requested appointment. Please request another time.",
+    },
+    ar: {
+      subject: "تم رفض طلب الموعد",
+      body:
+        "مرحباً {{customerName}}، لم يتمكن {{businessName}} من تلبية طلب الموعد. يرجى طلب وقت آخر عبر بوابة Revora.",
+      sms: "لم يتمكن {{businessName}} من تلبية طلب الموعد. يرجى طلب وقت آخر.",
+    },
+  },
+  // next_service_date / next_service_mileage come from an AI-generated
+  // maintenance plan, not a manufacturer schedule or verified service history,
+  // and the date may itself be projected from recorded mileage. The copy is
+  // therefore deliberately estimate-flavoured: no manufacturer requirement, no
+  // regulatory obligation, no guaranteed failure, no claim of precision. It
+  // must also stay clearly lower-urgency than vehicle_safety_critical.
+  maintenance_reminder_upcoming: {
+    en: {
+      subject: "Service estimate for your {{vehicleLabel}}",
+      body:
+        "Hello {{customerName}}, based on the information {{businessName}} has on record, your {{vehicleLabel}} is estimated to be due for a service around {{dueDateLabel}}. You can book a visit in your Revora portal.",
+      sms:
+        "{{businessName}}: your {{vehicleLabel}} is estimated to be due for a service around {{dueDateLabel}}. Book in your Revora portal.",
+    },
+    ar: {
+      subject: "تقدير موعد صيانة {{vehicleLabel}}",
+      body:
+        "مرحباً {{customerName}}، بناءً على المعلومات المتوفرة لدى {{businessName}}، من المقدّر أن تحتاج {{vehicleLabel}} إلى صيانة حوالي {{dueDateLabel}}. يمكنك حجز موعد عبر بوابة Revora.",
+      sms:
+        "{{businessName}}: من المقدّر أن تحتاج {{vehicleLabel}} إلى صيانة حوالي {{dueDateLabel}}. احجز عبر بوابة Revora.",
+    },
+  },
+  maintenance_reminder_due: {
+    en: {
+      subject: "Your {{vehicleLabel}} service estimate is coming up",
+      body:
+        "Hello {{customerName}}, the estimated service time for your {{vehicleLabel}} is around {{dueDateLabel}}. If it suits you, book a visit with {{businessName}} in your Revora portal.",
+      sms:
+        "{{businessName}}: the estimated service time for your {{vehicleLabel}} is around {{dueDateLabel}}. Book in your Revora portal.",
+    },
+    ar: {
+      subject: "اقترب موعد الصيانة المقدّر لـ {{vehicleLabel}}",
+      body:
+        "مرحباً {{customerName}}، الموعد المقدّر لصيانة {{vehicleLabel}} حوالي {{dueDateLabel}}. إذا كان ذلك مناسباً، احجز زيارة لدى {{businessName}} عبر بوابة Revora.",
+      sms:
+        "{{businessName}}: الموعد المقدّر لصيانة {{vehicleLabel}} حوالي {{dueDateLabel}}. احجز عبر بوابة Revora.",
+    },
+  },
+  invoice_issued: {
+    en: {
+      subject: "Invoice {{invoiceNumber}} is ready",
+      body:
+        "Hello {{customerName}}, {{businessName}} issued invoice {{invoiceNumber}} for {{total}} {{currency}}. View it in your Revora portal.",
+      sms:
+        "{{businessName}} issued invoice {{invoiceNumber}} for {{total}} {{currency}}. Check your Revora portal.",
+    },
+    ar: {
+      subject: "الفاتورة {{invoiceNumber}} جاهزة",
+      body:
+        "مرحباً {{customerName}}، أصدر {{businessName}} الفاتورة {{invoiceNumber}} بقيمة {{total}} {{currency}}. اطّلع عليها في بوابة Revora.",
+      sms:
+        "أصدر {{businessName}} الفاتورة {{invoiceNumber}} بقيمة {{total}} {{currency}}. تحقق من بوابة Revora.",
     },
   },
 };

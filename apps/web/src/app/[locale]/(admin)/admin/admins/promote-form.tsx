@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { setSuperAdmin, type AdminFormState } from "../actions";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 const initial: AdminFormState = {};
 
 export function PromoteAdminForm() {
+  const t = useTranslations("adminAdmins.form");
   const [state, action] = useActionState(setSuperAdmin, initial);
   const formRef = useRef<HTMLFormElement>(null);
   const last = useRef<string | undefined>(undefined);
@@ -27,7 +29,7 @@ export function PromoteAdminForm() {
     <form ref={formRef} action={action} className="flex flex-col gap-4">
       <input type="hidden" name="make_admin" value="true" />
       <div className="grid max-w-sm gap-2">
-        <Label htmlFor="email">User email</Label>
+        <Label htmlFor="email">{t("email")}</Label>
         <Input
           id="email"
           name="email"
@@ -39,15 +41,16 @@ export function PromoteAdminForm() {
           The person must have signed up already.
         </p>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div>
-        <SubmitButton>Grant super admin</SubmitButton>
+        <SubmitButton>{t("grant")}</SubmitButton>
       </div>
     </form>
   );
 }
 
 export function RevokeAdminButton({ email }: { email: string }) {
+  const t = useTranslations("adminAdmins.form");
   const [state, action] = useActionState(setSuperAdmin, initial);
   const last = useRef<string | undefined>(undefined);
 
@@ -67,7 +70,7 @@ export function RevokeAdminButton({ email }: { email: string }) {
       <input type="hidden" name="email" value={email} />
       <input type="hidden" name="make_admin" value="false" />
       <SubmitButton variant="ghost" size="sm">
-        Revoke
+        {t("revoke")}
       </SubmitButton>
     </form>
   );

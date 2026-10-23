@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { FormState } from "./actions";
+import { DraftRestoredBanner } from "@/components/draft-restored-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import type { Customer } from "@/lib/database.types";
 
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -25,17 +27,25 @@ export function CustomerForm({
   action,
   customer,
   submitLabel,
+  draftScope,
 }: {
   action: Action;
   customer?: Pick<
     Customer,
-    "id" | "full_name" | "phone" | "email" | "preferred_language"
+    "id" | "full_name" | "phone" | "email" | "preferred_language" | "marketing_consent"
   >;
   submitLabel: string;
+  draftScope?: string;
 }) {
   const [state, formAction] = useActionState(action, initial);
   const t = useTranslations("forms.customer");
   const lastMessage = useRef<string | undefined>(undefined);
+  const draft = useFormDraft({
+    key: "customer:new",
+    scope: draftScope,
+    error: state.error,
+    enabled: !customer,
+  });
 
   useEffect(() => {
     if (state.message && state.message !== lastMessage.current) {
@@ -45,7 +55,8 @@ export function CustomerForm({
   }, [state.message]);
 
   return (
-    <form action={formAction} className="flex max-w-lg flex-col gap-4">
+    <form ref={draft.ref} action={formAction} className="flex max-w-lg flex-col gap-4">
+      {draft.restored && <DraftRestoredBanner savedAt={draft.savedAt} onDiscard={draft.discard} />}
       {customer && <input type="hidden" name="id" value={customer.id} />}
       <div className="grid gap-2">
         <Label htmlFor="full_name">{t("fullName")}</Label>
@@ -99,7 +110,23 @@ export function CustomerForm({
           </SelectContent>
         </Select>
       </div>
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      <div className="grid gap-1">
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="marketing_consent"
+            defaultChecked={customer?.marketing_consent ?? false}
+            className="accent-primary mt-0.5 size-4 shrink-0"
+          />
+          <span>{t("marketingConsent")}</span>
+        </label>
+        <p className="text-muted-foreground ps-6 text-xs">{t("marketingConsentHint")}</p>
+      </div>
+      {state.error && (
+        <p role="alert" className="text-destructive text-sm">
+          {state.error}
+        </p>
+      )}
       <div>
         <SubmitButton>{submitLabel}</SubmitButton>
       </div>

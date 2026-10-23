@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { requireCustomerPortal } from "@/lib/auth";
+import { isFeatureOn } from "@/lib/features/guard";
 import { formatDate, formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import { getVehiclePortalSnapshot } from "@/lib/vehicle-intelligence/service";
@@ -49,9 +50,11 @@ export default async function PortalVehicleDetailPage({
         title={[snapshotData.vehicleMake, snapshotData.vehicleModel].filter(Boolean).join(" ") || snapshotData.plateNumber || snapshotData.vin || t("portal.vehicleFallback")}
         description={snapshotData.businessName}
         action={
-          <Link href="/portal/ai/health-check" className={buttonVariants()}>
-            {t("portal.healthCheckAction")}
-          </Link>
+          isFeatureOn("vehicleIntelligence") ? (
+            <Link href="/portal/ai/health-check" className={buttonVariants()}>
+              {t("portal.healthCheckAction")}
+            </Link>
+          ) : undefined
         }
       />
 

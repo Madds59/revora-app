@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 
 import { ErrorState } from "@/components/error-state";
 import { requireMembership, isSuperAdmin } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { canManagePricingTools } from "@/lib/permissions";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Customer } from "@/lib/database.types";
 import type { RetainerScenarioRecord } from "@/lib/retainer/types";
@@ -87,6 +89,7 @@ export default async function RetainerCalculatorPage({
   const params = await searchParams;
   const t = await getTranslations("retainerCalculator");
   const { member, business } = await requireMembership();
+  await requireFeature("retainerCalculator");
   const allowed = canManagePricingTools(member.role) || (await isSuperAdmin());
 
   if (!allowed) {
@@ -118,10 +121,20 @@ export default async function RetainerCalculatorPage({
   ]);
 
   if (customersResult.error || scenariosResult.error) {
-    console.error("retainer-calculator page load failed", {
-      customers: customersResult.error,
-      scenarios: scenariosResult.error,
-    });
+    if (customersResult.error) {
+      reportError(customersResult.error, {
+        section: "tools",
+        businessId: business.id,
+        extra: { part: "customers" },
+      });
+    }
+    if (scenariosResult.error) {
+      reportError(scenariosResult.error, {
+        section: "tools",
+        businessId: business.id,
+        extra: { part: "scenarios" },
+      });
+    }
     return (
       <div className="p-6">
         <ErrorState

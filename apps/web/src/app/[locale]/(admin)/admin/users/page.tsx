@@ -13,6 +13,7 @@ import { requireSuperAdmin } from "@/lib/auth";
 import type { AdminUserFilteredRow, PaginatedListResult, PlatformMetrics } from "@/lib/admin-views";
 import { parsePageParam } from "@/lib/filtering";
 import { parseAdminPageSize } from "@/lib/validation/admin";
+import { reportError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import { AdminUsersBrowser } from "./users-browser";
 
@@ -79,7 +80,7 @@ export default async function AdminUsersPage({
     }),
     supabase.rpc("admin_platform_metrics"),
   ]);
-  if (error) console.error("AdminUsersPage failed to load", error);
+  if (error) reportError(error, { section: "adminUsers" });
 
   const result = (userRows ?? null) as unknown as PaginatedListResult<AdminUserFilteredRow> | null;
   const users = result?.rows ?? [];

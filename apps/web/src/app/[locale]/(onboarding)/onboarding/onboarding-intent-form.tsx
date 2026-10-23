@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useActionState, useState } from "react";
 
 import { saveOnboardingIntent, type OnboardingState } from "./actions";
@@ -17,6 +19,7 @@ import type { AccountIntent } from "@/lib/account-intent";
 const initial: OnboardingState = {};
 
 export function OnboardingIntentForm() {
+  const t = useTranslations("onboarding.intent");
   const [state, action] = useActionState(saveOnboardingIntent, initial);
   const [accountIntent, setAccountIntent] = useState<AccountIntent | null>(
     null,
@@ -25,11 +28,8 @@ export function OnboardingIntentForm() {
   return (
     <Card className="w-full max-w-3xl">
       <CardHeader>
-        <CardTitle>Choose your account type</CardTitle>
-        <CardDescription>
-          This keeps business owners, customers, and invited staff on the
-          right path.
-        </CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("cardDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={action} className="flex flex-col gap-4">
@@ -39,13 +39,13 @@ export function OnboardingIntentForm() {
           />
           <input type="hidden" name="account_intent" value={accountIntent ?? ""} />
           <p className="text-muted-foreground text-xs">
-            You can update this later if your role changes.
+            {t("note")}
           </p>
           {state.error && (
-            <p className="text-destructive text-sm">{state.error}</p>
+            <p role="alert" className="text-destructive text-sm">{state.error}</p>
           )}
           <SubmitButton className="w-full" disabled={!accountIntent}>
-            Continue
+            {t("continue")}
           </SubmitButton>
         </form>
       </CardContent>

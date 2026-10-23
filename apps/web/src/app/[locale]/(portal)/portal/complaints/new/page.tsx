@@ -12,6 +12,7 @@ import { createComplaint } from "../../actions";
 export default async function NewComplaintPage() {
   const { accounts } = await requireCustomerPortal();
   const t = await getTranslations("complaints");
+  const tNew = await getTranslations("portalComplaints.new");
 
   function linkedAccountLabel(account: {
     business?: { name?: string | null } | null;
@@ -32,13 +33,13 @@ export default async function NewComplaintPage() {
   return (
     <>
       <PageHeader
-        title="Submit complaint"
-        description="Send a new complaint to the business team."
+        title={tNew("title")}
+        description={tNew("description")}
       />
       <div className="p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Complaint details</CardTitle>
+            <CardTitle>{tNew("cardTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             {accounts.length === 0 ? (

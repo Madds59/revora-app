@@ -5,6 +5,7 @@ export default function Loading() {
     <AppShellLoading
       title="Jobs"
       description="Loading your workshop jobs..."
+      variant="list"
     />
   );
 }

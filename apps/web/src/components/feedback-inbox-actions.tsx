@@ -98,7 +98,7 @@ export function FeedbackInboxActions({
         </div>
       </div>
 
-      {state.error && <p className="text-destructive text-sm">{state.error}</p>}
+      {state.error && <p role="alert" className="text-destructive text-sm">{state.error}</p>}
       <div className="flex justify-end">
         <SubmitButton variant="secondary" disabled={disabled}>
           {t("update")}

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { ErrorState } from "@/components/error-state";
 import { requireMembership, isSuperAdmin } from "@/lib/auth";
+import { requireFeature } from "@/lib/features/guard";
 import { canManagePricingTools } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { Customer } from "@/lib/database.types";
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function MembershipBundlesPage() {
   const t = await getTranslations("bundles");
   const { member, business } = await requireMembership();
+  await requireFeature("membershipBundles");
   const allowed = canManagePricingTools(member.role) || (await isSuperAdmin());
 
   if (!allowed) {
