@@ -9,6 +9,7 @@ import { formatDateTime, type AppLocale } from "@/lib/formatters";
 import { enqueueAppointmentDecisionNotification } from "@/lib/notifications/service";
 import { createClient } from "@/lib/supabase/server";
 import { firstValidationMessage } from "@/lib/validation/common";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 import {
   appointmentIdSchema,
   confirmAppointmentSchema,
@@ -45,7 +46,7 @@ export async function createAppointment(
   // were previously written straight into the insert alongside our own
   // business_id, so nothing stopped an appointment referencing another
   // tenant's rows. Resolve each one inside our own business first.
-  const [{ data: customer }, { data: branch }] = await Promise.all([
+  const [customerResult, branchResult] = await Promise.all([
     supabase
       .from("customers")
       .select("id")
@@ -60,18 +61,23 @@ export async function createAppointment(
       .eq("id", v.branchId)
       .maybeSingle(),
   ]);
+  const customer = unwrapRow(customerResult, "appointments.actions.customer");
+  const branch = unwrapRow(branchResult, "appointments.actions.branch");
   if (!customer) return { error: "Select a customer from this business." };
   if (!branch) return { error: "Select a branch from this business." };
 
   if (v.vehicleId) {
     // Same business is not enough -- the vehicle must be this customer's.
-    const { data: vehicle } = await supabase
-      .from("vehicles")
-      .select("id")
-      .eq("business_id", business.id)
-      .eq("customer_id", v.customerId)
-      .eq("id", v.vehicleId)
-      .maybeSingle();
+    const vehicle = unwrapRow(
+      await supabase
+        .from("vehicles")
+        .select("id")
+        .eq("business_id", business.id)
+        .eq("customer_id", v.customerId)
+        .eq("id", v.vehicleId)
+        .maybeSingle(),
+      "appointments.actions.vehicle",
+    );
     if (!vehicle) return { error: "Select a vehicle that belongs to this customer." };
   }
 

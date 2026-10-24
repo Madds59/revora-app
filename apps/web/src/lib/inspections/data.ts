@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { PRIVATE_BUCKET, signOwnedStorageObject } from "@/lib/storage";
 import { INSPECTION_ITEM_ENTITY } from "@/lib/validation/evidence";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 import type {
   InspectionContext,
   InspectionResult,
@@ -216,12 +217,15 @@ export async function getStaffInspection(
   if (error) console.error("getStaffInspection failed", error.code);
   if (!header) return null;
 
-  const { data: items } = await supabase
-    .from("inspection_items")
-    .select("id, section, label, position, result, note")
-    .eq("inspection_id", inspectionId)
-    .eq("business_id", businessId)
-    .order("position", { ascending: true });
+  const items = unwrapRows(
+    await supabase
+      .from("inspection_items")
+      .select("id, section, label, position, result, note")
+      .eq("inspection_id", inspectionId)
+      .eq("business_id", businessId)
+      .order("position", { ascending: true }),
+    "inspections.staff.items",
+  );
 
   const rows = items ?? [];
   const photos = await signItemPhotos(
@@ -365,11 +369,14 @@ export async function getPortalInspection(
   if (error) console.error("getPortalInspection failed", error.code);
   if (!header) return null;
 
-  const { data: items } = await supabase
-    .from("inspection_items")
-    .select("id, section, label, position, result, note")
-    .eq("inspection_id", inspectionId)
-    .order("position", { ascending: true });
+  const items = unwrapRows(
+    await supabase
+      .from("inspection_items")
+      .select("id, section, label, position, result, note")
+      .eq("inspection_id", inspectionId)
+      .order("position", { ascending: true }),
+    "inspections.portal.items",
+  );
 
   const rows = items ?? [];
   const photos = await signItemPhotos(
@@ -454,11 +461,14 @@ export async function getPublicInspection(
   // Media is signed ONLY now, after the token has resolved. The business id is
   // taken from the resolved inspection, never from the request.
   const admin = createAdminClient();
-  const { data: owner } = await admin
-    .from("vehicle_inspections")
-    .select("business_id")
-    .eq("id", header.inspection_id)
-    .maybeSingle();
+  const owner = unwrapRow(
+    await admin
+      .from("vehicle_inspections")
+      .select("business_id")
+      .eq("id", header.inspection_id)
+      .maybeSingle(),
+    "inspections.share.owner",
+  );
 
   const photos = owner
     ? await signItemPhotos(

@@ -21,6 +21,7 @@ import type {
 } from "@/lib/retainer/types";
 import { buildRetainerQuoteLine, buildRetainerQuoteNotes } from "@/lib/retainer/quote.js";
 import { trackRetainerEvent } from "@/lib/analytics/track";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export type FormState<T = unknown> = {
   error?: string;
@@ -483,11 +484,14 @@ export async function convertScenarioToQuote(
     return { error: "Could not create the quotation." };
   }
 
-  const { data: items } = await supabase
-    .from("quotation_items")
-    .select("quantity, unit_price, discount_amount, tax_rate")
-    .eq("quotation_id", quoteId);
-  const totals = computeTotals((items ?? []) as Parameters<typeof computeTotals>[0]);
+  const items = unwrapRows(
+    await supabase
+      .from("quotation_items")
+      .select("quantity, unit_price, discount_amount, tax_rate")
+      .eq("quotation_id", quoteId),
+    "retainerScenarios.quoteItems",
+  );
+  const totals = computeTotals(items as Parameters<typeof computeTotals>[0]);
 
   const { error: quoteUpdateError } = await supabase
     .from("quotations")
@@ -518,11 +522,14 @@ export async function convertScenarioToQuote(
     return { error: "Could not create the quotation." };
   }
 
-  const { data: quoteRow } = await supabase
-    .from("quotations")
-    .select("quote_number")
-    .eq("id", quoteId)
-    .maybeSingle();
+  const quoteRow = unwrapRow(
+    await supabase
+      .from("quotations")
+      .select("quote_number")
+      .eq("id", quoteId)
+      .maybeSingle(),
+    "retainerScenarios.quoteNumber",
+  );
 
   await trackRetainerEvent("retainer_quote_created", {
     business_id: access.business.id,

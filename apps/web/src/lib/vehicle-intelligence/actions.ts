@@ -32,6 +32,7 @@ import {
   VEHICLE_MEDIA_BUCKET,
 } from "@/lib/validation/vehicle-media";
 import type { VehicleDtcInterpretation, VehicleVinDecode } from "./types";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 
 // Same response for a missing vehicle, another tenant's vehicle, a mismatched
 // customer, and an unprovable path — none of these may be distinguishable.
@@ -449,25 +450,30 @@ export async function generateQuoteDraftAction(formData: FormData): Promise<void
   if (!diagnosticResultId) return;
 
   const supabase = await createClient();
-  const { data: resultRow, error } = await supabase
-    .from("vehicle_diagnostic_results")
-    .select("id, business_id, vehicle_id, quote_draft_eligible, diagnosis_json")
-    .eq("id", diagnosticResultId)
-    .eq("business_id", business.id)
-    .maybeSingle();
+  const resultRow = unwrapRow(
+    await supabase
+      .from("vehicle_diagnostic_results")
+      .select("id, business_id, vehicle_id, quote_draft_eligible, diagnosis_json")
+      .eq("id", diagnosticResultId)
+      .eq("business_id", business.id)
+      .maybeSingle(),
+    "vehicleIntelligence.generateQuoteDraft.diagnosticResult",
+  );
 
-  if (error) return;
   if (!resultRow) return;
   if (!resultRow.quote_draft_eligible) {
     return;
   }
 
-  const { data: vehicleRow } = await supabase
-    .from("vehicles")
-    .select("id, customer_id")
-    .eq("id", resultRow.vehicle_id)
-    .eq("business_id", business.id)
-    .maybeSingle();
+  const vehicleRow = unwrapRow(
+    await supabase
+      .from("vehicles")
+      .select("id, customer_id")
+      .eq("id", resultRow.vehicle_id)
+      .eq("business_id", business.id)
+      .maybeSingle(),
+    "vehicleIntelligence.generateQuoteDraft.vehicle",
+  );
   if (!vehicleRow?.customer_id) return;
 
   const quote = await createQuoteDraftFromDiagnosis({

@@ -10,6 +10,7 @@ import { computeLine, computeTotals } from "@/lib/money";
 import { enqueueQuoteSentNotification } from "@/lib/notifications/service";
 import { createClient } from "@/lib/supabase/server";
 import { firstValidationMessage } from "@/lib/validation/common";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 import {
   addItemSchema,
   approveQuoteSchema,
@@ -30,10 +31,15 @@ async function recomputeTotals(
   supabase: Awaited<ReturnType<typeof createClient>>,
   quotationId: string,
 ) {
-  const { data: items } = await supabase
-    .from("quotation_items")
-    .select("quantity, unit_price, discount_amount, tax_rate")
-    .eq("quotation_id", quotationId);
+  // A failed read must never reach computeTotals: `items ?? []` would persist
+  // a zeroed total over a real quote.
+  const items = unwrapRows(
+    await supabase
+      .from("quotation_items")
+      .select("quantity, unit_price, discount_amount, tax_rate")
+      .eq("quotation_id", quotationId),
+    "quotations.recomputeTotals",
+  );
 
   const totals = computeTotals(
     (items ?? []) as Pick<

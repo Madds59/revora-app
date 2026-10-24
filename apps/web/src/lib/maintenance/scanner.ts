@@ -8,6 +8,7 @@ import { enqueueMaintenanceReminderNotification } from "@/lib/notifications/serv
 
 import { evaluateMaintenanceDueState, resolveCurrentMaintenancePlan } from "./due-state.js";
 import { toIsoDate } from "./projection.js";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 /**
  * The domain modules are plain ESM so the same functions run under
@@ -140,7 +141,7 @@ async function scanBusiness(
   budget.remaining -= vehicleIds.length;
 
   // Batched lookups keyed by vehicle id -- never one query per vehicle.
-  const [{ data: vehicleRows }, { data: readingRows }, { data: appointmentRows }] =
+  const [vehicleResult, readingResult, appointmentResult] =
     await Promise.all([
       admin
         .from("vehicles")
@@ -161,6 +162,9 @@ async function scanBusiness(
         .in("vehicle_id", vehicleIds)
         .in("status", ["requested", "confirmed"]),
     ]);
+  const vehicleRows = unwrapRows(vehicleResult, "maintenance.scanner.vehicles");
+  const readingRows = unwrapRows(readingResult, "maintenance.scanner.odometerReadings");
+  const appointmentRows = unwrapRows(appointmentResult, "maintenance.scanner.appointments");
 
   const vehicles = new Map((vehicleRows ?? []).map((v) => [v.id, v]));
   const readings = new Map<string, OdometerReadingInput[]>();

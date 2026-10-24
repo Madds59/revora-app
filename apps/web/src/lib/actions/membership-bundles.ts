@@ -16,6 +16,7 @@ import type {
 } from "@/lib/bundles/types";
 import type { RetainerScenarioRecord } from "@/lib/retainer/types";
 import { trackRetainerEvent } from "@/lib/analytics/track";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export type FormState<T = unknown> = {
   error?: string;
@@ -344,12 +345,15 @@ export async function generateBundlesFromScenario(
   } as unknown as RetainerScenarioRecord;
 
   const drafts = buildBundlesFromScenario(scenario);
-  const { data: existing } = await supabase
-    .from("membership_bundles")
-    .select("sort_order")
-    .eq("business_id", access.business.id)
-    .order("sort_order", { ascending: false })
-    .limit(1);
+  const existing = unwrapRows(
+    await supabase
+      .from("membership_bundles")
+      .select("sort_order")
+      .eq("business_id", access.business.id)
+      .order("sort_order", { ascending: false })
+      .limit(1),
+    "membershipBundles.existingSortOrder",
+  );
   const offset = existing && existing.length > 0 ? Number(existing[0].sort_order) + 1 : 0;
 
   const rows = drafts.map((draft, index) => ({
@@ -421,11 +425,14 @@ export async function createQuoteFromBundle(
     return { error: "Could not create the quotation." };
   }
 
-  const { data: items } = await supabase
-    .from("quotation_items")
-    .select("quantity, unit_price, discount_amount, tax_rate")
-    .eq("quotation_id", quoteId);
-  const totals = computeTotals((items ?? []) as Parameters<typeof computeTotals>[0]);
+  const items = unwrapRows(
+    await supabase
+      .from("quotation_items")
+      .select("quantity, unit_price, discount_amount, tax_rate")
+      .eq("quotation_id", quoteId),
+    "membershipBundles.quoteItems",
+  );
+  const totals = computeTotals(items as Parameters<typeof computeTotals>[0]);
 
   const { error: updateError } = await supabase
     .from("quotations")
@@ -442,11 +449,14 @@ export async function createQuoteFromBundle(
     return { error: "Could not create the quotation." };
   }
 
-  const { data: quoteRow } = await supabase
-    .from("quotations")
-    .select("quote_number")
-    .eq("id", quoteId)
-    .maybeSingle();
+  const quoteRow = unwrapRow(
+    await supabase
+      .from("quotations")
+      .select("quote_number")
+      .eq("id", quoteId)
+      .maybeSingle(),
+    "membershipBundles.quoteNumber",
+  );
 
   revalidatePath(`/quotations/${quoteId}`);
   revalidatePath("/quotations");
