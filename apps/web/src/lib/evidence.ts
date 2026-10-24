@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { signOwnedStorageObject } from "@/lib/storage";
 import { COMPLAINT_EVIDENCE_ENTITY } from "@/lib/validation/evidence";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export type EvidenceItem = {
   id: string;
@@ -43,7 +44,7 @@ export async function loadComplaintEvidence(
   actor: "staff" | "customer",
 ): Promise<EvidenceItem[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const result = await supabase
     .from("complaint_evidence")
     .select(
       "id, description, created_at, business_id, complaint_id, media:media_assets!complaint_evidence_media_asset_id_fkey(object_path, file_name, mime_type)",
@@ -51,7 +52,7 @@ export async function loadComplaintEvidence(
     .eq("complaint_id", complaintId)
     .order("created_at", { ascending: false });
 
-  const rows = (data ?? []) as unknown as EvidenceRow[];
+  const rows = unwrapRows(result, "evidence.complaintEvidence") as unknown as EvidenceRow[];
   return Promise.all(
     rows.map(async (row) => {
       const mime = row.media?.mime_type ?? "";

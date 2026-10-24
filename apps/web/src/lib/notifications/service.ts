@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReminderDedupeKey } from "@/lib/maintenance/due-state.js";
 
 import { canAttemptLiveSend } from "./provider.js";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
+import { reportError } from "@/lib/observability";
 import {
   isNotificationChannel,
   normalizeNotificationLocale,
@@ -107,11 +109,12 @@ async function getSettings(
   admin: SupabaseClient<Database>,
   businessId: string,
 ): Promise<NotificationSettings | null> {
-  const { data } = await admin
+  const dataResult = await admin
     .from("business_notification_settings")
     .select("email_enabled, sms_enabled, live_send_enabled")
     .eq("business_id", businessId)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "notifications.getSettings");
   return (data ?? null) as NotificationSettings | null;
 }
 
@@ -120,11 +123,12 @@ async function getPreferences(
   businessId: string,
   customerId: string,
 ) {
-  const { data } = await admin
+  const dataResult = await admin
     .from("notification_preferences")
     .select("channel, template_key, enabled")
     .eq("business_id", businessId)
     .eq("customer_id", customerId);
+  const data = unwrapRows(dataResult, "notifications.getPreferences");
   return (data ?? []) as NotificationPreference[];
 }
 
@@ -175,7 +179,7 @@ async function loadCustomerContext(
   businessId: string,
   customerId: string,
 ) {
-  const [{ data: customer }, { data: business }] = await Promise.all([
+  const [customerResult, businessResult] = await Promise.all([
     admin
       .from("customers")
       .select("id, full_name, email, phone, preferred_language")
@@ -184,6 +188,8 @@ async function loadCustomerContext(
       .maybeSingle(),
     admin.from("businesses").select("id, name").eq("id", businessId).maybeSingle(),
   ]);
+  const customer = unwrapRow(customerResult, "notifications.loadCustomerContext.customer");
+  const business = unwrapRow(businessResult, "notifications.loadCustomerContext.business");
 
   return {
     business: (business ?? null) as BusinessRow | null,
@@ -653,11 +659,12 @@ export async function processQueuedNotifications(limit = 20): Promise<DispatchRe
 export async function enqueueQuoteSentNotification(quotationId: string) {
   try {
     const admin = createAdminClient();
-    const { data } = await admin
+    const dataResult = await admin
       .from("quotations")
       .select("id, business_id, customer_id, quote_number, customer:customers!quotations_customer_id_fkey(full_name), business:businesses(name)")
       .eq("id", quotationId)
       .maybeSingle();
+    const data = unwrapRow(dataResult, "notifications.enqueueQuoteSentNotification");
     const quote = data as
       | {
           business_id: string;
@@ -681,7 +688,8 @@ export async function enqueueQuoteSentNotification(quotationId: string) {
         quoteNumber: quote.quote_number,
       },
     });
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueQuoteSentNotification" });
     return { inserted: 0, skipped: true };
   }
 }
@@ -695,11 +703,12 @@ export async function enqueueQuoteDecisionNotification({
 }) {
   try {
     const admin = createAdminClient();
-    const { data } = await admin
+    const dataResult = await admin
       .from("quotations")
       .select("id, business_id, customer_id, quote_number")
       .eq("id", quotationId)
       .maybeSingle();
+    const data = unwrapRow(dataResult, "notifications.enqueueQuoteDecisionNotification");
     const quote = data as
       | {
           business_id: string;
@@ -738,7 +747,8 @@ export async function enqueueQuoteDecisionNotification({
       { ignoreDuplicates: true, onConflict: "business_id,dedupe_key" },
     );
     return { inserted: 1 };
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueQuoteDecisionNotification" });
     return { inserted: 0, skipped: true };
   }
 }
@@ -752,11 +762,12 @@ export async function enqueueJobStatusNotification({
 }) {
   try {
     const admin = createAdminClient();
-    const { data } = await admin
+    const dataResult = await admin
       .from("jobs")
       .select("id, business_id, customer_id, title, status")
       .eq("id", jobId)
       .maybeSingle();
+    const data = unwrapRow(dataResult, "notifications.enqueueJobStatusNotification");
     const job = data as
       | {
           business_id: string;
@@ -784,7 +795,8 @@ export async function enqueueJobStatusNotification({
         statusLabel,
       },
     });
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueJobStatusNotification" });
     return { inserted: 0, skipped: true };
   }
 }
@@ -802,11 +814,12 @@ export async function enqueueAppointmentDecisionNotification({
 }) {
   try {
     const admin = createAdminClient();
-    const { data } = await admin
+    const dataResult = await admin
       .from("appointments")
       .select("id, business_id, customer_id")
       .eq("id", appointmentId)
       .maybeSingle();
+    const data = unwrapRow(dataResult, "notifications.enqueueAppointmentDecisionNotification");
     const appointment = data as
       | { business_id: string; customer_id: string; id: string }
       | null;
@@ -827,7 +840,8 @@ export async function enqueueAppointmentDecisionNotification({
         slotLabel: slotLabel ?? "",
       },
     });
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueAppointmentDecisionNotification" });
     return { inserted: 0, skipped: true };
   }
 }
@@ -835,11 +849,12 @@ export async function enqueueAppointmentDecisionNotification({
 export async function enqueueInvoiceIssuedNotification(invoiceId: string) {
   try {
     const admin = createAdminClient();
-    const { data } = await admin
+    const dataResult = await admin
       .from("invoices")
       .select("id, business_id, customer_id, invoice_number, total, currency")
       .eq("id", invoiceId)
       .maybeSingle();
+    const data = unwrapRow(dataResult, "notifications.enqueueInvoiceIssuedNotification");
     const invoice = data as
       | {
           business_id: string;
@@ -867,7 +882,8 @@ export async function enqueueInvoiceIssuedNotification(invoiceId: string) {
         total: invoice.total.toFixed(2),
       },
     });
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueInvoiceIssuedNotification" });
     return { inserted: 0, skipped: true };
   }
 }
@@ -913,7 +929,8 @@ export async function enqueueMaintenanceReminderNotification({
       templateKey,
       variables: { dueDateLabel, vehicleLabel },
     });
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueMaintenanceReminderNotification" });
     return { inserted: 0, skipped: true };
   }
 }
@@ -927,11 +944,12 @@ export async function enqueueComplaintStatusNotification({
 }) {
   try {
     const admin = createAdminClient();
-    const { data } = await admin
+    const dataResult = await admin
       .from("complaints")
       .select("id, business_id, customer_id, subject, status")
       .eq("id", complaintId)
       .maybeSingle();
+    const data = unwrapRow(dataResult, "notifications.enqueueComplaintStatusNotification");
     const complaint = data as
       | {
           business_id: string;
@@ -958,7 +976,8 @@ export async function enqueueComplaintStatusNotification({
         subject: complaint.subject,
       },
     });
-  } catch {
+  } catch (error) {
+    reportError(error, { section: "notifications.enqueueComplaintStatusNotification" });
     return { inserted: 0, skipped: true };
   }
 }

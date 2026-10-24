@@ -3,7 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
-import { unwrapRow } from "@/lib/supabase/unwrap.js";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 import { isAccountIntent, type AccountIntent } from "@/lib/account-intent";
 import type {
   Business,
@@ -55,20 +55,27 @@ export const getCurrentMembership = cache(
     if (!user) return null;
 
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("business_members")
-      .select("*, business:businesses(*)")
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true })
-      .returns<MembershipRow[]>();
+    // A failed read must not be indistinguishable from "this user has no
+    // membership": requireMembership() treats null as "not onboarded" and
+    // redirects an onboarded owner to /onboarding or /portal. Raising instead
+    // lands on the route group's error.tsx.
+    const rows = unwrapRows(
+      await supabase
+        .from("business_members")
+        .select("*, business:businesses(*)")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .returns<MembershipRow[]>(),
+      "auth.currentMembership",
+    );
 
-    if (error || !data || data.length === 0) return null;
+    if (rows.length === 0) return null;
 
     const activeBusinessId = (await cookies()).get(ACTIVE_BUSINESS_COOKIE)?.value;
     const selected =
-      data.find((row) => row.business_id === activeBusinessId) ?? data[0];
+      rows.find((row) => row.business_id === activeBusinessId) ?? rows[0];
     if (!selected.business) return null;
 
     const { business, ...member } = selected;
@@ -81,17 +88,21 @@ export const getCurrentMemberships = cache(async (): Promise<Membership[]> => {
   if (!user) return [];
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("business_members")
-    .select("*, business:businesses(*)")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true })
-    .returns<MembershipRow[]>();
+  // The business switcher renders from this list, so a failed read would show
+  // an owner a single business -- or none -- rather than reporting the failure.
+  const rows = unwrapRows(
+    await supabase
+      .from("business_members")
+      .select("*, business:businesses(*)")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .returns<MembershipRow[]>(),
+    "auth.currentMemberships",
+  );
 
-  if (error || !data) return [];
-  return data
+  return rows
     .filter((row): row is MembershipRow & { business: Business } => !!row.business)
     .map(({ business, ...member }) => ({ member, business }));
 });
@@ -152,15 +163,19 @@ export const getCurrentCustomerAccounts = cache(async (): Promise<
   if (!user) return [];
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("customers")
-    .select("*, business:businesses(*)")
-    .eq("app_user_id", user.id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  // requireCustomerPortal() returns these accounts straight to the portal, so
+  // a failed read would render "no records" for a customer who has them.
+  const rows = unwrapRows(
+    await supabase
+      .from("customers")
+      .select("*, business:businesses(*)")
+      .eq("app_user_id", user.id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    "auth.currentCustomerAccounts",
+  );
 
-  if (error || !data) return [];
-  return data as unknown as CustomerAccount[];
+  return rows as unknown as CustomerAccount[];
 });
 
 /**

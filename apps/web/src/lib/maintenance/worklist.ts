@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 import {
   evaluateMaintenanceDueState as evaluateMaintenanceDueStateJs,
@@ -84,7 +85,7 @@ export async function loadMaintenanceWorklist(
 ): Promise<WorklistRow[]> {
   const supabase = await createClient();
 
-  const [{ data: planRows }, { data: settingsRow }] = await Promise.all([
+  const [planResult, settingsResult] = await Promise.all([
     supabase
       .from("vehicle_maintenance_plans")
       .select("id, vehicle_id, next_service_date, next_service_mileage, created_at")
@@ -99,6 +100,8 @@ export async function loadMaintenanceWorklist(
       .eq("business_id", businessId)
       .maybeSingle(),
   ]);
+  const planRows = unwrapRows(planResult, "maintenance.worklist.plans");
+  const settingsRow = unwrapRow(settingsResult, "maintenance.worklist.settings");
 
   const plans = (planRows ?? []) as PlanRow[];
   if (plans.length === 0) return [];
@@ -111,7 +114,7 @@ export async function loadMaintenanceWorklist(
   }
   const vehicleIds = [...byVehicle.keys()];
 
-  const [{ data: vehicleRows }, { data: readingRows }, { data: appointmentRows }] =
+  const [vehicleResult, readingResult, appointmentResult] =
     await Promise.all([
       supabase
         .from("vehicles")
@@ -132,6 +135,9 @@ export async function loadMaintenanceWorklist(
         .in("vehicle_id", vehicleIds)
         .in("status", ["requested", "confirmed"]),
     ]);
+  const vehicleRows = unwrapRows(vehicleResult, "maintenance.worklist.vehicles");
+  const readingRows = unwrapRows(readingResult, "maintenance.worklist.odometerReadings");
+  const appointmentRows = unwrapRows(appointmentResult, "maintenance.worklist.appointments");
 
   const vehicles = new Map(
     (vehicleRows ?? []).map((v) => [

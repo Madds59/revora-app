@@ -28,6 +28,7 @@ import {
   updateInspectionItemSchema,
 } from "@/lib/validation/inspections";
 import { PRIVATE_BUCKET } from "@/lib/storage";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 
 export type FormState = {
   error?: string;
@@ -53,13 +54,15 @@ const INSPECTION_UNAVAILABLE = "Inspection not found or unavailable.";
  */
 async function resolveInspection(businessId: string, inspectionId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("vehicle_inspections")
-    .select("id, status, business_id, quotation_id")
-    .eq("business_id", businessId)
-    .eq("id", inspectionId)
-    .maybeSingle();
-  return data;
+  return unwrapRow(
+    await supabase
+      .from("vehicle_inspections")
+      .select("id, status, business_id, quotation_id")
+      .eq("business_id", businessId)
+      .eq("id", inspectionId)
+      .maybeSingle(),
+    "inspections.actions.resolveInspection",
+  );
 }
 
 export async function startInspection(
@@ -86,13 +89,16 @@ export async function startInspection(
   // The RPC's integrity trigger validates every anchor against the business,
   // but resolving the vehicle first turns a raw constraint violation into a
   // readable message for the common "wrong vehicle" mistake.
-  const { data: vehicle } = await supabase
-    .from("vehicles")
-    .select("id")
-    .eq("business_id", business.id)
-    .eq("id", v.vehicleId)
-    .eq("customer_id", v.customerId)
-    .maybeSingle();
+  const vehicle = unwrapRow(
+    await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("business_id", business.id)
+      .eq("id", v.vehicleId)
+      .eq("customer_id", v.customerId)
+      .maybeSingle(),
+    "inspections.actions.vehicle",
+  );
   if (!vehicle)
     return { error: "That vehicle does not belong to the selected customer." };
 
@@ -232,13 +238,16 @@ export async function recordInspectionItemPhoto(
 
   const supabase = await createClient();
   // The item must belong to THIS inspection and business -- not merely exist.
-  const { data: item } = await supabase
-    .from("inspection_items")
-    .select("id")
-    .eq("id", v.itemId)
-    .eq("inspection_id", v.inspectionId)
-    .eq("business_id", business.id)
-    .maybeSingle();
+  const item = unwrapRow(
+    await supabase
+      .from("inspection_items")
+      .select("id")
+      .eq("id", v.itemId)
+      .eq("inspection_id", v.inspectionId)
+      .eq("business_id", business.id)
+      .maybeSingle(),
+    "inspections.actions.item",
+  );
   if (!item) return { error: INSPECTION_UNAVAILABLE };
 
   const ownedPath = parseNewResourceBoundPath(v.objectPath, {

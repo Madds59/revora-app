@@ -59,11 +59,13 @@ export function ResponsiveSidebarShell({
           it the flex child refuses to shrink below its content, the nav's
           overflow-y-auto never engages, and the panel grows past h-dvh and
           scrolls away. A ring replaces the old `border-e` — it has no side to
-          get wrong under RTL, and it carries the panel edge in dark mode,
-          where --sidebar and --background sit 0.02 lightness apart and the
-          shadow is effectively invisible. */}
+          get wrong under RTL. It draws --sidebar-outline rather than
+          --sidebar-border: that token also draws the dividers inside the
+          panel, and dark mode needs a brighter panel edge (--sidebar and
+          --background sit 0.02 lightness apart, so the shadow is invisible)
+          without brightening those dividers too. */}
       <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:p-3">
-        <div className="bg-sidebar text-sidebar-foreground ring-sidebar-border flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-lg ring-1">
+        <div className="bg-sidebar text-sidebar-foreground ring-sidebar-outline flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-lg ring-1">
           {sidebarBody()}
         </div>
       </aside>
