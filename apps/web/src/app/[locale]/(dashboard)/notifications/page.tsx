@@ -31,7 +31,7 @@ export default async function NotificationsPage() {
       supabase
         .from("notification_events")
         .select(
-          "id, business_id, customer_id, channel, template_key, payload, status, provider_message_id, scheduled_for, sent_at, failed_at, failure_reason, read_at, read_by, created_at, recipient_email, recipient_phone, recipient_name, locale, attempt_count, last_attempt_at, customer:customers(full_name, email)",
+          "id, business_id, customer_id, channel, template_key, payload, status, provider_message_id, scheduled_for, sent_at, failed_at, failure_reason, read_at, read_by, created_at, recipient_email, recipient_phone, recipient_name, locale, attempt_count, last_attempt_at, customer:customers!notification_events_customer_id_fkey(full_name, email)",
         )
         .eq("business_id", business.id)
         .order("created_at", { ascending: false }),

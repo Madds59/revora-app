@@ -57,7 +57,7 @@ export default async function DocumentsPage() {
   const { data, error } = await supabase
     .from("documents")
     .select(
-      "id, title, document_type, created_at, customer:customers(full_name), quotation:quotations(quote_number), complaint:complaints(subject), job:jobs(title), media:media_assets(bucket, object_path, file_name, mime_type, size_bytes, visibility)",
+      "id, title, document_type, created_at, customer:customers!documents_customer_id_fkey(full_name), quotation:quotations!documents_quotation_id_fkey(quote_number), complaint:complaints!documents_complaint_id_fkey(subject), job:jobs!documents_job_id_fkey(title), media:media_assets!documents_media_asset_id_fkey(bucket, object_path, file_name, mime_type, size_bytes, visibility)",
     )
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });

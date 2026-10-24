@@ -94,7 +94,7 @@ async function signItemPhotos(
   const { data, error } = await admin
     .from("inspection_item_media")
     .select(
-      "id, inspection_item_id, media_assets(object_path, file_name, bucket, business_id)",
+      "id, inspection_item_id, media_assets!inspection_item_media_media_asset_id_fkey(object_path, file_name, bucket, business_id)",
     )
     .in("inspection_item_id", itemIds)
     .eq("business_id", businessId)
@@ -157,7 +157,7 @@ export async function listStaffInspections(
   let query = supabase
     .from("vehicle_inspections")
     .select(
-      "id, status, context, created_at, completed_at, quotation_id, customers(full_name), vehicles(make, model, plate_number)",
+      "id, status, context, created_at, completed_at, quotation_id, customers!vehicle_inspections_customer_id_fkey(full_name), vehicles!vehicle_inspections_vehicle_id_fkey(make, model, plate_number)",
     )
     .eq("business_id", businessId)
     .order("created_at", { ascending: false })
@@ -207,7 +207,7 @@ export async function getStaffInspection(
   const { data: header, error } = await supabase
     .from("vehicle_inspections")
     .select(
-      "id, status, context, title, summary, odometer_reading, created_at, completed_at, customer_id, vehicle_id, job_id, appointment_id, quotation_id, share_created_at, share_expires_at, share_revoked_at, share_token_hash, customers(full_name), vehicles(make, model, plate_number)",
+      "id, status, context, title, summary, odometer_reading, created_at, completed_at, customer_id, vehicle_id, job_id, appointment_id, quotation_id, share_created_at, share_expires_at, share_revoked_at, share_token_hash, customers!vehicle_inspections_customer_id_fkey(full_name), vehicles!vehicle_inspections_vehicle_id_fkey(make, model, plate_number)",
     )
     .eq("business_id", businessId)
     .eq("id", inspectionId)
@@ -299,7 +299,7 @@ export async function listPortalInspections(
   const { data, error } = await supabase
     .from("vehicle_inspections")
     .select(
-      "id, created_at, completed_at, vehicles(make, model, plate_number), businesses(name)",
+      "id, created_at, completed_at, vehicles!vehicle_inspections_vehicle_id_fkey(make, model, plate_number), businesses(name)",
     )
     .in("customer_id", customerIds)
     .eq("status", "completed")
@@ -355,7 +355,7 @@ export async function getPortalInspection(
   const { data: header, error } = await supabase
     .from("vehicle_inspections")
     .select(
-      "id, business_id, completed_at, summary, odometer_reading, vehicles(make, model, plate_number), businesses(name)",
+      "id, business_id, completed_at, summary, odometer_reading, vehicles!vehicle_inspections_vehicle_id_fkey(make, model, plate_number), businesses(name)",
     )
     .eq("id", inspectionId)
     .eq("status", "completed")

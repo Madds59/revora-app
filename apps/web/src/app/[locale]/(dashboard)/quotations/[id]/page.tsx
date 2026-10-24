@@ -70,7 +70,7 @@ export default async function QuoteBuilderPage({
     supabase
       .from("quotations")
       .select(
-        "*, customer:customers(full_name, app_user_id, preferred_language), vehicle:vehicles(make, model, plate_number)",
+        "*, customer:customers!quotations_customer_id_fkey(full_name, app_user_id, preferred_language), vehicle:vehicles!quotations_vehicle_id_fkey(make, model, plate_number)",
       )
       .eq("business_id", business.id)
       .eq("id", id)

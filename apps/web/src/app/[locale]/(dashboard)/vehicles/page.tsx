@@ -44,7 +44,7 @@ export default async function VehiclesPage() {
       supabase
         .from("vehicles")
         .select(
-          "id, customer_id, make, model, year, plate_number, vin, color, created_at, updated_at, customer:customers(id, full_name, email)",
+          "id, customer_id, make, model, year, plate_number, vin, color, created_at, updated_at, customer:customers!vehicles_customer_id_fkey(id, full_name, email)",
         )
         .eq("business_id", business.id)
         .order("created_at", { ascending: false }),

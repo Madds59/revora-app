@@ -52,7 +52,7 @@ export default async function PortalJobsPage() {
   const { data, error } = await supabase
     .from("jobs")
     .select(
-      "id, title, status, expected_completion_at, created_at, updated_at, branch:branches(name), business:businesses(name)",
+      "id, title, status, expected_completion_at, created_at, updated_at, branch:branches!jobs_branch_id_fkey(name), business:businesses(name)",
     )
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });

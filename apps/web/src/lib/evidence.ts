@@ -46,7 +46,7 @@ export async function loadComplaintEvidence(
   const { data } = await supabase
     .from("complaint_evidence")
     .select(
-      "id, description, created_at, business_id, complaint_id, media:media_assets(object_path, file_name, mime_type)",
+      "id, description, created_at, business_id, complaint_id, media:media_assets!complaint_evidence_media_asset_id_fkey(object_path, file_name, mime_type)",
     )
     .eq("complaint_id", complaintId)
     .order("created_at", { ascending: false });

@@ -148,7 +148,7 @@ export default async function VehicleDetailPage({
   const { data: vehicleRow, error: vehicleError } = await supabase
     .from("vehicles")
     .select(
-      "id, customer_id, make, model, year, plate_number, vin, color, metadata, created_at, updated_at, customer:customers(id, full_name, phone, email)",
+      "id, customer_id, make, model, year, plate_number, vin, color, metadata, created_at, updated_at, customer:customers!vehicles_customer_id_fkey(id, full_name, phone, email)",
     )
     .eq("business_id", business.id)
     .eq("id", id)
@@ -174,7 +174,7 @@ export default async function VehicleDetailPage({
     supabase
       .from("jobs")
       .select(
-        "id, title, status, created_at, completed_at, expected_completion_at, quotation_id, quotation:quotations(quote_number)",
+        "id, title, status, created_at, completed_at, expected_completion_at, quotation_id, quotation:quotations!jobs_quotation_id_fkey(quote_number)",
       )
       .eq("business_id", business.id)
       .eq("customer_id", vehicle.customer_id)
@@ -194,7 +194,7 @@ export default async function VehicleDetailPage({
     supabase
       .from("documents")
       .select(
-        "id, title, document_type, created_at, customer_id, quotation_id, job_id, customer:customers(full_name), quotation:quotations(vehicle_id, quote_number), job:jobs(title)",
+        "id, title, document_type, created_at, customer_id, quotation_id, job_id, customer:customers!documents_customer_id_fkey(full_name), quotation:quotations!documents_quotation_id_fkey(vehicle_id, quote_number), job:jobs!documents_job_id_fkey(title)",
       )
       .eq("business_id", business.id)
       .order("created_at", { ascending: false }),

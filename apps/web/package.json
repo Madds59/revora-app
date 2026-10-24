@@ -29,7 +29,7 @@
     "test:db:portal": "node scripts/db-test.mjs --reset --run ../../supabase/tests/portal_authorization_matrix_tests.sql",
     "test:db:views": "node scripts/db-test.mjs --reset --run ../../supabase/tests/view_privilege_tests.sql",
     "test:db:views:positive-control": "node scripts/db-test.mjs --reset --up-to 0046 --run ../../supabase/tests/view_privilege_tests.sql",
-    "test:db:all": "pnpm test:db && pnpm test:db:finance && pnpm test:db:audit && pnpm test:db:lifecycle && pnpm test:db:auth && pnpm test:db:claims && pnpm test:db:portal && pnpm test:db:views && pnpm test:db:dvi:strict && pnpm audit:views && pnpm audit:functions",
+    "test:db:all": "pnpm test:db && pnpm test:db:finance && pnpm test:db:audit && pnpm test:db:lifecycle && pnpm test:db:auth && pnpm test:db:claims && pnpm test:db:portal && pnpm test:db:views && pnpm test:db:dvi:strict && pnpm audit:embeds && pnpm audit:views && pnpm audit:functions",
     "audit:tenant-fks": "node scripts/audit-tenant-fks.mjs",
     "audit:views": "node scripts/audit-view-security.mjs",
     "audit:views:self-test": "node scripts/audit-view-security.mjs --self-test",
@@ -37,7 +37,11 @@
     "audit:functions:self-test": "node scripts/audit-function-privileges.mjs --self-test",
     "audit:approval-path": "node scripts/audit-approval-path.mjs",
     "audit:migrations": "node scripts/audit-migration-collisions.mjs && node scripts/audit-migration-safety.mjs",
-    "diagnose:billing": "node scripts/diagnose-billing-env.mjs"
+    "diagnose:billing": "node scripts/diagnose-billing-env.mjs",
+    "audit:embeds": "node scripts/audit-postgrest-embeds.mjs",
+    "audit:embeds:self-test": "node scripts/audit-postgrest-embeds.mjs --self-test",
+    "probe:embeds": "node scripts/probe-postgrest-embeds.mjs",
+    "build:isolated": "node scripts/build-isolated.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

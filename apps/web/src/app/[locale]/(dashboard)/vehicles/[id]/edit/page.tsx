@@ -29,7 +29,7 @@ export default async function EditVehiclePage({
   ] = await Promise.all([
     supabase
       .from("vehicles")
-      .select("id, customer_id, make, model, year, plate_number, vin, color, customer:customers(id, full_name, email)")
+      .select("id, customer_id, make, model, year, plate_number, vin, color, customer:customers!vehicles_customer_id_fkey(id, full_name, email)")
       .eq("business_id", business.id)
       .eq("id", id)
       .maybeSingle(),

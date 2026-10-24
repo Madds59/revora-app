@@ -115,7 +115,7 @@ export async function loadMaintenanceWorklist(
     await Promise.all([
       supabase
         .from("vehicles")
-        .select("id, customer_id, make, model, plate_number, customer:customers(full_name)")
+        .select("id, customer_id, make, model, plate_number, customer:customers!vehicles_customer_id_fkey(full_name)")
         .eq("business_id", businessId)
         .in("id", vehicleIds),
       supabase

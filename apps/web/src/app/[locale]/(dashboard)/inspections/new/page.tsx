@@ -6,6 +6,7 @@ import { requireMembership } from "@/lib/auth";
 import { listInspectionTemplates } from "@/lib/inspections/data";
 import { canManageInspections } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 import {
   StartInspectionForm,
@@ -114,15 +115,18 @@ export default async function NewInspectionPage({
   // business's vehicles to choose from.
   let query = supabase
     .from("vehicles")
-    .select("id, customer_id, make, model, plate_number, customers(full_name)")
+    .select("id, customer_id, make, model, plate_number, customers!vehicles_customer_id_fkey(full_name)")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false })
     .limit(200);
   if (lockedVehicleId) query = query.eq("id", lockedVehicleId);
 
-  const { data: vehicleRows } = await query;
+  // Never read a failed query as "no vehicles": the form's empty state tells
+  // the user to add a vehicle, which would be a lie about their data and would
+  // hide the failure completely. Raising hands the route's error.tsx boundary.
+  const vehicleRows = unwrapRows(await query, "inspections.new.vehicles");
 
-  const vehicles: VehicleOption[] = (vehicleRows ?? []).map((v) => {
+  const vehicles: VehicleOption[] = vehicleRows.map((v) => {
     const customer = v.customers as unknown as { full_name: string } | null;
     return {
       id: v.id,

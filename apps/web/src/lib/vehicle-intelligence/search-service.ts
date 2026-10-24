@@ -316,7 +316,7 @@ export async function searchVehicleIntelligence(input: {
   const supabase = await createClient();
   const vehiclesPromise = supabase
     .from("vehicles")
-    .select("id, customer_id, make, model, year, plate_number, vin, color, created_at, updated_at, customer:customers(id, full_name, email)")
+    .select("id, customer_id, make, model, year, plate_number, vin, color, created_at, updated_at, customer:customers!vehicles_customer_id_fkey(id, full_name, email)")
     .eq("business_id", business.id)
     .order("updated_at", { ascending: false })
     .limit(250);

@@ -29,7 +29,7 @@ export async function loadJobAttachments(
   const { data } = await supabase
     .from("documents")
     .select(
-      "id, title, created_at, business_id, job_id, media:media_assets(object_path, file_name, mime_type)",
+      "id, title, created_at, business_id, job_id, media:media_assets!documents_media_asset_id_fkey(object_path, file_name, mime_type)",
     )
     .eq("job_id", jobId)
     .order("created_at", { ascending: false });
