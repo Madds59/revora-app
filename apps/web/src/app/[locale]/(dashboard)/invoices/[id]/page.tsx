@@ -43,6 +43,7 @@ import {
   RemoveInvoiceItemButton,
   VoidInvoiceForm,
 } from "../invoice-controls";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type InvoiceWithRelations = Invoice & {
   customer: { full_name: string } | null;
@@ -61,16 +62,17 @@ export default async function InvoiceDetailPage({
   const tInvoices = await getTranslations("dashboardInvoices");
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("invoices")
     .select("*, customer:customers!invoices_customer_id_fkey(full_name), vehicle:vehicles!invoices_vehicle_id_fkey(make, model, plate_number)")
     .eq("business_id", business.id)
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "invoices.detail.invoices");
   if (!data) notFound();
   const invoice = data as unknown as InvoiceWithRelations;
 
-  const [{ data: itemRows }, { data: paymentRows }, { data: creditRows }] = await Promise.all([
+  const [itemRowsResult, paymentRowsResult, creditRowsResult] = await Promise.all([
     supabase
       .from("invoice_items")
       .select("*")
@@ -90,6 +92,9 @@ export default async function InvoiceDetailPage({
       .eq("invoice_id", id)
       .order("created_at", { ascending: false }),
   ]);
+  const itemRows = unwrapRows(itemRowsResult, "invoices.detail.invoice_items");
+  const paymentRows = unwrapRows(paymentRowsResult, "invoices.detail.invoice_payments");
+  const creditRows = unwrapRows(creditRowsResult, "invoices.detail.invoice_credit_notes");
   const items = (itemRows ?? []) as InvoiceItem[];
   const payments = (paymentRows ?? []) as InvoicePayment[];
   const creditNotes = (creditRows ?? []) as InvoiceCreditNote[];

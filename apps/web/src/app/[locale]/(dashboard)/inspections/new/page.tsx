@@ -6,12 +6,12 @@ import { requireMembership } from "@/lib/auth";
 import { listInspectionTemplates } from "@/lib/inspections/data";
 import { canManageInspections } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
-import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 import {
   StartInspectionForm,
   type VehicleOption,
 } from "../start-inspection-form";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 /** `Make Model · PLATE`, with each part omitted when the column is null. */
 function label(v: {
@@ -66,47 +66,51 @@ export default async function NewInspectionPage({
   let jobId: string | undefined;
 
   if (params.job) {
-    const { data: job } = await supabase
+    const jobResult = await supabase
       .from("jobs")
       .select("id, customer_id, quotation_id")
       .eq("business_id", business.id)
       .eq("id", params.job)
       .maybeSingle();
+    const job = unwrapRow(jobResult, "inspections.new.jobs");
     if (!job) notFound();
     jobId = job.id;
 
     // Jobs carry no vehicle of their own; it comes from the approved quote.
     if (job.quotation_id) {
-      const { data: quote } = await supabase
+      const quoteResult = await supabase
         .from("quotations")
         .select("vehicle_id")
         .eq("business_id", business.id)
         .eq("id", job.quotation_id)
         .maybeSingle();
+      const quote = unwrapRow(quoteResult, "inspections.new.quotations");
       lockedVehicleId = quote?.vehicle_id ?? undefined;
     }
   }
 
   let appointmentId: string | undefined;
   if (params.appointment) {
-    const { data: appointment } = await supabase
+    const appointmentResult = await supabase
       .from("appointments")
       .select("id")
       .eq("business_id", business.id)
       .eq("id", params.appointment)
       .maybeSingle();
+    const appointment = unwrapRow(appointmentResult, "inspections.new.appointments");
     // An unresolvable appointment is dropped rather than rejected: the
     // inspection itself is still valid without one (walk-ins have no booking).
     appointmentId = appointment?.id;
   }
 
   if (!lockedVehicleId && params.vehicle) {
-    const { data: vehicle } = await supabase
+    const vehicleResult = await supabase
       .from("vehicles")
       .select("id")
       .eq("business_id", business.id)
       .eq("id", params.vehicle)
       .maybeSingle();
+    const vehicle = unwrapRow(vehicleResult, "inspections.new.vehicles");
     if (!vehicle) notFound();
     lockedVehicleId = vehicle.id;
   }

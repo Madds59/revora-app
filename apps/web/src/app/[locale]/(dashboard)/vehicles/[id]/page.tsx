@@ -166,10 +166,10 @@ export default async function VehicleDetailPage({
     { data: quoteRows, error: quoteError },
     { data: complaintRows, error: complaintError },
     { data: documentRows, error: documentError },
-    { data: symptomRows },
-    { data: diagnosticRows },
-    { data: planRows },
-    { data: mediaRows },
+    { data: symptomRows, error: symptomError },
+    { data: diagnosticRows, error: diagnosticError },
+    { data: planRows, error: planError },
+    { data: mediaRows, error: mediaError },
   ] = await Promise.all([
     supabase
       .from("jobs")
@@ -230,6 +230,10 @@ export default async function VehicleDetailPage({
   if (quoteError) reportError(quoteError, { section: "vehicleDetail", businessId: business.id, extra: { part: "quotes" } });
   if (complaintError) reportError(complaintError, { section: "vehicleDetail", businessId: business.id, extra: { part: "complaints" } });
   if (documentError) reportError(documentError, { section: "vehicleDetail", businessId: business.id, extra: { part: "documents" } });
+  if (symptomError) reportError(symptomError, { section: "vehicleDetail", businessId: business.id, extra: { part: "symptoms" } });
+  if (diagnosticError) reportError(diagnosticError, { section: "vehicleDetail", businessId: business.id, extra: { part: "diagnostics" } });
+  if (planError) reportError(planError, { section: "vehicleDetail", businessId: business.id, extra: { part: "maintenancePlans" } });
+  if (mediaError) reportError(mediaError, { section: "vehicleDetail", businessId: business.id, extra: { part: "media" } });
 
   const jobs = (jobRows ?? []) as unknown as VehicleJobRow[];
   const quotes = (quoteRows ?? []) as unknown as VehicleQuoteRow[];

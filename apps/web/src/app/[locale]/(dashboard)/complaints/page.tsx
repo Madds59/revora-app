@@ -33,6 +33,7 @@ import {
   getComplaintSeverityLabel,
   getComplaintStatusLabel,
 } from "@/lib/complaints";
+import { unwrapCount, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type ComplaintListItem = Complaint & {
   customer_name: string | null;
@@ -84,7 +85,7 @@ export default async function ComplaintsPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: complaintsData }, { count: openCount }, { count: resolvedCount }] =
+  const [complaintsResult, openCountResult, resolvedCountResult] =
     await Promise.all([
       supabase
         .from("complaints")
@@ -108,6 +109,9 @@ export default async function ComplaintsPage() {
         .eq("business_id", business.id)
         .in("status", ["resolved", "closed"]),
     ]);
+  const complaintsData = unwrapRows(complaintsResult, "complaints.complaints");
+  const openCount = unwrapCount(openCountResult, "complaints.openCount");
+  const resolvedCount = unwrapCount(resolvedCountResult, "complaints.resolvedCount");
 
   const complaintRows = (complaintsData ?? []) as Complaint[];
   const customerIds = [...new Set(complaintRows.map((row) => row.customer_id))];

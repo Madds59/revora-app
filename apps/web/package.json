@@ -10,7 +10,7 @@
     "typegen": "next typegen",
     "pretypecheck": "next typegen",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs && pnpm audit:discards:self-test && pnpm audit:discards && pnpm audit:wiring",
     "smoke:routes": "node scripts/e2e.mjs",
     "test:db": "node scripts/db-test.mjs --reset --run ../../supabase/tests/tenant_parent_integrity_tests.sql",
     "test:db:dvi": "node scripts/db-test.mjs --run ../../supabase/tests/dvi_security_tests.sql",
@@ -41,7 +41,10 @@
     "audit:embeds": "node scripts/audit-postgrest-embeds.mjs",
     "audit:embeds:self-test": "node scripts/audit-postgrest-embeds.mjs --self-test",
     "probe:embeds": "node scripts/probe-postgrest-embeds.mjs",
-    "build:isolated": "node scripts/build-isolated.mjs"
+    "build:isolated": "node scripts/build-isolated.mjs",
+    "audit:discards": "node scripts/audit-discarded-query-errors.mjs",
+    "audit:discards:self-test": "node scripts/audit-discarded-query-errors.mjs --self-test",
+    "audit:wiring": "node scripts/assert-audit-wired.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

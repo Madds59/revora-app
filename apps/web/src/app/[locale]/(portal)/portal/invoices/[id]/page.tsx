@@ -22,6 +22,7 @@ import { formatCurrency } from "@/lib/money";
 import { formatDateTime } from "@/lib/formatters";
 import { getInvoiceStatusLabel, INVOICE_STATUS_VARIANT } from "@/lib/invoices";
 import type { Invoice, InvoiceItem } from "@/lib/database.types";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type InvoiceWithRelations = Invoice & {
   business: { name: string; trn: string | null } | null;
@@ -40,21 +41,23 @@ export default async function PortalInvoiceDetailPage({
   const customerIds = accounts.map((account) => account.id);
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("invoices")
     .select("*, business:businesses(name, trn), vehicle:vehicles!invoices_vehicle_id_fkey(make, model, plate_number)")
     .in("customer_id", customerIds.length > 0 ? customerIds : ["00000000-0000-0000-0000-000000000000"])
     .neq("status", "draft")
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "portal.invoices.detail.invoices");
   if (!data) notFound();
   const invoice = data as unknown as InvoiceWithRelations;
 
-  const { data: itemRows } = await supabase
+  const itemRowsResult = await supabase
     .from("invoice_items")
     .select("*")
     .eq("invoice_id", id)
     .order("position", { ascending: true });
+  const itemRows = unwrapRows(itemRowsResult, "portal.invoices.detail.invoice_items");
   const items = (itemRows ?? []) as InvoiceItem[];
 
   const v = invoice.vehicle;

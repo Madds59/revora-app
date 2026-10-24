@@ -36,7 +36,7 @@ export class SupabaseQueryError extends Error {
  * with no error is a genuinely empty result and yields `[]`.
  *
  * @template T
- * @param {{data: T[] | null, error: unknown}} result
+ * @param {{data: T[] | null, error?: unknown}} result
  * @param {string} [section] label used in the raised message and the report
  * @returns {T[]}
  */
@@ -50,11 +50,26 @@ export function unwrapRows(result, section) {
  * for `.maybeSingle()`, so it is passed through; only an error raises.
  *
  * @template T
- * @param {{data: T | null, error: unknown}} result
+ * @param {{data: T | null, error?: unknown}} result
  * @param {string} [section]
  * @returns {T | null}
  */
 export function unwrapRow(result, section) {
   if (result?.error) throw new SupabaseQueryError(result.error, section);
   return result?.data ?? null;
+}
+
+/**
+ * The row count from a `head: true, count: "exact"` query, or throw.
+ *
+ * Same reasoning as unwrapRows: a failed count is `null`, and `count ?? 0`
+ * renders a confident "0 open complaints" for a query that never ran.
+ *
+ * @param {{count: number | null, error?: unknown}} result
+ * @param {string} [section]
+ * @returns {number}
+ */
+export function unwrapCount(result, section) {
+  if (result?.error) throw new SupabaseQueryError(result.error, section);
+  return result?.count ?? 0;
 }

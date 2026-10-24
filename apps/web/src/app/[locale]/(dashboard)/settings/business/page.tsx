@@ -37,6 +37,7 @@ import {
 } from "./settings-forms";
 import { TeamManagement } from "./team-management";
 import { uploadBusinessLogo } from "./logo-actions";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type MemberRow = {
   id: string;
@@ -54,7 +55,7 @@ export default async function BusinessSettingsPage() {
     ?.logo_url as string | undefined;
   const supabase = await createClient();
 
-  const [{ data: branches }, { data: services }] = await Promise.all([
+  const [branchesResult, servicesResult] = await Promise.all([
     supabase
       .from("branches")
       .select("*")
@@ -64,10 +65,12 @@ export default async function BusinessSettingsPage() {
       .select("*")
       .order("created_at", { ascending: true }),
   ]);
+  const branches = unwrapRows(branchesResult, "settings.business.branches");
+  const services = unwrapRows(servicesResult, "settings.business.services");
   const typedBranches = (branches ?? []) as Branch[];
   const typedServices = (services ?? []) as Service[];
 
-  const [{ data: memberRows }, { data: inviteRows }] = await Promise.all([
+  const [memberRowsResult, inviteRowsResult] = await Promise.all([
     supabase
       .from("business_members")
       .select("id, role, user_id, profile:profiles!business_members_user_id_fkey(full_name)")
@@ -81,6 +84,8 @@ export default async function BusinessSettingsPage() {
       .eq("status", "pending")
       .order("created_at", { ascending: true }),
   ]);
+  const memberRows = unwrapRows(memberRowsResult, "settings.business.business_members");
+  const inviteRows = unwrapRows(inviteRowsResult, "settings.business.business_invitations");
 
   const members = ((memberRows ?? []) as unknown as MemberRow[]).map((m) => ({
     id: m.id,

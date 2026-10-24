@@ -282,11 +282,11 @@ export default async function AnalyticsPage({
     { data: jobRows, error: jobError },
     { data: quoteRows, error: quoteError },
     { data: complaintRows, error: complaintError },
-    { data: ratingRows },
-    { data: documentRows },
-    { data: subscriptionRows },
-    { data: billingRevenueRowsData },
-    { data: invoiceListData },
+    { data: ratingRows, error: ratingError },
+    { data: documentRows, error: documentError },
+    { data: subscriptionRows, error: subscriptionError },
+    { data: billingRevenueRowsData, error: billingRevenueError },
+    { data: invoiceListData, error: invoiceListError },
   ] = await Promise.all([
     supabase
       .from("customers")
@@ -546,7 +546,12 @@ export default async function AnalyticsPage({
           customerError ||
           jobError ||
           quoteError ||
-          complaintError
+          complaintError ||
+          ratingError ||
+          documentError ||
+          subscriptionError ||
+          billingRevenueError ||
+          invoiceListError
         ) && (
           <Card className="border-destructive/20 bg-destructive/5">
             <CardContent className="p-4 text-sm text-destructive">

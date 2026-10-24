@@ -19,6 +19,7 @@ import {
   ConvertToQuotationButton,
   DeclineAppointmentForm,
 } from "../appointment-controls";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 
 type AppointmentWithRelations = Appointment & {
   customer: { full_name: string; phone: string | null } | null;
@@ -38,7 +39,7 @@ export default async function AppointmentDetailPage({
   const t = await getTranslations("dashboardAppointments");
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("appointments")
     .select(
       "*, customer:customers!appointments_customer_id_fkey(full_name, phone), vehicle:vehicles!appointments_vehicle_id_fkey(make, model, plate_number), branch:branches!appointments_branch_id_fkey(name)",
@@ -46,6 +47,7 @@ export default async function AppointmentDetailPage({
     .eq("business_id", business.id)
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "appointments.detail.appointments");
   if (!data) notFound();
   const appointment = data as unknown as AppointmentWithRelations;
 

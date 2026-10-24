@@ -12,6 +12,7 @@ import { isFeatureOn } from "@/lib/features/guard";
 import { formatDate, formatDateTime } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
 import { getVehiclePortalSnapshot } from "@/lib/vehicle-intelligence/service";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -38,11 +39,12 @@ export default async function PortalVehicleDetailPage({
   }
 
   const supabase = await createClient();
-  const { data: mediaRows } = await supabase
+  const mediaRowsResult = await supabase
     .from("vehicle_media_uploads")
     .select("id, storage_bucket, storage_path, media_type, description, created_at")
     .eq("vehicle_id", id)
     .order("created_at", { ascending: false });
+  const mediaRows = unwrapRows(mediaRowsResult, "portal.vehicles.detail.vehicle_media_uploads");
 
   return (
     <>

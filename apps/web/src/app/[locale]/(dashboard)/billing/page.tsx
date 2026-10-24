@@ -49,6 +49,7 @@ import {
 } from "@/lib/display-labels";
 import { formatCurrency as formatLocalizedCurrency } from "@/lib/formatters";
 import type { Subscription, SubscriptionItem } from "@/lib/database.types";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type SubscriptionView = Subscription & {
   items: SubscriptionItem[];
@@ -186,13 +187,14 @@ export default async function BillingPage() {
 
   const subscriptions = (subRows ?? []) as Subscription[];
   const subscriptionIds = subscriptions.map((subscription) => subscription.id);
-  const { data: itemRows } = subscriptionIds.length
+  const itemRowsResult = subscriptionIds.length
     ? await supabase
         .from("subscription_items")
         .select("*")
         .in("subscription_id", subscriptionIds)
         .order("created_at", { ascending: true })
     : { data: [] as SubscriptionItem[] };
+  const itemRows = unwrapRows(itemRowsResult, "billing.subscription_items");
 
   const itemMap = new Map<string, SubscriptionItem[]>();
   (itemRows ?? []).forEach((item: SubscriptionItem) => {

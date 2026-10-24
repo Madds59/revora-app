@@ -13,6 +13,7 @@ import { getAppointmentStatusLabel, APPOINTMENT_STATUS_VARIANT } from "@/lib/app
 import type { Appointment } from "@/lib/database.types";
 
 import { CancelAppointmentButton } from "../cancel-appointment-button";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 
 type AppointmentWithRelations = Appointment & {
   business: { name: string } | null;
@@ -31,12 +32,13 @@ export default async function PortalAppointmentDetailPage({
   const customerIds = accounts.map((account) => account.id);
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("appointments")
     .select("*, business:businesses(name), vehicle:vehicles!appointments_vehicle_id_fkey(make, model, plate_number)")
     .in("customer_id", customerIds.length > 0 ? customerIds : ["00000000-0000-0000-0000-000000000000"])
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "portal.appointments.detail.appointments");
   if (!data) notFound();
   const appointment = data as unknown as AppointmentWithRelations;
 
