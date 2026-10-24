@@ -27,3 +27,6 @@ supabase/.temp/
 npm-debug.log*
 yarn-debug.log*
 .pnpm-debug.log*
+
+# hookify machine-local rules
+.claude/*.local.md
