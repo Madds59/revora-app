@@ -10,6 +10,7 @@ import type {
   SubscriptionStatus,
   Json,
 } from "@/lib/database.types";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
@@ -167,7 +168,7 @@ function mapSubscriptionStatus(status: string | null | undefined): SubscriptionS
 }
 
 async function loadActiveBillingPlans(admin: AdminClient) {
-  const [{ data: plans }, { data: features }] = await Promise.all([
+  const [plansResult, featuresResult] = await Promise.all([
     admin
       .from("billing_plans")
       .select(
@@ -184,6 +185,8 @@ async function loadActiveBillingPlans(admin: AdminClient) {
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
   ]);
+  const plans = unwrapRows(plansResult, "stripeWebhook.billing_plans");
+  const features = unwrapRows(featuresResult, "stripeWebhook.billing_plan_features");
 
   const featureMap = new Map<string, BillingPlanFeature[]>();
   (features ?? []).forEach((feature) => {
@@ -201,48 +204,62 @@ async function loadActiveBillingPlans(admin: AdminClient) {
 async function resolveBusinessByStripeCustomer(admin: AdminClient, customerId: string | null | undefined) {
   const id = asString(customerId);
   if (!id) return null;
-  const { data } = await admin.from("businesses").select("id").eq("stripe_customer_id", id).maybeSingle();
-  return data?.id ?? null;
+  const row = unwrapRow(
+    await admin.from("businesses").select("id").eq("stripe_customer_id", id).maybeSingle(),
+    "stripeWebhook.resolveBusinessByStripeCustomer",
+  );
+  return row?.id ?? null;
 }
 
 async function resolveBusinessBySubscription(admin: AdminClient, stripeSubscriptionId: string | null | undefined) {
   const id = asString(stripeSubscriptionId);
   if (!id) return null;
-  const { data } = await admin
-    .from("subscriptions")
-    .select("business_id")
-    .eq("stripe_subscription_id", id)
-    .maybeSingle();
-  return data?.business_id ?? null;
+  const row = unwrapRow(
+    await admin
+      .from("subscriptions")
+      .select("business_id")
+      .eq("stripe_subscription_id", id)
+      .maybeSingle(),
+    "stripeWebhook.resolveBusinessBySubscription",
+  );
+  return row?.business_id ?? null;
 }
 
 async function resolveBusinessByInvoice(admin: AdminClient, stripeInvoiceId: string | null | undefined) {
   const id = asString(stripeInvoiceId);
   if (!id) return null;
-  const { data } = await admin
-    .from("billing_invoices")
-    .select("business_id")
-    .eq("stripe_invoice_id", id)
-    .maybeSingle();
-  return data?.business_id ?? null;
+  const row = unwrapRow(
+    await admin
+      .from("billing_invoices")
+      .select("business_id")
+      .eq("stripe_invoice_id", id)
+      .maybeSingle(),
+    "stripeWebhook.resolveBusinessByInvoice",
+  );
+  return row?.business_id ?? null;
 }
 
 async function resolveSubscriptionRecord(admin: AdminClient, stripeSubscriptionId: string | null | undefined) {
   const id = asString(stripeSubscriptionId);
   if (!id) return null;
-  const { data } = await admin
-    .from("subscriptions")
-    .select("id, business_id, stripe_subscription_id, plan_key, status, entitlements")
-    .eq("stripe_subscription_id", id)
-    .maybeSingle();
-  return data ?? null;
+  return unwrapRow(
+    await admin
+      .from("subscriptions")
+      .select("id, business_id, stripe_subscription_id, plan_key, status, entitlements")
+      .eq("stripe_subscription_id", id)
+      .maybeSingle(),
+    "stripeWebhook.resolveSubscriptionRecord",
+  );
 }
 
 async function resolveBusinessByMetadata(admin: AdminClient, metadata: StripeMetadata) {
   const candidate = asString(metadata?.business_id) ?? asString(metadata?.tenant_id) ?? asString(metadata?.workspace_id);
   if (!candidate || !isUuid(candidate)) return null;
-  const { data } = await admin.from("businesses").select("id").eq("id", candidate).maybeSingle();
-  return data?.id ?? null;
+  const row = unwrapRow(
+    await admin.from("businesses").select("id").eq("id", candidate).maybeSingle(),
+    "stripeWebhook.resolveBusinessByMetadata",
+  );
+  return row?.id ?? null;
 }
 
 async function resolveBusinessForInvoice(admin: AdminClient, invoice: StripeInvoiceLike) {
@@ -512,14 +529,14 @@ async function syncPaymentEvent(
 
   const invoiceStripeId = asString(payment.invoice);
   const subscriptionRow = invoiceStripeId
-    ? await (async () => {
-        const { data } = await admin
+    ? unwrapRow(
+        await admin
           .from("billing_invoices")
           .select("id, subscription_id, stripe_subscription_id")
           .eq("stripe_invoice_id", invoiceStripeId)
-          .maybeSingle();
-        return data ?? null;
-      })()
+          .maybeSingle(),
+        "stripeWebhook.paymentInvoiceLookup",
+      )
     : null;
 
   const payload = {

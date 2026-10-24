@@ -14,6 +14,7 @@ import test from "node:test";
 
 import {
   SupabaseQueryError,
+  unwrapCount,
   unwrapRow,
   unwrapRows,
 } from "../src/lib/supabase/unwrap.js";
@@ -68,4 +69,25 @@ test("unwrapRow raises on error but passes a legitimate null through", () => {
 
 test("an error with no message still raises rather than returning empty", () => {
   assert.throws(() => unwrapRows({ data: null, error: {} }), SupabaseQueryError);
+});
+
+test("a failed count raises instead of reading as zero", () => {
+  // The complaints list rendered `count ?? 0`, so a failed count was a
+  // confident "0 open complaints" for a query that never ran.
+  assert.throws(() => unwrapCount(AMBIGUOUS_EMBED, "complaints.openCount"), SupabaseQueryError);
+});
+
+test("a genuinely zero count is still zero", () => {
+  assert.equal(unwrapCount({ count: 0, data: null }, "complaints.openCount"), 0);
+});
+
+test("a real count passes through", () => {
+  assert.equal(unwrapCount({ count: 7, data: null }, "complaints.openCount"), 7);
+});
+
+test("a conditional query's `{ data: [] }` fallback carries no error and is not one", () => {
+  // `cond ? await supabase... : { data: [] }` is a legitimate shape; the
+  // literal branch has no error key at all.
+  assert.deepEqual(unwrapRows({ data: [] }, "portal.vehicles"), []);
+  assert.equal(unwrapRow({ data: null }, "portal.vehicles"), null);
 });

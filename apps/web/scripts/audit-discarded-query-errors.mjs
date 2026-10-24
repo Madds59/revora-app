@@ -8,9 +8,11 @@
 // not exist". Nothing is logged either way.
 //
 // SCOPE
-// Render paths only: `page.tsx` and `_sections/*.tsx` under src/app. Server
-// actions and lib/ still carry the same shape and are NOT audited here -- see
-// `audit:discards --list-unaudited` for that inventory.
+// Every .ts/.tsx file under src, minus PENDING below: the files still carrying
+// the shape, each with the count found when it was listed. A file is protected
+// the moment it is cleaned, because cleaning it means removing it from PENDING.
+// A PENDING file that no longer discards anything also FAILS, so the list
+// cannot quietly rot into an allowlist for code that was fixed long ago.
 //
 // Fixing a hit means unwrapRow/unwrapRows/unwrapCount from lib/supabase/unwrap.js,
 // which raises so the route's error.tsx boundary renders, or binding the error and
@@ -35,8 +37,25 @@ function filesUnder(dir) {
   return out;
 }
 
-const isRenderPath = (p) =>
-  p.includes("/app/") && (p.endsWith("/page.tsx") || p.includes("/_sections/"));
+// Still to do, with the count each carried when it was added. Shrink this; the
+// audit fails if an entry is stale in either direction.
+const PENDING = new Map([
+  ["app/[locale]/(dashboard)/appointments/actions.ts", 2],
+  ["app/[locale]/(dashboard)/inspections/actions.ts", 3],
+  ["app/[locale]/(dashboard)/invoices/actions.ts", 6],
+  ["app/[locale]/(dashboard)/quotations/actions.ts", 1],
+  ["app/[locale]/(dashboard)/vehicles/actions.ts", 2],
+  ["lib/actions/membership-bundles.ts", 3],
+  ["lib/actions/retainer-scenarios.ts", 2],
+  ["lib/documents.ts", 1],
+  ["lib/evidence.ts", 1],
+  ["lib/inspections/data.ts", 3],
+  ["lib/maintenance/scanner.ts", 1],
+  ["lib/maintenance/worklist.ts", 2],
+  ["lib/notifications/service.ts", 9],
+  ["lib/storage.ts", 1],
+  ["lib/vehicle-intelligence/actions.ts", 1],
+]);
 
 export function discardsIn(file) {
   const lines = readFileSync(file, "utf8").split("\n");
@@ -104,36 +123,56 @@ if (process.argv.includes("--self-test")) {
   process.exit(0);
 }
 
-const all = filesUnder(SRC);
-const audited = all.filter(isRenderPath);
-const unaudited = all.filter((p) => !isRenderPath(p));
+const all = filesUnder(SRC).sort();
+const rel = (file) => file.replace(SRC + "/", "");
 
-if (process.argv.includes("--list-unaudited")) {
+if (process.argv.includes("--list-pending")) {
   let total = 0;
-  for (const file of unaudited.sort()) {
+  for (const file of all) {
     const hits = discardsIn(file);
     if (!hits.length) continue;
     total += hits.length;
-    console.log(`  ${file.replace(SRC + "/", "")}: ${hits.map((h) => h.line).join(", ")}`);
+    console.log(`  ${rel(file)}: ${hits.map((h) => h.line).join(", ")}`);
   }
-  console.log(`not yet audited (server actions and lib/): ${total}`);
+  console.log(`still discarding: ${total}`);
   process.exit(0);
 }
 
 const failures = [];
-for (const file of audited.sort()) {
-  for (const hit of discardsIn(file)) {
-    failures.push(`${file.replace(SRC + "/", "")}:${hit.line}  ${hit.text}`);
+const seen = new Set();
+let guarded = 0;
+
+for (const file of all) {
+  const name = rel(file);
+  const hits = discardsIn(file);
+  if (PENDING.has(name)) {
+    seen.add(name);
+    const expected = PENDING.get(name);
+    if (hits.length === 0) {
+      failures.push(`${name} no longer discards anything -- remove it from PENDING`);
+    } else if (hits.length > expected) {
+      failures.push(
+        `${name} now discards ${hits.length} results, up from the ${expected} on the list`,
+      );
+    }
+    continue;
   }
+  guarded += 1;
+  for (const hit of hits) failures.push(`${name}:${hit.line}  ${hit.text}`);
 }
 
-console.log(`render paths audited: ${audited.length}`);
+for (const name of PENDING.keys()) {
+  if (!seen.has(name)) failures.push(`PENDING lists ${name}, which no longer exists`);
+}
+
+const left = [...PENDING.values()].reduce((a, b) => a + b, 0);
+console.log(`files guarded: ${guarded}   still on the list: ${PENDING.size} files, ${left} sites`);
 if (failures.length) {
-  console.error(`\nQuery results read without their error (${failures.length}):`);
+  console.error(`\nDiscarded query errors (${failures.length}):`);
   for (const f of failures) console.error(`  ${f}`);
   console.error(
     "\nUse unwrapRow/unwrapRows/unwrapCount from @/lib/supabase/unwrap.js, or bind\n" +
-      "the error and reportError() it if the panel is meant to fail soft.",
+      "the error and reportError() it where failing soft is deliberate.",
   );
   console.log("DISCARD_AUDIT_FAILED");
   process.exit(1);
