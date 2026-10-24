@@ -20,6 +20,7 @@ import { EvidenceGallery } from "@/components/evidence-gallery";
 import { BusinessRatingForm } from "@/components/business-rating-form";
 import { formatDateTime } from "@/lib/formatters";
 import type { Job, JobUpdate } from "@/lib/database.types";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type JobWithBusiness = Job & { business: { name: string } | null };
 
@@ -33,20 +34,22 @@ export default async function PortalJobDetailPage({
   const locale = await getLocale();
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("jobs")
     .select("*, business:businesses(name)")
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "portal.jobs.detail.jobs");
   if (!data) notFound();
   const job = data as unknown as JobWithBusiness;
 
   // RLS (job_updates_access) only returns customer-visible updates here.
-  const { data: updateRows } = await supabase
+  const updateRowsResult = await supabase
     .from("job_updates")
     .select("*")
     .eq("job_id", id)
     .order("created_at", { ascending: false });
+  const updateRows = unwrapRows(updateRowsResult, "portal.jobs.detail.job_updates");
   const updates = (updateRows ?? []) as JobUpdate[];
   const attachments = await loadJobAttachments(id, "customer");
 

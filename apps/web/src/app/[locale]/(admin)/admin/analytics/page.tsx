@@ -19,16 +19,19 @@ import {
 import { requireSuperAdmin } from "@/lib/auth";
 import type { AdminBusinessRow, PlatformMetrics } from "@/lib/admin-views";
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 
 export default async function AdminAnalyticsPage() {
   const t = await getTranslations("adminAnalytics");
   await requireSuperAdmin();
   const supabase = await createClient();
 
-  const [{ data: metricsData }, { data: businessesData }] = await Promise.all([
+  const [metricsResult, businessesResult] = await Promise.all([
     supabase.rpc("admin_platform_metrics"),
     supabase.rpc("admin_list_businesses"),
   ]);
+  const metricsData = unwrapRow(metricsResult, "admin.analytics.admin_platform_metrics");
+  const businessesData = unwrapRow(businessesResult, "admin.analytics.admin_list_businesses");
 
   const metrics = metricsData as unknown as PlatformMetrics | null;
   const businesses = (businessesData ?? []) as unknown as AdminBusinessRow[];

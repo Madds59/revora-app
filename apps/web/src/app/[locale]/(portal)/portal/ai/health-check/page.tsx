@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
 import { PortalHealthCheckForm } from "./portal-health-check-form";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -28,13 +29,14 @@ export default async function PortalHealthCheckPage({
   await requireFeature("vehicleIntelligence", "portal");
   const supabase = await createClient();
   const vehicleIds = accounts.map((account) => account.id);
-  const { data } = vehicleIds.length
+  const dataResult = vehicleIds.length
     ? await supabase
         .from("vehicles")
         .select("id, make, model, year, plate_number, vin, customer_id")
         .in("customer_id", vehicleIds)
         .order("created_at", { ascending: false })
     : { data: [] };
+  const data = unwrapRows(dataResult, "portal.ai.healthCheck.vehicles");
 
   const vehicles =
     (data ?? []).map((vehicle) => ({

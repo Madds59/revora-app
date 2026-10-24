@@ -9,6 +9,7 @@ import { canManageCustomers } from "@/lib/permissions";
 import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
 import { VehicleDiagnosisForm } from "./vehicle-diagnosis-form";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -39,11 +40,12 @@ export default async function VehicleDiagnosisPage({
   }
 
   const supabase = await createClient();
-  const { data: vehicleRows } = await supabase
+  const vehicleRowsResult = await supabase
     .from("vehicles")
     .select("id, customer_id, make, model, year, plate_number, vin, customer:customers!vehicles_customer_id_fkey(full_name, email)")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
+  const vehicleRows = unwrapRows(vehicleRowsResult, "ai.vehicle-diagnosis.vehicles");
 
   const vehicles =
     (vehicleRows ?? []).map((vehicle) => ({

@@ -10,6 +10,7 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { isFeatureOn } from "@/lib/features/guard";
 import { getVehiclePortalSnapshot } from "@/lib/vehicle-intelligence/service";
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -46,13 +47,14 @@ export default async function PortalVehiclesPage() {
 
   const supabase = await createClient();
   const customerIds = accounts.map((account) => account.id);
-  const { data: vehicleRows } = customerIds.length
+  const vehicleRowsResult = customerIds.length
     ? await supabase
         .from("vehicles")
         .select("id")
         .in("customer_id", customerIds)
         .order("created_at", { ascending: false })
     : { data: [] };
+  const vehicleRows = unwrapRows(vehicleRowsResult, "portal.vehicles.vehicles");
 
   const snapshots = (
     await Promise.all((vehicleRows ?? []).map((vehicle) => getVehiclePortalSnapshot(vehicle.id)))

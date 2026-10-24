@@ -28,6 +28,7 @@ import type { Customer, Vehicle } from "@/lib/database.types";
 import { updateCustomer } from "../actions";
 import { CustomerForm } from "../customer-form";
 import { AddVehicleForm } from "./vehicle-form";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export default async function CustomerDetailPage({
   params,
@@ -40,23 +41,25 @@ export default async function CustomerDetailPage({
   const supabase = await createClient();
   const tDetail = await getTranslations("dashboardCustomers.detail");
 
-  const { data: customer } = await supabase
+  const customerResult = await supabase
     .from("customers")
     .select("*")
     .eq("business_id", business.id)
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
+  const customer = unwrapRow(customerResult, "customers.detail.customers");
 
   if (!customer) notFound();
   const typedCustomer = customer as Customer;
 
-  const { data: vehicles } = await supabase
+  const vehiclesResult = await supabase
     .from("vehicles")
     .select("*")
     .eq("business_id", business.id)
     .eq("customer_id", id)
     .order("created_at", { ascending: false });
+  const vehicles = unwrapRows(vehiclesResult, "customers.detail.vehicles");
   const typedVehicles = (vehicles ?? []) as Vehicle[];
 
   return (

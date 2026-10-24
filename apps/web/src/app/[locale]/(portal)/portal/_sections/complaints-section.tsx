@@ -18,6 +18,7 @@ import {
   COMPLAINT_STATUS_LABELS,
   COMPLAINT_STATUS_VARIANT,
 } from "@/lib/complaints";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type ComplaintRow = Complaint & { business_name: string | null };
 
@@ -40,9 +41,10 @@ export async function ComplaintsSection({
 
   const complaints = (complaintsData ?? []) as Complaint[];
   const businessIds = [...new Set(complaints.map((complaint) => complaint.business_id))];
-  const { data: businessData } = businessIds.length
+  const businessDataResult = businessIds.length
     ? await supabase.from("businesses").select("id, name").in("id", businessIds)
     : { data: [] as Pick<Business, "id" | "name">[] };
+  const businessData = unwrapRows(businessDataResult, "portal.complaints.businesses");
   const businessMap = new Map(
     (businessData ?? []).map((business) => [business.id, business.name]),
   );

@@ -33,6 +33,7 @@ import { ComplaintMessageForm } from "@/components/complaint-message-form";
 import { EvidenceGallery } from "@/components/evidence-gallery";
 import { FileUpload } from "@/components/file-upload";
 import { addComplaintReply } from "../../actions";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type ComplaintDetail = Complaint & { business_name: string | null };
 type MessageRow = ComplaintMessage & { sender_name: string | null };
@@ -47,7 +48,7 @@ export default async function PortalComplaintDetailPage({
   const { accounts } = await requireCustomerPortal();
   const supabase = await createClient();
 
-  const [{ data: complaintRow }, { data: messageRows }] = await Promise.all([
+  const [complaintResult, messageRowsResult] = await Promise.all([
     supabase.from("complaints").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("complaint_messages")
@@ -56,6 +57,8 @@ export default async function PortalComplaintDetailPage({
       .eq("internal_only", false)
       .order("created_at", { ascending: true }),
   ]);
+  const complaintRow = unwrapRow(complaintResult, "portal.complaints.detail.complaints");
+  const messageRows = unwrapRows(messageRowsResult, "portal.complaints.detail.complaint_messages");
 
   if (!complaintRow) notFound();
   const complaint = complaintRow as Complaint;
@@ -63,19 +66,21 @@ export default async function PortalComplaintDetailPage({
     notFound();
   }
 
-  const { data: businessRow } = await supabase
+  const businessRowResult = await supabase
     .from("businesses")
     .select("id, name")
     .eq("id", complaint.business_id)
     .maybeSingle();
+  const businessRow = unwrapRow(businessRowResult, "portal.complaints.detail.businesses");
 
   const messages = (messageRows ?? []) as ComplaintMessage[];
   const senderIds = [
     ...new Set(messages.map((message) => message.sender_id).filter(Boolean)),
   ] as string[];
-  const { data: senderRows } = senderIds.length
+  const senderRowsResult = senderIds.length
     ? await supabase.from("profiles").select("id, full_name").in("id", senderIds)
     : { data: [] as Pick<Profile, "id" | "full_name">[] };
+  const senderRows = unwrapRows(senderRowsResult, "portal.complaints.detail.profiles");
   const senderMap = new Map(
     (senderRows ?? []).map((sender) => [sender.id, sender.full_name ?? null]),
   );

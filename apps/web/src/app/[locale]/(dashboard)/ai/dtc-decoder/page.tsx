@@ -9,6 +9,7 @@ import { canManageCustomers } from "@/lib/permissions";
 import { formatVehicleLabel } from "@/lib/vehicle-intelligence/labels";
 
 import { DtcDecoderForm } from "./dtc-decoder-form";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -39,11 +40,12 @@ export default async function DtcDecoderPage({
   }
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("vehicles")
     .select("id, make, model, year, plate_number, vin, customer:customers!vehicles_customer_id_fkey(full_name)")
     .eq("business_id", business.id)
     .order("created_at", { ascending: false });
+  const data = unwrapRows(dataResult, "ai.dtc-decoder.vehicles");
 
   const vehicles =
     (data ?? []).map((vehicle) => ({

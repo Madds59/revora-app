@@ -33,6 +33,7 @@ import { AddItemForm } from "./add-item-form";
 import { QuoteDetailsForm } from "./quote-details-form";
 import { ApproveForm, RemoveItemButton, SendQuoteButton } from "./quote-actions";
 import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "../status";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type QuoteWithRelations = Quotation & {
   customer: {
@@ -66,7 +67,7 @@ export default async function QuoteBuilderPage({
     getTranslations("dashboardQuotations.detail"),
   ]);
 
-  const [{ data }, { data: itemRows }, { data: approvalRows }] = await Promise.all([
+  const [quotationResult, itemRowsResult, approvalRowsResult] = await Promise.all([
     supabase
       .from("quotations")
       .select(
@@ -87,6 +88,9 @@ export default async function QuoteBuilderPage({
       .eq("business_id", business.id)
       .eq("quotation_id", id),
   ]);
+  const data = unwrapRow(quotationResult, "quotations.detail.quotations");
+  const itemRows = unwrapRows(itemRowsResult, "quotations.detail.quotation_items");
+  const approvalRows = unwrapRows(approvalRowsResult, "quotations.detail.approvals");
   if (!data) notFound();
   const quote = data as unknown as QuoteWithRelations;
   const items = (itemRows ?? []) as QuotationItem[];

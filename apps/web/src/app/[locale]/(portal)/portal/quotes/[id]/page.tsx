@@ -32,6 +32,7 @@ import { getQuoteStatusLabel, QUOTE_STATUS_VARIANT } from "@/app/[locale]/(dashb
 
 import { ApproveForm } from "../approve-form";
 import { RejectForm } from "../reject-form";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type QuoteWithBusiness = Quotation & { business: { name: string } | null };
 
@@ -51,11 +52,12 @@ export default async function PortalQuoteDetailPage({
   const locale = await getLocale();
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("quotations")
     .select("*, business:businesses(name)")
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "portal.quotes.detail.quotations");
   if (!data) notFound();
   const quote = data as unknown as QuoteWithBusiness;
 
@@ -73,7 +75,7 @@ export default async function PortalQuoteDetailPage({
     notFound();
   }
 
-  const [{ data: itemRows }, { data: approvalRows }] = await Promise.all([
+  const [itemRowsResult, approvalRowsResult] = await Promise.all([
     supabase
       .from("quotation_items")
       .select("*")
@@ -81,6 +83,8 @@ export default async function PortalQuoteDetailPage({
       .order("created_at", { ascending: true }),
     supabase.from("approvals").select("*").eq("quotation_id", id),
   ]);
+  const itemRows = unwrapRows(itemRowsResult, "portal.quotes.detail.quotation_items");
+  const approvalRows = unwrapRows(approvalRowsResult, "portal.quotes.detail.approvals");
 
   const items = (itemRows ?? []) as QuotationItem[];
   // Approvals are per quote version; pick the one for the current version.

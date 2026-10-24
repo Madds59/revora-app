@@ -40,6 +40,7 @@ import { ComplaintMessagingPanel } from "@/components/complaint-messaging-panel"
 import { EvidenceGallery } from "@/components/evidence-gallery";
 import { FileUpload } from "@/components/file-upload";
 import { addComplaintMessage, updateComplaint } from "../actions";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type ComplaintDetailRecord = Complaint & {
   customer_name: string | null;
@@ -89,7 +90,7 @@ export default async function ComplaintDetailPage({
 
   const supabase = await createClient();
 
-  const [{ data: complaintRow }, { data: messageRows }, { data: memberRows }] =
+  const [complaintResult, messageRowsResult, memberRowsResult] =
     await Promise.all([
       supabase
         .from("complaints")
@@ -109,6 +110,9 @@ export default async function ComplaintDetailPage({
         .eq("business_id", business.id)
         .eq("is_active", true),
     ]);
+  const complaintRow = unwrapRow(complaintResult, "complaints.detail.complaints");
+  const messageRows = unwrapRows(messageRowsResult, "complaints.detail.complaint_messages");
+  const memberRows = unwrapRows(memberRowsResult, "complaints.detail.business_members");
 
   if (!complaintRow) notFound();
 

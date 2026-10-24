@@ -31,6 +31,7 @@ import {
   ToggleTaskButton,
 } from "../job-controls";
 import { CreateInvoiceFromJobButton } from "../../invoices/create-invoice-button";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type JobWithRelations = Job & {
   customer: { full_name: string } | null;
@@ -57,7 +58,7 @@ export default async function JobDetailPage({
   const locale = await getLocale();
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("jobs")
     .select(
       "*, customer:customers!jobs_customer_id_fkey(full_name), quotation:quotations!jobs_quotation_id_fkey(quote_number, vehicle:vehicles!quotations_vehicle_id_fkey(make, model, plate_number))",
@@ -65,10 +66,11 @@ export default async function JobDetailPage({
     .eq("business_id", business.id)
     .eq("id", id)
     .maybeSingle();
+  const data = unwrapRow(dataResult, "jobs.detail.jobs");
   if (!data) notFound();
   const job = data as unknown as JobWithRelations;
 
-  const [{ data: taskRows }, { data: updateRows }, { data: existingInvoice }, attachments] =
+  const [taskRowsResult, updateRowsResult, existingInvoiceResult, attachments] =
     await Promise.all([
       supabase
         .from("job_tasks")
@@ -90,6 +92,9 @@ export default async function JobDetailPage({
         .maybeSingle(),
       loadJobAttachments(id, "staff"),
     ]);
+  const taskRows = unwrapRows(taskRowsResult, "jobs.detail.job_tasks");
+  const updateRows = unwrapRows(updateRowsResult, "jobs.detail.job_updates");
+  const existingInvoice = unwrapRow(existingInvoiceResult, "jobs.detail.invoices");
   const tasks = (taskRows ?? []) as JobTask[];
   const updates = (updateRows ?? []) as JobUpdate[];
   const v = job.quotation?.vehicle;

@@ -24,6 +24,7 @@ import {
   getComplaintSeverityLabel,
   getComplaintStatusLabel,
 } from "@/lib/complaints";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 type ComplaintRow = Complaint & { business_name: string | null };
 
@@ -53,17 +54,19 @@ export default async function PortalComplaintsPage() {
   const supabase = await createClient();
   const customerIds = accounts.map((account) => account.id);
 
-  const { data: complaintsData } = await supabase
+  const complaintsDataResult = await supabase
     .from("complaints")
     .select("*")
     .in("customer_id", customerIds)
     .order("created_at", { ascending: false });
+  const complaintsData = unwrapRows(complaintsDataResult, "portal.complaints.complaints");
 
   const complaints = (complaintsData ?? []) as Complaint[];
   const businessIds = [...new Set(complaints.map((complaint) => complaint.business_id))];
-  const { data: businessData } = businessIds.length
+  const businessDataResult = businessIds.length
     ? await supabase.from("businesses").select("id, name").in("id", businessIds)
     : { data: [] as Pick<Business, "id" | "name">[] };
+  const businessData = unwrapRows(businessDataResult, "portal.complaints.businesses");
   const businessMap = new Map(
     (businessData ?? []).map((business) => [business.id, business.name]),
   );

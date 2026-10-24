@@ -7,6 +7,7 @@ import { requireFeature } from "@/lib/features/guard";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/database.types";
 import { MembershipPlans, type PortalBundle } from "@/components/membership-bundles/membership-plans";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("bundles");
@@ -35,7 +36,7 @@ export default async function PortalMembershipsPage() {
   const businessIds = [...businessNames.keys()];
 
   const supabase = await createClient();
-  const { data } = businessIds.length
+  const dataResult = businessIds.length
     ? await supabase
         .from("membership_bundles")
         .select("id, business_id, name, tier, description, currency, billing_cycle, price, included_visits, sla_level, features")
@@ -43,6 +44,7 @@ export default async function PortalMembershipsPage() {
         .eq("is_published", true)
         .order("sort_order", { ascending: true })
     : { data: [] };
+  const data = unwrapRows(dataResult, "portal.memberships.membership_bundles");
 
   const bundles: PortalBundle[] = ((data ?? []) as BundleRow[]).map((row) => ({
     id: row.id,

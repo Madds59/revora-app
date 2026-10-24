@@ -13,6 +13,7 @@ import {
 import { requireCustomerPortal, getUser } from "@/lib/auth";
 import { formatDate } from "@/lib/formatters";
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 /**
  * Current template-wide email/SMS preference per linked account. A missing row
@@ -24,7 +25,7 @@ async function loadPreferenceAccounts(
 ): Promise<PortalPreferenceAccount[]> {
   if (accounts.length === 0) return [];
   const supabase = await createClient();
-  const { data } = await supabase
+  const dataResult = await supabase
     .from("notification_preferences")
     .select("business_id, customer_id, channel, enabled")
     .in(
@@ -32,6 +33,7 @@ async function loadPreferenceAccounts(
       accounts.map((account) => account.id),
     )
     .is("template_key", null);
+  const data = unwrapRows(dataResult, "portal.settings.notification_preferences");
   const rows = data ?? [];
   const lookup = (businessId: string, customerId: string, channel: "email" | "sms") =>
     rows.find(

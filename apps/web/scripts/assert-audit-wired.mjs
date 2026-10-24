@@ -18,6 +18,8 @@ const required = [
   ["audit:embeds", "the embed audit"],
   ["audit:embeds:self-test", "its positive control"],
   ["probe:embeds", "the live PostgREST probe"],
+  ["audit:discards", "the discarded-query-error audit"],
+  ["audit:discards:self-test", "its positive control"],
 ];
 
 const problems = [];
@@ -27,6 +29,12 @@ for (const [name, what] of required) {
 if (!(scripts["test:db:all"] ?? "").includes("audit:embeds")) {
   problems.push('test:db:all does not run audit:embeds, so nothing guards the embeds');
 }
+// The discard audit is static, so it belongs in the offline suite CI always runs.
+for (const name of ["audit:discards", "audit:discards:self-test"]) {
+  if (!(scripts.test ?? "").includes(name)) {
+    problems.push(`test does not run ${name}, so nothing guards the render paths`);
+  }
+}
 
 if (problems.length) {
   for (const p of problems) process.stdout.write(`  - ${p}\n`);
@@ -34,5 +42,5 @@ if (problems.length) {
   process.exit(1);
 }
 
-process.stdout.write(`checks_wired=${required.length} in_suite=test:db:all\n`);
+process.stdout.write(`checks_wired=${required.length} in_suites=test:db:all,test\n`);
 process.stdout.write("AUDIT_WIRING_OK\n");

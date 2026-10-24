@@ -8,6 +8,7 @@ import { requireCustomerPortal } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 import { RequestAppointmentForm } from "../request-appointment-form";
+import { unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export default async function NewAppointmentPage() {
   const t = await getTranslations("portalAppointments");
@@ -17,7 +18,7 @@ export default async function NewAppointmentPage() {
   const businessIds = [...new Set(accounts.map((a) => a.business_id))];
   const customerIds = accounts.map((a) => a.id);
 
-  const [{ data: branchRows }, { data: vehicleRows }] = await Promise.all([
+  const [branchRowsResult, vehicleRowsResult] = await Promise.all([
     businessIds.length > 0
       ? supabase.from("branches").select("id, business_id, name").in("business_id", businessIds)
       : Promise.resolve({ data: [] }),
@@ -28,6 +29,8 @@ export default async function NewAppointmentPage() {
           .in("customer_id", customerIds)
       : Promise.resolve({ data: [] }),
   ]);
+  const branchRows = unwrapRows(branchRowsResult, "portal.appointments.new.branches");
+  const vehicleRows = unwrapRows(vehicleRowsResult, "portal.appointments.new.vehicles");
 
   const accountOptions = accounts.map((account) => ({
     customerId: account.id,
