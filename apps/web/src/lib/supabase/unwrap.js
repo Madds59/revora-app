@@ -35,10 +35,14 @@ export class SupabaseQueryError extends Error {
  * Never returns `[]` for a failed query -- that is the whole point. `null` data
  * with no error is a genuinely empty result and yields `[]`.
  *
- * @template T
- * @param {{data: T[] | null, error?: unknown}} result
+ * The generic is the RESULT type, not the row type: a Supabase response is a
+ * union of success and failure shapes, and inferring a row type across that
+ * union collapses to `never`.
+ *
+ * @template {{data: unknown, error?: unknown}} R
+ * @param {R} result
  * @param {string} [section] label used in the raised message and the report
- * @returns {T[]}
+ * @returns {NonNullable<R["data"]>}
  */
 export function unwrapRows(result, section) {
   if (result?.error) throw new SupabaseQueryError(result.error, section);
@@ -49,10 +53,10 @@ export function unwrapRows(result, section) {
  * A single row from a Supabase query, or throw. `null` is a legitimate answer
  * for `.maybeSingle()`, so it is passed through; only an error raises.
  *
- * @template T
- * @param {{data: T | null, error?: unknown}} result
+ * @template {{data: unknown, error?: unknown}} R
+ * @param {R} result
  * @param {string} [section]
- * @returns {T | null}
+ * @returns {R["data"] | null}
  */
 export function unwrapRow(result, section) {
   if (result?.error) throw new SupabaseQueryError(result.error, section);

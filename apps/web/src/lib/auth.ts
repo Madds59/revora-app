@@ -3,6 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 import { isAccountIntent, type AccountIntent } from "@/lib/account-intent";
 import type {
   Business,
@@ -101,13 +102,15 @@ export const getCurrentProfile = cache(async (): Promise<ProfileRow | null> => {
   if (!user) return null;
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const result = await supabase
     .from("profiles")
     .select("id, full_name, account_intent")
     .eq("id", user.id)
     .maybeSingle();
 
-  return (data as ProfileRow | null) ?? null;
+  // null is a real answer here (the row is created on first claim); an error
+  // is not, and must not be flattened into it.
+  return (unwrapRow(result, "auth.profile") as ProfileRow | null) ?? null;
 });
 
 /** The user's intended account type, if they selected one during signup. */
@@ -135,8 +138,10 @@ export async function claimCustomerRecords(): Promise<number> {
   if (!user) return 0;
 
   const supabase = await createClient();
-  const { data } = await supabase.rpc("claim_customer_records");
-  return data ?? 0;
+  // A failed claim returning 0 strands the user with an empty portal and no
+  // sign that anything went wrong.
+  const claimed = unwrapRow(await supabase.rpc("claim_customer_records"), "auth.claimCustomerRecords");
+  return claimed ?? 0;
 }
 
 /** Linked customer records for the current portal user. */
@@ -167,22 +172,34 @@ export async function claimBusinessInvitations(): Promise<number> {
   if (!user) return 0;
 
   const supabase = await createClient();
-  const { data } = await supabase.rpc("claim_business_invitations");
-  return data ?? 0;
+  // Onboarding reports this count to the user, so a failed claim would tell an
+  // invited teammate they have no invitation.
+  const accepted = unwrapRow(await supabase.rpc("claim_business_invitations"), "auth.claimBusinessInvitations");
+  return accepted ?? 0;
 }
 
-/** Whether the current user is a platform super admin. Cached per request. */
+/**
+ * Whether the current user is a platform super admin. Cached per request.
+ *
+ * The read raises on error rather than answering false: platform_admins has a
+ * select-self policy and no SECURITY DEFINER helper inside it, so a non-admin
+ * reads zero rows, not an error. An error is therefore a real failure, and
+ * swallowing it would silently withdraw admin access from an admin.
+ */
 export const isSuperAdmin = cache(async (): Promise<boolean> => {
   const user = await getUser();
   if (!user) return false;
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("platform_admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  return !!data;
+  const row = unwrapRow(
+    await supabase
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    "auth.isSuperAdmin",
+  );
+  return !!row;
 });
 
 /** Redirects to /login when unauthenticated. Returns the user otherwise. */
