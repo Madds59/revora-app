@@ -241,6 +241,26 @@ jobs:
           echo "$out" | grep -E '^(CASE|cases=|TRUSTED_)' || true
           echo "$out" | grep -q 'TRUSTED_RECORD_OK'
 
+      # The control for the suite below. It was already defined in package.json
+      # and never invoked, so the auth suite was the one security suite in this
+      # job asserting an absence with nothing showing it could fail.
+      #
+      # At schema 0043 neither 0044 (auth_rate_limits) nor 0045 (the AAL2
+      # helpers) exists, so the hardening cannot be present and the suite must
+      # NOT reach AUTH_HARDENING_OK. Asserting the absence of the success token
+      # rather than a specific error string keeps this robust to how the
+      # missing relations surface.
+      - name: Positive control (auth hardening must be absent before 0044)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s test:db:auth:positive-control 2>&1 || true)"
+          echo "$out" | grep -E '^(CASE|cases=|AUTH_HARDENING|ERROR)' || true
+          if echo "$out" | grep -q 'AUTH_HARDENING_OK'; then
+            echo "::error::Auth-hardening control passed at schema 0043, where rate limits and MFA helpers do not exist"
+            exit 1
+          fi
+          echo "positive control OK: the auth hardening suite does not pass before 0044"
+
       - name: Auth hardening suite (rate limits, MFA assurance)
         run: |
           set -o pipefail
@@ -292,8 +312,17 @@ jobs:
           fi
           echo "$out" | grep -q 'DVI_SECURITY_OK'
 
+      # The pipe to `tail` used to swallow the exit code: `bash -e` is not
+      # `pipefail`, so the step reported tail's 0 and a TENANT_FK_AUDIT_FAILED
+      # -- or a TENANT_FK_AUDIT_UNAVAILABLE, meaning the audit never reached
+      # the database -- passed green. Assert the success token, like every
+      # other step in this job.
       - name: Systematic tenant parent/child FK audit
-        run: pnpm -s audit:tenant-fks | tail -40
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:tenant-fks)"
+          echo "$out" | tail -40
+          echo "$out" | grep -q 'TENANT_FK_AUDIT_OK'
 
       # Positive control for the view audit below. It builds one deliberately
       # bad view (owner rights + write grants for anon) and one correct view,
@@ -364,6 +393,34 @@ jobs:
       - name: Canonical approval path audit
         run: pnpm -s audit:approval-path
 
+      # Positive control for the embed audit below. 10 fixture cases: the five
+      # shapes it must catch (unhinted, reverse one-to-many, aliased, nested,
+      # and a `!inner` modifier mistaken for a constraint hint) and the five it
+      # must clear (hinted, hinted reverse, hint plus `!inner`, an unambiguous
+      # pair, and an embed-free select).
+      - name: Positive control (the embed audit must be able to fail and to pass)
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:embeds:self-test)"
+          echo "$out" | tail -5
+          if ! echo "$out" | grep -q 'EMBED_AUDIT_SELF_TEST_OK'; then
+            echo "::error::Embed detector failed its own positive control"
+            exit 1
+          fi
+
+      # PGRST201. An embed crossing a relationship with more than one foreign
+      # key, with no constraint named, fails at request time with HTTP 300 --
+      # and a page that reads `data ?? []` renders that as an empty state. This
+      # audit measures every embed in apps/web/src against the MIGRATED schema,
+      # so it needs the container above. It previously ran only inside
+      # `test:db:all`, which CI never invokes, so nothing guarded it here.
+      - name: PostgREST embed ambiguity audit
+        run: |
+          set -o pipefail
+          out="$(pnpm -s audit:embeds)"
+          echo "$out" | tail -20
+          echo "$out" | grep -q 'POSTGREST_EMBED_AUDIT_OK'
+
       # Runs on every event. The safety half picks its own subject: the
       # migrations a branch adds against origin/main, or -- on `main`, where
       # that range is empty by definition -- the ones the merge brought in
@@ -413,14 +470,17 @@ jobs:
           code=$?
           set -e
           echo "smoke exit code: $code"
-          # e2e.mjs exit codes: 0 = all good, 1 = real failure, 2 = env-blocked.
-          # In CI there is no local Supabase, so the local-DB portion is
-          # expected-blocked (exit 2). Fail only on real route failures (exit 1).
+          # e2e.mjs exit codes: 0 = all good, 1 = real failure, 2 = ONLY the
+          # local-DB half was unavailable. A blocked PRODUCTION check now
+          # counts as a failure (exit 1), and so does an unset APP_URL -- this
+          # step used to announce "production route smoke passed" for exit 2,
+          # which an unreachable production also produced, so a total outage
+          # read as a clean run.
           if [ "$code" -eq 1 ]; then
-            echo "::error::Production route smoke reported real failures"
+            echo "::error::Production route smoke reported real failures or could not reach production"
             exit 1
           fi
           if [ "$code" -eq 2 ]; then
-            echo "::notice::Local-DB smoke unavailable in CI (expected); production route smoke passed"
+            echo "::notice::Local-DB smoke unavailable in CI (expected); every production route check was answered"
           fi
           exit 0

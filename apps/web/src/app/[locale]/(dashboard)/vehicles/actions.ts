@@ -7,6 +7,7 @@ import { getUser, requireMembership } from "@/lib/auth";
 import { canManageCustomers } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { firstValidationMessage } from "@/lib/validation/common";
+import { unwrapRow } from "@/lib/supabase/unwrap.js";
 import {
   createVehicleSchema,
   updateVehicleSchema,
@@ -19,14 +20,17 @@ const VEHICLE_UNAVAILABLE = "Vehicle not found or unavailable.";
 
 async function validateCustomer(businessId: string, customerId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("customers")
-    .select("id")
-    .eq("business_id", businessId)
-    .eq("id", customerId)
-    .is("deleted_at", null)
-    .maybeSingle();
-  return data?.id ?? null;
+  const row = unwrapRow(
+    await supabase
+      .from("customers")
+      .select("id")
+      .eq("business_id", businessId)
+      .eq("id", customerId)
+      .is("deleted_at", null)
+      .maybeSingle(),
+    "vehicles.actions.validateCustomer",
+  );
+  return row?.id ?? null;
 }
 
 export async function createVehicle(
@@ -109,12 +113,17 @@ export async function updateVehicle(
   const v = parsed.data;
 
   const supabase = await createClient();
-  const { data: current } = await supabase
-    .from("vehicles")
-    .select("id, business_id, customer_id")
-    .eq("id", v.id)
-    .eq("business_id", business.id)
-    .maybeSingle();
+  // Still non-enumerating: a genuine miss is null and yields the same message,
+  // only a real failure raises.
+  const current = unwrapRow(
+    await supabase
+      .from("vehicles")
+      .select("id, business_id, customer_id")
+      .eq("id", v.id)
+      .eq("business_id", business.id)
+      .maybeSingle(),
+    "vehicles.actions.currentVehicle",
+  );
 
   if (!current) return { error: VEHICLE_UNAVAILABLE };
 

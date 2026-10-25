@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { authorizeStoredPathForSigning } from "@/lib/validation/evidence";
+import { reportError } from "@/lib/observability";
 
 export const PRIVATE_BUCKET = "revora-private";
 export const PUBLIC_BUCKET = "revora-public";
@@ -41,9 +42,12 @@ export async function signedUrl(
   expiresInSeconds = 3600,
 ): Promise<string | null> {
   const admin = createAdminClient();
-  const { data } = await admin.storage
+  const { data, error } = await admin.storage
     .from(PRIVATE_BUCKET)
     .createSignedUrl(objectPath, expiresInSeconds);
+  // Fails soft on purpose -- one unsignable object should blank one thumbnail,
+  // not raise through a list of twenty -- but it no longer fails silently.
+  if (error) reportError(error, { section: "storage.signedUrl" });
   return data?.signedUrl ?? null;
 }
 

@@ -35,6 +35,8 @@ const stamp = Date.now();
 let passed = 0;
 let failed = 0;
 let blocked = 0;
+let prodBlocked = 0;
+let prodChecks = 0;
 function ok(label) {
   passed++;
   console.log(`  PASS  ${label}`);
@@ -46,6 +48,15 @@ function bad(label, detail) {
 function envBlocked(label, detail) {
   blocked++;
   console.log(`  BLOCKED  ${label}${detail ? ` -> ${detail}` : ""}`);
+}
+// A production check that could not run is NOT the same as the local-DB half
+// being unavailable in CI. Both used to increment the same counter, so an
+// unreachable production exited 2 and the workflow announced "production route
+// smoke passed" for 33 checks that never ran.
+function prodEnvBlocked(label, detail) {
+  prodBlocked++;
+  blocked++;
+  console.log(`  BLOCKED(prod)  ${label}${detail ? ` -> ${detail}` : ""}`);
 }
 function assert(cond, label, detail) {
   if (cond) {
@@ -272,45 +283,51 @@ try {
 console.log(`\n== ${passed} passed, ${failed} failed, ${blocked} blocked ==\n`);
 const appBase = process.env.APP_URL;
 if (appBase) {
+  // An authenticated surface answering 200 to an UNAUTHENTICATED request is the
+  // failure this smoke exists to catch, so "OK" is not an accepted outcome for
+  // it. A locale redirect (/billing -> /en/billing) still classifies as
+  // "expected redirect", so that legitimate hop is preserved.
+  const PROTECTED = ["unauthorized as expected", "expected redirect"];
   const smokeRoutes = [
-    { route: "/", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/login", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/signup", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/billing", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/analytics", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/notifications", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/customers", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/vehicles", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/vehicles/new", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/ai", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/ai/search", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/ai/vin-decoder", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/ai/dtc-decoder", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/ai/vehicle-diagnosis", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/jobs", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/quotations", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/complaints", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/documents", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal/ai/health-check", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal/jobs", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal/quotes", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal/complaints", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal/documents", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/portal/settings", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin/tenants", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin/users", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin/subscriptions", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin/billing", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin/audit-logs", expected: ["OK", "unauthorized as expected", "expected redirect"] },
-    { route: "/admin/notifications", expected: ["OK", "unauthorized as expected", "expected redirect"] },
+    { route: "/", expected: PROTECTED },
+    { route: "/login", expected: PROTECTED },
+    { route: "/signup", expected: PROTECTED },
+    { route: "/billing", expected: PROTECTED },
+    { route: "/analytics", expected: PROTECTED },
+    { route: "/notifications", expected: PROTECTED },
+    { route: "/customers", expected: PROTECTED },
+    { route: "/vehicles", expected: PROTECTED },
+    { route: "/vehicles/new", expected: PROTECTED },
+    { route: "/ai", expected: PROTECTED },
+    { route: "/ai/search", expected: PROTECTED },
+    { route: "/ai/vin-decoder", expected: PROTECTED },
+    { route: "/ai/dtc-decoder", expected: PROTECTED },
+    { route: "/ai/vehicle-diagnosis", expected: PROTECTED },
+    { route: "/jobs", expected: PROTECTED },
+    { route: "/quotations", expected: PROTECTED },
+    { route: "/complaints", expected: PROTECTED },
+    { route: "/documents", expected: PROTECTED },
+    { route: "/portal", expected: PROTECTED },
+    { route: "/portal/ai/health-check", expected: PROTECTED },
+    { route: "/portal/jobs", expected: PROTECTED },
+    { route: "/portal/quotes", expected: PROTECTED },
+    { route: "/portal/complaints", expected: PROTECTED },
+    { route: "/portal/documents", expected: PROTECTED },
+    { route: "/portal/settings", expected: PROTECTED },
+    { route: "/admin", expected: PROTECTED },
+    { route: "/admin/tenants", expected: PROTECTED },
+    { route: "/admin/users", expected: PROTECTED },
+    { route: "/admin/subscriptions", expected: PROTECTED },
+    { route: "/admin/billing", expected: PROTECTED },
+    { route: "/admin/audit-logs", expected: PROTECTED },
+    { route: "/admin/notifications", expected: PROTECTED },
   ];
 
   console.log(`\n== route smoke against ${appBase} ==\n`);
   for (const { route, expected } of smokeRoutes) {
     try {
       const res = await fetch(new URL(route, appBase), { redirect: "manual" });
+      prodChecks += 1;
       const location = res.headers.get("location") ?? undefined;
       const classification = classifyRouteResponse(res.status, location);
       if (route === "/" || route === "/login" || route === "/signup") {
@@ -327,7 +344,7 @@ if (appBase) {
         `${classification}${location ? ` (${location})` : ""}`,
       );
     } catch (error) {
-      envBlocked(
+      prodEnvBlocked(
         `route ${route}`,
         `connection unavailable: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -342,7 +359,7 @@ if (appBase) {
       const location = res.headers.get("location") ?? undefined;
       const classification = classifyRouteResponse(res.status, location);
       assert(
-        ["OK", "unauthorized as expected", "expected redirect"].includes(classification),
+        PROTECTED.includes(classification),
         `route ${route}`,
         `${classification}${location ? ` (${location})` : ""}`,
       );
@@ -360,7 +377,7 @@ if (appBase) {
         `unexpected status ${res.status}`,
       );
     } catch (error) {
-      envBlocked(
+      prodEnvBlocked(
         `public locale auth route ${route}`,
         error instanceof Error ? error.message : String(error),
       );
@@ -381,13 +398,30 @@ if (appBase) {
     );
     assert(!res.headers.get("location"), "stripe webhook does not redirect", res.headers.get("location") ?? "redirect present");
   } catch (error) {
-    envBlocked(
+    prodEnvBlocked(
       "stripe webhook rejects unsigned requests",
       error instanceof Error ? error.message : String(error),
     );
   }
+  // A smoke that reached nothing has not passed. Require most of the route
+  // list to have actually been answered before this run may report a pass.
+  const MIN_PROD_CHECKS = Math.ceil(smokeRoutes.length * 0.9);
+  if (prodChecks < MIN_PROD_CHECKS) {
+    bad(
+      "production route smoke executed enough checks",
+      `only ${prodChecks} of ${smokeRoutes.length} routes answered (need >= ${MIN_PROD_CHECKS})`,
+    );
+  }
 } else {
   console.log("\n== route smoke skipped (APP_URL not set) ==\n");
+  // Skipping it silently is how an unset APP_URL turned into a reported pass.
+  bad("APP_URL is set so the production route smoke can run", "APP_URL is unset");
 }
 
-process.exit(failed > 0 ? 1 : blocked > 0 ? 2 : 0);
+console.log(
+  `\n== ${passed} passed, ${failed} failed, ${blocked} blocked (${prodBlocked} of them production) ==\n`,
+);
+
+// Exit 2 means ONLY the local-DB half was unavailable -- the meaning the
+// workflow relies on. A blocked production check is a failure, not a skip.
+process.exit(failed > 0 || prodBlocked > 0 ? 1 : blocked > 0 ? 2 : 0);

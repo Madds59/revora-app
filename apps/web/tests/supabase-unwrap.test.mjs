@@ -91,3 +91,64 @@ test("a conditional query's `{ data: [] }` fallback carries no error and is not 
   assert.deepEqual(unwrapRows({ data: [] }, "portal.vehicles"), []);
   assert.equal(unwrapRow({ data: null }, "portal.vehicles"), null);
 });
+
+// --- the auth core -------------------------------------------------------
+//
+// unwrapRows existing is not the same as the auth core using it. These three
+// reads were the last places where a query failure was still folded into
+// absence, and they are the worst place for it: getCurrentMembership returning
+// null makes requireMembership() redirect an ONBOARDED owner to /onboarding,
+// and getCurrentCustomerAccounts returning [] shows a portal customer an empty
+// portal. `audit:discards` cannot see them -- its detector skips any line
+// mentioning `error`, so binding the error satisfies it even when the handling
+// throws the failure away.
+//
+// This is a SOURCE-SHAPE guard, not a behavioural one: auth.ts is TypeScript
+// importing next/navigation through the `@/` alias, so `node --test` cannot
+// load it. It asserts the shape is gone and the helper is used; it does not
+// execute the functions.
+
+import { readFileSync } from "node:fs";
+
+const AUTH_SRC = readFileSync(
+  new URL("../src/lib/auth.ts", import.meta.url),
+  "utf8",
+);
+
+/** `if (error ...) return <absence>` -- a failure answered as "no data". */
+const COLLAPSE = /if\s*\(\s*error[^)]*\)\s*return\s*(\[\]|null|0)\s*;/;
+
+test("the collapse detector can actually fail (positive control)", () => {
+  // Without this, a detector that matched nothing would pass vacuously.
+  assert.match("  if (error || !data) return [];", COLLAPSE);
+  assert.match("    if (error || !data || data.length === 0) return null;", COLLAPSE);
+  // And it must stay quiet about a result that reports its error.
+  assert.doesNotMatch("  if (error) return { error: error.message };", COLLAPSE);
+});
+
+test("no read in the auth core answers a failed query with absence", () => {
+  const offenders = AUTH_SRC.split("\n")
+    .map((line, i) => [i + 1, line])
+    .filter(([, line]) => COLLAPSE.test(line));
+  assert.deepEqual(
+    offenders,
+    [],
+    `auth.ts folds a query failure into absence at line(s) ${offenders
+      .map(([n]) => n)
+      .join(", ")}`,
+  );
+});
+
+test("each auth core read goes through an unwrap helper with a named section", () => {
+  for (const section of [
+    "auth.currentMembership",
+    "auth.currentMemberships",
+    "auth.currentCustomerAccounts",
+  ]) {
+    assert.ok(
+      AUTH_SRC.includes(`"${section}"`),
+      `expected an unwrapped read labelled ${section}`,
+    );
+  }
+  assert.match(AUTH_SRC, /import \{ unwrapRow, unwrapRows \} from "@\/lib\/supabase\/unwrap\.js";/);
+});

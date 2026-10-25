@@ -19,6 +19,7 @@ import {
   voidInvoiceSchema,
 } from "@/lib/validation/invoices";
 import type { InvoiceItem, ItemKind, ProductCategory } from "@/lib/database.types";
+import { unwrapRow, unwrapRows } from "@/lib/supabase/unwrap.js";
 
 export type FormState = { error?: string; message?: string };
 
@@ -32,10 +33,15 @@ async function recomputeInvoiceTotals(
   supabase: Awaited<ReturnType<typeof createClient>>,
   invoiceId: string,
 ) {
-  const { data: items } = await supabase
-    .from("invoice_items")
-    .select("quantity, unit_price, discount_amount, tax_rate")
-    .eq("invoice_id", invoiceId);
+  // A failed read must never reach computeTotals: `items ?? []` would persist
+  // a zeroed total over a real invoice.
+  const items = unwrapRows(
+    await supabase
+      .from("invoice_items")
+      .select("quantity, unit_price, discount_amount, tax_rate")
+      .eq("invoice_id", invoiceId),
+    "invoices.recomputeTotals",
+  );
 
   const totals = computeTotals(
     (items ?? []) as Pick<
@@ -63,20 +69,26 @@ export async function createInvoiceFromJob(
   const { jobId } = parsed.data;
 
   const supabase = await createClient();
-  const { data: job } = await supabase
-    .from("jobs")
-    .select("id, business_id, branch_id, customer_id, quotation_id")
-    .eq("business_id", business.id)
-    .eq("id", jobId)
-    .maybeSingle();
+  const job = unwrapRow(
+    await supabase
+      .from("jobs")
+      .select("id, business_id, branch_id, customer_id, quotation_id")
+      .eq("business_id", business.id)
+      .eq("id", jobId)
+      .maybeSingle(),
+    "invoices.actions.job",
+  );
   if (!job) return { error: "Job not found." };
 
-  const { data: existing } = await supabase
-    .from("invoices")
-    .select("id")
-    .eq("job_id", jobId)
-    .eq("business_id", business.id)
-    .maybeSingle();
+  const existing = unwrapRow(
+    await supabase
+      .from("invoices")
+      .select("id")
+      .eq("job_id", jobId)
+      .eq("business_id", business.id)
+      .maybeSingle(),
+    "invoices.actions.existingForJob",
+  );
   if (existing) redirect(`/invoices/${existing.id}`);
 
   let vehicleId: string | null = null;
@@ -95,7 +107,7 @@ export async function createInvoiceFromJob(
   }> = [];
 
   if (job.quotation_id) {
-    const [{ data: quote }, { data: items }] = await Promise.all([
+    const [quoteResult, itemsResult] = await Promise.all([
       supabase
         .from("quotations")
         .select("vehicle_id")
@@ -109,6 +121,8 @@ export async function createInvoiceFromJob(
         .eq("quotation_id", job.quotation_id)
         .order("position", { ascending: true }),
     ]);
+    const quote = unwrapRow(quoteResult, "invoices.actions.sourceQuote");
+    const items = unwrapRows(itemsResult, "invoices.actions.sourceQuoteItems");
     vehicleId = quote?.vehicle_id ?? null;
     quoteItems.push(
       ...((items ?? []) as unknown as typeof quoteItems),
@@ -251,12 +265,15 @@ export async function removeInvoiceItem(
  * invoices are frozen documents and must not have their line items edited. */
 async function createClientAndCheckDraft(businessId: string, invoiceId: string) {
   const supabase = await createClient();
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("id, status")
-    .eq("business_id", businessId)
-    .eq("id", invoiceId)
-    .maybeSingle();
+  const invoice = unwrapRow(
+    await supabase
+      .from("invoices")
+      .select("id, status")
+      .eq("business_id", businessId)
+      .eq("id", invoiceId)
+      .maybeSingle(),
+    "invoices.actions.draftGuard",
+  );
   return { data: invoice && invoice.status === "draft" ? invoice : null };
 }
 
@@ -317,12 +334,15 @@ export async function recordInvoicePayment(
   // straight into the insert, so a manager of one business could book a payment
   // against another tenant's invoice and the SECURITY DEFINER recompute trigger
   // would mark it paid. Resolve the invoice inside our own business first.
-  const { data: invoice } = await supabase
-    .from("invoices")
-    .select("id, status")
-    .eq("business_id", business.id)
-    .eq("id", v.invoiceId)
-    .maybeSingle();
+  const invoice = unwrapRow(
+    await supabase
+      .from("invoices")
+      .select("id, status")
+      .eq("business_id", business.id)
+      .eq("id", v.invoiceId)
+      .maybeSingle(),
+    "invoices.actions.paymentInvoice",
+  );
   if (!invoice) return { error: INVOICE_UNAVAILABLE };
   if (invoice.status === "draft" || invoice.status === "void") {
     return { error: "Only an issued invoice can take a payment." };

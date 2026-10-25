@@ -37,25 +37,10 @@ function filesUnder(dir) {
   return out;
 }
 
-// Still to do, with the count each carried when it was added. Shrink this; the
-// audit fails if an entry is stale in either direction.
-const PENDING = new Map([
-  ["app/[locale]/(dashboard)/appointments/actions.ts", 2],
-  ["app/[locale]/(dashboard)/inspections/actions.ts", 3],
-  ["app/[locale]/(dashboard)/invoices/actions.ts", 6],
-  ["app/[locale]/(dashboard)/quotations/actions.ts", 1],
-  ["app/[locale]/(dashboard)/vehicles/actions.ts", 2],
-  ["lib/actions/membership-bundles.ts", 3],
-  ["lib/actions/retainer-scenarios.ts", 2],
-  ["lib/documents.ts", 1],
-  ["lib/evidence.ts", 1],
-  ["lib/inspections/data.ts", 3],
-  ["lib/maintenance/scanner.ts", 1],
-  ["lib/maintenance/worklist.ts", 2],
-  ["lib/notifications/service.ts", 9],
-  ["lib/storage.ts", 1],
-  ["lib/vehicle-intelligence/actions.ts", 1],
-]);
+// Empty, and meant to stay that way. It exists so a file can be exempted
+// deliberately and visibly, with the count it carried, rather than by nobody
+// noticing. An entry that is already clean, or whose count has grown, fails.
+const PENDING = new Map([]);
 
 export function discardsIn(file) {
   const lines = readFileSync(file, "utf8").split("\n");
