@@ -8,6 +8,7 @@ export type FeatureKey =
   | "membershipBundles"
   | "analytics"
   | "maintenance"
-  | "feedback";
+  | "feedback"
+  | "inboundCapture";
 
 export type FeatureFlags = Record<FeatureKey, boolean>;

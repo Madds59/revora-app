@@ -36,6 +36,12 @@ export const DASHBOARD_NAV = [
     items: [
       { labelKey: "customers", href: "/customers", icon: "Users" },
       { labelKey: "vehicles", href: "/vehicles", icon: "CarFront" },
+      {
+        labelKey: "leads",
+        href: "/leads",
+        icon: "Inbox",
+        feature: "inboundCapture",
+      },
       { labelKey: "complaints", href: "/complaints", icon: "MessageSquareWarning" },
       { labelKey: "documents", href: "/documents", icon: "Files" },
     ],

@@ -6,8 +6,19 @@ name: CI
 # production-mutating calls. See docs/security/CI_VALIDATION_WORKFLOW.md.
 
 on:
+  # No `branches:` filter here, and `edited` among the activity types, both
+  # deliberately. The filter matches the BASE branch, so a PR stacked on another
+  # feature branch never matched it and ran no CI at all. Worse, when the parent
+  # merged and GitHub retargeted the base to main, no run fired either: a base
+  # change arrives as `edited`, which is not one of the default activity types
+  # (opened, synchronize, reopened). PRs #29 and #32 reached main that way, with
+  # lint, typecheck, build, the offline suite and every database security suite
+  # having never executed against them. The cost of this is CI time on PRs that
+  # target another branch, and a re-run when a title or body is edited (bounded
+  # by the cancel-in-progress concurrency group below). A merge that skipped
+  # every gate cost more.
   pull_request:
-    branches: [main]
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
   workflow_dispatch:

@@ -27,6 +27,20 @@ export const stripeEnv = {
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? null,
 };
 
+/**
+ * Inbound webhook configuration. Platform-level, not per tenant: one Meta app
+ * serves every business, so the app secret and the subscription verify token
+ * are deployment-wide. Per-tenant routing is a database lookup against
+ * inbound_channel_routes, never an environment variable.
+ *
+ * Both are nullable so the build and every unrelated test run without them;
+ * the routes refuse to process anything when they are unset.
+ */
+export const inboundEnv = {
+  metaAppSecret: process.env.META_APP_SECRET ?? null,
+  metaVerifyToken: process.env.META_VERIFY_TOKEN ?? null,
+};
+
 export const openAiEnv = {
   apiKey: process.env.OPENAI_API_KEY ?? null,
   model: process.env.OPENAI_MODEL ?? null,

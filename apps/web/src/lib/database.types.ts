@@ -175,6 +175,405 @@ export type Database = {
           },
         ]
       }
+      channel_identities: {
+        Row: {
+          business_id: string
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          created_at: string
+          customer_id: string | null
+          display_name: string | null
+          external_handle: string | null
+          external_id: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          locale: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          created_at?: string
+          customer_id?: string | null
+          display_name?: string | null
+          external_handle?: string | null
+          external_id: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          locale?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          channel?: Database["public"]["Enums"]["inbound_channel"]
+          created_at?: string
+          customer_id?: string | null
+          display_name?: string | null
+          external_handle?: string | null
+          external_id?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          locale?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_identities_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_identities_customer_fk"
+            columns: ["customer_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "business_id"]
+          },
+        ]
+      }
+      inbound_channel_routes: {
+        Row: {
+          branch_id: string | null
+          business_id: string
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          created_at: string
+          display_label: string | null
+          external_account_id: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          verify_token_hash: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          business_id: string
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          created_at?: string
+          display_label?: string | null
+          external_account_id: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          verify_token_hash?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          business_id?: string
+          channel?: Database["public"]["Enums"]["inbound_channel"]
+          created_at?: string
+          display_label?: string | null
+          external_account_id?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          verify_token_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_channel_routes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_channel_routes_branch_fk"
+            columns: ["branch_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id", "business_id"]
+          },
+        ]
+      }
+      inbound_webhook_events: {
+        Row: {
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          error_message: string | null
+          external_event_id: string | null
+          id: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          resolved_business_id: string | null
+          route_id: string | null
+          signature_verified: boolean
+          status: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          error_message?: string | null
+          external_event_id?: string | null
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          resolved_business_id?: string | null
+          route_id?: string | null
+          signature_verified: boolean
+          status?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["inbound_channel"]
+          error_message?: string | null
+          external_event_id?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          resolved_business_id?: string | null
+          route_id?: string | null
+          signature_verified?: boolean
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_webhook_events_resolved_business_id_fkey"
+            columns: ["resolved_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_webhook_events_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "inbound_channel_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_messages: {
+        Row: {
+          ai_tool_call_id: string | null
+          author_type: string
+          author_user_id: string | null
+          body: string | null
+          business_id: string
+          created_at: string
+          direction: string
+          external_message_id: string | null
+          id: string
+          is_internal: boolean
+          lead_id: string
+          media_asset_id: string | null
+        }
+        Insert: {
+          ai_tool_call_id?: string | null
+          author_type: string
+          author_user_id?: string | null
+          body?: string | null
+          business_id: string
+          created_at?: string
+          direction: string
+          external_message_id?: string | null
+          id?: string
+          is_internal?: boolean
+          lead_id: string
+          media_asset_id?: string | null
+        }
+        Update: {
+          ai_tool_call_id?: string | null
+          author_type?: string
+          author_user_id?: string | null
+          body?: string | null
+          business_id?: string
+          created_at?: string
+          direction?: string
+          external_message_id?: string | null
+          id?: string
+          is_internal?: boolean
+          lead_id?: string
+          media_asset_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_messages_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_messages_lead_fk"
+            columns: ["lead_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "lead_messages_ai_tool_call_fk"
+            columns: ["ai_tool_call_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tool_calls"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "lead_messages_media_fk"
+            columns: ["media_asset_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "lead_messages_author_user_id_fkey"
+            columns: ["author_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          ai_confidence: number | null
+          appointment_id: string | null
+          assigned_to: string | null
+          branch_id: string | null
+          business_id: string
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          channel_identity_id: string | null
+          closed_at: string | null
+          consent_source: string | null
+          created_at: string
+          customer_id: string | null
+          first_response_at: string | null
+          id: string
+          intent: string | null
+          marketing_consent: boolean
+          quotation_id: string | null
+          safety_flagged: boolean
+          service_type: string | null
+          source_ad_id: string | null
+          source_campaign_id: string | null
+          source_form_id: string | null
+          status: string
+          subject: string | null
+          summary: string | null
+          updated_at: string
+          urgency: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          appointment_id?: string | null
+          assigned_to?: string | null
+          branch_id?: string | null
+          business_id: string
+          channel: Database["public"]["Enums"]["inbound_channel"]
+          channel_identity_id?: string | null
+          closed_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          customer_id?: string | null
+          first_response_at?: string | null
+          id?: string
+          intent?: string | null
+          marketing_consent?: boolean
+          quotation_id?: string | null
+          safety_flagged?: boolean
+          service_type?: string | null
+          source_ad_id?: string | null
+          source_campaign_id?: string | null
+          source_form_id?: string | null
+          status?: string
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          appointment_id?: string | null
+          assigned_to?: string | null
+          branch_id?: string | null
+          business_id?: string
+          channel?: Database["public"]["Enums"]["inbound_channel"]
+          channel_identity_id?: string | null
+          closed_at?: string | null
+          consent_source?: string | null
+          created_at?: string
+          customer_id?: string | null
+          first_response_at?: string | null
+          id?: string
+          intent?: string | null
+          marketing_consent?: boolean
+          quotation_id?: string | null
+          safety_flagged?: boolean
+          service_type?: string | null
+          source_ad_id?: string | null
+          source_campaign_id?: string | null
+          source_form_id?: string | null
+          status?: string
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          urgency?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_channel_identity_fk"
+            columns: ["channel_identity_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "channel_identities"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "leads_customer_fk"
+            columns: ["customer_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "leads_vehicle_fk"
+            columns: ["vehicle_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "leads_appointment_fk"
+            columns: ["appointment_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "leads_quotation_fk"
+            columns: ["quotation_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "leads_branch_fk"
+            columns: ["branch_id", "business_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id", "business_id"]
+          },
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_events: {
         Row: {
           approval_id: string
@@ -4353,6 +4752,10 @@ export type Database = {
         }
         Returns: Database["public"]["Tables"]["appointments"]["Row"]
       }
+      consume_rate_limit: {
+        Args: { identifier: string; scope: string }
+        Returns: boolean
+      }
       convert_appointment_to_quotation: {
         Args: { target_appointment_id: string }
         Returns: string
@@ -4525,6 +4928,17 @@ export type Database = {
         | "bank_transfer"
         | "online_card"
         | "other"
+      inbound_channel:
+        | "instagram"
+        | "facebook"
+        | "whatsapp"
+        | "tiktok"
+        | "meta_lead_ad"
+        | "voice"
+        | "sms"
+        | "email"
+        | "web_chat"
+        | "web_form"
       inspection_context: "pre_quote" | "in_job"
       inspection_result: "pass" | "attention" | "fail" | "not_checked"
       inspection_status: "draft" | "completed"
@@ -4714,6 +5128,18 @@ export const Constants = {
         "resolved",
         "closed",
       ],
+      inbound_channel: [
+        "instagram",
+        "facebook",
+        "whatsapp",
+        "tiktok",
+        "meta_lead_ad",
+        "voice",
+        "sms",
+        "email",
+        "web_chat",
+        "web_form",
+      ],
       inspection_context: ["pre_quote", "in_job"],
       inspection_result: ["pass", "attention", "fail", "not_checked"],
       inspection_status: ["draft", "completed"],
@@ -4827,6 +5253,11 @@ export type ComplaintSeverity = AppEnums["complaint_severity"];
 export type ComplaintStatus = AppEnums["complaint_status"];
 
 export type Customer = AppTables["customers"]["Row"];
+export type ChannelIdentity = AppTables["channel_identities"]["Row"];
+export type InboundChannel = AppEnums["inbound_channel"];
+export type InboundChannelRoute = AppTables["inbound_channel_routes"]["Row"];
+export type Lead = AppTables["leads"]["Row"];
+export type LeadMessage = AppTables["lead_messages"]["Row"];
 export type CustomerInsert = AppTables["customers"]["Insert"];
 export type CustomerUpdate = AppTables["customers"]["Update"];
 
