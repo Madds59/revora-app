@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ChevronDown, CreditCard, LogOut, Scale, Settings, ShieldCheck } from "lucide-react";
+import {
+  ChevronDown,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Scale,
+  Settings,
+  ShieldCheck,
+} from "lucide-react";
 
 import { signOut } from "@/app/[locale]/(auth)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -25,7 +33,7 @@ import { useTranslations } from "next-intl";
 export type ShellMenuLink = {
   href: string;
   label: string;
-  icon?: "settings" | "billing" | "admin";
+  icon?: "settings" | "billing" | "admin" | "dashboard";
 };
 
 type ShellAccountMenuProps = {
@@ -58,6 +66,8 @@ function resolveIcon(icon?: ShellMenuLink["icon"]): LucideIcon | null {
       return CreditCard;
     case "admin":
       return ShieldCheck;
+    case "dashboard":
+      return LayoutDashboard;
     default:
       return null;
   }
