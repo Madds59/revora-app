@@ -25,43 +25,18 @@ Revora is a multi-tenant SaaS platform for automotive service businesses, worksh
 
 ## Route Groups
 
-Business dashboard:
+Every page lives under `apps/web/src/app/[locale]/`, and all but one sit inside a route group: `(dashboard)`, `(portal)`, `(admin)`, `(auth)`, `(onboarding)`, `(legal)`.
 
-- /
-- /customers
-- /vehicles
-- /jobs
-- /quotes or /quotations
-- /complaints
-- /documents
-- /billing
-- /analytics
-- /notifications
-- /settings
+The sole exception is `[locale]/i/[token]` — the public inspection share link. Unauthenticated access is granted by `isPublicPath()` in `apps/web/src/lib/supabase/middleware.ts`, alongside `/login`, `/signup`, `/forgot-password`, `/auth*` and `/legal*`. Of those, the share link is the only one that serves tenant data without a session, so treat any change to it, or to that predicate, as a security change.
 
-Customer portal:
+Never add a page outside `[locale]`.
 
-- /portal
-- /portal/jobs
-- /portal/quotes
-- /portal/quotes/[id]
-- /portal/complaints
-- /portal/complaints/new
-- /portal/complaints/[id]
-- /portal/documents
-- /portal/settings
+The authoritative route inventory is code, not this file — do not duplicate it here:
 
-Root admin:
+- `apps/web/src/lib/nav/model.js` — dashboard and portal routes, including the `feature` keys that gate phase 1 modules.
+- `apps/web/src/components/admin-nav.tsx` — root admin routes.
 
-- /admin
-- /admin/tenants
-- /admin/users
-- /admin/subscriptions
-- /admin/billing
-- /admin/analytics
-- /admin/notifications
-- /admin/audit-logs
-- /admin/settings
+Feature-gated routes call `requireFeature()` (`apps/web/src/lib/features/guard.ts`) and redirect when their flag is off, so a route existing in the inventory does not mean it is reachable in a given environment.
 
 ## Development Rules
 
@@ -120,10 +95,16 @@ Do not introduce a new styling system.
 
 ## Validation Rules
 
-After meaningful changes run:
+There is no root `package.json` — all scripts live in `apps/web`, which is its own pnpm workspace root (`apps/web/pnpm-workspace.yaml`). Run every check from there.
 
-- `pnpm lint`
-- `pnpm typecheck` if script exists
-- `pnpm build`
+After meaningful changes:
 
-If `typecheck` script does not exist, use the existing TypeScript validation approach from `package.json`.
+```bash
+cd apps/web
+pnpm lint
+pnpm typecheck   # `pretypecheck` runs `next typegen` first
+pnpm build
+pnpm test
+```
+
+These are the same four checks `.github/workflows/ci.yml` runs on every PR.
