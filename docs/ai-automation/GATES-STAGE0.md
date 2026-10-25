@@ -38,10 +38,14 @@ Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
   EXPECT: TENANT_FK_AUDIT_OK
   CWD: ../../apps/web
 
-- [ ] G4: Stage 0 introduces no new PostgREST relationship ambiguity, so no
+- [x] G4: Stage 0 introduces no new PostgREST relationship ambiguity, so no
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=files=449 ambiguous_pairs=111 violations=0 | POSTGREST_EMBED_AUDIT_OK
       embed from these tables can fail with PGRST201 and render as a false
-      empty state.
-ABANDON: G4 Impossible on this base. This branch is cut from main, and audit-postgrest-embeds.mjs is not on main: it lives on the unmerged fix/postgrest-ambiguous-embeds work (PR #27). The earlier measurement (files=444 ambiguous_pairs=111 violations=0) was taken on that branch's base and cannot be reproduced here, so it is not carried forward as evidence. For the inbound code the property is superseded by GATES-STAGE0-ROUTES R8/R9, which prove it issues no embed at all. The /leads UI will need the real audit, so this needs the owner to decide whether PR #27 merges to main first.
+      empty state. (Abandoned in an earlier revision on the false premise that
+      the audit was absent from main; local main was simply stale.)
+  CHECK: node scripts/audit-postgrest-embeds.mjs
+  EXPECT: POSTGREST_EMBED_AUDIT_OK
+  CWD: ../../apps/web
 
 - [x] G5: The pre-existing cross-tenant integrity suite still passes against
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=TENANT_INTEGRITY_OK | psql:<stdin>:86: NOTICE:  table "_sec_results" does not exist, skipping

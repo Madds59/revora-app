@@ -10,10 +10,13 @@ leads; the tenant is resolved from the correct field per surface; the unverified
 path is rate-limited through the 0044 limiter; and nothing in the existing
 offline or database suites regresses.
 
-NOT GATED HERE, deliberately: the PostgREST embed audit. `audit-embeds` and its
-script live on the unmerged fix/postgrest-ambiguous-embeds work and are absent
-from main, which this branch is cut from. R8 instead proves the new code
-introduces no embed at all, which is what would have made that audit relevant.
+CORRECTION. An earlier revision of this ledger said the PostgREST embed audit
+could not run here, because audit-embeds was absent from main. That was wrong:
+LOCAL main was six commits stale and had never been fetched. origin/main
+contains PR #27, #28 and #29, and the audit script with them. This branch is
+now rebased onto origin/main, and R8/R9 run the real audit. The stand-in
+audit-inbound-embeds.mjs written under the false premise is deleted rather
+than kept as a near-duplicate.
 
 Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
 
@@ -25,11 +28,12 @@ Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
   EXPECT: /pass 27[\s\S]*fail 0/
   CWD: ../../apps/web
 
-- [x] R2: The whole offline suite still passes, so the new modules and the
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=ℹ pass 457 | ℹ fail 0
+- [x] R2: The whole offline suite still passes on the rebased base (467 tests:
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=ℹ pass 467 | ℹ fail 0
+      457 before the rebase plus PR #28/#29's), so the new modules and the
       database.types.ts additions regress nothing.
   CHECK: pnpm test 2>&1 | grep -E "(pass|fail) [0-9]+$"
-  EXPECT: /pass 457[\s\S]*fail 0/
+  EXPECT: /pass 467[\s\S]*fail 0/
   CWD: ../../apps/web
 
 - [x] R3: Lint and typecheck are clean with the new routes, modules and types.
@@ -66,17 +70,19 @@ Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
   EXPECT: TENANT_FK_AUDIT_OK
   CWD: ../../apps/web
 
-- [x] R8: The embed detector can actually detect a PostgREST embed and does
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=self-test cases=7 failures=0 | INBOUND_EMBED_AUDIT_SELF_TEST_OK
-      not fire on a flat select (positive control for R9).
-  CHECK: node scripts/audit-inbound-embeds.mjs --self-test
-  EXPECT: INBOUND_EMBED_AUDIT_SELF_TEST_OK
+- [x] R8: The embed audit detects an unhinted embed, a nested one, and a
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=ok   embed-free select passes (expected 0, got 0) | EMBED_AUDIT_SELF_TEST_OK
+      `!inner` modifier mistaken for a hint, and clears hinted and embed-free
+      selects (positive control for R9).
+  CHECK: node scripts/audit-postgrest-embeds.mjs --self-test
+  EXPECT: EMBED_AUDIT_SELF_TEST_OK
   CWD: ../../apps/web
 
-- [x] R9: The inbound code issues no PostgREST embed, so the PGRST201
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=files=7 embeds=0 | INBOUND_EMBED_AUDIT_OK
-      ambiguity class cannot apply to it — the property the absent
-      audit-embeds script would otherwise have had to check.
-  CHECK: node scripts/audit-inbound-embeds.mjs
-  EXPECT: INBOUND_EMBED_AUDIT_OK
+- [x] R9: No embed in apps/web/src crosses a relationship with more than one
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=files=449 ambiguous_pairs=111 violations=0 | POSTGREST_EMBED_AUDIT_OK
+      foreign key without naming the constraint, measured against the migrated
+      schema including 0048's five new tables. Stage 0 must add no new
+      ambiguity, since PGRST201 renders as a false empty state.
+  CHECK: node scripts/audit-postgrest-embeds.mjs
+  EXPECT: POSTGREST_EMBED_AUDIT_OK
   CWD: ../../apps/web

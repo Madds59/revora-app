@@ -374,26 +374,23 @@ pnpm test                              # 457 offline tests, 27 of them inbound
 pnpm test:db:inbound                   # 25 cases, expect INBOUND_CAPTURE_OK
 pnpm test:db:inbound:positive-control  # schema 0047, must refuse
 pnpm audit:tenant-fks                  # expect 98/98 covered
-pnpm audit:inbound-embeds:self-test    # control: the detector can detect one
-pnpm audit:inbound-embeds              # expect embeds=0
+pnpm audit:embeds:self-test            # control: the audit can detect one
+pnpm audit:embeds                      # expect violations=0
 ```
 
 `test:db:inbound` is wired into `test:db:all`. The positive control builds the
 schema at 0047 and runs the same file; its preflight raises because the Stage 0
 tables are absent, so a green run of the suite cannot be a vacuous one.
 
-**Branch base.** This work is cut from `main`. PR #27 (the PostgREST embed
-fixes) is **not** in `main` — it exists only on the unmerged
-`fix/surface-discarded-*` branches — so `audit-embeds` and its script are
-absent here. The inbound code issues no PostgREST embed at all, which
-`audit:inbound-embeds` proves locally (with its own self-test as the control),
-so the PGRST201 class cannot apply to it. The `/leads` UI, when it is built,
-will need the real embed audit.
+**Branch base.** Rebased onto `origin/main`, which contains PR #27, #28 and
+#29. An earlier revision of this document claimed PR #27 was missing from
+`main` and that the embed audit was therefore unavailable. That was wrong:
+local `main` was six commits stale and had never been fetched. The real
+`pnpm audit:embeds` runs against this branch and is gated.
 
 **Measured on 2026-10-25:** migration 0048 applies as 44 of 44 (70 tables, 141
 policies) and 0049 as 45 of 45. Stage 0 database suite 25/25. Offline suite
 457/457, including 27 inbound tests. Pre-existing tenant-integrity suite 16/16.
-`audit:tenant-fks` 98/98 covered. `audit:inbound-embeds` 0 embeds across 7
-files, self-test 7/7. `audit:views` 2/2 compliant,
+`audit:tenant-fks` 98/98 covered. `audit:views` 2/2 compliant,
 `audit:function-privileges` OK, `audit:migration-safety` 0 findings. Lint and
 typecheck clean.
