@@ -342,7 +342,8 @@
       "service": "Service",
       "support": "Support",
       "tools": "Tools"
-    }
+    },
+    "leads": "Leads"
   },
   "shell": {
     "openNavigation": "Open navigation",
@@ -2600,6 +2601,97 @@
       "analytics": "Analytics",
       "maintenance": "Maintenance",
       "feedback": "Feedback"
+    }
+  },
+  "dashboardLeads": {
+    "title": "Leads",
+    "description": "Inbound inquiries from social, ads, chat and phone.",
+    "searchPlaceholder": "Search contact, handle, subject, or summary",
+    "accessRestricted": "You do not have permission to work the lead queue.",
+    "accessRestrictedDescription": "Ask an owner or manager for access.",
+    "stats": {
+      "open": "Open",
+      "unassigned": "Unassigned",
+      "converted": "Converted"
+    },
+    "filters": {
+      "status": "Status",
+      "channel": "Channel",
+      "allStatuses": "All statuses",
+      "allChannels": "All channels",
+      "openOnly": "Open only",
+      "reset": "Reset filters"
+    },
+    "summary": {
+      "visible": "Showing {count} of {total} leads",
+      "filtered": "Filtered"
+    },
+    "empty": {
+      "noneTitle": "No leads yet",
+      "noneDescription": "Inquiries appear here once an inbound channel is connected. A platform administrator connects an Instagram account, WhatsApp number or ad form to this business.",
+      "matchTitle": "No leads match",
+      "matchDescription": "Try a different search term or clear the filters."
+    },
+    "table": {
+      "contact": "Contact",
+      "channel": "Channel",
+      "subject": "Inquiry",
+      "status": "Status",
+      "urgency": "Urgency",
+      "assignee": "Assigned to",
+      "received": "Received",
+      "unassigned": "Unassigned"
+    },
+    "detail": {
+      "backToQueue": "Back to leads",
+      "notFound": "Lead not found",
+      "notFoundDescription": "It may have been removed, or it belongs to another business.",
+      "thread": "Conversation",
+      "threadEmpty": "No messages on this lead yet.",
+      "inbound": "Customer",
+      "outbound": "Staff",
+      "internalNote": "Internal note",
+      "aiGenerated": "AI",
+      "attribution": "Attribution",
+      "campaign": "Campaign",
+      "ad": "Ad",
+      "form": "Form",
+      "noAttribution": "No campaign attribution on this lead.",
+      "identity": "Channel identity",
+      "handle": "Handle",
+      "firstSeen": "First seen",
+      "lastSeen": "Last seen",
+      "linkedCustomer": "Linked customer",
+      "notLinked": "Not linked to a customer yet",
+      "summaryLabel": "Summary",
+      "summaryPlaceholder": "A short summary of what the customer wants",
+      "safetyFlagged": "Safety flagged",
+      "safetyFlaggedDescription": "This inquiry matched a safety term. Treat it as urgent and do not send self-service advice."
+    },
+    "manage": {
+      "title": "Triage",
+      "description": "Set status, urgency and owner.",
+      "status": "Status",
+      "urgency": "Urgency",
+      "assignee": "Assigned to",
+      "unassigned": "Unassigned",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saved": "Lead updated."
+    },
+    "convert": {
+      "title": "Convert to customer",
+      "description": "Creates a customer record from this inquiry and links it to the lead. Quotes and appointments are then created from the customer as usual.",
+      "fullName": "Full name",
+      "phone": "Phone",
+      "email": "Email",
+      "submit": "Create customer",
+      "submitting": "Creating...",
+      "done": "Customer created and linked.",
+      "alreadyLinked": "This lead is already linked to a customer.",
+      "viewCustomer": "View customer",
+      "newQuote": "New quote",
+      "bookAppointment": "Book appointment"
     }
   }
 }

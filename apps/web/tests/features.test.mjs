@@ -19,8 +19,9 @@ test("every phase 1 optional module defaults to off", () => {
     analytics: false,
     maintenance: false,
     feedback: false,
+    inboundCapture: false,
   });
-  assert.equal(FEATURE_KEYS.length, 6);
+  assert.equal(FEATURE_KEYS.length, 7);
 });
 
 test("an unset or blank override leaves the defaults untouched", () => {
@@ -55,10 +56,10 @@ test("malformed override entries are ignored rather than thrown on", () => {
 test("an unknown key never becomes an enabled flag", () => {
   const flags = resolveFeatures("nope,__proto__,constructor");
   assert.deepEqual(flags, PHASE_1_DEFAULTS);
-  assert.equal(Object.keys(flags).length, 6);
+  assert.equal(Object.keys(flags).length, 7);
 });
 
-test("isFeatureKey accepts only the six registry names", () => {
+test("isFeatureKey accepts only the seven registry names", () => {
   assert.equal(isFeatureKey("analytics"), true);
   assert.equal(isFeatureKey("nope"), false);
   assert.equal(isFeatureKey(""), false);
