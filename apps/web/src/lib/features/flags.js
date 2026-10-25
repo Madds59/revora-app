@@ -20,6 +20,7 @@ export const PHASE_1_DEFAULTS = Object.freeze({
   analytics: false,
   maintenance: false,
   feedback: false,
+  inboundCapture: false,
 });
 
 /** @type {FeatureKey[]} */

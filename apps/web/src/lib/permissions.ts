@@ -57,6 +57,17 @@ export function canManageJobs(role: MemberRole | null | undefined): boolean {
   return hasRole(role, ["business_owner", "manager", "employee"]);
 }
 
+/**
+ * Inbound leads can be worked by all active staff roles. This matches the RLS
+ * added in 0048, where leads_manage is `is_business_member(business_id)` --
+ * every active member, not an owner/manager subset. Front-desk staff are the
+ * ones answering a DM, so narrowing it here would diverge from the policy and
+ * produce a page that renders empty rather than refusing honestly.
+ */
+export function canManageLeads(role: MemberRole | null | undefined): boolean {
+  return hasRole(role, ["business_owner", "manager", "employee"]);
+}
+
 /** Complaints can be handled by all active staff roles per RLS. */
 export function canManageComplaints(
   role: MemberRole | null | undefined,

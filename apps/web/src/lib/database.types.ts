@@ -5253,6 +5253,11 @@ export type ComplaintSeverity = AppEnums["complaint_severity"];
 export type ComplaintStatus = AppEnums["complaint_status"];
 
 export type Customer = AppTables["customers"]["Row"];
+export type ChannelIdentity = AppTables["channel_identities"]["Row"];
+export type InboundChannel = AppEnums["inbound_channel"];
+export type InboundChannelRoute = AppTables["inbound_channel_routes"]["Row"];
+export type Lead = AppTables["leads"]["Row"];
+export type LeadMessage = AppTables["lead_messages"]["Row"];
 export type CustomerInsert = AppTables["customers"]["Insert"];
 export type CustomerUpdate = AppTables["customers"]["Update"];
 

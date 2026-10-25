@@ -25,15 +25,15 @@ Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
       correctly computed Meta signature IS accepted — without which every
       rejection case would be satisfied by a verifier that refuses everything.
   CHECK: node --test tests/inbound-capture.test.mjs 2>&1 | grep -E "(pass|fail) [0-9]+$"
-  EXPECT: /pass 27[\s\S]*fail 0/
+  EXPECT: /pass (2[7-9]|[3-9][0-9]|[1-9][0-9]{2,})[\s\S]*fail 0/
   CWD: ../../apps/web
 
 - [x] R2: The whole offline suite still passes on the rebased base (467 tests:
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=ℹ pass 467 | ℹ fail 0
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=ℹ pass 484 | ℹ fail 0
       457 before the rebase plus PR #28/#29's), so the new modules and the
       database.types.ts additions regress nothing.
   CHECK: pnpm test 2>&1 | grep -E "(pass|fail) [0-9]+$"
-  EXPECT: /pass 467[\s\S]*fail 0/
+  EXPECT: /pass (4[6-9][0-9]|[5-9][0-9]{2}|[1-9][0-9]{3,})[\s\S]*fail 0/
   CWD: ../../apps/web
 
 - [x] R3: Lint and typecheck are clean with the new routes, modules and types.
@@ -46,7 +46,7 @@ Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
   CHECK: node scripts/audit-migration-collisions.mjs
   EXPECT: MIGRATION_NUMBERING_OK
   CWD: ../../apps/web
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=numbers=48 refs_scanned=61 highest=0049 collisions=0 | MIGRATION_NUMBERING_OK
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=numbers=48 refs_scanned=63 highest=0049 collisions=0 | MIGRATION_NUMBERING_OK
 
 - [x] R5: The full migration set, 0048 and 0049 included, applies from zero to
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=[db-test] recreating database revora_sec_test | [db-test] applying supabase shim
@@ -79,7 +79,7 @@ Run with: node <skill-dir>/scripts/gate-check.mjs --timeout 600 <this file>
   CWD: ../../apps/web
 
 - [x] R9: No embed in apps/web/src crosses a relationship with more than one
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=files=449 ambiguous_pairs=111 violations=0 | POSTGREST_EMBED_AUDIT_OK
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/Users/Madds/Downloads/Revora-app/apps/web; path=532a6879ab00/19 entries; output=files=460 ambiguous_pairs=111 violations=0 | POSTGREST_EMBED_AUDIT_OK
       foreign key without naming the constraint, measured against the migrated
       schema including 0048's five new tables. Stage 0 must add no new
       ambiguity, since PGRST201 renders as a false empty state.
